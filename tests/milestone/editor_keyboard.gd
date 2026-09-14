@@ -9,13 +9,15 @@ func check(ok: bool, label: String) -> void:
 	print("%s: %s" % ["ok" if ok else "FAIL", label])
 	if not ok:
 		failures += 1
-func send_key(code: int, down: bool, echo := false, ctrl := false) -> void:
+func send_key(code: int, down: bool, echo := false, ctrl := false, shift := false, meta := false) -> void:
 	var event := InputEventKey.new()
 	event.keycode = code
 	event.unicode = code if code < 128 else 0
 	event.pressed = down
 	event.echo = echo
 	event.ctrl_pressed = ctrl
+	event.shift_pressed = shift
+	event.meta_pressed = meta
 	Input.parse_input_event(event)
 func find_button(prefix: String, node: Node) -> BaseButton:
 	if node is BaseButton and node.text.begins_with(prefix):
@@ -36,6 +38,7 @@ func run() -> void:
 	editor.advanced_toggle.button_pressed = true
 	var reset := find_button("Reset container", editor.tools_column)
 	var undo := find_button("Undo build", editor.tools_column)
+	undo.disabled = false # Make the focus probe meaningful with an empty fixture.
 	for button in [reset, undo]:
 		button.grab_focus() # Equivalent keyboard focus after clicking/tabbing.
 		send_key(KEY_SPACE, true)
@@ -59,6 +62,16 @@ func run() -> void:
 	send_key(KEY_SPACE, true, false, true)
 	send_key(KEY_SPACE, false, false, true)
 	check(editor.run_requests == 3, "modified Space is not claimed as the editor phase shortcut")
+	reset.grab_focus()
+	send_key(KEY_Z, true, false, true, true)
+	send_key(KEY_Z, false, false, true, true)
+	send_key(KEY_Z, true, false, false, true, true)
+	send_key(KEY_Z, false, false, false, true, true)
+	check(editor.redo_requests == 2 and editor.undo_requests == 0, "Ctrl/Cmd Shift Z requests Redo without Undo or focused button activation")
+	text.grab_focus()
+	send_key(KEY_Z, true, false, true, true)
+	send_key(KEY_Z, false, false, true, true)
+	check(editor.redo_requests == 2, "numeric text retains its own redo shortcut")
 	# Modal ownership is tested with the production archive panel, without
 	# opening a native OS dialog in this headless regression.
 	var panel = load("res://scripts/editor/archive_panel.gd").new()

@@ -3,9 +3,13 @@ extends "res://tests/milestone/paint_tools_lab.gd"
 var run_requests := 0
 var reset_requests := 0
 var undo_requests := 0
+var redo_requests := 0
 func run_or_restore() -> void:
 	run_requests += 1
 func reset_container() -> void:
 	reset_requests += 1
 func undo_edit() -> void:
 	undo_requests += 1
+
+func redo_edit() -> void:
+	redo_requests += 1

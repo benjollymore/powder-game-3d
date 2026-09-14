@@ -65,3 +65,7 @@ godot --path . --resolution 1280x800 --always-on-top --disable-vsync -s res://te
 ```
 
 Construction tools also expose **Show workplane grid**. Hiding this visual guide leaves the exact plane/depth targeting, brush preview, region bounds and simulation matter unchanged. The preference remains effective while painting or selecting regions because the frame update honors it; the default remains visible.
+
+# Checkpoint 4: reversible regional history
+
+Build now has bounded Undo and Redo, sharing a 128 MiB retained-byte budget. Inverse capture must validate before restoration; exact no-op painting preserves an existing Redo chain. Both directions survive Run/Return and clear on world replacement. See [regional Redo design, measurements and regression results](editor-redo.md).

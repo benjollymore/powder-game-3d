@@ -577,6 +577,92 @@ func _rt_surface_emitter_stamp(cl: int, surface: Dictionary, radius: int, elemen
 		_rt_edit_gpu().stamp_surface(cl, ray, radius, element, mode, seed, Elements.default_amount(element))
 
 
+## Capture and validate the inverse before changing GPU material. Failure
+## leaves the source history usable; no full-volume readback is performed.
+func reverse_edit_transaction(result: Dictionary, callback: Callable) -> bool:
+	return _capture_history_state(result, callback, true)
+
+
+## Used only when a new gesture might branch an existing redo chain. A true
+## no-op must leave that future history intact.
+func inspect_edit_transaction(result: Dictionary, callback: Callable) -> bool:
+	return _capture_history_state(result, callback, false)
+
+
+func _history_record_valid(result: Dictionary) -> bool:
+	if not result.get("valid", false) or result.get("epoch", -1) != edit_epoch or not result.get("regions") is Array:
+		return false
+	var total := 0
+	var seen := {}
+	for region in result.regions:
+		if not region is Dictionary or not region.get("lo") is Vector3i or not region.get("hi") is Vector3i or not region.get("bytes") is PackedByteArray:
+			return false
+		var lo: Vector3i = region.lo
+		var hi: Vector3i = region.hi
+		if not VoxelCodec.in_bounds(lo) or lo.x % EditGPU.TILE != 0 or lo.y % EditGPU.TILE != 0 or lo.z % EditGPU.TILE != 0:
+			return false
+		if hi != (lo + Vector3i.ONE * EditGPU.TILE).min(Vector3i.ONE * GRID) or seen.has(lo):
+			return false
+		seen[lo] = true
+		var extent := hi - lo
+		if region.bytes.size() != extent.x * extent.y * extent.z * 4:
+			return false
+		total += region.bytes.size()
+		if total > EditGPU.MAX_TRANSACTION_BYTES:
+			return false
+	return total > 0 and total == result.get("bytes", -1)
+
+
+func _capture_history_state(result: Dictionary, callback: Callable, apply_restore: bool) -> bool:
+	if not _rt_ready or not _history_record_valid(result):
+		return false
+	if apply_restore:
+		edit_revision += 1 # Accepted user intent also invalidates pending file loads.
+	var original := result.duplicate(true)
+	var revision := edit_revision
+	var at_tick := tick
+	var id := begin_edit_transaction(func(captured: Dictionary):
+		_complete_history_capture(captured, original, revision, at_tick, apply_restore, callback))
+	RenderingServer.call_on_render_thread(_rt_capture_history_state.bind(id, original.regions))
+	return true
+
+
+func _rt_capture_history_state(id: int, regions: Array) -> void:
+	_rt_edit_gpu().capture_existing_regions(id, regions)
+	_rt_edit_gpu().finish(id)
+
+
+func _complete_history_capture(captured: Dictionary, original: Dictionary, revision: int, at_tick: int, apply_restore: bool, callback: Callable) -> void:
+	captured["applied"] = false
+	captured["changed"] = false
+	if not captured.get("valid", false) or captured.get("error", "") != "" or not _history_record_valid(captured) or captured.bytes != original.bytes or not _history_regions_match(captured.regions, original.regions):
+		captured.valid = false
+		captured.error = "History capture failed; no history action was applied."
+	elif original.epoch != edit_epoch or edit_revision != revision or tick != at_tick:
+		captured.valid = false
+		captured.error = "The world changed during history capture; no history action was applied."
+	else:
+		for i in original.regions.size():
+			if original.regions[i].bytes != captured.regions[i].bytes:
+				captured.changed = true
+				break
+		if apply_restore:
+			captured.applied = restore_edit_transaction(original)
+			if not captured.applied:
+				captured.valid = false
+				captured.error = "This history belongs to a different world; no action was applied."
+	callback.call(captured)
+
+
+func _history_regions_match(captured: Array, original: Array) -> bool:
+	if captured.size() != original.size():
+		return false
+	for i in original.size():
+		if captured[i].lo != original[i].lo or captured[i].hi != original[i].hi:
+			return false
+	return true
+
+
 func restore_edit_transaction(result: Dictionary) -> bool:
 	if not result.get("valid", false) or result.get("epoch", -1) != edit_epoch or not result.has("regions"):
 		return false

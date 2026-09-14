@@ -73,6 +73,8 @@ func _run() -> void:
 			walls_intact = false
 	check(walls_intact, "region fill preserves every original wall cell")
 	lab.undo_edit()
+	while lab.capturing:
+		await process_frame
 	check(await read() == painted, "undo region restores packed voxel bytes exactly")
 	# Simulate a brush gesture while its undo snapshot is still pending; changing
 	# palette/radius before readback must not rewrite that gesture's metadata.
@@ -94,6 +96,8 @@ func _run() -> void:
 	check(id_at(gesture, cell) == Elements.Id.SAND, "pending gesture retains original material across palette change")
 	check(id_at(gesture, cell + Vector3i.RIGHT) == Elements.Id.AIR, "pending gesture retains original single-cell radius")
 	lab.undo_edit()
+	while lab.capturing:
+		await process_frame
 	check(await read() == painted, "undo brush gesture restores packed voxel bytes exactly")
 	lab.section = false
 	lab._update_plane()

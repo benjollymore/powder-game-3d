@@ -57,6 +57,7 @@ func run() -> void:
 	editor.run_or_restore()
 	check(not editor.testing and await read() == build, "Return restores the exact construction captured by queued Run")
 	editor.undo_edit()
+	await settled()
 	check(await read() == original, "authored Undo still applies after Run and Return")
 	begin_stroke()
 	editor.new_empty_build()

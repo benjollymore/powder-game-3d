@@ -162,6 +162,7 @@ func run() -> void:
 	var undo_activations := [0]
 	undo_button.pressed.connect(func(): undo_activations[0] += 1)
 	await click(undo_button)
+	await settled()
 	check(await read() == original and editor.undo_history.is_empty(), "GUI Undo restores exact original packed bytes")
 	key(KEY_SPACE) # Undo retains actual GUI focus from the preceding mouse click.
 	await settled()
@@ -263,6 +264,7 @@ func run() -> void:
 	check(not editor.testing and clock.paused and await read() == authored, "GUI Return restores exact authored construction after live input")
 	await capture("restored-build")
 	await click(find_button("Undo build"))
+	await settled()
 	check(await read() == ramp and editor.undo_history.size() == 1, "GUI Undo after Return removes only the last authored sand stroke")
 	_restore_input()
 	await frames(2)

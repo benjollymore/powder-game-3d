@@ -3,6 +3,7 @@ extends Node3D
 const Geometry := preload("res://scripts/discovery/edit_geometry.gd")
 const SimScene := preload("res://scenes/sim_volume.tscn")
 const Emission := preload("res://scripts/discovery/brush_emission.gd")
+const HistoryBudget := preload("res://scripts/editor/history_budget.gd")
 enum TargetMode { PLANE, SURFACE }
 var targeting_mode := TargetMode.PLANE
 var stroke_target_mode := TargetMode.PLANE
@@ -60,6 +61,10 @@ var testing := false
 var build_snapshot := PackedByteArray()
 var undo_history: Array[Dictionary] = []
 var undo_bytes := 0
+var redo_history: Array[Dictionary] = []
+var redo_bytes := 0
+var undo_button: Button
+var redo_button: Button
 var active_transaction := -1
 var last_edit_bytes := 0
 var edit_message := ""
@@ -163,8 +168,7 @@ func replace_authored(bytes: PackedByteArray) -> bool:
 	_stop_navigation()
 	TimeController.paused = true
 	testing = false
-	undo_history.clear()
-	undo_bytes = 0
+	_clear_history()
 	last_edit_bytes = 0
 	edit_message = ""
 	build_snapshot.clear()
@@ -261,10 +265,20 @@ func _build_ui() -> void:
 	step_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	step_button.pressed.connect(step_test)
 	test_time_controls.add_child(step_button)
-	var undo := Button.new()
-	undo.text = "Undo build edit · Ctrl/Cmd Z"
-	undo.pressed.connect(undo_edit)
-	column.add_child(undo)
+	var history_row := HBoxContainer.new()
+	column.add_child(history_row)
+	undo_button = Button.new()
+	undo_button.text = "Undo build"
+	undo_button.tooltip_text = "Undo · Ctrl/Cmd Z"
+	undo_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	undo_button.pressed.connect(undo_edit)
+	history_row.add_child(undo_button)
+	redo_button = Button.new()
+	redo_button.text = "Redo build"
+	redo_button.tooltip_text = "Redo · Ctrl/Cmd Shift Z"
+	redo_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	redo_button.pressed.connect(redo_edit)
+	history_row.add_child(redo_button)
 	var target_row := HBoxContainer.new()
 	column.add_child(target_row)
 	var target_label := Label.new()
@@ -436,6 +450,9 @@ func _refresh_test_controls() -> void:
 
 func _refresh_palette() -> void:
 	_refresh_test_controls()
+	if undo_button:
+		undo_button.disabled = testing or (undo_history.is_empty() and not capturing)
+		redo_button.disabled = testing or (redo_history.is_empty() and not capturing)
 	for id in material_buttons:
 		material_buttons[id].set_pressed_no_signal(id == element and not erase)
 	if erase_button:
@@ -504,6 +521,7 @@ func _resume_editor_action() -> void:
 		return
 	match action:
 		"undo": undo_edit()
+		"redo": redo_edit()
 		"start_test": _set_testing(true)
 		"return_build": _set_testing(false)
 		"reset": reset_container()
@@ -753,7 +771,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		match event.keycode:
 			KEY_Z:
 				if event.ctrl_pressed or event.meta_pressed:
-					undo_edit()
+					if event.shift_pressed:
+						redo_edit()
+					else:
+						undo_edit()
 			KEY_P:
 				toggle_test_pause()
 			KEY_N:
@@ -816,35 +837,101 @@ func fill_selection() -> void:
 		_end_stroke()
 
 
+func _clear_history() -> void:
+	undo_history.clear()
+	redo_history.clear()
+	undo_bytes = 0
+	redo_bytes = 0
+
+
+func _trim_history() -> void:
+	var sizes := HistoryBudget.trim(undo_history, redo_history, undo_bytes, redo_bytes)
+	undo_bytes = sizes.x
+	redo_bytes = sizes.y
+
+
 func _begin_authored_edit() -> void:
 	capturing = true
 	edit_message = ""
 	active_transaction = sim.begin_edit_transaction(func(result: Dictionary):
-		capturing = false
 		if result.epoch != sim.edit_epoch:
+			capturing = false
 			return
-		last_edit_bytes = result.bytes
-		edit_message = result.error
-		if not result.valid:
-			undo_history.clear()
-			undo_bytes = 0
-		if not result.regions.is_empty():
-			undo_history.append(result)
-			undo_bytes += result.bytes
-		while undo_bytes > 128 * 1024 * 1024 and not undo_history.is_empty():
-			var discarded: Dictionary = undo_history.pop_front()
-			undo_bytes -= discarded.bytes
-		edit_completed.emit(result))
+		if result.valid and not result.regions.is_empty() and not redo_history.is_empty():
+			# Only a changed construction branches history. A miss or an ONLY_AIR
+			# brush over occupied matter must not discard the remaining future.
+			if sim.inspect_edit_transaction(result, func(inspected: Dictionary):
+				if inspected.epoch != sim.edit_epoch:
+					capturing = false
+					return
+				if not inspected.valid:
+					result.error = "Could not verify the new edit; Redo was cleared. Its Undo remains available."
+				_complete_authored_edit(result, inspected.changed if inspected.valid else true)):
+				return
+			result.error = "Could not verify the new edit; Redo was cleared. Its Undo remains available."
+		_complete_authored_edit(result, true))
+
+
+func _complete_authored_edit(result: Dictionary, changed: bool) -> void:
+	capturing = false
+	last_edit_bytes = result.bytes
+	edit_message = result.error
+	if not result.valid:
+		_clear_history()
+	if result.valid and changed and not result.regions.is_empty():
+		redo_history.clear()
+		redo_bytes = 0
+		undo_history.append(result)
+		undo_bytes += result.bytes
+		_trim_history()
+	result["changed"] = result.valid and changed and not result.regions.is_empty()
+	edit_completed.emit(result)
 
 
 func undo_edit() -> void:
-	if testing or _wait_for_edit("undo"):
+	_history_action(false)
+
+
+func redo_edit() -> void:
+	_history_action(true)
+
+
+func _history_action(redo: bool) -> void:
+	if testing or _wait_for_edit("redo" if redo else "undo"):
 		return
-	if not undo_history.is_empty():
-		var result: Dictionary = undo_history.pop_back()
-		undo_bytes -= result.bytes
-		if not sim.restore_edit_transaction(result):
-			edit_message = "This edit belongs to a different world; undo was skipped."
+	var source: Array[Dictionary] = redo_history if redo else undo_history
+	if source.is_empty():
+		return
+	var original: Dictionary = source.back()
+	capturing = true
+	edit_message = "Preparing Redo…" if redo else "Preparing Undo…"
+	if not sim.reverse_edit_transaction(original, func(inverse: Dictionary):
+		capturing = false
+		if inverse.epoch != sim.edit_epoch:
+			_clear_history()
+			edit_message = "The world changed; history was cleared."
+			return
+		if not inverse.applied:
+			# The original is still on its stack; failed inverse capture did not
+			# mutate the world or consume the only recoverable history entry.
+			edit_message = inverse.error
+			edit_completed.emit(inverse)
+			return
+		source.pop_back()
+		if redo:
+			redo_bytes -= original.bytes
+			undo_history.append(inverse)
+			undo_bytes += inverse.bytes
+		else:
+			undo_bytes -= original.bytes
+			redo_history.append(inverse)
+			redo_bytes += inverse.bytes
+		_trim_history()
+		last_edit_bytes = inverse.bytes
+		edit_message = ""
+		edit_completed.emit(inverse)):
+		capturing = false
+		edit_message = "This history is unavailable or belongs to another world; no action was applied."
 
 
 func run_or_restore() -> void:
@@ -863,7 +950,7 @@ func _set_testing(desired: bool) -> void:
 		sim.upload(build_snapshot)
 		# This reset restores the exact authored revision, so its existing build
 		# history remains applicable even though the runtime epoch advances.
-		for transaction in undo_history:
+		for transaction in undo_history + redo_history:
 			transaction.epoch = sim.edit_epoch
 		testing = false
 		play_button.text = "Run experiment · Space"
@@ -1044,7 +1131,7 @@ func _process(delta: float) -> void:
 		marker.scale = Vector3.ONE * (2 * radius + 1) * sim.world_size() / VoxelCodec.GRID
 	_update_live_emitter(over_ui)
 	_flush()
-	status.text = "%s · %s · r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % ["ERASE" if erase else "Add into empty space", Elements.TABLE[element].name, radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else _test_phase(), "Live edits reset on return; no live undo" if testing else "%d build edits can be undone" % undo_history.size()]
+	status.text = "%s · %s · r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % ["ERASE" if erase else "Add into empty space", Elements.TABLE[element].name, radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else _test_phase(), "Live edits reset on return; no live undo" if testing else "%d undo · %d redo" % [undo_history.size(), redo_history.size()]]
 	if edit_message != "":
 		status.text += "\n" + edit_message
 	if targeting_mode == TargetMode.SURFACE:

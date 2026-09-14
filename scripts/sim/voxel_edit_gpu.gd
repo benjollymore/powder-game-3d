@@ -152,6 +152,15 @@ func capture_region(id: int, lo: Vector3i, hi: Vector3i) -> bool:
 	tx.seen.merge(added)
 	return true
 
+func capture_existing_regions(id: int, regions: Array) -> bool:
+	# History records contain unique aligned tiles, validated before submission.
+	# Batch the inverse into one transfer instead of one buffer per tile.
+	var bounds: Array = []
+	for region in regions:
+		bounds.append({"lo": region.lo, "hi": region.hi})
+	return _capture(id, bounds)
+
+
 func _capture(id: int, bounds: Array) -> bool:
 	if not transactions.has(id):
 		return false
