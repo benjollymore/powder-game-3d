@@ -12,6 +12,7 @@ uniform sampler3D occupancy : filter_nearest, repeat_disable;
 uniform vec4 palette[16];
 uniform int grid_size = 128;
 uniform int brick_size = 8;
+uniform int liquid_mask = 0;
 uniform vec3 light_dir = vec3(0.4, 1.0, 0.3);
 uniform vec3 sun_color : source_color = vec3(1.0, 0.96, 0.9);
 uniform vec3 sky_color : source_color = vec3(0.74, 0.79, 0.84);
@@ -134,6 +135,11 @@ void fragment() {
 
 	vec4 pal = palette[int(id)];
 	vec3 base = pal.rgb * (0.88 + 0.16 * seed);
+	if ((liquid_mask & (1 << int(id))) != 0) {
+		// Interim until the isosurface renderer: partial cells read darker.
+		float fill = clamp(float(value.z) / 200.0, 0.0, 1.0);
+		base *= 0.7 + 0.3 * fill;
+	}
 	float diffuse = max(dot(normal_world, normalize(light_dir)), 0.0);
 	// Hemisphere ambient: sky from above, ground bounce from below.
 	vec3 hemi = mix(ground_color, sky_color, normal_world.y * 0.5 + 0.5);

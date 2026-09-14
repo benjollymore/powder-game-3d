@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://4btvcgwb4rq0"
+path="res://.godot/imported/hydro.glsl-3de34280a5f826037324115b1bd8398f.res"
+
+[deps]
+
+source_file="res://shaders/compute/hydro.glsl"
+dest_files=["res://.godot/imported/hydro.glsl-3de34280a5f826037324115b1bd8398f.res"]
+
+[params]
+

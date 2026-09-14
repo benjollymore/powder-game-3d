@@ -10,7 +10,7 @@ layout(rgba8, set = 0, binding = 0) uniform restrict image3D grid;
 
 layout(push_constant, std430) uniform Params {
 	ivec4 center_radius;      // cx, cy, cz, radius (voxels)
-	uvec4 element_mode_seed;  // element id, mode (0 replace, 1 only into air, 2 erase), seed, unused
+	uvec4 element_mode_seed;  // element id, mode (0 replace, 1 only into air, 2 erase), seed, liquid amount
 } pc;
 
 const int GRID = 128;
@@ -47,5 +47,6 @@ void main() {
 	}
 	uint seed = hash(uint(p.x) * 73856093u ^ uint(p.y) * 19349663u ^ uint(p.z) * 83492791u
 			^ pc.element_mode_seed.z) & 0xFFu;
-	imageStore(grid, p, vec4(uvec4(id, seed, 0u, 0u)) / 255.0);
+	uint amount = (mode == 2u) ? 0u : pc.element_mode_seed.w;
+	imageStore(grid, p, vec4(uvec4(id, seed, amount, 0u)) / 255.0);
 }

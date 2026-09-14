@@ -16,6 +16,9 @@ const FLAG_FLAMMABLE := 1 << 4
 ## Renderer palette slots; keep in sync with `palette[16]` in the shader.
 const PALETTE_SIZE := 16
 
+## Nominal full amount of a liquid cell (byte z). Must match FULL in sim.glsl.
+const LIQUID_FULL := 200
+
 ## Index = Id. density: lighter things rise through heavier ones.
 ## decay: per-tick chance to turn into `decay_to`. spread: sideways flow chance.
 const TABLE := [
@@ -42,6 +45,24 @@ const REACTIONS := [
 
 static func count() -> int:
 	return TABLE.size()
+
+
+static func is_liquid(id: int) -> bool:
+	return (TABLE[id]["flags"] & FLAG_LIQUID) != 0
+
+
+## Amount byte a freshly created cell of this element carries.
+static func default_amount(id: int) -> int:
+	return LIQUID_FULL if is_liquid(id) else 0
+
+
+## Bit per element id for shaders that need "is this a liquid" without the table.
+static func liquid_mask() -> int:
+	var mask := 0
+	for id in TABLE.size():
+		if is_liquid(id):
+			mask |= 1 << id
+	return mask
 
 
 static func palette() -> PackedColorArray:

@@ -10,8 +10,10 @@ signal ticks_requested(count: int)
 signal paused_changed(paused: bool)
 signal time_scale_changed(target_scale: float)
 
-const TICKS_PER_SECOND := 60.0
-const MAX_TICKS_PER_FRAME := 4
+## Simulation ticks per second at real time. A grain pairs with the cell below
+## on about half the ticks, so 180 gives ~90 voxels/s of free fall.
+const TICKS_PER_SECOND := 180.0
+const MAX_TICKS_PER_FRAME := 8
 const MIN_SCALE := 1.0 / 32.0
 const MAX_SCALE := 4.0
 ## Seconds it takes to ramp between time scales, so slow-mo eases in.

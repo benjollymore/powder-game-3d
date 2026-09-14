@@ -8,8 +8,8 @@ Each voxel is four bytes, read and written as exact integers (unorm8 round-trips
 |---|---|
 | R | element id (`Elements.Id`, 0 = air) |
 | G | per-voxel random seed: colour variation now, rule randomness later. Travels with the grain when it moves. |
-| B | reserved (temperature, later phase) |
-| A | reserved (life / misc, later phase) |
+| B | liquid amount, 0 for anything that is not a liquid. `Elements.LIQUID_FULL` (200) is a nominal full cell; deeper cells hold up to 255 as hydrostatic compression |
+| A | bit 0: the liquid is in an unsupported (falling) run, set by `hydro.glsl`; other bits reserved |
 
 Why RGBA8 and not R32_UINT: the renderer samples the same texture through
 `Texture3DRD`, which only accepts RenderingDevice formats that map to an

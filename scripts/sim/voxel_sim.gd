@@ -18,6 +18,9 @@ const GRID := VoxelCodec.GRID
 const SIM_SHADER_PATH := "res://shaders/compute/sim.glsl"
 const BRUSH_SHADER_PATH := "res://shaders/compute/brush.glsl"
 const BRUSH_LOCAL_SIZE := 8
+const HYDRO_SHADER_PATH := "res://shaders/compute/hydro.glsl"
+## Percent of the gap to a horizontal run's mean closed per hydro pass.
+const HYDRO_RELAX_PERCENT := 50
 const OCCUPANCY_SHADER_PATH := "res://shaders/compute/occupancy.glsl"
 ## One occupancy cell per 8^3 brick: 16^3 cells for a 128^3 world.
 const OCCUPANCY_GRID := 16
@@ -35,6 +38,8 @@ const PUSH_CONSTANT_INTS := 8
 @export var listen_to_time_controller := true
 ## Bit flags passed to the kernel: 1 = no reactions, 2 = no decay (tests).
 @export var rule_flags := 0
+## Run the line-based liquid pressure solver after each tick.
+@export var hydro_enabled := true
 
 var tick := 0
 
@@ -50,6 +55,9 @@ var _sim_set := RID()
 var _brush_shader := RID()
 var _brush_pipeline := RID()
 var _brush_set := RID()
+var _hydro_shader := RID()
+var _hydro_pipeline := RID()
+var _hydro_set := RID()
 var _occ_rid := RID()
 var _occ_texture := Texture3DRD.new()
 var _occ_shader := RID()
@@ -64,6 +72,7 @@ func _ready() -> void:
 	_material = mesh.material_override
 	_material.set_shader_parameter("grid_size", GRID)
 	_material.set_shader_parameter("palette", Elements.palette())
+	_material.set_shader_parameter("liquid_mask", Elements.liquid_mask())
 	# Bound now, but only points at a real texture once the render thread has
 	# created it (see _process). Re-bound every run because the RD texture
 	# binding does not survive scene reloads.
@@ -162,6 +171,16 @@ static func histogram(bytes: PackedByteArray) -> PackedInt64Array:
 	return counts
 
 
+## Total liquid amount (sum of byte z) held by cells of element `id`.
+static func mass(bytes: PackedByteArray, id: int) -> int:
+	var total := 0
+	var n := bytes.size() / 4
+	for i in n:
+		if bytes[i * 4] == id:
+			total += bytes[i * 4 + 2]
+	return total
+
+
 # --- render thread -------------------------------------------------------------
 
 func _rt_init(initial: PackedByteArray) -> void:
@@ -249,7 +268,8 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	var sim_spirv := _rt_compile(SIM_SHADER_PATH, from_source)
 	var brush_spirv := _rt_compile(BRUSH_SHADER_PATH, from_source)
 	var occ_spirv := _rt_compile(OCCUPANCY_SHADER_PATH, from_source)
-	if sim_spirv == null or brush_spirv == null or occ_spirv == null:
+	var hydro_spirv := _rt_compile(HYDRO_SHADER_PATH, from_source)
+	if sim_spirv == null or brush_spirv == null or occ_spirv == null or hydro_spirv == null:
 		return
 	_rt_free_pipelines()
 
@@ -269,6 +289,10 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	_brush_pipeline = _rd.compute_pipeline_create(_brush_shader)
 	_brush_set = _rd.uniform_set_create([_image_uniform(0)], _brush_shader, 0)
 
+	_hydro_shader = _rd.shader_create_from_spirv(hydro_spirv)
+	_hydro_pipeline = _rd.compute_pipeline_create(_hydro_shader)
+	_hydro_set = _rd.uniform_set_create([_image_uniform(0), _buffer_uniform(1, _elements_buffer)], _hydro_shader, 0)
+
 	_occ_shader = _rd.shader_create_from_spirv(occ_spirv)
 	_occ_pipeline = _rd.compute_pipeline_create(_occ_shader)
 	_occ_set = _rd.uniform_set_create(
@@ -279,7 +303,7 @@ func _rt_build_pipelines(from_source: bool) -> void:
 
 func _rt_free_pipelines() -> void:
 	for rid in [_sim_set, _sim_pipeline, _sim_shader, _brush_set, _brush_pipeline, _brush_shader,
-			_occ_set, _occ_pipeline, _occ_shader]:
+			_occ_set, _occ_pipeline, _occ_shader, _hydro_set, _hydro_pipeline, _hydro_shader]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
 	_sim_set = RID()
@@ -291,6 +315,9 @@ func _rt_free_pipelines() -> void:
 	_occ_set = RID()
 	_occ_pipeline = RID()
 	_occ_shader = RID()
+	_hydro_set = RID()
+	_hydro_pipeline = RID()
+	_hydro_shader = RID()
 
 
 func _rt_free() -> void:
@@ -309,10 +336,9 @@ func _rt_tick(first_tick: int, count: int) -> void:
 	if not _sim_pipeline.is_valid():
 		return
 	var cl := _rd.compute_list_begin()
-	_rd.compute_list_bind_compute_pipeline(cl, _sim_pipeline)
-	_rd.compute_list_bind_uniform_set(cl, _sim_set, 0)
 	var push := PackedInt32Array()
 	push.resize(PUSH_CONSTANT_INTS)
+	var hydro_groups := GRID / 8
 	for i in count:
 		var t := first_tick + i
 		var offset := partition_offset(t)
@@ -325,9 +351,21 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		push[6] = offset.z
 		push[7] = Elements.REACTIONS.size()
 		var bytes := push.to_byte_array()
+		_rd.compute_list_bind_compute_pipeline(cl, _sim_pipeline)
+		_rd.compute_list_bind_uniform_set(cl, _sim_set, 0)
 		_rd.compute_list_set_push_constant(cl, bytes, bytes.size())
 		_rd.compute_list_dispatch(cl, DISPATCH_GROUPS, DISPATCH_GROUPS, DISPATCH_GROUPS)
 		_rd.compute_list_add_barrier(cl)
+		if not hydro_enabled:
+			continue
+		# Liquid pressure: exact columns, then relax rows along x or z alternately.
+		_rd.compute_list_bind_compute_pipeline(cl, _hydro_pipeline)
+		_rd.compute_list_bind_uniform_set(cl, _hydro_set, 0)
+		for mode in [0, 1 + (t & 1)]:
+			var hp := PackedInt32Array([mode, t, world_seed, HYDRO_RELAX_PERCENT]).to_byte_array()
+			_rd.compute_list_set_push_constant(cl, hp, hp.size())
+			_rd.compute_list_dispatch(cl, hydro_groups, hydro_groups, 1)
+			_rd.compute_list_add_barrier(cl)
 	_rd.compute_list_end()
 	_rt_occupancy_update()
 
@@ -346,7 +384,8 @@ func _rt_paint(center: Vector3i, radius: int, element: int, mode: int, seed: int
 	if not _brush_pipeline.is_valid():
 		return
 	var groups := ceili(float(2 * radius + 1) / BRUSH_LOCAL_SIZE)
-	var push := PackedInt32Array([center.x, center.y, center.z, radius, element, mode, seed, 0])
+	var push := PackedInt32Array([center.x, center.y, center.z, radius, element, mode, seed,
+		Elements.default_amount(element)])
 	var bytes := push.to_byte_array()
 	var cl := _rd.compute_list_begin()
 	_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
@@ -438,5 +477,5 @@ func build_test_pattern() -> PackedByteArray:
 				elif x >= 50 and x < 62 and z >= 100 and z < 124 and y >= 4 and y < 16:
 					id = Elements.Id.OIL
 				if id != Elements.Id.AIR:
-					data[VoxelCodec.index(x, y, z)] = VoxelCodec.encode(id, rng.randi_range(0, 255))
+					data[VoxelCodec.index(x, y, z)] = VoxelCodec.encode(id, rng.randi_range(0, 255), Elements.default_amount(id))
 	return data.to_byte_array()

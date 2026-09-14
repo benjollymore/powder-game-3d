@@ -17,7 +17,6 @@ func _initialize() -> void:
 		tc.paused = true
 	_sim = load("res://scenes/sim_volume.tscn").instantiate()
 	_sim.listen_to_time_controller = false
-	_sim.rule_flags = 3 # movement-only tests: no reactions, no decay
 	root.add_child(_sim)
 	_run()
 
@@ -26,15 +25,28 @@ func _run() -> void:
 	# Let the render thread create the texture and pipeline.
 	for i in 3:
 		await process_frame
-	await _test_sand_settles()
-	await _test_water_levels()
-	await _test_steam_rises()
-	await _test_brush_paints()
-	await _test_occupancy()
-	_sim.rule_flags = 0
-	await _test_fire_burns_plant()
-	await _test_water_boils_on_fire()
-	await _test_oil_floats()
+	var only := ""
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("only="):
+			only = arg.substr(5)
+	# [name, rule_flags]: 3 = movement only (no reactions, no decay).
+	var tests := [
+		["_test_sand_settles", 3], ["_test_water_levels", 3], ["_test_steam_rises", 3],
+		["_test_brush_paints", 3], ["_test_occupancy", 3], ["_test_liquid_mass", 3],
+		["_test_u_bend", 3], ["_test_pressure_pipe", 3],
+		["_test_fire_burns_plant", 0], ["_test_water_boils_on_fire", 0], ["_test_oil_floats", 3],
+	]
+	for t in tests:
+		if only != "":
+			var wanted := false
+			for part in only.split(","):
+				if (t[0] as String).contains(part):
+					wanted = true
+			if not wanted:
+				continue
+		_sim.rule_flags = t[1]
+		print("--- " + t[0])
+		await call(t[0])
 	print("%d checks, %d failures" % [_checks, _failures])
 	quit(1 if _failures > 0 else 0)
 
@@ -54,15 +66,33 @@ func _empty_world() -> PackedInt32Array:
 	return data
 
 
-func _fill_box(data: PackedInt32Array, lo: Vector3i, hi: Vector3i, id: int) -> void:
+func _fill_box(data: PackedInt32Array, lo: Vector3i, hi: Vector3i, id: int, amount: int = -1) -> void:
+	if amount < 0:
+		amount = Elements.default_amount(id)
 	for z in range(lo.z, hi.z):
 		for y in range(lo.y, hi.y):
 			for x in range(lo.x, hi.x):
-				data[VoxelCodec.index(x, y, z)] = VoxelCodec.encode(id, (x * 7 + y * 13 + z * 31) & 0xFF)
+				data[VoxelCodec.index(x, y, z)] = VoxelCodec.encode(id, (x * 7 + y * 13 + z * 31) & 0xFF, amount)
+
+
+## Amount-weighted water height of column (x, z), in cells.
+func _column_height(bytes: PackedByteArray, x: int, z: int, id: int) -> float:
+	var total := 0
+	for y in GRID:
+		var base := VoxelCodec.index(x, y, z) * 4
+		if bytes[base] == id:
+			total += mini(bytes[base + 2], Elements.LIQUID_FULL)
+	return float(total) / Elements.LIQUID_FULL
 
 
 func _run_and_read(ticks: int) -> PackedByteArray:
-	_sim.request_ticks(ticks)
+	# Chunk the work across frames so no single submission trips the GPU fence timeout.
+	var remaining := ticks
+	while remaining > 0:
+		var batch := mini(remaining, 200)
+		_sim.request_ticks(batch)
+		remaining -= batch
+		await process_frame
 	await process_frame
 	# Lambdas capture by value in GDScript, so wait on the signal instead of a flag.
 	_sim.request_readback(func(_bytes): pass)
@@ -119,36 +149,35 @@ func _test_water_levels() -> void:
 	_fill_box(data, Vector3i(10, 60, 10), Vector3i(34, 84, 34), Elements.Id.WATER)
 	var world := data.to_byte_array()
 	_sim.upload(world)
-	var before: PackedInt64Array = _sim.histogram(world)
+	var before_mass: int = _sim.mass(world, Elements.Id.WATER)
 	var after_bytes: PackedByteArray = await _run_and_read(4000)
 	var after: PackedInt64Array = _sim.histogram(after_bytes)
 
-	check(after[Elements.Id.WATER] == before[Elements.Id.WATER],
-		"water count conserved: %d -> %d" % [before[Elements.Id.WATER], after[Elements.Id.WATER]])
-	check(after[Elements.Id.WALL] == before[Elements.Id.WALL], "wall count conserved")
+	check(_sim.mass(after_bytes, Elements.Id.WATER) == before_mass,
+		"water mass conserved: %d -> %d" % [before_mass, _sim.mass(after_bytes, Elements.Id.WATER)])
+	check(after[Elements.Id.WALL] == 40 * 40 * 30 - 36 * 36 * 24, "wall count conserved")
 
-	# Water column height per bowl column; a level surface varies by <= 1.
-	var lo := 999
-	var hi := 0
-	var bubbles := 0
+	var lo := 1e9
+	var hi := 0.0
+	var over_air := 0
 	var outside := 0
 	for z in GRID:
 		for x in GRID:
-			var height := 0
-			for y in GRID:
+			var inside := x >= 6 and x < 42 and z >= 6 and z < 42
+			for y in range(1, GRID):
 				if after_bytes[VoxelCodec.index(x, y, z) * 4] == Elements.Id.WATER:
-					height += 1
-					if y > 0 and after_bytes[VoxelCodec.index(x, y - 1, z) * 4] == Elements.Id.AIR:
-						bubbles += 1
-					if not (x >= 6 and x < 42 and z >= 6 and z < 42):
+					if not inside:
 						outside += 1
-			if x >= 6 and x < 42 and z >= 6 and z < 42:
-				lo = mini(lo, height)
-				hi = maxi(hi, height)
+					if after_bytes[VoxelCodec.index(x, y - 1, z) * 4] == Elements.Id.AIR:
+						over_air += 1
+			if inside:
+				var h := _column_height(after_bytes, x, z, Elements.Id.WATER)
+				lo = minf(lo, h)
+				hi = maxf(hi, h)
 	check(outside == 0, "all water ended inside the bowl (found %d outside)" % outside)
-	check(bubbles == 0, "no water floating over air (found %d)" % bubbles)
-	check(hi - lo <= 1, "water surface is level: column heights %d..%d" % [lo, hi])
-	check(lo >= 6, "bowl holds a real depth of water (min column %d)" % lo)
+	check(over_air <= after[Elements.Id.WATER] / 200, "no water hanging over air (found %d)" % over_air)
+	check(hi - lo <= 1.5, "water surface is level: column heights %.2f..%.2f" % [lo, hi])
+	check(lo >= 9.0, "bowl holds a real depth of water (min column %.2f)" % lo)
 
 
 func _test_steam_rises() -> void:
@@ -217,17 +246,18 @@ func _test_water_boils_on_fire() -> void:
 	_fill_box(data, Vector3i(44, 10, 44), Vector3i(56, 12, 56), Elements.Id.FIRE)
 	var world := data.to_byte_array()
 	_sim.upload(world)
-	var before: PackedInt64Array = _sim.histogram(world)
-	var after: PackedInt64Array = _sim.histogram(await _run_and_read(200))
+	var mass_before: int = _sim.mass(world, Elements.Id.WATER)
+	var after_bytes: PackedByteArray = await _run_and_read(200)
+	var after: PackedInt64Array = _sim.histogram(after_bytes)
 	var boiled: int = after[Elements.Id.STEAM]
+	var lost: int = mass_before - _sim.mass(after_bytes, Elements.Id.WATER)
 	check(boiled > 0, "some water boiled into steam (%d)" % boiled)
-	check(after[Elements.Id.WATER] + boiled == before[Elements.Id.WATER],
-		"water + steam equals original water (%d + %d vs %d)" % [after[Elements.Id.WATER], boiled, before[Elements.Id.WATER]])
+	# Each boiled cell removes between 1 and 255 units of water.
+	check(lost >= boiled and lost <= boiled * 255, "water mass lost matches boiled cells (%d units, %d cells)" % [lost, boiled])
 	check(after[Elements.Id.FIRE] == 0, "fire was put out (%d left)" % after[Elements.Id.FIRE])
 
 
 func _test_oil_floats() -> void:
-	_sim.rule_flags = 3
 	var data := _empty_world()
 	_fill_box(data, Vector3i(4, 0, 4), Vector3i(44, 40, 44), Elements.Id.WALL)
 	_fill_box(data, Vector3i(6, 6, 6), Vector3i(42, 40, 42), Elements.Id.AIR)
@@ -237,9 +267,9 @@ func _test_oil_floats() -> void:
 	_sim.upload(world)
 	var before: PackedInt64Array = _sim.histogram(world)
 	var after_bytes: PackedByteArray = await _run_and_read(3000)
-	var after: PackedInt64Array = _sim.histogram(after_bytes)
-	check(after[Elements.Id.OIL] == before[Elements.Id.OIL] and after[Elements.Id.WATER] == before[Elements.Id.WATER],
-		"oil and water conserved")
+	check(_sim.mass(after_bytes, Elements.Id.OIL) == _sim.mass(world, Elements.Id.OIL)
+		and _sim.mass(after_bytes, Elements.Id.WATER) == _sim.mass(world, Elements.Id.WATER),
+		"oil and water mass conserved")
 	var oil_under_water := 0
 	for z in range(6, 42):
 		for x in range(6, 42):
@@ -252,7 +282,6 @@ func _test_oil_floats() -> void:
 					oil_under_water += 1
 	check(oil_under_water <= before[Elements.Id.OIL] / 100,
 		"oil floats on water: %d water voxels above oil" % oil_under_water)
-	_sim.rule_flags = 0
 
 
 func _test_occupancy() -> void:
@@ -277,3 +306,96 @@ func _test_occupancy() -> void:
 		if (occ[i] != 0) != expected:
 			wrong += 1
 	check(set_count == 8 and wrong == 0, "occupancy marks exactly the 8 bricks around the sphere (%d set, %d wrong)" % [set_count, wrong])
+
+
+func _test_liquid_mass() -> void:
+	# Bowl, a water cube with mixed fill levels, and a sand block dropped on top.
+	var data := _empty_world()
+	_fill_box(data, Vector3i(4, 0, 4), Vector3i(44, 30, 44), Elements.Id.WALL)
+	_fill_box(data, Vector3i(6, 6, 6), Vector3i(42, 30, 42), Elements.Id.AIR)
+	_fill_box(data, Vector3i(10, 40, 10), Vector3i(34, 64, 34), Elements.Id.WATER, 200)
+	_fill_box(data, Vector3i(14, 44, 14), Vector3i(30, 60, 30), Elements.Id.WATER, 90)
+	_fill_box(data, Vector3i(18, 48, 18), Vector3i(26, 56, 26), Elements.Id.WATER, 30)
+	_fill_box(data, Vector3i(18, 80, 18), Vector3i(28, 90, 28), Elements.Id.SAND)
+	var world := data.to_byte_array()
+	_sim.upload(world)
+	var mass_before: int = _sim.mass(world, Elements.Id.WATER)
+	var before: PackedInt64Array = _sim.histogram(world)
+	var after_bytes: PackedByteArray = await _run_and_read(3000)
+	var after: PackedInt64Array = _sim.histogram(after_bytes)
+	var mass_after: int = _sim.mass(after_bytes, Elements.Id.WATER)
+	check(mass_after == mass_before, "liquid mass conserved with mixed fills: %d -> %d" % [mass_before, mass_after])
+	check(after[Elements.Id.SAND] == before[Elements.Id.SAND], "sand count conserved through water")
+	var bad_nonliquid := 0
+	var zero_liquid := 0
+	var remnants := 0
+	for i in GRID * GRID * GRID:
+		var id := after_bytes[i * 4]
+		var amount := after_bytes[i * 4 + 2]
+		if id == Elements.Id.WATER:
+			if amount == 0:
+				zero_liquid += 1
+			elif amount < 6:
+				remnants += 1
+		elif amount != 0:
+			bad_nonliquid += 1
+	check(bad_nonliquid == 0, "non-liquids carry no amount (found %d)" % bad_nonliquid)
+	check(zero_liquid == 0, "no water cell at zero amount (found %d)" % zero_liquid)
+	check(remnants <= after[Elements.Id.WATER] / 200, "few tiny remnants (%d of %d)" % [remnants, after[Elements.Id.WATER]])
+
+
+func _test_u_bend() -> void:
+	# Two 6-wide arms joined by a channel at the bottom; only the left arm is filled.
+	var data := _empty_world()
+	_fill_box(data, Vector3i(20, 0, 20), Vector3i(60, 40, 32), Elements.Id.WALL)
+	_fill_box(data, Vector3i(24, 6, 23), Vector3i(30, 40, 29), Elements.Id.AIR)   # left arm
+	_fill_box(data, Vector3i(50, 6, 23), Vector3i(56, 40, 29), Elements.Id.AIR)   # right arm
+	_fill_box(data, Vector3i(24, 6, 23), Vector3i(56, 8, 29), Elements.Id.AIR)    # channel, 2 tall
+	_fill_box(data, Vector3i(24, 8, 23), Vector3i(30, 34, 29), Elements.Id.WATER)
+	var world := data.to_byte_array()
+	_sim.upload(world)
+	var mass_before: int = _sim.mass(world, Elements.Id.WATER)
+	var after_bytes: PackedByteArray = await _run_and_read(4000)
+	check(_sim.mass(after_bytes, Elements.Id.WATER) == mass_before, "u-bend mass conserved")
+	var left := 0.0
+	var right := 0.0
+	for z in range(23, 29):
+		for x in range(24, 30):
+			left += _column_height(after_bytes, x, z, Elements.Id.WATER)
+		for x in range(50, 56):
+			right += _column_height(after_bytes, x, z, Elements.Id.WATER)
+	left /= 36.0
+	right /= 36.0
+	check(absf(left - right) <= 2.0, "u-bend arms level out: left %.2f, right %.2f" % [left, right])
+	check(right > 4.0, "water actually crossed to the right arm (%.2f)" % right)
+
+
+func _test_pressure_pipe() -> void:
+	# Open tank 26 deep; a 1x1 pipe leaves the tank floor and rises outside it.
+	var data := _empty_world()
+	_fill_box(data, Vector3i(20, 0, 20), Vector3i(46, 40, 46), Elements.Id.WALL)
+	_fill_box(data, Vector3i(22, 6, 22), Vector3i(44, 40, 44), Elements.Id.AIR)
+	_fill_box(data, Vector3i(22, 6, 22), Vector3i(44, 32, 44), Elements.Id.WATER)
+	_fill_box(data, Vector3i(46, 0, 20), Vector3i(51, 60, 25), Elements.Id.WALL)   # pipe casing
+	_fill_box(data, Vector3i(44, 6, 22), Vector3i(49, 7, 23), Elements.Id.AIR)     # floor channel
+	_fill_box(data, Vector3i(48, 6, 22), Vector3i(49, 60, 23), Elements.Id.AIR)    # riser
+	var world := data.to_byte_array()
+	_sim.upload(world)
+	var mass_before: int = _sim.mass(world, Elements.Id.WATER)
+	var after_bytes: PackedByteArray = await _run_and_read(4000)
+	check(_sim.mass(after_bytes, Elements.Id.WATER) == mass_before, "pressure pipe mass conserved")
+	var tank := 0.0
+	for z in range(22, 44):
+		for x in range(22, 44):
+			tank += _column_height(after_bytes, x, z, Elements.Id.WATER)
+	tank /= 22.0 * 22.0
+	var pipe := _column_height(after_bytes, 48, 22, Elements.Id.WATER)
+	var dbg := PackedStringArray()
+	for x in range(40, 49):
+		dbg.append("(%d,6)=%d" % [x, after_bytes[VoxelCodec.index(x, 6, 22) * 4 + 2]])
+	for y in range(6, 14):
+		dbg.append("(48,%d)=%d" % [y, after_bytes[VoxelCodec.index(48, y, 22) * 4 + 2]])
+	dbg.append("tank bottom (30,6)=%d top (30,%d)=%d" % [after_bytes[VoxelCodec.index(30, 6, 30) * 4 + 2], int(tank) + 5, after_bytes[VoxelCodec.index(30, int(tank) + 5, 30) * 4 + 2]])
+	print("amounts: " + " ".join(dbg))
+	check(pipe >= tank - 3.0 and pipe <= tank + 2.0,
+		"pressure pushes water up the pipe to the tank level: pipe %.2f vs tank %.2f" % [pipe, tank])

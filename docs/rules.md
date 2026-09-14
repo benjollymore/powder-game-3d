@@ -10,27 +10,50 @@ horizontal mirror/swap, so no direction is favoured and no checkerboard shows.
 Rules run in this order inside a block (canonical frame, y up):
 
 1. **Reactions** — for each of the 12 axis-adjacent pairs, the first matching
-   row of `Elements.REACTIONS` fires with its probability and replaces both
-   cells. MVP: fire+plant → fire+fire, fire+oil → fire+fire,
-   fire+water → air+steam, plant+water → plant+plant.
+   row of `Elements.REACTIONS` fires with its probability (scaled by fill for a
+   liquid participant) and replaces both cells. MVP: fire+plant → fire+fire,
+   fire+oil → fire+fire, fire+water → air+steam, plant+water → plant+plant.
 2. **Decay** — a cell with `decay > 0` turns into its `decay_to` with that
    probability per tick. Fire → air, steam → water (slow, so it rains).
-3. **Vertical** — in each of the 4 columns, if the top cell is denser than the
-   bottom and neither is immovable, swap. One comparison covers falling (sand,
-   water) and rising (steam, fire, oil under water).
+3. **Vertical** — in each of the 4 columns: if both cells are air or the same
+   liquid, the liquid *amount* is split hydrostatically (see below); otherwise
+   if the top cell is denser than the bottom and neither is immovable, swap.
+   One comparison covers falling (sand, water) and rising (steam, fire, oil
+   under water).
 4. **Powder slump** — a powder that could not fall tries, with 50% chance, a
    random other column's bottom cell; if that is lighter, swap diagonally. This
    forms piles at a natural angle.
-5. **Fluid spread** — liquids on the block's top row (so their cell below is
-   known and supporting) and gases on the bottom row (cell above known and
-   blocking) drift, with `spread` probability, into a random same-layer
-   neighbour: liquids into anything lighter, gases into any other gas. Falling
-   water therefore does not spray, and puddles level out.
+5. **Liquid spread** — on each row of the block, one liquid pools its amount
+   with same-liquid cells (and, on the top row, with air cells, if the liquid is
+   resting on something) and splits it evenly. Tiny remnants join a neighbour.
+6. **Vertical again** for liquids, so water that spread over an edge falls the
+   same tick.
+7. **Gas spread** — gases on the bottom row drift into a random same-layer gas
+   neighbour, which diffuses clouds.
 
 Only cells that changed are written back.
 
-Timing: TimeController hands the sim 0–4 ticks per frame (60 ticks/s at real
+## Liquid amounts and pressure
+
+Byte B of a liquid cell is its amount: `FULL` = 200 is a nominal full cell and
+cells deeper in a column hold up to 255 as compression (`COMP` = 2 extra units
+per cell of liquid above). A column of two cells with total S rests with the
+bottom holding `stable_bottom(S)`: all of it below FULL, then a blend up to
+FULL+COMP, then half plus COMP. Rounding is stochastic so tanks and 1-wide
+pipes agree on pressure.
+
+Pairwise splitting inside blocks only moves pressure at diffusion speed, so
+`shaders/compute/hydro.glsl` runs after every tick with one thread per grid
+line: columns get the exact hydrostatic profile within each contiguous run of
+one liquid (never across air, so falling water still falls cell by cell), and
+rows along x or z (alternating each tick) relax toward the run's mean by 50%.
+That is what makes water find its level through a U-bend and climb a pipe to
+the height of the tank feeding it. The column pass also flags runs that are not
+resting on anything (byte A bit 0) so falling water holds together instead of
+spraying sideways.
+
+Timing: TimeController hands the sim 0–8 ticks per frame (180 ticks/s at real
 time). A cell pairs with the cell below it on about half of all ticks, so a
-free-falling grain moves ~30 voxels per second.
+free-falling grain moves ~90 voxels per second.
 
 Tests for each rule live in `tests/gpu/run_gpu_tests.gd`.
