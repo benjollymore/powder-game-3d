@@ -1,0 +1,26 @@
+# Voxel format
+
+The world is a 128³ RGBA8 3D texture living on Godot's global RenderingDevice.
+Each voxel is four bytes, read and written as exact integers (unorm8 round-trips
+0–255 losslessly):
+
+| Byte | Meaning |
+|---|---|
+| R | element id (`Elements.Id`, 0 = air) |
+| G | per-voxel random seed: colour variation now, rule randomness later. Travels with the grain when it moves. |
+| B | reserved (temperature, later phase) |
+| A | reserved (life / misc, later phase) |
+
+Why RGBA8 and not R32_UINT: the renderer samples the same texture through
+`Texture3DRD`, which only accepts RenderingDevice formats that map to an
+`Image` format. No integer formats do; RGBA8 does.
+
+Coordinates: x fastest, then y, then z (`VoxelCodec.index`). The unit cube mesh
+at the origin maps model space `[-0.5, 0.5]³` to voxel space `[0, 128)³`, so
+voxel `(x, y, z)` is centred at `((x, y, z) + 0.5) / 128 - 0.5`. Reads outside
+the box return wall, writes outside are dropped, which gives the world a floor
+and walls for free.
+
+Single source of truth for element ids, colours, densities and flags:
+`scripts/sim/elements.gd`. Both compute shaders and the raymarcher derive
+everything from it (property buffer, reaction buffer, palette, UI).

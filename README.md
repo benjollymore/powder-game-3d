@@ -1,0 +1,44 @@
+# Powder Game 3D
+
+A 3D falling-sand physics sandbox in the spirit of Powder Game / The Powder Toy,
+built with Godot 4 as a learning project. Fly anywhere around a glass box,
+freeze time, step it, slow it down, paint elements in, and let it go.
+
+Requires **Godot 4.6.3** (4.7.x hangs at startup on Apple M4/M5 + macOS 26,
+see godotengine/godot#123479). Open `project.godot` in the editor and press
+Play, or run `godot --path .` from the repo root.
+
+## Controls
+
+| Key | Action |
+|---|---|
+| Left mouse (hold) | Paint with the brush at the sphere cursor |
+| 1–7 | Pick element (wall, sand, water, steam, fire, plant, oil) |
+| X | Toggle erase |
+| [ / ] | Brush radius |
+| Shift + scroll | Move the brush cursor along the view ray |
+| Right mouse (hold) + move | Look |
+| W A S D / Q E | Fly / down / up |
+| Shift | Sprint |
+| Scroll | Fly speed (fly mode) / distance (orbit mode) |
+| O | Toggle orbit mode around the box |
+| F | Frame the box |
+| Space | Pause / resume time |
+| N | Advance one tick while paused |
+| , / . | Halve / double time scale |
+| 0 / 1 | Freeze / real time |
+| C | Clear the world |
+| R | Reload the test world |
+| F5 | Hot-reload the simulation compute shader from disk |
+| F9 | Print a per-element voxel count to the console |
+
+## Tests
+
+```sh
+# CPU-only unit tests (headless)
+godot --headless --path . -s res://tests/unit/run_unit.gd
+# GPU simulation tests (need a window: headless has no RenderingDevice)
+godot --path . --resolution 320x240 -s res://tests/gpu/run_gpu_tests.gd
+```
+
+See `docs/` for the voxel format and simulation rules.
