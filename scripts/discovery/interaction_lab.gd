@@ -39,6 +39,12 @@ var stroke_radius := 3
 var stroke_element := Elements.Id.WATER
 var stroke_erase := false
 var radius_input: SpinBox
+var tools_panel: PanelContainer
+var camera_target := Vector3.ZERO # box widths, independent of simulation size
+var navigation_button := MOUSE_BUTTON_NONE
+var navigation_pan := false
+var depth_scroll_fraction := 0.0
+var last_depth_scroll_ms := 0
 
 
 func _ready() -> void:
@@ -97,11 +103,18 @@ func _build_ui() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	var panel := PanelContainer.new()
+	tools_panel = panel
 	panel.position = Vector2(16, 16)
 	layer.add_child(panel)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(scroll)
+	panel.size = Vector2(390, get_viewport().get_visible_rect().size.y - 32.0)
+	get_viewport().size_changed.connect(func():
+		panel.size.y = maxf(100.0, get_viewport().get_visible_rect().size.y - 32.0))
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 8)
-	panel.add_child(column)
+	scroll.add_child(column)
 	var title := Label.new()
 	title.text = "  PAINT & PLAY  /  discovery prototype  "
 	column.add_child(title)
@@ -126,6 +139,14 @@ func _build_ui() -> void:
 		depth = int(value)
 		_update_plane())
 	row.add_child(depth_input)
+	for step in [-1, 1]:
+		var button := Button.new()
+		button.text = "−" if step < 0 else "+"
+		button.tooltip_text = "Move construction plane by one cell"
+		button.pressed.connect(func():
+			depth_scroll_fraction = 0.0
+			depth_input.value += step)
+		row.add_child(button)
 	var material_row := HBoxContainer.new()
 	column.add_child(material_row)
 	column.move_child(material_row, 1)
@@ -186,12 +207,26 @@ func _build_ui() -> void:
 	play_button.pressed.connect(run_or_restore)
 	column.add_child(play_button)
 	column.move_child(play_button, 3)
+	var navigation_row := HBoxContainer.new()
+	column.add_child(navigation_row)
+	column.move_child(navigation_row, 4)
+	for action in ["Zoom −", "Zoom +", "Center · V"]:
+		var button := Button.new()
+		button.text = action
+		button.pressed.connect(func():
+			_end_stroke()
+			if action == "Center · V":
+				_face_plane()
+			else:
+				_zoom(1.1 if action == "Zoom +" else 1.0 / 1.1))
+		navigation_row.add_child(button)
 	var reset := Button.new()
 	reset.text = "Reset container (discards edits)"
 	reset.pressed.connect(reset_container)
 	column.add_child(reset)
 	var controls := Label.new()
-	controls.text = "LMB draw · RMB orbit · wheel zoom\nShift + wheel: plane ±1 cell · [ ] radius\n1 wall · 2 sand · 3 water · X erase\nV face plane · F angled view · B region"
+	controls.add_theme_font_size_override("font_size", 14)
+	controls.text = "Drag: paint · two fingers: orbit · pinch: zoom\nShift + two fingers: pan · Option + drag: orbit\nOption + Shift + drag: pan · RMB/wheel work too\nPlane: −/+ above · Shift-wheel · [ ] brush size\n1 wall · 2 sand · 3 water · X erase · F angle"
 	column.add_child(controls)
 	status = Label.new()
 	column.add_child(status)
@@ -222,6 +257,8 @@ func set_plane(value: int) -> void:
 
 
 func _face_plane() -> void:
+	camera_target = Vector3.ZERO
+	distance = 1.25
 	yaw = PI / 2.0 if axis == 0 else 0.0
 	pitch = -PI / 2.0 + 0.001 if axis == 1 else 0.0
 	_update_camera()
@@ -229,8 +266,53 @@ func _face_plane() -> void:
 
 func _update_camera() -> void:
 	var direction := Vector3(sin(yaw) * cos(pitch), -sin(pitch), cos(yaw) * cos(pitch))
-	camera.position = direction * distance * sim.world_size()
-	camera.look_at(Vector3.ZERO, Vector3.UP)
+	camera.position = (camera_target + direction * distance) * sim.world_size()
+	camera.look_at(camera_target * sim.world_size(), Vector3.UP)
+
+
+func _zoom(factor: float) -> void:
+	if not is_finite(factor) or factor <= 0.0:
+		return
+	distance = clampf(distance / factor, 0.7, 4.0)
+	_update_camera()
+
+
+func _navigate(delta: Vector2, pan: bool, gesture: bool = false) -> void:
+	if not delta.is_finite():
+		return
+	if pan:
+		var amount := distance * (0.035 if gesture else 0.0015)
+		camera_target += (-camera.global_basis.x * delta.x + camera.global_basis.y * delta.y) * amount
+		camera_target = camera_target.clamp(Vector3.ONE * -1.5, Vector3.ONE * 1.5)
+	else:
+		var sensitivity := 0.035 if gesture else 0.005
+		yaw = wrapf(yaw - delta.x * sensitivity, -PI, PI)
+		pitch = clampf(pitch - delta.y * sensitivity, -1.56, 1.56)
+	_update_camera()
+
+
+func _over_tools(position: Vector2) -> bool:
+	return tools_panel != null and tools_panel.get_global_rect().has_point(position)
+
+
+func _stop_navigation() -> void:
+	orbiting = false
+	navigation_button = MOUSE_BUTTON_NONE
+	navigation_pan = false
+
+
+func _wheel_depth(amount: float) -> void:
+	var now := Time.get_ticks_msec()
+	if now - last_depth_scroll_ms > 350:
+		depth_scroll_fraction = 0.0
+	last_depth_scroll_ms = now
+	depth_scroll_fraction += amount
+	var steps := int(depth_scroll_fraction)
+	if steps != 0:
+		depth_input.value += steps
+		depth_scroll_fraction -= steps
+	if depth_input.value == depth_input.min_value or depth_input.value == depth_input.max_value:
+		depth_scroll_fraction = 0.0
 
 
 func _update_plane() -> void:
@@ -256,30 +338,63 @@ func _update_plane() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
+		depth_scroll_fraction = 0.0
+	if event is InputEventKey and event.pressed and event.keycode != KEY_SHIFT:
+		depth_scroll_fraction = 0.0
+	# A native gesture may be handled by a GUI control later. It must still
+	# terminate a stroke first, but must never move the camera over the toolbar.
+	if event is InputEventGesture:
+		_end_stroke()
+		_stop_navigation()
+		depth_scroll_fraction = 0.0
+	if event is InputEventKey and not event.pressed and event.keycode == KEY_SHIFT:
+		depth_scroll_fraction = 0.0
 	# Releases must terminate even over UI or after leaving the viewport.
 	if event is InputEventMouseButton and not event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			_end_stroke()
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			orbiting = false
-	if event is InputEventMouseMotion and orbiting:
-		yaw -= event.relative.x * 0.005
-		pitch = clampf(pitch - event.relative.y * 0.005, -1.56, 1.56)
-		_update_camera()
+		if event.button_index == navigation_button:
+			_stop_navigation()
+	if event is InputEventMouseMotion and navigation_button != MOUSE_BUTTON_NONE:
+		if not _over_tools(event.position):
+			_navigate(event.relative, navigation_pan)
 		get_viewport().set_input_as_handled()
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		_end_stroke()
-		orbiting = false
+		_stop_navigation()
+		depth_scroll_fraction = 0.0
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed:
+	if event is InputEventGesture or event is InputEventMouseButton:
+		if _over_tools(event.position):
+			depth_scroll_fraction = 0.0
+			return
+	if event is InputEventPanGesture:
+		_end_stroke()
+		_stop_navigation()
+		_navigate(event.delta, event.shift_pressed, true)
+		get_viewport().set_input_as_handled()
+	elif event is InputEventMagnifyGesture:
+		_end_stroke()
+		_stop_navigation()
+		_zoom(event.factor)
+		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton and event.pressed:
 		match event.button_index:
 			MOUSE_BUTTON_LEFT:
-				if selecting:
+				if event.alt_pressed:
+					_end_stroke()
+					navigation_button = MOUSE_BUTTON_LEFT
+					navigation_pan = event.shift_pressed
+					orbiting = true
+				elif navigation_button != MOUSE_BUTTON_NONE:
+					return
+				elif selecting:
 					_select_corner(_target_at(event.position))
 				elif not capturing and _target_at(event.position).x >= 0:
 					stroke_radius = radius
@@ -291,15 +406,19 @@ func _unhandled_input(event: InputEvent) -> void:
 					_sample(event.position)
 			MOUSE_BUTTON_RIGHT:
 				_end_stroke()
+				navigation_button = MOUSE_BUTTON_RIGHT
+				navigation_pan = event.shift_pressed
 				orbiting = true
 			MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN:
 				_end_stroke()
 				var sign_value := 1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1
+				# Godot reports zero when this device has no precise wheel factor.
+				var amount: float = event.factor if event.factor > 0.0 and is_finite(event.factor) else 1.0
 				if event.shift_pressed:
-					depth_input.value += sign_value
+					_wheel_depth(sign_value * amount)
 				else:
-					distance = clampf(distance * (0.9 if sign_value > 0 else 1.1), 0.7, 4.0)
-					_update_camera()
+					depth_scroll_fraction = 0.0
+					_zoom(pow(1.0 / 0.9, clampf(sign_value * amount, -100.0, 100.0)))
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion and painting:
 		_sample(event.position)
@@ -330,6 +449,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_V:
 				_face_plane()
 			KEY_F:
+				camera_target = Vector3.ZERO
+				distance = 1.25
 				yaw = 0.65
 				pitch = -0.4
 				_update_camera()
@@ -444,6 +565,8 @@ func _process(_delta: float) -> void:
 		return
 	if painting and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		_end_stroke()
+	if navigation_button != MOUSE_BUTTON_NONE and not Input.is_mouse_button_pressed(navigation_button):
+		_stop_navigation()
 	# Hovering UI breaks the segment, avoiding a bridge across controls.
 	var over_ui := get_viewport().gui_get_hovered_control() != null
 	if over_ui:
