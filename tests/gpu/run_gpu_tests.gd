@@ -3,7 +3,7 @@ extends SceneTree
 ##   godot --path . --resolution 320x240 -s res://tests/gpu/run_gpu_tests.gd
 ## Uploads known worlds, runs ticks, reads back, asserts. Exit code 0/1.
 
-const GRID := VoxelCodec.GRID
+var GRID: int = VoxelCodec.GRID
 
 var _failures := 0
 var _checks := 0
@@ -40,7 +40,7 @@ func _run() -> void:
 		["_test_brush_paints", 3], ["_test_occupancy", 3], ["_test_liquid_mass", 3],
 		["_test_u_bend", 3], ["_test_pressure_pipe", 3], ["_test_density_pass", 3],
 		["_test_fire_burns_plant", 0], ["_test_water_boils_on_fire", 0], ["_test_oil_floats", 3],
-		["_test_air_boundary", 3], ["_test_air_plume", 2],
+		["_test_air_boundary", 3], ["_test_air_plume", 2], ["_test_large_grid_smoke", 0],
 	]
 	for t in tests:
 		if only != "":
@@ -208,7 +208,8 @@ func _test_steam_rises() -> void:
 func _test_brush_paints() -> void:
 	_sim.upload(_empty_world().to_byte_array())
 	await process_frame
-	_sim.paint(Vector3i(64, 64, 64), 5, Elements.Id.WALL)
+	var mid := Vector3i.ONE * (GRID / 2)
+	_sim.paint(mid, 5, Elements.Id.WALL)
 	var painted: PackedByteArray = await _run_and_read(0)
 	var counts: PackedInt64Array = _sim.histogram(painted)
 	# Voxels with |d|^2 <= 25 around the centre.
@@ -219,7 +220,7 @@ func _test_brush_paints() -> void:
 				if x * x + y * y + z * z <= 25:
 					expected += 1
 	check(counts[Elements.Id.WALL] == expected, "brush painted a radius-5 sphere: %d voxels (expected %d)" % [counts[Elements.Id.WALL], expected])
-	_sim.paint(Vector3i(64, 64, 64), 5, Elements.Id.WALL, _sim.BrushMode.ERASE)
+	_sim.paint(mid, 5, Elements.Id.WALL, _sim.BrushMode.ERASE)
 	var erased: PackedByteArray = await _run_and_read(0)
 	check(_sim.histogram(erased)[Elements.Id.WALL] == 0, "erase mode removed the sphere")
 
@@ -286,20 +287,22 @@ func _test_oil_floats() -> void:
 func _test_occupancy() -> void:
 	_sim.upload(_empty_world().to_byte_array())
 	await process_frame
-	_sim.paint(Vector3i(64, 64, 64), 5, Elements.Id.WALL)
+	var half := GRID / 2
+	_sim.paint(Vector3i(half, half, half), 5, Elements.Id.WALL)
 	await process_frame
 	_sim.request_occupancy_readback()
 	var occ: PackedByteArray = await _sim.occupancy_ready
 	var n: int = _sim.OCCUPANCY_GRID
 	check(occ.size() == n * n * n, "occupancy readback is %d bytes" % occ.size())
-	# Voxels 59..69 span bricks 7 and 8 on every axis: exactly 8 bricks set.
+	# The sphere straddles the two bricks either side of the centre on every axis.
+	var b := half / 8
 	var set_count := 0
 	var wrong := 0
 	for i in occ.size():
 		var x := i % n
 		var y := (i / n) % n
 		var z := i / (n * n)
-		var expected := (x == 7 or x == 8) and (y == 7 or y == 8) and (z == 7 or z == 8)
+		var expected := (x == b - 1 or x == b) and (y == b - 1 or y == b) and (z == b - 1 or z == b)
 		if occ[i] != 0:
 			set_count += 1
 		if (occ[i] != 0) != expected:
@@ -506,3 +509,31 @@ func _test_air_plume() -> void:
 	var all := _air_cell_stats(vel, Vector3i(0, 1, 0), Vector3i(_sim.AIR_GRID, _sim.AIR_GRID, _sim.AIR_GRID))
 	check(all["max_abs"].x > 0.02 or all["max_abs"].z > 0.02,
 		"flow recirculates sideways somewhere (max |v_x| %.3f, |v_z| %.3f)" % [all["max_abs"].x, all["max_abs"].z])
+
+
+## Only meaningful at grid >= 256: the demo world survives ticking without
+## losing mass or producing unknown ids. Sampled every 64th voxel so the
+## GDScript loop over 16.7M cells stays under a few seconds.
+func _test_large_grid_smoke() -> void:
+	if GRID < 256:
+		print("skipped (grid %d)" % GRID)
+		return
+	var world := Scenarios.build("Demo")
+	_sim.upload(world)
+	var sand_before := 0
+	var n := GRID * GRID * GRID
+	for i in range(0, n, 64):
+		if world[i * 4] == Elements.Id.SAND:
+			sand_before += 1
+	var after: PackedByteArray = await _run_and_read(40)
+	var sand_after := 0
+	var unknown := 0
+	for i in range(0, n, 64):
+		var id := after[i * 4]
+		if id == Elements.Id.SAND:
+			sand_after += 1
+		if id >= Elements.count():
+			unknown += 1
+	check(after.size() == n * 4, "large grid readback is %d bytes" % after.size())
+	check(unknown == 0, "no unknown ids at %d^3" % GRID)
+	check(absi(sand_after - sand_before) < sand_before / 10, "sampled sand count stays close at %d^3 (%d -> %d)" % [GRID, sand_before, sand_after])

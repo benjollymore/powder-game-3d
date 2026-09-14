@@ -3,12 +3,11 @@ extends RefCounted
 ## Builds world byte arrays from simple primitives. Used by scenarios and tests.
 ## Fills only the voxels they touch, so even large worlds build in milliseconds.
 
-const GRID := VoxelCodec.GRID
 
 
 static func empty() -> PackedInt32Array:
 	var data := PackedInt32Array()
-	data.resize(GRID * GRID * GRID)
+	data.resize(VoxelCodec.GRID * VoxelCodec.GRID * VoxelCodec.GRID)
 	return data
 
 
@@ -21,8 +20,8 @@ static func seed_at(x: int, y: int, z: int) -> int:
 static func fill_box(data: PackedInt32Array, lo: Vector3i, hi: Vector3i, id: int, amount: int = -1) -> void:
 	if amount < 0:
 		amount = Elements.default_amount(id)
-	var a := lo.clamp(Vector3i.ZERO, Vector3i(GRID, GRID, GRID))
-	var b := hi.clamp(Vector3i.ZERO, Vector3i(GRID, GRID, GRID))
+	var a := lo.clamp(Vector3i.ZERO, Vector3i(VoxelCodec.GRID, VoxelCodec.GRID, VoxelCodec.GRID))
+	var b := hi.clamp(Vector3i.ZERO, Vector3i(VoxelCodec.GRID, VoxelCodec.GRID, VoxelCodec.GRID))
 	for z in range(a.z, b.z):
 		for y in range(a.y, b.y):
 			for x in range(a.x, b.x):
@@ -33,8 +32,8 @@ static func fill_sphere(data: PackedInt32Array, center: Vector3, radius: float, 
 	if amount < 0:
 		amount = Elements.default_amount(id)
 	var r2 := radius * radius
-	var lo := Vector3i((center - Vector3.ONE * radius).floor()).clamp(Vector3i.ZERO, Vector3i(GRID, GRID, GRID))
-	var hi := Vector3i((center + Vector3.ONE * radius).ceil() + Vector3.ONE).clamp(Vector3i.ZERO, Vector3i(GRID, GRID, GRID))
+	var lo := Vector3i((center - Vector3.ONE * radius).floor()).clamp(Vector3i.ZERO, Vector3i(VoxelCodec.GRID, VoxelCodec.GRID, VoxelCodec.GRID))
+	var hi := Vector3i((center + Vector3.ONE * radius).ceil() + Vector3.ONE).clamp(Vector3i.ZERO, Vector3i(VoxelCodec.GRID, VoxelCodec.GRID, VoxelCodec.GRID))
 	for z in range(lo.z, hi.z):
 		for y in range(lo.y, hi.y):
 			for x in range(lo.x, hi.x):
@@ -50,4 +49,4 @@ static func fill_bowl(data: PackedInt32Array, lo: Vector3i, hi: Vector3i, wall :
 
 ## Floor slab across the whole world.
 static func floor(data: PackedInt32Array, height := 4) -> void:
-	fill_box(data, Vector3i.ZERO, Vector3i(GRID, height, GRID), Elements.Id.WALL)
+	fill_box(data, Vector3i.ZERO, Vector3i(VoxelCodec.GRID, height, VoxelCodec.GRID), Elements.Id.WALL)

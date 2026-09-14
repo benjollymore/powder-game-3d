@@ -13,7 +13,7 @@ layout(push_constant, std430) uniform Params {
 	uvec4 element_mode_seed;  // element id, mode (0 replace, 1 only into air, 2 erase), seed, liquid amount
 } pc;
 
-const int GRID = 128;
+layout(constant_id = 0) const int GRID = 128;
 
 uint hash(uint x) {
 	x ^= x >> 16;

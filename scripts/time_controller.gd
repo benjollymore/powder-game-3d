@@ -11,9 +11,10 @@ signal paused_changed(paused: bool)
 signal time_scale_changed(target_scale: float)
 
 ## Simulation ticks per second at real time. A grain pairs with the cell below
-## on about half the ticks, so 180 gives ~90 voxels/s of free fall.
-const TICKS_PER_SECOND := 180.0
-const MAX_TICKS_PER_FRAME := 8
+## on about half the ticks, so 180 gives ~90 voxels/s of free fall. Larger
+## worlds cost proportionally more per tick, so the budget shrinks with size.
+var TICKS_PER_SECOND: float = 180.0
+var MAX_TICKS_PER_FRAME: int = 8
 const MIN_SCALE := 1.0 / 32.0
 const MAX_SCALE := 4.0
 ## Seconds it takes to ramp between time scales, so slow-mo eases in.
@@ -51,6 +52,16 @@ var _tps_window_ticks := 0
 var _tps_window_time := 0.0
 
 
+func _init() -> void:
+	var g: int = VoxelCodec.GRID
+	if g >= 256:
+		# Measured on an M5 Pro at 256^3: ~2 ms per tick (Margolus + hydro) on top
+		# of an ~11 ms frame, so 2 ticks/frame at 60 fps with room for a 1.5x
+		# fast-forward. See tools/bench.gd.
+		TICKS_PER_SECOND = 120.0
+		MAX_TICKS_PER_FRAME = 3
+
+
 func _process(delta: float) -> void:
 	# Exponential ease toward the target scale.
 	var blend := 1.0 - exp(-delta / SMOOTHING)
@@ -58,7 +69,8 @@ func _process(delta: float) -> void:
 	if absf(effective_scale - time_scale) < 0.001:
 		effective_scale = time_scale
 
-	var result := compute_ticks(delta, paused, effective_scale, _pending_steps, _accumulator)
+	var result := compute_ticks(delta, paused, effective_scale, _pending_steps, _accumulator,
+		TICKS_PER_SECOND, MAX_TICKS_PER_FRAME)
 	ticks_this_frame = result[0]
 	_accumulator = result[1]
 	_pending_steps = 0
@@ -77,16 +89,16 @@ func _process(delta: float) -> void:
 ## Pure tick scheduling, kept static so it can be unit-tested headless.
 ## Returns [ticks_to_run, new_accumulator].
 static func compute_ticks(delta: float, is_paused: bool, scale: float,
-		pending_steps: int, accumulator: float) -> Array:
+		pending_steps: int, accumulator: float, tps: float = 180.0, max_ticks: int = 8) -> Array:
 	var count := pending_steps
 	if not is_paused and scale >= MIN_SCALE:
-		accumulator += scale * TICKS_PER_SECOND * delta
+		accumulator += scale * tps * delta
 		var whole := int(accumulator)
 		accumulator -= whole
 		count += whole
-	if count > MAX_TICKS_PER_FRAME:
+	if count > max_ticks:
 		# Drop the excess rather than spiralling behind on slow frames.
-		count = MAX_TICKS_PER_FRAME
+		count = max_ticks
 		accumulator = 0.0
 	return [count, accumulator]
 

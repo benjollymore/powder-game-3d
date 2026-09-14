@@ -3,7 +3,6 @@ extends RefCounted
 ## Preset worlds. Each builder returns the full world as bytes. They double as
 ## living demos of the simulation milestones.
 
-const GRID := VoxelCodec.GRID
 const AIR := Elements.Id.AIR
 const WALL := Elements.Id.WALL
 const SAND := Elements.Id.SAND
@@ -38,7 +37,7 @@ static func build(name: String) -> PackedByteArray:
 ## that catches fire, an oil pool.
 static func _demo(data: PackedInt32Array) -> void:
 	WorldBuilder.floor(data)
-	WorldBuilder.fill_sphere(data, Vector3(GRID * 0.5, GRID * 0.55, GRID * 0.5), GRID * 0.2, SAND)
+	WorldBuilder.fill_sphere(data, Vector3(VoxelCodec.GRID * 0.5, VoxelCodec.GRID * 0.55, VoxelCodec.GRID * 0.5), VoxelCodec.GRID * 0.2, SAND)
 	WorldBuilder.fill_bowl(data, Vector3i(4, 0, 4), Vector3i(44, 30, 44))
 	WorldBuilder.fill_box(data, Vector3i(10, 60, 10), Vector3i(34, 84, 34), WATER)
 	WorldBuilder.fill_box(data, Vector3i(84, 8, 8), Vector3i(104, 28, 28), STEAM)
@@ -50,9 +49,9 @@ static func _demo(data: PackedInt32Array) -> void:
 ## A reservoir held back by a wall with a notch already cut in it.
 static func _dam_break(data: PackedInt32Array) -> void:
 	WorldBuilder.floor(data)
-	WorldBuilder.fill_box(data, Vector3i(60, 4, 0), Vector3i(64, 70, GRID), WALL)      # dam
+	WorldBuilder.fill_box(data, Vector3i(60, 4, 0), Vector3i(64, 70, VoxelCodec.GRID), WALL)      # dam
 	WorldBuilder.fill_box(data, Vector3i(60, 4, 52), Vector3i(64, 30, 76), AIR)        # breach
-	WorldBuilder.fill_box(data, Vector3i(2, 4, 2), Vector3i(60, 60, GRID - 2), WATER)  # reservoir
+	WorldBuilder.fill_box(data, Vector3i(2, 4, 2), Vector3i(60, 60, VoxelCodec.GRID - 2), WATER)  # reservoir
 	WorldBuilder.fill_sphere(data, Vector3(100, 12, 40), 10.0, SAND)                   # downstream pile
 	_tree(data, Vector3i(104, 4, 90), 24, 6, 24)
 
@@ -80,14 +79,14 @@ static func _pressure_pipe(data: PackedInt32Array) -> void:
 ## A grove on sand with undergrowth to carry the fire, and a spark at one trunk.
 static func _forest_fire(data: PackedInt32Array) -> void:
 	WorldBuilder.floor(data)
-	WorldBuilder.fill_box(data, Vector3i(0, 4, 0), Vector3i(GRID, 7, GRID), SAND)
-	WorldBuilder.fill_box(data, Vector3i(4, 7, 4), Vector3i(GRID - 4, 8, GRID - 4), PLANT)
+	WorldBuilder.fill_box(data, Vector3i(0, 4, 0), Vector3i(VoxelCodec.GRID, 7, VoxelCodec.GRID), SAND)
+	WorldBuilder.fill_box(data, Vector3i(4, 7, 4), Vector3i(VoxelCodec.GRID - 4, 8, VoxelCodec.GRID - 4), PLANT)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	var first := Vector3i.ZERO
 	for i in 14:
-		var x := rng.randi_range(12, GRID - 20)
-		var z := rng.randi_range(12, GRID - 20)
+		var x := rng.randi_range(12, VoxelCodec.GRID - 20)
+		var z := rng.randi_range(12, VoxelCodec.GRID - 20)
 		var h := rng.randi_range(22, 40)
 		var w := rng.randi_range(14, 24)
 		_tree(data, Vector3i(x, 8, z), h, 5, w)

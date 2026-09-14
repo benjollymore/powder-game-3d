@@ -17,11 +17,13 @@ layout(push_constant, std430) uniform Params {
 	uvec4 m; // tick, unused
 } pc;
 
-const float AIR_GRID = 32.0;
-const float SUB = 4.0;
+layout(constant_id = 0) const int AIR_GRID_I = 32;
+layout(constant_id = 1) const int SUB_I = 4;
 
 void main() {
 	ivec3 c = ivec3(gl_GlobalInvocationID);
+	float AIR_GRID = float(AIR_GRID_I);
+	float SUB = float(SUB_I);
 	float dt = pc.p.x;
 	vec4 s = imageLoad(src, c);
 	if (imageLoad(occ, c).r > 0.5) {

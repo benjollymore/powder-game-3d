@@ -40,7 +40,7 @@ layout(push_constant, std430) uniform Params {
 	uvec4 a; // mode, tick, seed, relax rate in percent
 } pc;
 
-const int GRID = 128;
+layout(constant_id = 0) const int GRID = 128;
 const uint AIR = 0u;
 const uint FLAG_LIQUID = 1u << 2;
 const uint FULL = 200u;

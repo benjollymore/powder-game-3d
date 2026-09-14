@@ -9,7 +9,7 @@ extends Node3D
 
 signal changed
 
-const GRID := VoxelCodec.GRID
+var GRID: int = VoxelCodec.GRID
 const MIN_RADIUS := 1
 const MAX_RADIUS := 12
 

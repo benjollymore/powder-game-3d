@@ -19,6 +19,10 @@ TimeController="*res://scripts/time_controller.gd"
 window/size/viewport_width=1600
 window/size/viewport_height=900
 
+[powder]
+
+sim/grid_size=128
+
 [rendering]
 
 renderer/rendering_method="forward_plus"

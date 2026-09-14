@@ -6,7 +6,20 @@ extends RefCounted
 ##   bits 16-23 liquid amount (0 for anything that is not a liquid)
 ##   bits 24-31 reserved (temperature / life, later phases)
 
-const GRID := 128
+## World size per axis. Resolved once from the project setting
+## `powder/sim/grid_size`, overridden by a `grid=N` command-line user arg
+## (after `--`) so tests can run small while play runs large. Must be a
+## multiple of 8.
+static var GRID: int = _resolve_grid()
+
+
+static func _resolve_grid() -> int:
+	var g: int = int(ProjectSettings.get_setting("powder/sim/grid_size", 128))
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("grid="):
+			g = int(arg.substr(5))
+	assert(g >= 16 and g % 8 == 0, "grid_size must be a multiple of 8")
+	return g
 const ID_MASK := 0xFF
 const SEED_SHIFT := 8
 const AMOUNT_SHIFT := 16

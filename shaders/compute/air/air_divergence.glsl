@@ -16,7 +16,8 @@ layout(push_constant, std430) uniform Params {
 	uvec4 m; // tick, unused
 } pc;
 
-const int AIR_GRID = 32;
+layout(constant_id = 0) const int AIR_GRID = 32;
+layout(constant_id = 1) const int SUB = 4;
 
 bool solid(ivec3 p) {
 	if (any(lessThan(p, ivec3(0))) || any(greaterThanEqual(p, ivec3(AIR_GRID)))) {

@@ -44,7 +44,7 @@ const uint RULE_NO_REACTIONS = 1u;
 const uint RULE_NO_DECAY = 2u;
 const uint RULE_NO_AIR = 4u;
 
-const int GRID = 128;
+layout(constant_id = 0) const int GRID = 128;
 const uint AIR = 0u;
 const uint WALL = 1u;
 

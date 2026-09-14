@@ -29,7 +29,8 @@ layout(push_constant, std430) uniform Params {
 	uvec4 m; // tick, unused
 } pc;
 
-const int SUB = 4;
+layout(constant_id = 0) const int AIR_GRID = 32;
+layout(constant_id = 1) const int SUB = 4;
 const uint FLAG_IMMOVABLE = 1u << 0;
 const uint FLAG_POWDER = 1u << 1;
 const uint FLAG_LIQUID = 1u << 2;
@@ -59,6 +60,7 @@ void main() {
 			}
 		}
 	}
-	imageStore(occ, c, vec4(solid / 64.0));
-	imageStore(src, c, vec4(0.0, 0.0, 0.0, heat / 64.0));
+	float n = float(SUB * SUB * SUB);
+	imageStore(occ, c, vec4(solid / n));
+	imageStore(src, c, vec4(0.0, 0.0, 0.0, heat / n));
 }

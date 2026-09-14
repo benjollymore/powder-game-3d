@@ -10,6 +10,13 @@ extends Node3D
 ##
 ## Every RenderingDevice call runs on the render thread through
 ## RenderingServer.call_on_render_thread; the main thread only queues work.
+##
+## Size comes from VoxelCodec.GRID (project setting `powder/sim/grid_size`,
+## `grid=N` override) and every dispatch size derives from it; compute shaders
+## receive it as a specialization constant. Measured with tools/bench.gd
+## (--disable-vsync, M5 Pro, 1600x900 Retina, display-capped at ~11 ms):
+##   128^3: 8 ticks/frame stays at the cap.
+##   256^3: 0-2 ticks/frame at the cap, 4 ticks 15 ms, ~2.05 ms per tick.
 
 signal readback_ready(bytes: PackedByteArray)
 signal occupancy_ready(bytes: PackedByteArray)
@@ -17,7 +24,7 @@ signal density_ready(bytes: PackedByteArray)
 signal scenario_changed(name: String)
 signal velocity_ready(bytes: PackedByteArray)
 
-const GRID := VoxelCodec.GRID
+var GRID: int = VoxelCodec.GRID
 const SIM_SHADER_PATH := "res://shaders/compute/sim.glsl"
 const BRUSH_SHADER_PATH := "res://shaders/compute/brush.glsl"
 const BRUSH_LOCAL_SIZE := 8
@@ -27,18 +34,20 @@ const HYDRO_RELAX_PERCENT := 50
 const DENSITY_SHADER_PATH := "res://shaders/compute/density.glsl"
 const AIR_SHADER_DIR := "res://shaders/compute/air/"
 const AIR_KERNELS := ["air_downsample", "air_advect", "air_divergence", "air_jacobi", "air_project"]
-## Coarse air grid: 4^3 voxels per cell, 4^3 threads per workgroup.
-const AIR_GRID := 32
-const AIR_GROUPS := 8
+## Coarse air grid: AIR_SUB^3 voxels per cell, 4^3 threads per workgroup.
+const AIR_SUB := 4
+var AIR_GRID: int = GRID / AIR_SUB
+var AIR_GROUPS: int = AIR_GRID / 4
 const RULE_NO_AIR := 4
 const OCCUPANCY_SHADER_PATH := "res://shaders/compute/occupancy.glsl"
-## One occupancy cell per 8^3 brick: 16^3 cells for a 128^3 world.
-const OCCUPANCY_GRID := 16
+## One occupancy cell per 8^3 brick.
+const BRICK := 8
+var OCCUPANCY_GRID: int = GRID / BRICK
 
 enum BrushMode { REPLACE, ONLY_AIR, ERASE }
-## 2x2x2 blocks with a partition offset straddle the edge: 65 blocks per axis,
-## 4x4x4 threads per workgroup -> 17 groups per axis.
-const DISPATCH_GROUPS := 17
+## 2x2x2 blocks with a partition offset straddle the edge: GRID/2 + 1 blocks
+## per axis, 4x4x4 threads per workgroup.
+var DISPATCH_GROUPS: int = ceili((GRID / 2 + 1) / 4.0)
 ## Push constants: uvec4 a (tick, seed, substep, flags) + uvec4 b (offset xyz, 0).
 const PUSH_CONSTANT_INTS := 8
 
@@ -213,7 +222,8 @@ func request_velocity_readback() -> void:
 
 ## Decode one air cell from a velocity readback.
 static func velocity_at(bytes: PackedByteArray, x: int, y: int, z: int) -> Vector4:
-	var base := (x + AIR_GRID * (y + AIR_GRID * z)) * 8
+	var n := VoxelCodec.GRID / AIR_SUB
+	var base := (x + n * (y + n * z)) * 8
 	return Vector4(bytes.decode_half(base), bytes.decode_half(base + 2), bytes.decode_half(base + 4), bytes.decode_half(base + 6))
 
 
@@ -365,6 +375,17 @@ func _rt_compile(path: String, from_source: bool) -> RDShaderSPIRV:
 	return spirv
 
 
+## Specialization constants baked into a compute pipeline at creation.
+func _spec(values: Array) -> Array:
+	var out: Array = []
+	for i in values.size():
+		var sc := RDPipelineSpecializationConstant.new()
+		sc.constant_id = i
+		sc.value = values[i]
+		out.append(sc)
+	return out
+
+
 func _image_uniform(binding: int, rid: RID = _grid_rid) -> RDUniform:
 	var u := RDUniform.new()
 	u.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
@@ -401,7 +422,7 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	_rt_free_pipelines()
 
 	_sim_shader = _rd.shader_create_from_spirv(sim_spirv)
-	_sim_pipeline = _rd.compute_pipeline_create(_sim_shader)
+	_sim_pipeline = _rd.compute_pipeline_create(_sim_shader, _spec([GRID]))
 	var u_elems := RDUniform.new()
 	u_elems.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
 	u_elems.binding = 1
@@ -417,7 +438,7 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	# (pres ping-pong, even count so the result lands in pres0) -> project (vel1 -> vel0).
 	for k in AIR_KERNELS:
 		_air_shaders[k] = _rd.shader_create_from_spirv(air_spirv[k])
-		_air_pipelines[k] = _rd.compute_pipeline_create(_air_shaders[k])
+		_air_pipelines[k] = _rd.compute_pipeline_create(_air_shaders[k], _spec([AIR_GRID, AIR_SUB]))
 	_air_sets["air_downsample"] = _rd.uniform_set_create(
 		[_image_uniform(0), _image_uniform(1, _air_occ), _image_uniform(2, _air_src), _buffer_uniform(3, _elements_buffer)],
 		_air_shaders["air_downsample"], 0)
@@ -436,11 +457,11 @@ func _rt_build_pipelines(from_source: bool) -> void:
 		_air_shaders["air_project"], 0)
 
 	_brush_shader = _rd.shader_create_from_spirv(brush_spirv)
-	_brush_pipeline = _rd.compute_pipeline_create(_brush_shader)
+	_brush_pipeline = _rd.compute_pipeline_create(_brush_shader, _spec([GRID]))
 	_brush_set = _rd.uniform_set_create([_image_uniform(0)], _brush_shader, 0)
 
 	_hydro_shader = _rd.shader_create_from_spirv(hydro_spirv)
-	_hydro_pipeline = _rd.compute_pipeline_create(_hydro_shader)
+	_hydro_pipeline = _rd.compute_pipeline_create(_hydro_shader, _spec([GRID]))
 	_hydro_set = _rd.uniform_set_create([_image_uniform(0), _buffer_uniform(1, _elements_buffer)], _hydro_shader, 0)
 
 	_density_shader = _rd.shader_create_from_spirv(density_spirv)
@@ -506,7 +527,7 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		_rt_air_step(cl, count, first_tick)
 	var push := PackedInt32Array()
 	push.resize(PUSH_CONSTANT_INTS)
-	var hydro_groups := GRID / 8
+	var hydro_groups := GRID / 8  # 8x8 threads per group, one line per thread
 	for i in count:
 		var t := first_tick + i
 		var offset := partition_offset(t)

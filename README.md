@@ -4,6 +4,10 @@ A 3D falling-sand physics sandbox in the spirit of Powder Game / The Powder Toy,
 built with Godot 4 as a learning project. Fly anywhere around a glass box,
 freeze time, step it, slow it down, paint elements in, and let it go.
 
+World size is the project setting `powder/sim/grid_size` (128 by default, a
+multiple of 8; 256 is the target for play and costs ~8x per tick) and can be
+overridden per run with `-- grid=256`.
+
 Requires **Godot 4.6.3** (4.7.x hangs at startup on Apple M4/M5 + macOS 26,
 see godotengine/godot#123479). Open `project.godot` in the editor and press
 Play, or run `godot --path .` from the repo root. Add `-- scenario="Dam break"`

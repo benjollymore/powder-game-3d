@@ -25,7 +25,7 @@ func check(cond: bool, msg: String) -> void:
 
 func _test_time_controller() -> void:
 	var f := TimeControllerScript.compute_ticks
-	var tps := TimeControllerScript.TICKS_PER_SECOND
+	var tps := 180.0
 	var frame := 1.0 / 60.0
 
 	var r: Array = f.call(frame, true, 1.0, 0, 0.0)
@@ -59,9 +59,9 @@ func _test_time_controller() -> void:
 
 	# Huge frame is capped and the backlog is dropped.
 	r = f.call(1.0, false, 4.0, 0, 0.0)
-	check(r[0] == TimeControllerScript.MAX_TICKS_PER_FRAME, "ticks per frame are capped")
+	check(r[0] == 8, "ticks per frame are capped")
 	check(r[1] == 0.0, "backlog dropped after cap")
-	check(tps >= 60.0, "tick rate constant is at least 60")
+	check(VoxelCodec.GRID % 8 == 0, "resolved grid size %d is a multiple of 8" % VoxelCodec.GRID)
 
 
 func _test_liquid_constants() -> void:
