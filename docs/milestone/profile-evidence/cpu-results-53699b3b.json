@@ -1,0 +1,36 @@
+[
+  {
+    "name": "gpu-profile",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.17,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/gpu_profile.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/profile-evidence/gpu-profile"
+    ]
+  },
+  {
+    "name": "editor-keyboard",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.27,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/editor_keyboard.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/profile-evidence/editor-keyboard"
+    ]
+  }
+]

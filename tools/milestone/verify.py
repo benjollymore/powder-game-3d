@@ -21,6 +21,8 @@ CPU = [
     ("editing-unit", "tests/milestone/editing_unit.gd", 128),
     ("paint-tools", "tests/milestone/paint_tools.gd", 128),
     ("time-controls", "tests/milestone/test_time_controls.gd", 128),
+    ("gpu-profile", "tests/milestone/gpu_profile.gd", 128),
+    ("editor-keyboard", "tests/milestone/editor_keyboard.gd", 128),
     ("archive-format", "tests/milestone/world_archive.gd", 128),
     ("archive-job", "tests/milestone/archive_job.gd", 128),
     ("archive-panel", "tests/milestone/archive_panel.gd", 128),
@@ -41,9 +43,12 @@ GPU = [
     ("phase128", "tests/milestone/test_time_gpu.gd", 128),
     ("preparation128", "tests/milestone/render_preparation.gd", 128),
     ("preparation-render128", "tests/milestone/prepare_capture.gd", 128),
+    ("leaf128", "tests/milestone/leaf_finite.gd", 128),
+    ("workflow128", "tests/milestone/editor_workflow_gpu.gd", 128),
     ("surfaces-render128", "tests/milestone/render_surface_gpu.gd", 128),
     ("sprites-render128", "tests/milestone/render_section_sprites_gpu.gd", 128),
     ("liquid-render128", "tests/milestone/render_liquid_section_gpu.gd", 128),
+    ("liquid-edges128", "tests/milestone/render_liquid_edges_gpu.gd", 128),
 ]
 
 

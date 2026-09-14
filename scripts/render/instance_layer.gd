@@ -3,7 +3,7 @@ extends MultiMeshInstance3D
 ## A MultiMesh whose instance buffer is filled on the GPU (splat_emit.glsl,
 ## fx.glsl). Nothing here touches instance data from the CPU after
 ## allocation: that would re-enable Godot's CPU-side cache and clobber the
-## GPU writes. Unused instances are zero-size and cost nothing to draw.
+## GPU writes. Unused instances are zero-size but the direct draw still submits them.
 
 ## Instance slots; sets the storage buffer size (64 bytes each).
 @export var capacity := 131072

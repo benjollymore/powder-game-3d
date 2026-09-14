@@ -31,6 +31,7 @@ signal activity_ready(counts: PackedInt32Array)
 signal edit_transaction_ready(result: Dictionary)
 const EditGPU := preload("res://scripts/sim/voxel_edit_gpu.gd")
 const EditGeometry := preload("res://scripts/discovery/edit_geometry.gd")
+const GPUProfile := preload("res://scripts/sim/gpu_profile.gd")
 var edit_epoch := 0 # reset boundary; ticks do not invalidate authored history
 var edit_revision := 0 # ordered voxel edit submissions, distinct from tick
 var _edit_sequence := 0
@@ -114,7 +115,7 @@ const BRUSH_PUSH_INTS := 12
 		defer_render_preparation = value
 		if is_node_ready():
 			RenderingServer.call_on_render_thread(_rt_set_deferred_preparation.bind(value))
-## Capture GPU timestamps around each pass (read with profile_report()).
+## Capture pass timestamps (read with await profile_report()). Metal may not support them.
 @export var profile := false
 var volume_debug := 0
 @export var jacobi_iterations := 20
@@ -1088,17 +1089,30 @@ func _rt_free() -> void:
 
 func _stamp(name: String) -> void:
 	if profile:
-		_rd.capture_timestamp(name)
+		_rd.capture_timestamp("powder/" + name)
 
 
-## GPU milliseconds between consecutive timestamps of the last captured frame.
+## Read the last captured frame on its owning render thread. This is asynchronous;
+## callers must await it. Never interpret unavailable timestamps as zero GPU cost.
 func profile_report() -> Dictionary:
-	var out := {}
+	var replies: Array[Dictionary] = []
+	RenderingServer.call_on_render_thread(_rt_profile_report.bind(func(value: Dictionary):
+		replies.append(value)))
+	while replies.is_empty():
+		await get_tree().process_frame
+	return replies[0]
+
+
+func _rt_profile_report(callback: Callable) -> void:
+	if not _rt_ready:
+		callback.call_deferred({"available": false, "reason": "Simulation device is not ready"})
+		return
+	var markers: Array[Dictionary] = []
 	var n := _rd.get_captured_timestamps_count()
-	for i in range(1, n):
-		var dt := (_rd.get_captured_timestamp_gpu_time(i) - _rd.get_captured_timestamp_gpu_time(i - 1)) / 1e6
-		out[_rd.get_captured_timestamp_name(i)] = dt
-	return out
+	for i in n:
+		markers.append({"name": _rd.get_captured_timestamp_name(i),
+			"gpu_ns": _rd.get_captured_timestamp_gpu_time(i)})
+	callback.call_deferred(GPUProfile.summarize(markers, _rd.get_captured_timestamps_frame()))
 
 
 func _rt_tick(first_tick: int, count: int) -> void:

@@ -1,7 +1,7 @@
 extends SceneTree
 ## Compare integrated liquid length against analytic frozen box intersections.
 ## godot --path . --always-on-top --disable-vsync -s res://tests/milestone/render_liquid_edges_gpu.gd -- grid=128
-const OUT := "res://docs/milestone/liquid-edge-evidence"
+var OUT := "res://docs/milestone/liquid-edge-evidence"
 const BASELINE := "res://tests/milestone/fixtures/voxel_volume_edge_baseline.gdshader"
 const FIXED := "res://shaders/spatial/voxel_volume.gdshader"
 var sim: Node3D
@@ -11,6 +11,9 @@ var failures := 0
 var rows: Array[Dictionary] = []
 
 func _initialize() -> void:
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("output_dir="):
+			OUT = argument.trim_prefix("output_dir=")
 	call_deferred("_run")
 
 func _shader(path: String) -> Shader:

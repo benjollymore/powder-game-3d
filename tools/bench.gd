@@ -1,11 +1,14 @@
 extends SceneTree
-## GPU cost of the simulation: runs the demo world at the maximum ticks per
-## frame and prints the average measured GPU frame time.
+## Visible whole-frame cost: runs the demo at maximum ticks per frame.
+## Wall time includes rendering and scheduling; it is not isolated GPU time.
 ## Usage: godot --path . -s res://tools/bench.gd -- [frames] [hydro=0] [air=0] [ticks=N] [grid=N] [sunvis=0] [cam=x,y,z] [look=x,y,z] [aa=fxaa|smaa|temporal|spatial|off]
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
-	var frames := int(args[0]) if args.size() > 0 else 180
+	var frames := clampi(int(args[0]), 1, 3600) if args.size() > 0 and args[0].is_valid_int() else 180
+	create_timer(180.0).timeout.connect(func():
+		push_error("Benchmark watchdog: rendered frames did not complete")
+		quit(1))
 	var hydro := true
 	var air := true
 	var ticks := -1
@@ -50,21 +53,26 @@ func _initialize() -> void:
 		rig.frame_box(false)
 	tc.time_scale = tc.MAX_SCALE
 	for i in 30:
-		await process_frame
+		await RenderingServer.frame_post_draw
 	var total_ticks := 0
+	var drawn_before := Engine.get_frames_drawn()
 	var t0 := Time.get_ticks_usec()
 	for i in frames:
-		await process_frame
+		await RenderingServer.frame_post_draw
 		total_ticks += tc.ticks_this_frame
 	var ms := (Time.get_ticks_usec() - t0) / 1000.0 / frames
 	# Wall-clock per frame is the only reliable number on Metal (the viewport GPU
 	# timer reads zero); run with --disable-vsync so the display cap does not hide cost.
 	print("bench grid=%d hydro=%s air=%s ticks/frame=%.1f: %.2f ms/frame (%.0f fps)" % [
 		VoxelCodec.GRID, hydro, air, float(total_ticks) / frames, ms, 1000.0 / ms])
+	print("visible frames drawn: ", Engine.get_frames_drawn() - drawn_before)
 	if profile:
-		var rep: Dictionary = sim.profile_report()
-		var parts := PackedStringArray()
-		for k in rep:
-			parts.append("%s %.2f" % [k, rep[k]])
-		print("gpu ms: " + "  ".join(parts))
+		var rep: Dictionary = await sim.profile_report()
+		print("GPU_TIMESTAMP_REPORT ", JSON.stringify(rep))
+	sim.listen_to_time_controller = false
+	tc.paused = true
+	await RenderingServer.frame_post_draw
+	current_scene.queue_free()
+	await process_frame
+	await process_frame
 	quit(0)

@@ -1,0 +1,9 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: Space with actual Reset/Undo button focus requests Run once without activating either GUI action
+ok: held Space echoes cannot retrigger phase or focused button
+ok: Space in numeric text input edits text without starting Test
+ok: modified Space is not claimed as the editor phase shortcut
+ok: modal dialog suspension prevents Space from changing editor phase
+ok: Enter still activates a focused GUI action for keyboard access
+Editor keyboard: 6 checks, 0 failures

@@ -1,0 +1,62 @@
+[
+  {
+    "name": "archives128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 1.16,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/archive_editor_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/workflow-integrated/archives128"
+    ]
+  },
+  {
+    "name": "actions128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 1.16,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/editor_actions_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/workflow-integrated/actions128"
+    ]
+  },
+  {
+    "name": "workflow128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 2.16,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/editor_workflow_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/workflow-integrated/workflow128"
+    ]
+  }
+]
