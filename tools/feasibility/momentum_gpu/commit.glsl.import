@@ -1,0 +1,13 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://b4tqaqtk1x0k6"
+path="res://.godot/imported/commit.glsl-f0c53475abf2e0c1695b33f1a683612f.res"
+
+[deps]
+
+source_file="res://tools/feasibility/momentum_gpu/commit.glsl"
+dest_files=["res://.godot/imported/commit.glsl-f0c53475abf2e0c1695b33f1a683612f.res"]
+
+[params]

@@ -1,0 +1,8 @@
+..............
+----------------------------------------------------------------------
+Ran 14 tests in 0.600s
+
+OK
+METRIC affine_20_roundtrips max_velocity_error_m_s=2.75e-15 max_C_error_per_s=1.93e-14
+METRIC nonaffine_apic_20_roundtrips energy_retained=0.086257982 linear_error=1.83e-16 angular_error=5.17e-17
+METRIC rotation_20_roundtrips {"apic": {"angular_retained": 1.000000000000003, "center_energy_retained": 1.0000000000000058, "initial_affine_energy_J": 0.013020000000000004, "initial_center_energy_J": 0.027657931989247302, "total_energy_retained": 1.0000000000000056}, "pic": {"angular_retained": 0.001355251496559642, "center_energy_retained": 2.0356425545777455e-06, "initial_affine_energy_J": 0.0, "initial_center_energy_J": 0.027657931989247302, "total_energy_retained": 2.0356425545777455e-06}}

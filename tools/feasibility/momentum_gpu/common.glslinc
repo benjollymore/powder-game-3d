@@ -1,0 +1,32 @@
+struct Particle { vec4 position_mass; vec4 velocity; vec4 c0; vec4 c1; vec4 c2; };
+layout(std430,set=0,binding=0) buffer Current { Particle value[]; } current;
+layout(std430,set=0,binding=1) buffer Candidate { Particle value[]; } candidate;
+layout(std430,set=0,binding=2) buffer Grid { vec4 value[]; } grid; // velocity.xyz,mass
+layout(std430,set=0,binding=3) buffer Flags { uint value[]; } invalid;
+layout(std430,set=0,binding=4) buffer Status { uint value[]; } status; // accepted ticks,halt,rejections,reason,particle
+layout(push_constant,std430) uniform Params { uvec4 shape_count; vec4 time; } pc; // dx,dt,APIC(1)/PIC(0),unused
+bool finite_vec(vec3 a) { return !any(isnan(a)) && !any(isinf(a)); }
+bool finite_particle(Particle p) {
+    return finite_vec(p.position_mass.xyz) && !isnan(p.position_mass.w) && !isinf(p.position_mass.w) && p.position_mass.w>0.0
+        && finite_vec(p.velocity.xyz) && finite_vec(p.c0.xyz) && finite_vec(p.c1.xyz) && finite_vec(p.c2.xyz);
+}
+ivec3 base_of(vec3 x) { return ivec3(floor(x/pc.time.x-0.5)); }
+bool supported(vec3 x) {
+    ivec3 b=base_of(x);
+    return all(greaterThanEqual(b,ivec3(0))) && all(lessThan(b+2,ivec3(pc.shape_count.xyz)));
+}
+float axis_weight(float f,int local) {
+    precise float w;
+    if(local==0) { w=0.5*(1.5-f)*(1.5-f); }
+    else if(local==1) { w=0.75-(f-1.0)*(f-1.0); }
+    else { w=0.5*(f-0.5)*(f-0.5); }
+    return w;
+}
+float weight_at(vec3 x,ivec3 node) {
+    ivec3 b=base_of(x), local=node-b;
+    if(any(lessThan(local,ivec3(0))) || any(greaterThan(local,ivec3(2)))) { return 0.0; }
+    precise vec3 f=x/pc.time.x-vec3(b);
+    precise float w=axis_weight(f.x,local.x)*axis_weight(f.y,local.y)*axis_weight(f.z,local.z);
+    return w;
+}
+uint index_of(ivec3 p) { return uint(p.x)+pc.shape_count.x*(uint(p.y)+pc.shape_count.y*uint(p.z)); }

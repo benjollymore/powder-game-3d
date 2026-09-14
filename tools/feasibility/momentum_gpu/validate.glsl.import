@@ -1,0 +1,13 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://eftuaucth2qa"
+path="res://.godot/imported/validate.glsl-8e374d44ab06c5fe6d866f5d4115182b.res"
+
+[deps]
+
+source_file="res://tools/feasibility/momentum_gpu/validate.glsl"
+dest_files=["res://.godot/imported/validate.glsl-8e374d44ab06c5fe6d866f5d4115182b.res"]
+
+[params]

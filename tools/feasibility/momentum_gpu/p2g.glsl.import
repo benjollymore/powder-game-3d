@@ -1,0 +1,13 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://bviowbcf422l"
+path="res://.godot/imported/p2g.glsl-15d80466c13938ac7fbca6ea526f14e2.res"
+
+[deps]
+
+source_file="res://tools/feasibility/momentum_gpu/p2g.glsl"
+dest_files=["res://.godot/imported/p2g.glsl-15d80466c13938ac7fbca6ea526f14e2.res"]
+
+[params]

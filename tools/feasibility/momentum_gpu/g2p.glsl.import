@@ -1,0 +1,13 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://cg6rxlksc5vj8"
+path="res://.godot/imported/g2p.glsl-a529a3fa2dd843df8d18adfd173d7266.res"
+
+[deps]
+
+source_file="res://tools/feasibility/momentum_gpu/g2p.glsl"
+dest_files=["res://.godot/imported/g2p.glsl-a529a3fa2dd843df8d18adfd173d7266.res"]
+
+[params]
