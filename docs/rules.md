@@ -105,6 +105,15 @@ changes. It shadows sand under smoke, pits, and the ground plane: the ground
 shader intersects each point's ray toward the sun with the box and samples
 the field where it enters, giving a voxel-accurate shadow with no shadow map.
 
+Powder cells carry a "moved age" (byte A bits 1-2, set to 3 when a grain
+moves and counting down at rest). Grains that moved recently and have nothing
+under them are airborne: `shaders/compute/fields.glsl` leaves them out of the
+heap surface and `shaders/compute/splat_emit.glsl` appends them, with a
+per-grain jitter, into a MultiMesh instance buffer (`scripts/render/splat_layer.gd`,
+`shaders/spatial/splat.gdshader`) drawn as lit, alpha-scissored, camera-facing
+grain sprites, so poured sand reads as individual grains and a settled pile
+emits none. The buffer is filled on the GPU and never touched from the CPU.
+
 The depth prepass is disabled: an opaque material that writes depth would run
 the raymarch twice, and the voxel AO covers what SSAO provided. `debug=N`
 shows flat colour (1), AO (2), normals (3), texture (4) or sun visibility

@@ -64,6 +64,14 @@ uint stage(ivec3 p) {
 	if ((flags & (FLAG_IMMOVABLE | FLAG_POWDER)) == 0u) {
 		return 0u;
 	}
+	if ((flags & FLAG_POWDER) != 0u && ((v.w >> 1) & 3u) != 0u && p.y > 0) {
+		// A grain that just moved and has nothing under it is airborne: it is
+		// drawn as a splat, not as part of the heap.
+		uint below = uint(imageLoad(grid, p - ivec3(0, 1, 0)).r * 255.0 + 0.5);
+		if (below == 0u || (elems[below].flags & FLAG_GAS) != 0u) {
+			return 0u;
+		}
+	}
 	return 1u | (uint(clamp(elems[id].smoothing, 0.0, 1.0) * 255.0 + 0.5) << 8);
 }
 

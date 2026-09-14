@@ -23,6 +23,7 @@ signal occupancy_ready(bytes: PackedByteArray)
 signal density_ready(bytes: PackedByteArray)
 signal scenario_changed(name: String)
 signal velocity_ready(bytes: PackedByteArray)
+signal splat_count_ready(count: int)
 
 var GRID: int = VoxelCodec.GRID
 ## Scene units are metres; every voxel is one centimetre, so the box is
@@ -46,6 +47,7 @@ var AIR_GROUPS: int = AIR_GRID / 4
 const RULE_NO_AIR := 4
 const OCCUPANCY_SHADER_PATH := "res://shaders/compute/occupancy.glsl"
 const SUNVIS_SHADER_PATH := "res://shaders/compute/sunvis.glsl"
+const SPLAT_SHADER_PATH := "res://shaders/compute/splat_emit.glsl"
 const SUNVIS_SLABS_PER_DISPATCH := 8
 ## The sun-visibility field is swept at half resolution (2 cm cells at 256^3).
 const SUNVIS_DIV := 2
@@ -66,6 +68,7 @@ const BRUSH_PUSH_INTS := 12
 
 @export var mesh_path: NodePath = ^"Mesh"
 @export var volume_mesh_path: NodePath = ^"VolumeMesh"
+@export var splats_path: NodePath = ^"Splats"
 @export var world_seed := 12345
 ## Set by TimeController normally; tests drive ticks directly.
 @export var listen_to_time_controller := true
@@ -134,6 +137,13 @@ var _sunvis_texture := Texture3DRD.new()
 var _sunvis_shader := RID()
 var _sunvis_pipeline := RID()
 var _sunvis_set := RID()
+var _splat_multimesh := RID()
+var _splat_capacity := 0
+var _splat_buffer := RID()
+var _splat_counter := RID()
+var _splat_shader := RID()
+var _splat_pipeline := RID()
+var _splat_set := RID()
 var _occ_shader := RID()
 var _occ_pipeline := RID()
 var _occ_set := RID()
@@ -162,7 +172,15 @@ func _ready() -> void:
 	var mesh: MeshInstance3D = get_node(mesh_path)
 	_material = mesh.material_override
 	_volume_material = get_node(volume_mesh_path).material_override
+	var splats := get_node_or_null(splats_path)
 	_materials = [_material, _volume_material]
+	if splats:
+		_splat_multimesh = splats.multimesh.get_rid()
+		_splat_capacity = splats.CAPACITY
+		var sm: ShaderMaterial = splats.material_override
+		_materials.append(sm)
+		sm.set_shader_parameter("box_center", Vector3.ZERO)
+		sm.set_shader_parameter("box_half", 0.5 * world_size())
 	_material.set_shader_parameter("debug_mode", debug_mode)
 	_volume_material.set_shader_parameter("volume_debug", volume_debug)
 	set_param("grid_size", GRID)
@@ -279,6 +297,13 @@ func request_occupancy_readback() -> void:
 		RenderingServer.call_on_render_thread(_rt_occupancy_readback)
 
 
+## Number of airborne-grain splats emitted last frame; `splat_count_ready`
+## fires on the main thread. Stalls the GPU; tests only.
+func request_splat_count() -> void:
+	if _rt_ready:
+		RenderingServer.call_on_render_thread(_rt_splat_count)
+
+
 ## Copy the air velocity field (32^3 RGBA16F: xyz voxels/tick, w heat) back;
 ## `velocity_ready` fires on the main thread. Stalls the GPU; tests only.
 func request_velocity_readback() -> void:
@@ -378,6 +403,10 @@ func _rt_init() -> void:
 	)
 	_sunvis_rid = _rd.texture_create(sv_fmt, RDTextureView.new())
 	_rd.texture_clear(_sunvis_rid, Color(1, 1, 1, 1), 0, 1, 0, 1)
+
+	_splat_counter = _rd.storage_buffer_create(16, PackedByteArray([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
+	if _splat_multimesh.is_valid():
+		_splat_buffer = RenderingServer.multimesh_get_buffer_rd_rid(_splat_multimesh)
 
 	var den_fmt := RDTextureFormat.new()
 	den_fmt.format = RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM
@@ -501,8 +530,9 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	var density_spirv := _rt_compile(FIELDS_SHADER_PATH, from_source)
 	var mip_spirv := _rt_compile(FIELDS_MIP_SHADER_PATH, from_source)
 	var sunvis_spirv := _rt_compile(SUNVIS_SHADER_PATH, from_source)
+	var splat_spirv := _rt_compile(SPLAT_SHADER_PATH, from_source)
 	if sim_spirv == null or brush_spirv == null or occ_spirv == null or hydro_spirv == null \
-			or density_spirv == null or mip_spirv == null or sunvis_spirv == null:
+			or density_spirv == null or mip_spirv == null or sunvis_spirv == null or splat_spirv == null:
 		return
 	var air_spirv := {}
 	for k in AIR_KERNELS:
@@ -571,6 +601,13 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	_sunvis_set = _rd.uniform_set_create(
 		[_image_uniform(0, _sunvis_rid), _sampler_uniform(1, _density_rid)], _sunvis_shader, 0)
 
+	if _splat_buffer.is_valid():
+		_splat_shader = _rd.shader_create_from_spirv(splat_spirv)
+		_splat_pipeline = _rd.compute_pipeline_create(_splat_shader, _spec([GRID]))
+		_splat_set = _rd.uniform_set_create(
+			[_image_uniform(0), _image_uniform(1, _occ_rid), _buffer_uniform(2, _elements_buffer),
+			_buffer_uniform(3, _splat_counter), _buffer_uniform(4, _splat_buffer)], _splat_shader, 0)
+
 	_occ_shader = _rd.shader_create_from_spirv(occ_spirv)
 	_occ_pipeline = _rd.compute_pipeline_create(_occ_shader)
 	_occ_set = _rd.uniform_set_create(
@@ -587,7 +624,7 @@ func _rt_free_pipelines() -> void:
 	for rid in [_sim_set, _sim_pipeline, _sim_shader, _brush_set, _brush_pipeline, _brush_shader,
 			_occ_set, _occ_pipeline, _occ_shader, _hydro_set, _hydro_pipeline, _hydro_shader,
 			_density_set, _density_pipeline, _density_shader, _mip_pipeline, _mip_shader,
-			_sunvis_set, _sunvis_pipeline, _sunvis_shader]:
+			_sunvis_set, _sunvis_pipeline, _sunvis_shader, _splat_set, _splat_pipeline, _splat_shader]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
 	_sim_set = RID()
@@ -610,6 +647,9 @@ func _rt_free_pipelines() -> void:
 	_sunvis_set = RID()
 	_sunvis_pipeline = RID()
 	_sunvis_shader = RID()
+	_splat_set = RID()
+	_splat_pipeline = RID()
+	_splat_shader = RID()
 	for d in [_air_sets, _air_pipelines, _air_shaders]:
 		for k in d:
 			if d[k].is_valid():
@@ -623,7 +663,7 @@ func _rt_free() -> void:
 		if v.is_valid():
 			_rd.free_rid(v)
 	_fields_views = []
-	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid, _density_rid, _sunvis_rid,
+	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid, _density_rid, _sunvis_rid, _splat_counter,
 			_air_vel[0], _air_vel[1], _air_pres[0], _air_pres[1], _air_div, _air_occ, _air_src, _air_sampler]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
@@ -819,6 +859,7 @@ func _rt_occupancy_update() -> void:
 	_rd.compute_list_add_barrier(cl)
 	_rd.compute_list_end()
 	_stamp("occupancy")
+	_rt_splat_emit()
 	cl = _rd.compute_list_begin()
 	if _density_pipeline.is_valid():
 		var dg := GRID / 8
@@ -872,6 +913,27 @@ func _rt_sunvis_sweep(cl: int) -> void:
 		_rd.compute_list_dispatch(cl, groups, groups, 1)
 		_rd.compute_list_add_barrier(cl)
 		k += SUNVIS_SLABS_PER_DISPATCH
+
+
+## Refill the splat instance buffer from the current grid.
+func _rt_splat_emit() -> void:
+	if not _splat_pipeline.is_valid():
+		return
+	_rd.buffer_clear(_splat_counter, 0, 16)
+	_rd.buffer_clear(_splat_buffer, 0, _splat_capacity * 64)
+	var cl := _rd.compute_list_begin()
+	_rd.compute_list_bind_compute_pipeline(cl, _splat_pipeline)
+	_rd.compute_list_bind_uniform_set(cl, _splat_set, 0)
+	var push := PackedInt32Array([_splat_capacity, 0, 0, 0]).to_byte_array()
+	_rd.compute_list_set_push_constant(cl, push, push.size())
+	var g := GRID / 8
+	_rd.compute_list_dispatch(cl, g, g, g)
+	_rd.compute_list_end()
+
+
+func _rt_splat_count() -> void:
+	var bytes := _rd.buffer_get_data(_splat_counter, 0, 4)
+	splat_count_ready.emit.call_deferred(bytes.decode_u32(0))
 
 
 func _rt_density_readback() -> void:

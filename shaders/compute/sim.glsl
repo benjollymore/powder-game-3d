@@ -11,7 +11,9 @@
 //
 // Voxel bytes: x = element id, y = per-voxel seed, z = liquid amount (0 for
 // anything that is not a liquid), w bit 0 = liquid is in an unsupported
-// (falling) run, maintained by hydro.glsl.
+// (falling) run (maintained by hydro.glsl), w bits 1-2 = powder "moved age":
+// 3 right after a grain moved, counting down while it rests (drives the
+// airborne-grain splats).
 
 layout(local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
 
@@ -61,6 +63,7 @@ const uint COMP = 2u;          // extra units held per cell of liquid above (com
 const uint MIN_SPLIT = 40u;    // don't spread into empty cells below this share (a little surface tension)
 const uint MIN_KEEP = 6u;      // cells below this donate everything to a neighbour
 const uint FALLING = 1u;       // byte w flag: this liquid is falling (do not spray sideways)
+const uint AGE_SHIFT = 1u;     // byte w bits 1-2: powder moved age
 
 // Per-invocation block state.
 ivec3 origin;
@@ -471,6 +474,12 @@ void main() {
 			c[i].x = AIR;
 		} else if (!is_liquid(c[i].x)) {
 			c[i].z = 0u;
+		}
+		if (is_powder(c[i].x)) {
+			uint age = (c[i].w >> AGE_SHIFT) & 3u;
+			bool moved = (c[i].x != before[i].x) || (c[i].y != before[i].y);
+			uint new_age = moved ? 3u : (age > 0u ? age - 1u : 0u);
+			c[i].w = (c[i].w & ~(3u << AGE_SHIFT)) | (new_age << AGE_SHIFT);
 		}
 		if (c[i] != before[i]) {
 			store(pos[i], c[i]);

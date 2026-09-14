@@ -42,7 +42,7 @@ func _run() -> void:
 		["_test_brush_paints", 3], ["_test_occupancy", 3], ["_test_liquid_mass", 3],
 		["_test_u_bend", 3], ["_test_pressure_pipe", 3], ["_test_density_pass", 3],
 		["_test_fire_burns_plant", 0], ["_test_water_boils_on_fire", 0], ["_test_oil_floats", 3],
-		["_test_air_boundary", 3], ["_test_air_plume", 2], ["_test_large_grid_smoke", 0],
+		["_test_air_boundary", 3], ["_test_air_plume", 2], ["_test_splats", 3], ["_test_large_grid_smoke", 0],
 	]
 	for t in tests:
 		if only != "":
@@ -564,3 +564,20 @@ func _test_large_grid_smoke() -> void:
 	check(after.size() == n * 4, "large grid readback is %d bytes" % after.size())
 	check(unknown == 0, "no unknown ids at %d^3" % GRID)
 	check(absi(sand_after - sand_before) < sand_before / 10, "sampled sand count stays close at %d^3 (%d -> %d)" % [GRID, sand_before, sand_after])
+
+
+func _test_splats() -> void:
+	# A sand ball dropped from height emits airborne-grain splats while falling
+	# and none once the pile has settled.
+	var data := _empty_world()
+	WorldBuilder.floor(data)
+	WorldBuilder.fill_sphere(data, Vector3(GRID / 2, GRID * 0.7, GRID / 2), 8.0, Elements.Id.SAND)
+	_sim.upload(data.to_byte_array())
+	await _run_and_read(6)
+	_sim.request_splat_count()
+	var falling: int = await _sim.splat_count_ready
+	check(falling > 50, "falling sand emits splats (%d)" % falling)
+	await _run_and_read(2500)
+	_sim.request_splat_count()
+	var settled: int = await _sim.splat_count_ready
+	check(settled == 0, "a settled pile emits no splats (%d)" % settled)

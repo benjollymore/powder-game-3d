@@ -1,8 +1,10 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/sim/voxel_sim.gd" id="1_sim"]
 [ext_resource type="Shader" path="res://shaders/spatial/voxel_opaque.gdshader" id="2_opaque"]
 [ext_resource type="Shader" path="res://shaders/spatial/voxel_volume.gdshader" id="3_volume"]
+[ext_resource type="Shader" path="res://shaders/spatial/splat.gdshader" id="4_splat"]
+[ext_resource type="Script" path="res://scripts/render/splat_layer.gd" id="5_splats"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_unit"]
 
@@ -12,6 +14,9 @@ shader = ExtResource("2_opaque")
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_volume"]
 render_priority = -1
 shader = ExtResource("3_volume")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_splat"]
+shader = ExtResource("4_splat")
 
 [node name="SimVolume" type="Node3D"]
 script = ExtResource("1_sim")
@@ -25,3 +30,7 @@ mesh = SubResource("BoxMesh_unit")
 cast_shadow = 0
 material_override = SubResource("ShaderMaterial_volume")
 mesh = SubResource("BoxMesh_unit")
+
+[node name="Splats" type="MultiMeshInstance3D" parent="."]
+material_override = SubResource("ShaderMaterial_splat")
+script = ExtResource("5_splats")
