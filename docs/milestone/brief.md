@@ -2,6 +2,10 @@
 
 Start: 2026-09-14 20:10 UTC. Intended handoff: approximately 2026-09-15 00:10 UTC (21:10 Atlantic). Base: `62694cb`; integration branch: `milestone/fundamentals`. The user explicitly authorized an autonomous goal-driven swarm while away for about four hours. No external publishing or main replacement is required.
 
+User clarification: four hours is **not a hard cap**; overtime is authorized. Continue beyond the return target when needed for useful completion, integration and verification. This supersedes the initial goal's approximate time limit; do not rush or abandon necessary validation at that time.
+
+Latest user instruction: **keep going until the user comes back and checks in**. After the first milestone, continue useful review, iteration and bounded next experiments rather than stopping merely because the initial four-hour estimate elapsed.
+
 ## Outcome
 
 One dependable paint-and-sim loop: construct a container, fill it without damaging its walls, inspect the interior, run, paint into the live experiment, and return to the authored construction. WorldPainter remains the simple paint-first reference; advanced controls are optional. Preserve working Mac gestures and Option-drag fallbacks. Physical ambition remains richer interactions, momentum, heat, destruction and machinery; this milestone must not silently redefine that ambition as the current cellular model.
