@@ -1,0 +1,15 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: integrated simulation provides tick-owned click completion
+ok: 1 samples/frame adds exactly 24 grains over 120 ticks (got 24)
+ok: live drag leaves no immediate geometry queue
+ok: 16 samples/frame adds exactly 24 grains over 120 ticks (got 24)
+ok: live drag leaves no immediate geometry queue
+ok: actual packed material state is identical with 1 or 16 pointer samples/frame
+ok: quick click does not inject outside a simulation tick
+ok: quick click paints once on the next tick
+ok: completed quick click does not leave a held emitter
+ok: surface pointer input cannot bypass the tick-owned source either
+ok: focus cancellation adds no deferred click
+Live paint input GPU: 11 checks, 0 failures

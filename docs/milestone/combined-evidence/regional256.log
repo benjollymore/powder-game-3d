@@ -1,0 +1,21 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: regional before-images complete without error
+ok: two first-touched 8³ tiles transfer 4096 bytes, independent of grid size
+ok: recorded additive brush preserves wall
+ok: recorded stroke mutates intended cell
+ok: later erase executes in transaction order
+ok: regional undo accepts same-world transaction
+ok: overlapping brush commands undo all packed bytes exactly
+ok: mixed region and brush commands retain one before-image per tile
+ok: mixed region/brush undo restores exact original state
+ok: clamped edge region captures only one in-bounds tile
+ok: edge-region undo restores exact original state
+ok: world reset epoch rejects stale undo
+ok: old transaction cannot mutate a new world after reset
+ok: oversized transaction reports limit while retaining valid prefix undo
+ok: oversized remaining region causes no partial mutation
+ok: rejected region transfers no additional undo tiles
+ok: accepted prefix remains exactly undoable after cap rejection
+Regional undo GPU: 17 checks, 0 failures; full volume=67108864 bytes, tiny stroke=4096 bytes

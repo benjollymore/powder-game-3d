@@ -1,0 +1,33 @@
+test_apic_reproduces_full_affine_field (test_momentum_reference.MomentumReferenceTests) ... ok
+test_arbitrary_grid_velocity_transfers_momentum_to_apic (test_momentum_reference.MomentumReferenceTests) ... ok
+test_boundary_and_missing_nodes_are_rejected (test_momentum_reference.MomentumReferenceTests) ... ok
+test_grouping_roundtrips_does_not_change_state_or_positions (test_momentum_reference.MomentumReferenceTests) ... ok
+test_nonaffine_roundtrips_conserve_momentum_but_dissipate_energy (test_momentum_reference.MomentumReferenceTests) ... ok
+test_pic_and_apic_preserve_constant_translation (test_momentum_reference.MomentumReferenceTests) ... ok
+test_pic_rotation_dissipation_negative_control (test_momentum_reference.MomentumReferenceTests) ... ok
+test_quadratic_weights_reproduce_partition_position_covariance (test_momentum_reference.MomentumReferenceTests) ... ok
+test_single_particle_spin_requires_affine_angular_momentum (test_momentum_reference.MomentumReferenceTests) ... ok
+test_zero_C_initialization_does_not_reproduce_affine_velocity (test_momentum_reference.MomentumReferenceTests) ... ok
+test_analytic_insulated_cosine_diffusion_converges (test_thermal_reference.ThermalReferenceTests) ... ok
+test_conduction_across_phase_change_conserves_energy (test_thermal_reference.ThermalReferenceTests) ... ok
+test_identical_ticks_are_batch_invariant (test_thermal_reference.ThermalReferenceTests) ... ok
+test_insulated_two_material_blocks_10_seconds (test_thermal_reference.ThermalReferenceTests) ... ok
+test_latent_heat_plateau_and_source_ledger (test_thermal_reference.ThermalReferenceTests) ... ok
+test_liquid_mass_transfer_carries_specific_enthalpy (test_thermal_reference.ThermalReferenceTests) ... ok
+test_partial_fill_conduction_is_explicitly_unsupported (test_thermal_reference.ThermalReferenceTests) ... ok
+test_three_dimensional_hotspot_exchanges_with_six_faces (test_thermal_reference.ThermalReferenceTests) ... ok
+test_transfer_into_empty_and_reject_unsupported_without_mutation (test_thermal_reference.ThermalReferenceTests) ... ok
+test_two_material_equilibrium_uses_heat_capacity (test_thermal_reference.ThermalReferenceTests) ... ok
+test_unsafe_timestep_is_rejected_and_would_overshoot (test_thermal_reference.ThermalReferenceTests) ... ok
+test_zero_conductivity_insulates_and_material_changes_need_new_faces (test_thermal_reference.ThermalReferenceTests) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.661s
+
+OK
+METRIC affine_20_roundtrips max_velocity_error_m_s=2.75e-15 max_C_error_per_s=1.93e-14
+METRIC nonaffine_apic_20_roundtrips energy_retained=0.086257982 linear_error=1.83e-16 angular_error=5.17e-17
+METRIC rotation_20_roundtrips {"apic": {"angular_retained": 1.000000000000003, "center_energy_retained": 1.0000000000000058, "initial_affine_energy_J": 0.013020000000000004, "initial_center_energy_J": 0.027657931989247302, "total_energy_retained": 1.0000000000000056}, "pic": {"angular_retained": 0.001355251496559642, "center_energy_retained": 2.0356425545777455e-06, "initial_affine_energy_J": 0.0, "initial_center_energy_J": 0.027657931989247302, "total_energy_retained": 2.0356425545777455e-06}}
+METRIC diffusion_rms_K_16_32_64=[0.0016103779070520824, 0.0005064797721068627, 0.00012659918135519703] refinement_ratios=[3.179550291521429, 4.000655981225042]
+METRIC conducting_phase_change plateau_samples=8 energy_drift=2.16e-16
+METRIC insulated_128_cells steps=8 dt_s=1.25 energy_drift=1.21e-16 temperature_range_K=[300,400]

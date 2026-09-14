@@ -48,6 +48,10 @@ func _run() -> void:
 	_check(disappeared > 100, "clear plus inspection removes geometry in next drawn image (%d changed pixels)" % disappeared)
 	_check(residual < 20, "restored empty viewport has no stale volume or shadow (%d residual pixels)" % residual)
 	var directory := "res://docs/milestone/evidence-simulation/"
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("output_dir="):
+			directory = argument.trim_prefix("output_dir=").trim_suffix("/") + "/"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(directory))
 	empty.save_png(directory + "prepare-empty.png")
 	filled.save_png(directory + "prepare-filled.png")
 	cleared.save_png(directory + "prepare-cleared.png")

@@ -1,0 +1,18 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+PREPARATION variant=immediate rebuilds=7 voxel_sha256=4f3eaa200478bc84263a510e37421c8166b536eb883bc90a4543dd9b1985b04d air_sha256=81dbeafb234fd36fe42765fcef9ec5bab712afcc4a70fdf1ec43490b41b48e6a
+PREPARATION variant=deferred rebuilds=1 voxel_sha256=4f3eaa200478bc84263a510e37421c8166b536eb883bc90a4543dd9b1985b04d air_sha256=81dbeafb234fd36fe42765fcef9ec5bab712afcc4a70fdf1ec43490b41b48e6a
+ok: coalescing preserves ordered edit/tick voxel bytes
+ok: coalescing preserves all seven air solver textures
+ok: immediate control records seven separate preparations
+ok: same transaction prepares derived state exactly once
+ok: paused edit publishes via pre-draw preparation without inspection
+ok: paused rendering does not schedule simulation ticks
+ok: density inspection sees pending edit after implicit flush
+ok: sprite inspection flushes pending edit and emits physical leaves
+ok: disabling coalescing flushes pending presentation time
+ok: mode change is applied in render-thread command order
+ok: world replacement discards pending old-world time and geometry
+ok: empty extra flush cannot advance presentation clock
+RENDER_PREPARATION grid=128 checks=12 failures=0

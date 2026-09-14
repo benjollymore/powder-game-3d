@@ -12,6 +12,9 @@ var rows: Array[Dictionary] = []
 var out_dir := "res://docs/milestone/rendering-evidence"
 
 func _initialize() -> void:
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("output_dir="):
+			out_dir = argument.trim_prefix("output_dir=")
 	call_deferred("_run")
 
 func _run() -> void:

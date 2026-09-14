@@ -1,0 +1,18 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: scene pinch starts zooming
+ok: pinch continues across toolbar instead of cutting out
+ok: Shift-pan continues across toolbar instead of cutting out
+ok: gesture stream creates no paint transaction
+ok: scene pinch survives a GUI event consumer
+ok: scene pan survives a GUI event consumer
+ok: toolbar-origin sequence cannot turn into camera navigation
+ok: new gesture after idle can acquire the scene
+ok: focus loss clears previous scene ownership
+GESTURE_TRACE {"amount":1.00100004673004,"distance":1.07871837648998,"ms":569,"over_tools":false,"owner":"scene","position":"(1000.0, 400.0)","shift":false,"target":"(-0.154951, 0.077475, 0.0)","type":"InputEventMagnifyGesture"}
+GESTURE_TRACE {"amount":1.00100004673004,"distance":1.07764068544634,"ms":569,"over_tools":false,"owner":"scene","position":"(1000.0, 400.0)","shift":false,"target":"(-0.154951, 0.077475, 0.0)","type":"InputEventMagnifyGesture"}
+GESTURE_TRACE {"amount":1.00100004673004,"distance":1.07656407106739,"ms":569,"over_tools":false,"owner":"scene","position":"(1000.0, 400.0)","shift":false,"target":"(-0.154951, 0.077475, 0.0)","type":"InputEventMagnifyGesture"}
+GESTURE_TRACE {"amount":1.00100004673004,"distance":1.07548853227749,"ms":569,"over_tools":false,"owner":"scene","position":"(1000.0, 400.0)","shift":false,"target":"(-0.154951, 0.077475, 0.0)","type":"InputEventMagnifyGesture"}
+GESTURE_TRACE {"amount":1.00100004673004,"distance":1.07441406800207,"ms":569,"over_tools":false,"owner":"scene","position":"(1000.0, 400.0)","shift":false,"target":"(-0.154951, 0.077475, 0.0)","type":"InputEventMagnifyGesture"}
+ok: small pinch updates accumulate without a dead zone
+Gesture routing: 10 checks, 0 failures

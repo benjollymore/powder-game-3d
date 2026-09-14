@@ -1,0 +1,12 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: Run retains exact authored bytes before any Test ticks
+ok: Pause preserves actual voxel bytes and tick across later frames
+ok: paused Test remains visible and distinct from Build
+ok: Single step advances the production simulation exactly one tick
+ok: Resume continues the same Test without restoring or restarting it
+ok: pause, step and resume never overwrite the authored snapshot
+ok: Return from paused Test restores exact authored bytes and cancels a pending step
+ok: Build guards prevent later step/pause actions from advancing the restored world
+Test time GPU: 8 checks, 0 failures

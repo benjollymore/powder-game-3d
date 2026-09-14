@@ -1,0 +1,32 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: two quick releases queue two clicks without advancing time
+ok: release ends continuous emission
+ok: queued clicks do not paint before their tick
+ok: first click keeps its sand material and one-cell radius
+ok: second click keeps its water material and radius-one volume
+ok: each queued click is consumed once
+ok: completed quick clicks do not continue emitting
+ok: released click retains a deep copy of its original ray metadata
+ok: released click freezes radius, material and seed
+ok: release after initial source tick cannot add a duplicate click
+ok: navigation/cancel can discard an unstarted source
+ok: clear cancels pending click before next world tick
+ok: upload cancels pending click before next world tick
+ok: preset cancels pending click before next world tick
+WARNING: Live click queue full (32); newest click rejected until simulation advances
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _rt_finish_live_emitter (res://scripts/sim/voxel_sim.gd:1150)
+         [1] finish_live_emitter (res://scripts/sim/voxel_sim.gd:366)
+         [2] _queue_bound (res://tests/milestone/live_click.gd:92)
+         [3] _run (res://tests/milestone/live_click.gd:14)
+         [4] _cancel_and_reset (res://tests/milestone/live_click.gd:86)
+         [5] _voxels (res://tests/milestone/live_click.gd:122)
+ok: overflow preserves first 32 clicks and rejects newest with warning
+ok: one tick drains at most four queued clicks
+ok: remaining clicks retain FIFO order for future ticks
+ok: accepted bounded queue drains exactly once per click
+ok: queued clicks and held source preserve voxel bytes across batch schedules
+LIVE_CLICK grid=128 checks=19 failures=0

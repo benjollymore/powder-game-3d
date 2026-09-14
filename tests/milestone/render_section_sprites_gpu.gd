@@ -6,9 +6,13 @@ var card: MultiMeshInstance3D
 var failures := 0
 var checks := 0
 var rows: Array[Dictionary] = []
-const OUT := "res://docs/milestone/rendering-evidence"
+var OUT := "res://docs/milestone/rendering-evidence"
 
 func _initialize() -> void:
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("output_dir="):
+			OUT = argument.trim_prefix("output_dir=")
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
 	call_deferred("_run")
 
 func _run() -> void:

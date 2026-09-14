@@ -1,0 +1,114 @@
+[
+	{
+		"center": -0.02,
+		"clipped_side_pixels": 12168,
+		"kept_side_pixels": 20852,
+		"role": "splat",
+		"variant": "baseline"
+	},
+	{
+		"center": -0.02,
+		"clipped_side_pixels": 0,
+		"kept_side_pixels": 20852,
+		"role": "splat",
+		"variant": "fixed"
+	},
+	{
+		"center": 0.02,
+		"clipped_side_pixels": 0,
+		"kept_side_pixels": 0,
+		"role": "splat",
+		"variant": "baseline"
+	},
+	{
+		"center": 0.02,
+		"clipped_side_pixels": 0,
+		"kept_side_pixels": 12370,
+		"role": "splat",
+		"variant": "fixed"
+	},
+	{
+		"center": -0.02,
+		"clipped_side_pixels": 12168,
+		"kept_side_pixels": 20852,
+		"role": "droplet",
+		"variant": "baseline"
+	},
+	{
+		"center": -0.02,
+		"clipped_side_pixels": 0,
+		"kept_side_pixels": 20852,
+		"role": "droplet",
+		"variant": "fixed"
+	},
+	{
+		"center": 0.02,
+		"clipped_side_pixels": 0,
+		"kept_side_pixels": 0,
+		"role": "droplet",
+		"variant": "baseline"
+	},
+	{
+		"center": 0.02,
+		"clipped_side_pixels": 0,
+		"kept_side_pixels": 12370,
+		"role": "droplet",
+		"variant": "fixed"
+	},
+	{
+		"center": -0.02,
+		"clipped_side_pixels": 10407,
+		"kept_side_pixels": 18895,
+		"role": "leaf",
+		"variant": "baseline"
+	},
+	{
+		"center": -0.02,
+		"clipped_side_pixels": 0,
+		"kept_side_pixels": 18895,
+		"role": "leaf",
+		"variant": "fixed"
+	},
+	{
+		"center": 0.02,
+		"clipped_side_pixels": 0,
+		"kept_side_pixels": 0,
+		"role": "leaf",
+		"variant": "baseline"
+	},
+	{
+		"center": 0.02,
+		"clipped_side_pixels": 0,
+		"kept_side_pixels": 10598,
+		"role": "leaf",
+		"variant": "fixed"
+	},
+	{
+		"center": -0.02,
+		"clipped_side_pixels": 10518,
+		"kept_side_pixels": 18696,
+		"role": "fx",
+		"variant": "baseline"
+	},
+	{
+		"center": -0.02,
+		"clipped_side_pixels": 0,
+		"kept_side_pixels": 18696,
+		"role": "fx",
+		"variant": "fixed"
+	},
+	{
+		"center": 0.02,
+		"clipped_side_pixels": 0,
+		"kept_side_pixels": 0,
+		"role": "fx",
+		"variant": "baseline"
+	},
+	{
+		"center": 0.02,
+		"clipped_side_pixels": 0,
+		"kept_side_pixels": 10708,
+		"role": "fx",
+		"variant": "fixed"
+	}
+]

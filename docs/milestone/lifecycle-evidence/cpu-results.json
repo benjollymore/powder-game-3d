@@ -1,0 +1,53 @@
+[
+  {
+    "name": "gestures",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.68,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/discovery/gesture_routing.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/lifecycle-evidence/gestures"
+    ]
+  },
+  {
+    "name": "paint-tools",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.27,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/paint_tools.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/lifecycle-evidence/paint-tools"
+    ]
+  },
+  {
+    "name": "time-controls",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.28,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/test_time_controls.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/lifecycle-evidence/time-controls"
+    ]
+  }
+]

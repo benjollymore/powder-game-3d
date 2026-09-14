@@ -1,0 +1,137 @@
+[
+  {
+    "name": "physics128",
+    "pass": true,
+    "exit": 0,
+    "checks": 74,
+    "grid": 128,
+    "script": "tests/gpu/run_gpu_tests.gd",
+    "log": "physics128.log"
+  },
+  {
+    "name": "regional256",
+    "pass": true,
+    "exit": 0,
+    "checks": 17,
+    "grid": 256,
+    "script": "tests/milestone/regional_undo_gpu.gd",
+    "log": "regional256.log"
+  },
+  {
+    "name": "cadence128",
+    "pass": true,
+    "exit": 0,
+    "checks": 30,
+    "grid": 128,
+    "script": "tests/milestone/batch_cadence.gd",
+    "log": "cadence128.log"
+  },
+  {
+    "name": "reset128",
+    "pass": true,
+    "exit": 0,
+    "checks": 31,
+    "grid": 128,
+    "script": "tests/milestone/presentation_reset.gd",
+    "log": "reset128.log"
+  },
+  {
+    "name": "sources128",
+    "pass": true,
+    "exit": 0,
+    "checks": 34,
+    "grid": 128,
+    "script": "tests/milestone/live_emitter.gd",
+    "log": "sources128.log"
+  },
+  {
+    "name": "clicks128",
+    "pass": true,
+    "exit": 0,
+    "checks": 19,
+    "grid": 128,
+    "script": "tests/milestone/live_click.gd",
+    "log": "clicks128.log"
+  },
+  {
+    "name": "surface128",
+    "pass": true,
+    "exit": 0,
+    "checks": 36,
+    "grid": 128,
+    "script": "tests/milestone/surface_pick_gpu.gd",
+    "log": "surface128.log"
+  },
+  {
+    "name": "live-input128",
+    "pass": true,
+    "exit": 0,
+    "checks": 11,
+    "grid": 128,
+    "script": "tests/milestone/live_paint_input_gpu.gd",
+    "log": "live-input128.log"
+  },
+  {
+    "name": "archives128",
+    "pass": true,
+    "exit": 0,
+    "checks": 13,
+    "grid": 128,
+    "script": "tests/milestone/archive_editor_gpu.gd",
+    "log": "archives128.log"
+  },
+  {
+    "name": "actions128",
+    "pass": true,
+    "exit": 0,
+    "checks": 11,
+    "grid": 128,
+    "script": "tests/milestone/editor_actions_gpu.gd",
+    "log": "actions128.log"
+  },
+  {
+    "name": "editor128",
+    "pass": true,
+    "exit": 0,
+    "checks": 20,
+    "grid": 128,
+    "script": "tests/discovery/interaction_gpu.gd",
+    "log": "editor128.log"
+  },
+  {
+    "name": "trackpad128",
+    "pass": true,
+    "exit": 0,
+    "checks": 27,
+    "grid": 128,
+    "script": "tests/discovery/trackpad_gpu.gd",
+    "log": "trackpad128.log"
+  },
+  {
+    "name": "surfaces-render128",
+    "pass": true,
+    "exit": 0,
+    "checks": 60,
+    "grid": 128,
+    "script": "tests/milestone/render_surface_gpu.gd",
+    "log": "surfaces-render128.log"
+  },
+  {
+    "name": "sprites-render128",
+    "pass": true,
+    "exit": 0,
+    "checks": 40,
+    "grid": 128,
+    "script": "tests/milestone/render_section_sprites_gpu.gd",
+    "log": "sprites-render128.log"
+  },
+  {
+    "name": "liquid-render128",
+    "pass": true,
+    "exit": 0,
+    "checks": 61,
+    "grid": 128,
+    "script": "tests/milestone/render_liquid_section_gpu.gd",
+    "log": "liquid-render128.log"
+  }
+]

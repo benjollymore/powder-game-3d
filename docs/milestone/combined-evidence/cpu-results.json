@@ -1,0 +1,121 @@
+[
+  {
+    "name": "unit",
+    "pass": true,
+    "exit": 0,
+    "seconds": 1.07,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/unit/run_unit.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/combined-evidence/unit"
+    ]
+  },
+  {
+    "name": "gestures",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.68,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/discovery/gesture_routing.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/combined-evidence/gestures"
+    ]
+  },
+  {
+    "name": "editing-unit",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.18,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/editing_unit.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/combined-evidence/editing-unit"
+    ]
+  },
+  {
+    "name": "paint-tools",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.27,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/paint_tools.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/combined-evidence/paint-tools"
+    ]
+  },
+  {
+    "name": "archive-format",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.17,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/world_archive.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/combined-evidence/archive-format"
+    ]
+  },
+  {
+    "name": "archive-job",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.27,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/archive_job.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/combined-evidence/archive-job"
+    ]
+  },
+  {
+    "name": "archive-panel",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.57,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/archive_panel.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/combined-evidence/archive-panel"
+    ]
+  }
+]
