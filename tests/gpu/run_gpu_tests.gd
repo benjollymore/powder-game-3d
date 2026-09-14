@@ -407,8 +407,8 @@ func _test_pressure_pipe() -> void:
 
 func _test_density_pass() -> void:
 	var data := _empty_world()
-	_fill_box(data, Vector3i(10, 10, 10), Vector3i(12, 12, 12), Elements.Id.WALL)
-	_fill_box(data, Vector3i(20, 10, 10), Vector3i(22, 12, 12), Elements.Id.SAND)
+	_fill_box(data, Vector3i(8, 8, 8), Vector3i(12, 12, 12), Elements.Id.WALL)
+	_fill_box(data, Vector3i(20, 8, 8), Vector3i(26, 14, 14), Elements.Id.SAND)
 	_fill_box(data, Vector3i(30, 10, 10), Vector3i(32, 12, 12), Elements.Id.WATER, 200)
 	_fill_box(data, Vector3i(40, 10, 10), Vector3i(42, 12, 12), Elements.Id.WATER, 100)
 	_fill_box(data, Vector3i(50, 10, 10), Vector3i(52, 12, 12), Elements.Id.WATER, 50)
@@ -418,8 +418,22 @@ func _test_density_pass() -> void:
 	await process_frame
 	_sim.request_density_readback()
 	var den: PackedByteArray = await _sim.density_ready
-	check(den.size() == GRID * GRID * GRID, "density readback is one byte per voxel")
-	var at := func(x: int) -> int: return den[VoxelCodec.index(x, 10, 10)]
+	# texture_get_data returns every mip level of the layer; mip 0 comes first.
+	check(den.size() >= GRID * GRID * GRID * 4, "fields readback holds at least mip 0 (%d bytes)" % den.size())
+	var at := func(x: int) -> int: return den[VoxelCodec.index(x, 10, 10) * 4]
+	var g := func(x: int) -> int: return den[VoxelCodec.index(x, 10, 10) * 4 + 1]
+	check(g.call(10) == 255 and g.call(23) == 255, "wall and sand interior are opaque in the smoothed field (%d, %d)" % [g.call(10), g.call(23)])
+	check(g.call(12) == 0, "air beside a wall stays 0 in the smoothed field (walls do not smooth)")
+	check(g.call(26) > 10 and g.call(26) < 128, "air beside sand gets a partial smoothed value (%d)" % g.call(26))
+	check(g.call(25) > 128 and g.call(25) < 255, "sand surface cell is partially smoothed (%d)" % g.call(25))
+	# Mip 1 follows mip 0 in the readback: the sand block's interior texel there is opaque too.
+	var h := GRID / 2
+	var mip1 := GRID * GRID * GRID * 4
+	var m1 := func(x: int, y: int, z: int) -> int: return den[mip1 + (x + h * (y + h * z)) * 4 + 1]
+	check(den.size() >= mip1 + h * h * h * 4, "readback includes mip 1")
+	check(m1.call(11, 5, 5) > 200, "mip 1 sand interior is opaque (%d)" % m1.call(11, 5, 5))
+	check(m1.call(30, 5, 5) == 0, "mip 1 air is empty (%d)" % m1.call(30, 5, 5))
+	check(m1.call(5, 5, 5) == 255, "mip 1 wall interior is opaque (%d)" % m1.call(5, 5, 5))
 	check(at.call(5) == 0, "air density 0 (got %d)" % at.call(5))
 	check(at.call(10) == 255, "wall density 255 (got %d)" % at.call(10))
 	check(at.call(20) == 255, "sand density 255 (got %d)" % at.call(20))

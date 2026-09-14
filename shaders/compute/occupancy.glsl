@@ -18,7 +18,7 @@ struct Elem {
 	float extinction;
 	float air_coupling;
 	float heat;
-	float pad;
+	float smoothing;       // renderer: 0 crisp cubes .. 1 smooth heap
 };
 layout(std430, set = 0, binding = 2) restrict readonly buffer Elems { Elem elems[]; };
 

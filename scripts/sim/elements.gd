@@ -25,14 +25,16 @@ const LIQUID_FULL := 200
 ## extinction (gases): opacity per voxel travelled when rendered as a volume.
 ## air_coupling: how strongly the air velocity field carries the element.
 ## heat: buoyancy source for the air solver.
+## smooth (solids/powders): 0 keeps crisp cube faces, 1 renders as a smooth heap.
+## mat: texture layer in MaterialLibrary; grain: normal noise strength; rough: roughness.
 const TABLE := [
 	{ "name": "Air",   "color": Color(0, 0, 0, 0),          "flags": FLAG_GAS,                     "density": 10.0,   "decay": 0.0,  "decay_to": 0, "spread": 0.0 },
-	{ "name": "Wall",  "color": Color(0.45, 0.45, 0.48),    "flags": FLAG_IMMOVABLE,               "density": 1000.0, "decay": 0.0,  "decay_to": 0, "spread": 0.0 },
-	{ "name": "Sand",  "color": Color(0.86, 0.72, 0.42),    "flags": FLAG_POWDER,                  "density": 200.0,  "decay": 0.0,  "decay_to": 0, "spread": 0.0, "air_coupling": 0.05 },
+	{ "name": "Wall",  "color": Color(0.45, 0.45, 0.48),    "flags": FLAG_IMMOVABLE,               "density": 1000.0, "decay": 0.0,  "decay_to": 0, "spread": 0.0, "smooth": 0.0, "mat": 0, "grain": 0.08, "rough": 0.85 },
+	{ "name": "Sand",  "color": Color(0.86, 0.72, 0.42),    "flags": FLAG_POWDER,                  "density": 200.0,  "decay": 0.0,  "decay_to": 0, "spread": 0.0, "air_coupling": 0.05, "smooth": 1.0, "mat": 1, "grain": 0.35, "rough": 0.9 },
 	{ "name": "Water", "color": Color(0.2, 0.45, 0.9),      "flags": FLAG_LIQUID,                  "density": 100.0,  "decay": 0.0,  "decay_to": 0, "spread": 1.0, "air_coupling": 0.1 },
 	{ "name": "Steam", "color": Color(0.86, 0.89, 0.93),    "flags": FLAG_GAS,                     "density": 1.0,    "decay": 0.0005, "decay_to": 3, "spread": 0.6, "extinction": 0.12, "air_coupling": 1.0, "heat": 0.25 },
 	{ "name": "Fire",  "color": Color(1.0, 0.45, 0.1),      "flags": FLAG_GAS,                     "density": 2.0,    "decay": 0.05, "decay_to": 8, "spread": 0.3, "emission": 2.2, "extinction": 0.2, "air_coupling": 1.0, "heat": 1.0 },
-	{ "name": "Plant", "color": Color(0.2, 0.7, 0.25),      "flags": FLAG_IMMOVABLE | FLAG_FLAMMABLE, "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0 },
+	{ "name": "Plant", "color": Color(0.2, 0.7, 0.25),      "flags": FLAG_IMMOVABLE | FLAG_FLAMMABLE, "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0, "smooth": 0.6, "mat": 2, "grain": 0.2, "rough": 0.7 },
 	{ "name": "Oil",   "color": Color(0.35, 0.25, 0.15),    "flags": FLAG_LIQUID | FLAG_FLAMMABLE, "density": 80.0,   "decay": 0.0,  "decay_to": 0, "spread": 0.5, "air_coupling": 0.1 },
 	{ "name": "Smoke", "color": Color(0.2, 0.2, 0.22),      "flags": FLAG_GAS,                     "density": 3.0,    "decay": 0.002, "decay_to": 0, "spread": 0.5, "extinction": 0.3, "air_coupling": 1.0, "heat": 0.3 },
 ]
@@ -121,7 +123,26 @@ static func property_bytes() -> PackedByteArray:
 		out.encode_float(base + 16, float(e.get("extinction", 0.0)))
 		out.encode_float(base + 20, float(e.get("air_coupling", 0.0)))
 		out.encode_float(base + 24, float(e.get("heat", 0.0)))
-		out.encode_float(base + 28, 0.0)
+		out.encode_float(base + 28, float(e.get("smooth", 0.0)))
+	return out
+
+
+## Texture layer per element id (PALETTE_SIZE entries, 3 = generic).
+static func material_layers() -> PackedInt32Array:
+	var out := PackedInt32Array()
+	out.resize(PALETTE_SIZE)
+	out.fill(3)
+	for i in TABLE.size():
+		out[i] = int(TABLE[i].get("mat", 3))
+	return out
+
+
+## Any numeric per-element field as a PALETTE_SIZE float array.
+static func floats(key: String, default := 0.0) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	out.resize(PALETTE_SIZE)
+	for i in TABLE.size():
+		out[i] = float(TABLE[i].get(key, default))
 	return out
 
 

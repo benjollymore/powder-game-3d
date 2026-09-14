@@ -34,7 +34,9 @@ const BRUSH_LOCAL_SIZE := 8
 const HYDRO_SHADER_PATH := "res://shaders/compute/hydro.glsl"
 ## Percent of the gap to a horizontal run's mean closed per hydro pass.
 const HYDRO_RELAX_PERCENT := 50
-const DENSITY_SHADER_PATH := "res://shaders/compute/density.glsl"
+const FIELDS_SHADER_PATH := "res://shaders/compute/fields.glsl"
+const FIELDS_MIP_SHADER_PATH := "res://shaders/compute/fields_mip.glsl"
+const FIELDS_MIPS := 5
 const AIR_SHADER_DIR := "res://shaders/compute/air/"
 const AIR_KERNELS := ["air_downsample", "air_advect", "air_divergence", "air_jacobi", "air_project"]
 ## Coarse air grid: AIR_SUB^3 voxels per cell, 4^3 threads per workgroup.
@@ -100,11 +102,15 @@ var _air_sampler := RID()
 var _air_shaders := {}
 var _air_pipelines := {}
 var _air_sets := {}
-var _density_rid := RID()
+var _density_rid := RID()  # the RGBA8 "fields" texture (R liquid, G smoothed opaque, B gas)
 var _density_texture := Texture3DRD.new()
 var _density_shader := RID()
 var _density_pipeline := RID()
 var _density_set := RID()
+var _fields_views: Array = []      # storage view per mip level
+var _mip_shader := RID()
+var _mip_pipeline := RID()
+var _mip_sets: Array = []
 var _occ_rid := RID()
 var _occ_texture := Texture3DRD.new()
 var _occ_shader := RID()
@@ -122,18 +128,23 @@ static func world_size() -> float:
 func _ready() -> void:
 	add_to_group("sim")
 	scale = Vector3.ONE * world_size()
+	var debug_mode := 0
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("scenario="):
 			current_scenario = arg.substr(9)
+		elif arg.begins_with("debug="):
+			debug_mode = int(arg.substr(6))
 	var mesh: MeshInstance3D = get_node(mesh_path)
 	_material = mesh.material_override
+	_material.set_shader_parameter("debug_mode", debug_mode)
 	_material.set_shader_parameter("grid_size", GRID)
 	_material.set_shader_parameter("palette", Elements.palette())
 	_material.set_shader_parameter("liquid_mask", Elements.liquid_mask())
 	_material.set_shader_parameter("gas_mask", Elements.gas_mask())
 	_material.set_shader_parameter("extinction", Elements.extinction())
 	_material.set_shader_parameter("liquid_full", float(Elements.LIQUID_FULL))
-	_material.set_shader_parameter("density", _density_texture)
+	_material.set_shader_parameter("fields", _density_texture)
+	MaterialLibrary.apply(_material)
 	# Bound now, but only points at a real texture once the render thread has
 	# created it (see _process). Re-bound every run because the RD texture
 	# binding does not survive scene reloads.
@@ -310,18 +321,22 @@ func _rt_init() -> void:
 	_occ_rid = _rd.texture_create(occ_fmt, RDTextureView.new())
 
 	var den_fmt := RDTextureFormat.new()
-	den_fmt.format = RenderingDevice.DATA_FORMAT_R8_UNORM
+	den_fmt.format = RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM
 	den_fmt.texture_type = RenderingDevice.TEXTURE_TYPE_3D
 	den_fmt.width = GRID
 	den_fmt.height = GRID
 	den_fmt.depth = GRID
-	den_fmt.mipmaps = 1
+	den_fmt.mipmaps = FIELDS_MIPS
 	den_fmt.usage_bits = (
 		RenderingDevice.TEXTURE_USAGE_STORAGE_BIT
 		| RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
 		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
 	)
 	_density_rid = _rd.texture_create(den_fmt, RDTextureView.new())
+	_fields_views = []
+	for m in FIELDS_MIPS:
+		_fields_views.append(_rd.texture_create_shared_from_slice(
+			RDTextureView.new(), _density_rid, 0, m, 1, RenderingDevice.TEXTURE_SLICE_3D))
 
 	for i in 2:
 		_air_vel[i] = _rt_air_texture(RenderingDevice.DATA_FORMAT_R16G16B16A16_SFLOAT)
@@ -424,8 +439,10 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	var brush_spirv := _rt_compile(BRUSH_SHADER_PATH, from_source)
 	var occ_spirv := _rt_compile(OCCUPANCY_SHADER_PATH, from_source)
 	var hydro_spirv := _rt_compile(HYDRO_SHADER_PATH, from_source)
-	var density_spirv := _rt_compile(DENSITY_SHADER_PATH, from_source)
-	if sim_spirv == null or brush_spirv == null or occ_spirv == null or hydro_spirv == null or density_spirv == null:
+	var density_spirv := _rt_compile(FIELDS_SHADER_PATH, from_source)
+	var mip_spirv := _rt_compile(FIELDS_MIP_SHADER_PATH, from_source)
+	if sim_spirv == null or brush_spirv == null or occ_spirv == null or hydro_spirv == null \
+			or density_spirv == null or mip_spirv == null:
 		return
 	var air_spirv := {}
 	for k in AIR_KERNELS:
@@ -479,9 +496,15 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	_hydro_set = _rd.uniform_set_create([_image_uniform(0), _buffer_uniform(1, _elements_buffer)], _hydro_shader, 0)
 
 	_density_shader = _rd.shader_create_from_spirv(density_spirv)
-	_density_pipeline = _rd.compute_pipeline_create(_density_shader)
+	_density_pipeline = _rd.compute_pipeline_create(_density_shader, _spec([GRID]))
 	_density_set = _rd.uniform_set_create(
-		[_image_uniform(0), _image_uniform(1, _density_rid), _buffer_uniform(2, _elements_buffer)], _density_shader, 0)
+		[_image_uniform(0), _image_uniform(1, _fields_views[0]), _buffer_uniform(2, _elements_buffer)], _density_shader, 0)
+	_mip_shader = _rd.shader_create_from_spirv(mip_spirv)
+	_mip_pipeline = _rd.compute_pipeline_create(_mip_shader)
+	_mip_sets = []
+	for m in range(1, FIELDS_MIPS):
+		_mip_sets.append(_rd.uniform_set_create(
+			[_image_uniform(0, _fields_views[m - 1]), _image_uniform(1, _fields_views[m])], _mip_shader, 0))
 
 	_occ_shader = _rd.shader_create_from_spirv(occ_spirv)
 	_occ_pipeline = _rd.compute_pipeline_create(_occ_shader)
@@ -492,9 +515,13 @@ func _rt_build_pipelines(from_source: bool) -> void:
 
 
 func _rt_free_pipelines() -> void:
+	for ms in _mip_sets:
+		if ms.is_valid():
+			_rd.free_rid(ms)
+	_mip_sets = []
 	for rid in [_sim_set, _sim_pipeline, _sim_shader, _brush_set, _brush_pipeline, _brush_shader,
 			_occ_set, _occ_pipeline, _occ_shader, _hydro_set, _hydro_pipeline, _hydro_shader,
-			_density_set, _density_pipeline, _density_shader]:
+			_density_set, _density_pipeline, _density_shader, _mip_pipeline, _mip_shader]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
 	_sim_set = RID()
@@ -512,6 +539,8 @@ func _rt_free_pipelines() -> void:
 	_density_set = RID()
 	_density_pipeline = RID()
 	_density_shader = RID()
+	_mip_pipeline = RID()
+	_mip_shader = RID()
 	for d in [_air_sets, _air_pipelines, _air_shaders]:
 		for k in d:
 			if d[k].is_valid():
@@ -521,6 +550,10 @@ func _rt_free_pipelines() -> void:
 
 func _rt_free() -> void:
 	_rt_free_pipelines()
+	for v in _fields_views:
+		if v.is_valid():
+			_rd.free_rid(v)
+	_fields_views = []
 	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid, _density_rid,
 			_air_vel[0], _air_vel[1], _air_pres[0], _air_pres[1], _air_div, _air_occ, _air_src, _air_sampler]:
 		if rid.is_valid():
@@ -694,6 +727,16 @@ func _rt_occupancy_update() -> void:
 		_rd.compute_list_bind_compute_pipeline(cl, _density_pipeline)
 		_rd.compute_list_bind_uniform_set(cl, _density_set, 0)
 		_rd.compute_list_dispatch(cl, dg, dg, dg)
+		_rd.compute_list_add_barrier(cl)
+		_rd.compute_list_bind_compute_pipeline(cl, _mip_pipeline)
+		for m in range(1, FIELDS_MIPS):
+			var size := GRID >> m
+			var push := PackedInt32Array([size, size, size, 0]).to_byte_array()
+			_rd.compute_list_bind_uniform_set(cl, _mip_sets[m - 1], 0)
+			_rd.compute_list_set_push_constant(cl, push, push.size())
+			var mg := maxi(1, ceili(size / 4.0))
+			_rd.compute_list_dispatch(cl, mg, mg, mg)
+			_rd.compute_list_add_barrier(cl)
 	_rd.compute_list_end()
 
 

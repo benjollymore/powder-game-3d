@@ -25,7 +25,7 @@ struct Elem {
 	float extinction;   // renderer: volume opacity per voxel (gases)
 	float air_coupling; // air solver: how strongly the velocity field moves it
 	float heat;         // air solver: buoyancy source
-	float pad;
+	float smoothing;       // renderer: 0 crisp cubes .. 1 smooth heap
 };
 layout(std430, set = 0, binding = 1) restrict readonly buffer Elems { Elem elems[]; };
 

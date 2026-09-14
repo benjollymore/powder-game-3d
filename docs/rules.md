@@ -78,17 +78,23 @@ deterministic from a given upload.
 
 ## Rendering
 
-`shaders/spatial/voxel_raymarch.gdshader` walks the voxel texture per pixel.
-Solids and powders are opaque lit cubes. Liquids are drawn as the 0.5
-isosurface of the density texture written by `shaders/compute/density.glsl`
-(trilinear, so partial cells give a smooth surface at the right height), with
-Fresnel reflection of the sky, a sun highlight, in-scattering in the liquid's
-palette colour and Beer-Lambert absorption of whatever lies behind. Gases
-(steam, fire, smoke) are participating media accumulated along the ray using
-each element's `extinction`; fire also carries `emission` so it blooms. The
-material is transparent with premultiplied alpha, so the ground and sky show
-through water and gas at the box faces, and it writes depth at the first
-surface so other meshes composite correctly.
+`shaders/spatial/voxel_raymarch.gdshader` walks the voxel texture per pixel
+together with the renderer fields written by `shaders/compute/fields.glsl`
+(R liquid density, G smoothed opaque density, B gas, plus a mip chain from
+`fields_mip.glsl`). Solids and powders are the 0.5 isosurface of the smoothed
+field: each element's `smooth` sets how much a 3³ kernel blurs it, so walls
+(0) keep crisp cube faces while sand (1) renders as a heap. The hit is shaded
+with triplanar textures from `scripts/render/material_library.gd` (procedural
+placeholders per `mat` layer), a grain normal from a seamless 3D noise, cone
+traced ambient occlusion from the field mips, and curvature darkening, with
+the normal taken from a coarser mip so one-voxel stairs on slopes vanish.
+Liquids are the 0.5 isosurface of the liquid field (smoothed sideways across
+same-liquid neighbours) with Fresnel reflection, a sun highlight,
+in-scattering and Beer-Lambert absorption. Gases are participating media.
+The material is transparent with premultiplied alpha and writes depth at the
+first surface. Texture LOD is analytic and grows at grazing angles because
+explicit LOD gets no anisotropic filtering. `debug=N` on the command line
+shows flat colour (1), AO (2), normals (3), texture (4) or face normals (5).
 
 ## Scenarios
 

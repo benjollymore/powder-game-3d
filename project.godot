@@ -27,3 +27,5 @@ sim/grid_size=256
 
 renderer/rendering_method="forward_plus"
 anti_aliasing/quality/screen_space_aa=1
+scaling_3d/mode=3
+scaling_3d/scale=0.75
