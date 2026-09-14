@@ -115,6 +115,7 @@ func _run() -> void:
 	sim.paint(Vector3i(2, 2, 2), 0, Elements.Id.SAND)
 	lab._receive_pick(result, 5)
 	check(not lab.pick_cache.is_empty(), "live preview tolerates world evolution while atomic stamping owns correctness")
+	await _test_ray_boundaries()
 	if sim.has_method("set_live_emitter"):
 		await _test_tick_surface_emission()
 	print("Surface GPU: %d checks, %d failures" % [checks, failures])
@@ -148,3 +149,29 @@ func _test_tick_surface_emission() -> void:
 			baseline = bytes
 		else:
 			check(bytes == baseline, "atomic surface emission and material state are identical at batch%d" % batch)
+
+func _test_ray_boundaries() -> void:
+	var data := WorldBuilder.empty()
+	WorldBuilder.fill_box(data, Vector3i(64, 64, 64), Vector3i(65, 65, 65), Elements.Id.WALL)
+	sim.upload(data.to_byte_array())
+	var cell_center := Vector3(64.5, 64.5, 64.5) / VoxelCodec.GRID - Vector3.ONE * 0.5
+	for axis in 3:
+		for sign_value in [-1, 1]:
+			var normal := Vector3i.ZERO
+			normal[axis] = sign_value
+			var result := await query({"origin": cell_center + Vector3(normal) * 2.0, "direction": -Vector3(normal)})
+			check(result.valid and result.hit == Vector3i(64, 64, 64) and result.normal == normal and result.target == Vector3i(64, 64, 64) + normal,
+				"axis%d sign%d returns exact face normal and adjacent target" % [axis, sign_value])
+	var result := await query({"origin": cell_center, "direction": Vector3.RIGHT})
+	check(not result.valid and result.element == Elements.Id.WALL, "camera inside solid cannot invent an outside add face")
+	result = await query({"origin": cell_center, "direction": Vector3.RIGHT}, 0, true)
+	check(result.valid and result.target == Vector3i(64, 64, 64), "camera inside solid may erase that exact hit cell")
+	data = WorldBuilder.empty()
+	WorldBuilder.fill_box(data, Vector3i(40, 39, 64), Vector3i(41, 40, 65), Elements.Id.WALL)
+	WorldBuilder.fill_box(data, Vector3i(45, 45, 64), Vector3i(46, 46, 65), Elements.Id.WALL)
+	sim.upload(data.to_byte_array())
+	result = await query({"origin": Vector3(30.5, 30.5, 64.5) / VoxelCodec.GRID - Vector3.ONE * 0.5,
+		"direction": Vector3(1, 1, 0)}, 0, true)
+	check(result.valid and result.hit == Vector3i(45, 45, 64), "diagonal ray skips wall touched only at an edge")
+	result = await query({"origin": Vector3(1, 1, 0), "direction": Vector3(1, -1, 0)}, 0, true)
+	check(not result.valid, "ray pointing away from the volume does not produce a boundary hit")

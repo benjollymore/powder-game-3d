@@ -60,8 +60,15 @@ void main() {
         int axis = next_t.x <= next_t.y && next_t.x <= next_t.z ? 0 : (next_t.y <= next_t.z ? 1 : 2);
         t = next_t[axis];
         if (t >= leave) { return; }
-        cell[axis] += step_dir[axis];
-        next_t[axis] += delta[axis];
+        // Cross simultaneous faces together: side cells touched only at an
+        // edge/corner have zero ray length and must not occlude a true hit.
+        // Keep the first tied axis as a deterministic placement face.
         normal = ivec3(0); normal[axis] = -step_dir[axis];
+        for (int crossed = 0; crossed < 3; crossed++) {
+            if (next_t[crossed] <= t + 1e-6) {
+                cell[crossed] += step_dir[crossed];
+                next_t[crossed] += delta[crossed];
+            }
+        }
     }
 }
