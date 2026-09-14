@@ -1,0 +1,94 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project initialization (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Scanning file structure...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | Loading global class names...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | Verifying GDExtensions...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | Creating autoload scripts...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | Initializing plugins...[39m[0m
+[  83% ] [90m[1mfirst_scan_filesystem[22m | Starting file scan...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | Started Registering global classes... (18 steps)[39m[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[   5% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  10% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  15% ] [90m[1mupdate_scripts_classes[22m | MotionBlurEffect[39m[0m
+[  21% ] [90m[1mupdate_scripts_classes[22m | InstanceLayer[39m[0m
+[  26% ] [90m[1mupdate_scripts_classes[22m | MaterialLibrary[39m[0m
+[  31% ] [90m[1mupdate_scripts_classes[22m | Scenarios[39m[0m
+[  36% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  42% ] [90m[1mupdate_scripts_classes[22m | Elements[39m[0m
+[  47% ] [90m[1mupdate_scripts_classes[22m | VoxelCodec[39m[0m
+[  52% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  57% ] [90m[1mupdate_scripts_classes[22m | WorldBuilder[39m[0m
+[  63% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  68% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  73% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  78% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  84% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  89% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[92m[ DONE ][39m [1mupdate_scripts_classes[22m
+[0m
+[   0% ] [90m[1m_update_scan_actions[22m | Started Scanning actions... (15 steps)[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | air_advect.glsl[39m[0m
+[   6% ] [90m[1m_update_scan_actions[22m | air_divergence.glsl[39m[0m
+[  12% ] [90m[1m_update_scan_actions[22m | air_downsample.glsl[39m[0m
+[  18% ] [90m[1m_update_scan_actions[22m | air_jacobi.glsl[39m[0m
+[  25% ] [90m[1m_update_scan_actions[22m | air_project.glsl[39m[0m
+[  31% ] [90m[1m_update_scan_actions[22m | brush.glsl[39m[0m
+[  37% ] [90m[1m_update_scan_actions[22m | fields.glsl[39m[0m
+[  43% ] [90m[1m_update_scan_actions[22m | fields_mip.glsl[39m[0m
+[  50% ] [90m[1m_update_scan_actions[22m | fx.glsl[39m[0m
+[  56% ] [90m[1m_update_scan_actions[22m | hydro.glsl[39m[0m
+[  62% ] [90m[1m_update_scan_actions[22m | occupancy.glsl[39m[0m
+[  68% ] [90m[1m_update_scan_actions[22m | sim.glsl[39m[0m
+[  75% ] [90m[1m_update_scan_actions[22m | splat_emit.glsl[39m[0m
+[  81% ] [90m[1m_update_scan_actions[22m | sunvis.glsl[39m[0m
+[  87% ] [90m[1m_update_scan_actions[22m | motion_blur.glsl[39m[0m
+[92m[ DONE ][39m [1m_update_scan_actions[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (15 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   6% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  12% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  18% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  25% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  31% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  37% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  43% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  50% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  56% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  62% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  68% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  75% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  81% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  87% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   0% ] [90m[1mreimport[22m | Executing pre-reimport operations...[39m[0m
+[   0% ] [90m[1mreimport[22m | air_advect.glsl[39m[0m
+[   6% ] [90m[1mreimport[22m | air_divergence.glsl[39m[0m
+[  12% ] [90m[1mreimport[22m | air_downsample.glsl[39m[0m
+[  18% ] [90m[1mreimport[22m | air_jacobi.glsl[39m[0m
+[  25% ] [90m[1mreimport[22m | air_project.glsl[39m[0m
+[  31% ] [90m[1mreimport[22m | brush.glsl[39m[0m
+[  37% ] [90m[1mreimport[22m | fields.glsl[39m[0m
+[  43% ] [90m[1mreimport[22m | fields_mip.glsl[39m[0m
+[  50% ] [90m[1mreimport[22m | fx.glsl[39m[0m
+[  56% ] [90m[1mreimport[22m | hydro.glsl[39m[0m
+[  62% ] [90m[1mreimport[22m | occupancy.glsl[39m[0m
+[  68% ] [90m[1mreimport[22m | sim.glsl[39m[0m
+[  75% ] [90m[1mreimport[22m | splat_emit.glsl[39m[0m
+[  81% ] [90m[1mreimport[22m | sunvis.glsl[39m[0m
+[  87% ] [90m[1mreimport[22m | motion_blur.glsl[39m[0m
+[  93% ] [90m[1mreimport[22m | Finalizing Asset Import...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (15 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Executing post-reimport operations...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started Loading editor (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Loading editor layout...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | Loading docks...[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
