@@ -1,0 +1,30 @@
+layout(std430,set=0,binding=4) readonly buffer Temperature { float value[]; } temperature;
+// Same precise transfer arithmetic as canonical_transfer, but inputs have
+// already been decoded. Both neighbors still pass the lower-index cell first.
+float decoded_transfer(float ki, float kj, float ti, float tj) {
+    precise float conductance=(ki+kj==0.0) ? 0.0 : (2.0*ki*kj/(ki+kj))*pc.time.x;
+    precise float q=pc.time.y*conductance*(tj-ti);
+    return q;
+}
+void cell_faces(uvec3 p, out vec3 positive, out vec3 negative) {
+    uint i=index_of(p);
+    precise float center_t=temperature.value[i];
+    precise float center_k=materials.value[ids.value[i]].transport.y;
+    positive=vec3(0.0); negative=vec3(0.0);
+    for (uint axis=0u;axis<3u;axis++) {
+        uvec3 neighbor=p; neighbor[axis]++;
+        if (neighbor[axis]<pc.shape[axis]) {
+            uint j=index_of(neighbor);
+            precise float tj=temperature.value[j];
+            precise float kj=materials.value[ids.value[j]].transport.y;
+            positive[axis]=decoded_transfer(center_k,kj,center_t,tj);
+        }
+        if (p[axis]>0u) {
+            neighbor=p; neighbor[axis]--;
+            uint j=index_of(neighbor);
+            precise float tj=temperature.value[j];
+            precise float kj=materials.value[ids.value[j]].transport.y;
+            negative[axis]=decoded_transfer(kj,center_k,tj,center_t);
+        }
+    }
+}

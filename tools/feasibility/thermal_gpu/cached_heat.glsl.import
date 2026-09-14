@@ -1,0 +1,13 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://djwwr0vvmnkjs"
+path="res://.godot/imported/cached_heat.glsl-aced0ee5975cc964304f99a8d5f458f0.res"
+
+[deps]
+
+source_file="res://tools/feasibility/thermal_gpu/cached_heat.glsl"
+dest_files=["res://.godot/imported/cached_heat.glsl-aced0ee5975cc964304f99a8d5f458f0.res"]
+
+[params]

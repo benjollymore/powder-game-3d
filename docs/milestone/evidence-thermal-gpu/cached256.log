@@ -1,0 +1,28 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+THERMAL_COMPARE_CONFIG variant=two-pass n=256 logical_MiB=576 diagnostics_allocated=true
+CASE variant=two-pass n=256 steps_per_frame=0 repeat=0 drained_mean_ms=2.885946 frame_p95_ms=8.432000 ticks=0 interface_energy_J=[246.850006103516, 16.8500003814697]
+CASE variant=two-pass n=256 steps_per_frame=1 repeat=0 drained_mean_ms=4.674858 frame_p95_ms=8.028000 ticks=270 interface_energy_J=[224.363098144531, 38.7785606384277]
+CASE variant=two-pass n=256 steps_per_frame=4 repeat=0 drained_mean_ms=17.044779 frame_p95_ms=17.481000 ticks=1080 interface_energy_J=[192.222366333008, 84.7766952514648]
+THERMAL_COMPARE_CONFIG variant=reuse n=256 logical_MiB=192 diagnostics_allocated=false
+CASE variant=reuse n=256 steps_per_frame=0 repeat=0 drained_mean_ms=2.224567 frame_p95_ms=6.575000 ticks=0 interface_energy_J=[246.850006103516, 16.8500003814697]
+CASE variant=reuse n=256 steps_per_frame=1 repeat=0 drained_mean_ms=4.789892 frame_p95_ms=8.338000 ticks=270 interface_energy_J=[224.363098144531, 38.7785682678223]
+CASE variant=reuse n=256 steps_per_frame=4 repeat=0 drained_mean_ms=17.872904 frame_p95_ms=17.946000 ticks=1080 interface_energy_J=[192.222351074219, 84.776741027832]
+THERMAL_COMPARE_CONFIG variant=cached n=256 logical_MiB=256 diagnostics_allocated=false
+CASE variant=cached n=256 steps_per_frame=0 repeat=0 drained_mean_ms=2.090371 frame_p95_ms=5.549000 ticks=0 interface_energy_J=[246.850006103516, 16.8500003814697]
+CASE variant=cached n=256 steps_per_frame=1 repeat=0 drained_mean_ms=3.968671 frame_p95_ms=8.486000 ticks=270 interface_energy_J=[224.363098144531, 38.7785682678223]
+CASE variant=cached n=256 steps_per_frame=4 repeat=0 drained_mean_ms=13.194758 frame_p95_ms=13.317000 ticks=1080 interface_energy_J=[192.222351074219, 84.776741027832]
+THERMAL_COMPARE_CONFIG variant=cached n=256 logical_MiB=256 diagnostics_allocated=false
+CASE variant=cached n=256 steps_per_frame=4 repeat=1 drained_mean_ms=13.204788 frame_p95_ms=13.342000 ticks=1080 interface_energy_J=[192.222351074219, 84.776741027832]
+CASE variant=cached n=256 steps_per_frame=1 repeat=1 drained_mean_ms=3.921492 frame_p95_ms=8.519000 ticks=270 interface_energy_J=[224.363098144531, 38.7785682678223]
+CASE variant=cached n=256 steps_per_frame=0 repeat=1 drained_mean_ms=1.820183 frame_p95_ms=2.284000 ticks=0 interface_energy_J=[246.850006103516, 16.8500003814697]
+THERMAL_COMPARE_CONFIG variant=reuse n=256 logical_MiB=192 diagnostics_allocated=false
+CASE variant=reuse n=256 steps_per_frame=4 repeat=1 drained_mean_ms=17.878908 frame_p95_ms=17.953000 ticks=1080 interface_energy_J=[192.222351074219, 84.776741027832]
+CASE variant=reuse n=256 steps_per_frame=1 repeat=1 drained_mean_ms=4.980446 frame_p95_ms=8.887000 ticks=270 interface_energy_J=[224.363098144531, 38.7785682678223]
+CASE variant=reuse n=256 steps_per_frame=0 repeat=1 drained_mean_ms=2.022458 frame_p95_ms=6.165000 ticks=0 interface_energy_J=[246.850006103516, 16.8500003814697]
+THERMAL_COMPARE_CONFIG variant=two-pass n=256 logical_MiB=576 diagnostics_allocated=true
+CASE variant=two-pass n=256 steps_per_frame=4 repeat=1 drained_mean_ms=17.838696 frame_p95_ms=18.187000 ticks=1080 interface_energy_J=[192.222366333008, 84.7766952514648]
+CASE variant=two-pass n=256 steps_per_frame=1 repeat=1 drained_mean_ms=4.871392 frame_p95_ms=8.355000 ticks=270 interface_energy_J=[224.363098144531, 38.7785606384277]
+CASE variant=two-pass n=256 steps_per_frame=0 repeat=1 drained_mean_ms=2.261917 frame_p95_ms=7.445000 ticks=0 interface_energy_J=[246.850006103516, 16.8500003814697]
+THERMAL_COMPARE_BENCH failures=0

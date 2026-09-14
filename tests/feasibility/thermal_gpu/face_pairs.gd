@@ -10,6 +10,8 @@ func _initialize() -> void:
 	create_timer(90.0).timeout.connect(func(): push_error("Face audit timed out"); quit(1))
 	if "thermal_variant=reuse" in OS.get_cmdline_user_args():
 		_gpu_path = "res://tools/feasibility/thermal_gpu/reuse_gpu.gd"
+	if "thermal_variant=cached" in OS.get_cmdline_user_args():
+		_gpu_path = "res://tools/feasibility/thermal_gpu/cached_gpu.gd"
 	call_deferred("_run")
 
 func _run() -> void:

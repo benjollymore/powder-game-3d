@@ -1,0 +1,13 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://yqmokij0soyo"
+path="res://.godot/imported/cached_audit.glsl-089d7df60737612fb3d9a07cda06e297.res"
+
+[deps]
+
+source_file="res://tools/feasibility/thermal_gpu/cached_audit.glsl"
+dest_files=["res://.godot/imported/cached_audit.glsl-089d7df60737612fb3d9a07cda06e297.res"]
+
+[params]

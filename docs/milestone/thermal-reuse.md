@@ -2,6 +2,8 @@
 
 Explicitly decoding each cell's own temperature once improves the [first fused implementation](thermal-fused.md) while preserving every tested FP32 energy and diagnostic byte. At 256³, four steps per visible frame fall from **23.827 to 17.877 ms** (25.0% lower), with the same **192 MiB** steady logical GPU allocation. This remains an isolated stationary-conduction experiment, with no production heat coupling.
 
+The final [cached-temperature comparison](thermal-cached.md) evaluates the middle-storage alternative against both this candidate and the original reference in one process.
+
 ## Change and correctness
 
 `reuse_heat.glsl` computes the center temperature and conductivity outside the face loop. Each face then decodes only its neighbor and passes the pair in canonical lower-index→upper-index order to the same precise transfer expression. The final gather retains +x,+y,+z,-x,-y,-z order and skips missing boundary faces. The shared `state_of` decoder and all original fused/two-pass shader sources remain unchanged. An adapter subclass selects the new heat/audit shaders; the first fused adapter's default kernel selection remains unchanged.

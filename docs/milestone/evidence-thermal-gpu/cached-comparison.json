@@ -1,0 +1,110 @@
+[
+  {
+    "name": "hotspot_3d",
+    "checkpoints": 1,
+    "exact_energy_checkpoints": 1,
+    "exact_state_checkpoints": 1,
+    "maximum_cell_energy_difference_J": 0.0,
+    "maximum_temperature_difference_K": 0.0,
+    "maximum_fraction_difference": 0.0
+  },
+  {
+    "name": "interface_3d",
+    "checkpoints": 4,
+    "exact_energy_checkpoints": 4,
+    "exact_state_checkpoints": 4,
+    "maximum_cell_energy_difference_J": 0.0,
+    "maximum_temperature_difference_K": 0.0,
+    "maximum_fraction_difference": 0.0
+  },
+  {
+    "name": "below_reference",
+    "checkpoints": 1,
+    "exact_energy_checkpoints": 1,
+    "exact_state_checkpoints": 1,
+    "maximum_cell_energy_difference_J": 0.0,
+    "maximum_temperature_difference_K": 0.0,
+    "maximum_fraction_difference": 0.0
+  },
+  {
+    "name": "equilibrium_3d",
+    "checkpoints": 1,
+    "exact_energy_checkpoints": 1,
+    "exact_state_checkpoints": 1,
+    "maximum_cell_energy_difference_J": 0.0,
+    "maximum_temperature_difference_K": 0.0,
+    "maximum_fraction_difference": 0.0
+  },
+  {
+    "name": "conducting_phase",
+    "checkpoints": 9,
+    "exact_energy_checkpoints": 9,
+    "exact_state_checkpoints": 9,
+    "maximum_cell_energy_difference_J": 0.0,
+    "maximum_temperature_difference_K": 0.0,
+    "maximum_fraction_difference": 0.0
+  },
+  {
+    "name": "latent_plateau",
+    "checkpoints": 1,
+    "exact_energy_checkpoints": 1,
+    "exact_state_checkpoints": 1,
+    "maximum_cell_energy_difference_J": 0.0,
+    "maximum_temperature_difference_K": 0.0,
+    "maximum_fraction_difference": 0.0
+  },
+  {
+    "name": "insulated_interface",
+    "checkpoints": 1,
+    "exact_energy_checkpoints": 1,
+    "exact_state_checkpoints": 1,
+    "maximum_cell_energy_difference_J": 0.0,
+    "maximum_temperature_difference_K": 0.0,
+    "maximum_fraction_difference": 0.0
+  },
+  {
+    "name": "diffusion_16",
+    "checkpoints": 1,
+    "exact_energy_checkpoints": 1,
+    "exact_state_checkpoints": 1,
+    "maximum_cell_energy_difference_J": 0.0,
+    "maximum_temperature_difference_K": 0.0,
+    "maximum_fraction_difference": 0.0
+  },
+  {
+    "name": "diffusion_32",
+    "checkpoints": 1,
+    "exact_energy_checkpoints": 1,
+    "exact_state_checkpoints": 1,
+    "maximum_cell_energy_difference_J": 0.0,
+    "maximum_temperature_difference_K": 0.0,
+    "maximum_fraction_difference": 0.0
+  },
+  {
+    "name": "diffusion_64",
+    "checkpoints": 1,
+    "exact_energy_checkpoints": 1,
+    "exact_state_checkpoints": 1,
+    "maximum_cell_energy_difference_J": 0.0,
+    "maximum_temperature_difference_K": 0.0,
+    "maximum_fraction_difference": 0.0
+  },
+  {
+    "name": "batch_phase",
+    "checkpoints": 1,
+    "exact_energy_checkpoints": 1,
+    "exact_state_checkpoints": 1,
+    "maximum_cell_energy_difference_J": 0.0,
+    "maximum_temperature_difference_K": 0.0,
+    "maximum_fraction_difference": 0.0
+  },
+  {
+    "name": "varied_materials_3d",
+    "checkpoints": 4,
+    "exact_energy_checkpoints": 4,
+    "exact_state_checkpoints": 4,
+    "maximum_cell_energy_difference_J": 0.0,
+    "maximum_temperature_difference_K": 0.0,
+    "maximum_fraction_difference": 0.0
+  }
+]

@@ -17,6 +17,9 @@ func _initialize() -> void:
 		elif arg == "thermal_variant=reuse":
 			_gpu_path = "res://tools/feasibility/thermal_gpu/reuse_gpu.gd"
 			_prefix = "reuse-"
+		elif arg == "thermal_variant=cached":
+			_gpu_path = "res://tools/feasibility/thermal_gpu/cached_gpu.gd"
+			_prefix = "cached-"
 		elif arg == "thermal_variant=baseline":
 			_prefix = "baseline-"
 	create_timer(180.0).timeout.connect(func(): push_error("Thermal GPU experiment timed out"); quit(1))

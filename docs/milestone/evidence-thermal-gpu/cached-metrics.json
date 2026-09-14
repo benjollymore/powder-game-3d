@@ -1,0 +1,156 @@
+{
+  "metrics": [
+    {
+      "name": "hotspot_3d",
+      "steps": 1,
+      "dt": 0.8333333333333336,
+      "stable_dt": 1.6666666666666672,
+      "max_temperature_error_K": 8.138020837122895e-05,
+      "max_fraction_error": 0.0,
+      "energy_relative_drift": 4.624156091736535e-09,
+      "max_cell_energy_error_J": 2.4414062551159077e-05,
+      "final_energy_drift_J": 3.814697606685513e-06,
+      "plateau_samples": 0
+    },
+    {
+      "name": "interface_3d",
+      "steps": 1000,
+      "dt": 1.2631578947368425,
+      "stable_dt": 1.578947368421053,
+      "max_temperature_error_K": 9.42013358553595e-05,
+      "max_fraction_error": 0.0,
+      "energy_relative_drift": 6.106772560664411e-07,
+      "max_cell_energy_error_J": 0.00014734037105768039,
+      "final_energy_drift_J": -0.009155273422948085,
+      "plateau_samples": 0
+    },
+    {
+      "name": "below_reference",
+      "steps": 500,
+      "dt": 1.2500000000000002,
+      "stable_dt": 2.5000000000000004,
+      "max_temperature_error_K": 6.1035156022626325e-05,
+      "max_fraction_error": 0.0,
+      "energy_relative_drift": 1.813069129862834e-08,
+      "max_cell_energy_error_J": 3.0899047850141415e-05,
+      "final_energy_drift_J": 3.814697407733547e-06,
+      "plateau_samples": 0
+    },
+    {
+      "name": "equilibrium_3d",
+      "steps": 1000,
+      "dt": 0.8333333333333336,
+      "stable_dt": 1.6666666666666672,
+      "max_temperature_error_K": 6.1035156022626325e-05,
+      "max_fraction_error": 0.0,
+      "energy_relative_drift": 0.0,
+      "max_cell_energy_error_J": 1.525878957409077e-06,
+      "final_energy_drift_J": 0.0,
+      "plateau_samples": 0
+    },
+    {
+      "name": "conducting_phase",
+      "steps": 300,
+      "dt": 5.000000000000001,
+      "stable_dt": 10.000000000000002,
+      "max_temperature_error_K": 6.973743552407541e-06,
+      "max_fraction_error": 7.152557390810443e-08,
+      "energy_relative_drift": 3.6165125134495144e-08,
+      "max_cell_energy_error_J": 9.155273062333436e-06,
+      "final_energy_drift_J": -9.536742709315149e-06,
+      "plateau_samples": 4
+    },
+    {
+      "name": "latent_plateau",
+      "steps": 20,
+      "dt": 1,
+      "stable_dt": 1e+30,
+      "max_temperature_error_K": 0.0,
+      "max_fraction_error": 7.152557390810443e-08,
+      "energy_relative_drift": 0.0,
+      "max_cell_energy_error_J": 6.103515943323146e-06,
+      "final_energy_drift_J": 0.0,
+      "plateau_samples": 9
+    },
+    {
+      "name": "insulated_interface",
+      "steps": 1000,
+      "dt": 1,
+      "stable_dt": 1e+30,
+      "max_temperature_error_K": 6.1035156022626325e-05,
+      "max_fraction_error": 0.0,
+      "energy_relative_drift": 0.0,
+      "max_cell_energy_error_J": 1.5258790710959147e-06,
+      "final_energy_drift_J": 0.0,
+      "plateau_samples": 0
+    },
+    {
+      "name": "diffusion_16",
+      "steps": 11,
+      "dt": 0.09090909090909091,
+      "stable_dt": 0.19531250000000006,
+      "max_temperature_error_K": 7.001256039984582e-05,
+      "max_fraction_error": 0.0,
+      "energy_relative_drift": 3.1768462348413495e-08,
+      "max_cell_energy_error_J": 6.26366594858041e-06,
+      "final_energy_drift_J": -9.536743391436175e-06,
+      "plateau_samples": 0,
+      "analytic_rms_K": 0.0016173221002651766
+    },
+    {
+      "name": "diffusion_32",
+      "steps": 41,
+      "dt": 0.024390243902439025,
+      "stable_dt": 0.048828125000000014,
+      "max_temperature_error_K": 8.676914978877903e-05,
+      "max_fraction_error": 0.0,
+      "energy_relative_drift": 1.5884230568419272e-08,
+      "max_cell_energy_error_J": 9.929114614948276e-07,
+      "final_energy_drift_J": 1.1920928955078125e-06,
+      "plateau_samples": 0,
+      "analytic_rms_K": 0.0005050532030535808
+    },
+    {
+      "name": "diffusion_64",
+      "steps": 164,
+      "dt": 0.006097560975609756,
+      "stable_dt": 0.012207031250000003,
+      "max_temperature_error_K": 9.853754863797803e-05,
+      "max_fraction_error": 0.0,
+      "energy_relative_drift": 7.942115290517355e-09,
+      "max_cell_energy_error_J": 1.2513677555281433e-07,
+      "final_energy_drift_J": 1.4901161193847656e-07,
+      "plateau_samples": 0,
+      "analytic_rms_K": 0.00012844873045279813
+    },
+    {
+      "name": "batch_phase",
+      "steps": 80,
+      "dt": 2.0000000000000004,
+      "stable_dt": 2.5000000000000004,
+      "max_temperature_error_K": 1.651177819894656e-05,
+      "max_fraction_error": 0.0,
+      "energy_relative_drift": 3.6336739867699144e-08,
+      "max_cell_energy_error_J": 1.7619413966940556e-05,
+      "final_energy_drift_J": 8.39233371152659e-05,
+      "plateau_samples": 0
+    },
+    {
+      "name": "varied_materials_3d",
+      "steps": 1000,
+      "dt": 1.1428571428571432,
+      "stable_dt": 1.428571428571429,
+      "max_temperature_error_K": 8.138020837122895e-05,
+      "max_fraction_error": 9.29404444627302e-07,
+      "energy_relative_drift": 4.130750092414066e-07,
+      "max_cell_energy_error_J": 0.0002540485681947757,
+      "final_energy_drift_J": -0.006202816963195801,
+      "plateau_samples": 15
+    }
+  ],
+  "diffusion_refinement_ratios": [
+    3.202280651794215,
+    3.931943906905144
+  ],
+  "failures": []
+}

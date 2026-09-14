@@ -7,7 +7,7 @@ DIRECTORY = Path(__file__).resolve().parents[3] / "docs/milestone/evidence-therm
 
 
 def main(first="baseline", second="fused"):
-    prefix = "reuse-" if second == "reuse" else ""
+    prefix = second + "-" if second in ["reuse", "cached"] else ""
     variants = [json.loads((DIRECTORY / f"{v}-results.json").read_text()) for v in [first, second]]
     assert len(variants[0]["cases"]) == len(variants[1]["cases"]) == 12
     assert all(v["failures"] == 0 and v["checks"] > 0 for v in variants)
@@ -37,7 +37,7 @@ def main(first="baseline", second="fused"):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--first", choices=["baseline", "fused"], default="baseline")
-    parser.add_argument("--second", choices=["fused", "reuse"], default="fused")
+    parser.add_argument("--first", choices=["baseline", "fused", "reuse"], default="baseline")
+    parser.add_argument("--second", choices=["fused", "reuse", "cached"], default="fused")
     args = parser.parse_args()
     main(args.first, args.second)

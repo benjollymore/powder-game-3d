@@ -1,0 +1,14 @@
+METRIC hotspot_3d steps=1 temperature_error_K=8.13802084e-05 fraction_error=0 energy_drift_relative=4.62415609e-09 drift_J=3.81469761e-06 plateau_samples=0
+METRIC interface_3d steps=1000 temperature_error_K=9.42013359e-05 fraction_error=0 energy_drift_relative=6.10677256e-07 drift_J=-0.00915527342 plateau_samples=0
+METRIC below_reference steps=500 temperature_error_K=6.1035156e-05 fraction_error=0 energy_drift_relative=1.81306913e-08 drift_J=3.81469741e-06 plateau_samples=0
+METRIC equilibrium_3d steps=1000 temperature_error_K=6.1035156e-05 fraction_error=0 energy_drift_relative=0 drift_J=0 plateau_samples=0
+METRIC conducting_phase steps=300 temperature_error_K=6.97374355e-06 fraction_error=7.15255739e-08 energy_drift_relative=3.61651251e-08 drift_J=-9.53674271e-06 plateau_samples=4
+METRIC latent_plateau steps=20 temperature_error_K=0 fraction_error=7.15255739e-08 energy_drift_relative=0 drift_J=0 plateau_samples=9
+METRIC insulated_interface steps=1000 temperature_error_K=6.1035156e-05 fraction_error=0 energy_drift_relative=0 drift_J=0 plateau_samples=0
+METRIC diffusion_16 steps=11 temperature_error_K=7.00125604e-05 fraction_error=0 energy_drift_relative=3.17684623e-08 drift_J=-9.53674339e-06 plateau_samples=0
+METRIC diffusion_32 steps=41 temperature_error_K=8.67691498e-05 fraction_error=0 energy_drift_relative=1.58842306e-08 drift_J=1.1920929e-06 plateau_samples=0
+METRIC diffusion_64 steps=164 temperature_error_K=9.85375486e-05 fraction_error=0 energy_drift_relative=7.94211529e-09 drift_J=1.49011612e-07 plateau_samples=0
+METRIC batch_phase steps=80 temperature_error_K=1.65117782e-05 fraction_error=0 energy_drift_relative=3.63367399e-08 drift_J=8.39233371e-05 plateau_samples=0
+METRIC varied_materials_3d steps=1000 temperature_error_K=8.13802084e-05 fraction_error=9.29404445e-07 energy_drift_relative=4.13075009e-07 drift_J=-0.00620281696 plateau_samples=15
+DIFFUSION rms_K=[0.0016173221002651766, 0.0005050532030535808, 0.00012844873045279813] refinement_ratios=[3.202280651794215, 3.931943906905144]
+THERMAL_NUMERICS failures=0
