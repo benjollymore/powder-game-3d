@@ -106,13 +106,35 @@ shader intersects each point's ray toward the sun with the box and samples
 the field where it enters, giving a voxel-accurate shadow with no shadow map.
 
 Powder cells carry a "moved age" (byte A bits 1-2, set to 3 when a grain
-moves and counting down at rest). Grains that moved recently and have nothing
-under them are airborne: `shaders/compute/fields.glsl` leaves them out of the
-heap surface and `shaders/compute/splat_emit.glsl` appends them, with a
-per-grain jitter, into a MultiMesh instance buffer (`scripts/render/splat_layer.gd`,
-`shaders/spatial/splat.gdshader`) drawn as lit, alpha-scissored, camera-facing
-grain sprites, so poured sand reads as individual grains and a settled pile
-emits none. The buffer is filled on the GPU and never touched from the CPU.
+moves and counting down at rest); liquid cells use the same bits as a "landed
+age", set by `hydro.glsl` the tick a falling run comes to rest. After every
+world change `shaders/compute/splat_emit.glsl` walks the occupied bricks and
+fills MultiMesh instance buffers on the GPU (`scripts/render/instance_layer.gd`,
+one node per layer under SimVolume; the CPU never touches the instances):
+
+- **Grains** (`splat.gdshader`): powders that moved recently with nothing
+  under them. `fields.glsl` leaves them out of the heap surface, so poured
+  sand reads as a curtain of lit, camera-facing grain sprites and a settled
+  pile emits none.
+- **Leaves** (`leaf.gdshader`): every plant cell (`FLAG_LEAFY`) exposed to
+  air grows a leaf card oriented outward and tilted by its seed, unless it
+  sits in a vertical run of plant at least GRID/8 tall (bark). Cards are
+  two-sided with a back-light term, sway with simulation time, and cover the
+  smoothed green surface underneath. Trees are wood trunks with canopies of
+  overlapping plant spheres, and a one-cell plant layer reads as grass.
+- **Droplets** (`droplet.gdshader`): falling liquid cells with at most two
+  liquid face neighbours are thin spray; the fields pass drops them from the
+  liquid surface and they draw as blended glossy beads after the volume pass.
+- **FX pool** (`fx.glsl`, `fx.gdshader`): a persistent buffer of 32k
+  particles stepped once per frame by simulation time (frozen time freezes
+  them). The emit pass queues spawn requests (embers off exposed fire, dust
+  where grains land, a ring of splash droplets where liquid lands); dead slots
+  claim them. Particles follow the air velocity field with per-kind buoyancy,
+  drag and flutter, die against the smoothed opaque field (dust settles on
+  it), and draw as unshaded soft discs: embers emissive so they bloom, dust
+  and splash lit by sun visibility.
+
+`sprites=0` and `fx=0` on the command line disable the layers for benchmarks.
 
 The depth prepass is disabled: an opaque material that writes depth would run
 the raymarch twice, and the voxel AO covers what SSAO provided. `debug=N`

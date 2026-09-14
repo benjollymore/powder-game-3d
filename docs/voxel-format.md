@@ -9,7 +9,7 @@ Each voxel is four bytes, read and written as exact integers (unorm8 round-trips
 | R | element id (`Elements.Id`, 0 = air) |
 | G | per-voxel random seed: colour variation now, rule randomness later. Travels with the grain when it moves. |
 | B | liquid amount, 0 for anything that is not a liquid. `Elements.LIQUID_FULL` (200) is a nominal full cell; deeper cells hold up to 255 as hydrostatic compression |
-| A | bit 0: the liquid is in an unsupported (falling) run, set by `hydro.glsl`; other bits reserved |
+| A | bit 0: the liquid is in an unsupported (falling) run, set by `hydro.glsl`. Bits 1-2: for powders the "moved age" (3 on the tick a grain moves, counting down at rest, written by `sim.glsl`); for liquids the "landed age" (3 on the tick a falling run comes to rest, counting down, written by `hydro.glsl`). Both drive the sprite layers (see `docs/rules.md`). Other bits reserved |
 
 Why RGBA8 and not R32_UINT: the renderer samples the same texture through
 `Texture3DRD`, which only accepts RenderingDevice formats that map to an

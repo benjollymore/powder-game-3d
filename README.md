@@ -18,7 +18,7 @@ to start in a preset.
 | Key | Action |
 |---|---|
 | Left mouse (hold) | Paint with the brush at the sphere cursor |
-| 1–8 | Pick element (wall, sand, water, steam, fire, plant, oil, smoke) |
+| 1–9 | Pick element (wall, sand, water, steam, fire, plant, oil, smoke, wood) |
 | X | Toggle erase |
 | [ / ] | Brush radius |
 | Shift + scroll | Move the brush cursor along the view ray |

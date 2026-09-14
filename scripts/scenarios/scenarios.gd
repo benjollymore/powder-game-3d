@@ -14,6 +14,7 @@ const STEAM := Elements.Id.STEAM
 const FIRE := Elements.Id.FIRE
 const PLANT := Elements.Id.PLANT
 const OIL := Elements.Id.OIL
+const WOOD := Elements.Id.WOOD
 
 const DEFAULT := "Demo"
 ## Reference box the coordinates below are written in.
@@ -138,17 +139,21 @@ static func _steam_vent(data: PackedInt32Array) -> void:
 	_box(data, Vector3i(33, 12, 33), Vector3i(95, 36, 95), WATER)
 
 
-## Trunk plus a blocky canopy; face-connected so fire can climb it.
+## Wood trunk with a canopy of overlapping plant spheres; face-connected so
+## fire can climb it. Leaf cards grow on the plant (see splat_emit.glsl).
 static func _tree(data: PackedInt32Array, base: Vector3i, height: int, trunk: int, canopy: int) -> void:
 	var half_t := trunk / 2
-	var half_c := canopy / 2
-	_box(data, Vector3i(base.x - half_t, base.y, base.z - half_t),
-		Vector3i(base.x + half_t, base.y + height, base.z + half_t), PLANT)
+	var r := canopy * 0.5
 	var top := base.y + height
-	_box(data, Vector3i(base.x - half_c, top - 4, base.z - half_c),
-		Vector3i(base.x + half_c, top + 4, base.z + half_c), PLANT)
-	_box(data, Vector3i(base.x - half_c / 2, top + 4, base.z - half_c / 2),
-		Vector3i(base.x + half_c / 2, top + 8, base.z + half_c / 2), PLANT)
+	var c := Vector3(base.x, top, base.z)
+	_box(data, Vector3i(base.x - half_t, base.y, base.z - half_t),
+		Vector3i(base.x + half_t, top - int(r * 0.4), base.z + half_t), WOOD)
+	_sphere(data, c, r, PLANT)
+	var seed := base.x * 31 + base.z * 17 + height
+	var lobes := [Vector3(0.55, 0.15, 0.1), Vector3(-0.4, 0.3, 0.45), Vector3(0.05, 0.45, -0.5), Vector3(-0.3, -0.1, -0.35)]
+	for i in lobes.size():
+		var l: Vector3 = lobes[(i + seed) % lobes.size()]
+		_sphere(data, c + l * r, r * (0.55 + 0.1 * float((seed >> i) & 1)), PLANT)
 
 
 # --- reference-unit primitives ------------------------------------------------

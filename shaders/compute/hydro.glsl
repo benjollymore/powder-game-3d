@@ -113,7 +113,16 @@ void profile_column(int s, int e, uint L, uint M) {
 		carry = (want > MAX_AMOUNT) ? want - MAX_AMOUNT : 0u;
 		want = min(want, MAX_AMOUNT);
 		int idx = s + int(k);
-		write(idx, load(idx), L, want, w);
+		uvec4 v = load(idx);
+		// Bits 1-2: "landed" age, set to 3 the tick a falling run comes to rest,
+		// counting down after (splash and foam triggers for the renderer).
+		uint landed = (v.w >> 1) & 3u;
+		if ((v.w & FALLING) != 0u && w == 0u) {
+			landed = 3u;
+		} else if (landed > 0u) {
+			landed -= 1u;
+		}
+		write(idx, v, L, want, w | (landed << 1));
 	}
 }
 

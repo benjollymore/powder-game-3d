@@ -5,13 +5,15 @@ extends RefCounted
 ## Adding an element = one row in TABLE (+ shader code only if it needs
 ## bespoke behaviour).
 
-enum Id { AIR, WALL, SAND, WATER, STEAM, FIRE, PLANT, OIL, SMOKE }
+enum Id { AIR, WALL, SAND, WATER, STEAM, FIRE, PLANT, OIL, SMOKE, WOOD }
 
 const FLAG_IMMOVABLE := 1 << 0
 const FLAG_POWDER := 1 << 1
 const FLAG_LIQUID := 1 << 2
 const FLAG_GAS := 1 << 3
 const FLAG_FLAMMABLE := 1 << 4
+## Exposed cells grow leaf cards (see splat_emit.glsl).
+const FLAG_LEAFY := 1 << 5
 
 ## Renderer palette slots; keep in sync with `palette[16]` in the shader.
 const PALETTE_SIZE := 16
@@ -34,9 +36,10 @@ const TABLE := [
 	{ "name": "Water", "color": Color(0.2, 0.45, 0.9),      "flags": FLAG_LIQUID,                  "density": 100.0,  "decay": 0.0,  "decay_to": 0, "spread": 1.0, "air_coupling": 0.1 },
 	{ "name": "Steam", "color": Color(0.86, 0.89, 0.93),    "flags": FLAG_GAS,                     "density": 1.0,    "decay": 0.0005, "decay_to": 3, "spread": 0.6, "extinction": 0.12, "air_coupling": 1.0, "heat": 0.25 },
 	{ "name": "Fire",  "color": Color(1.0, 0.45, 0.1),      "flags": FLAG_GAS,                     "density": 2.0,    "decay": 0.05, "decay_to": 8, "spread": 0.3, "emission": 2.2, "extinction": 0.2, "air_coupling": 1.0, "heat": 1.0 },
-	{ "name": "Plant", "color": Color(0.2, 0.7, 0.25),      "flags": FLAG_IMMOVABLE | FLAG_FLAMMABLE, "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0, "smooth": 0.6, "mat": 2, "grain": 0.2, "rough": 0.7 },
+	{ "name": "Plant", "color": Color(0.2, 0.7, 0.25),      "flags": FLAG_IMMOVABLE | FLAG_FLAMMABLE | FLAG_LEAFY, "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0, "smooth": 0.6, "mat": 2, "grain": 0.2, "rough": 0.7 },
 	{ "name": "Oil",   "color": Color(0.35, 0.25, 0.15),    "flags": FLAG_LIQUID | FLAG_FLAMMABLE, "density": 80.0,   "decay": 0.0,  "decay_to": 0, "spread": 0.5, "air_coupling": 0.1 },
 	{ "name": "Smoke", "color": Color(0.2, 0.2, 0.22),      "flags": FLAG_GAS,                     "density": 3.0,    "decay": 0.002, "decay_to": 0, "spread": 0.5, "extinction": 0.3, "air_coupling": 1.0, "heat": 0.3 },
+	{ "name": "Wood",  "color": Color(0.42, 0.28, 0.16),    "flags": FLAG_IMMOVABLE | FLAG_FLAMMABLE, "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0, "smooth": 0.5, "mat": 4, "grain": 0.15, "rough": 0.8 },
 ]
 
 
@@ -45,6 +48,7 @@ const TABLE := [
 const REACTIONS := [
 	[Id.FIRE, Id.PLANT, Id.FIRE, Id.FIRE, 0.5],   # plant catches fire
 	[Id.FIRE, Id.OIL, Id.FIRE, Id.FIRE, 0.5],     # oil ignites
+	[Id.FIRE, Id.WOOD, Id.FIRE, Id.FIRE, 0.08],   # wood burns, slowly
 	[Id.FIRE, Id.WATER, Id.AIR, Id.STEAM, 1.0],   # water puts fire out and boils
 	[Id.PLANT, Id.WATER, Id.PLANT, Id.PLANT, 0.0015], # plant drinks water and grows (slowly)
 ]

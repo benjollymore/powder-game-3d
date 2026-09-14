@@ -59,6 +59,21 @@ uint stage(ivec3 p) {
 	}
 	uint flags = elems[id].flags;
 	if ((flags & FLAG_LIQUID) != 0u) {
+		if ((v.w & 1u) != 0u) {
+			// Falling: thin spray (two or fewer liquid face neighbours) is drawn
+			// as droplets by splat_emit.glsl and left out of the surface.
+			int wet = 0;
+			const ivec3 dirs[6] = ivec3[6](ivec3(1, 0, 0), ivec3(-1, 0, 0), ivec3(0, 1, 0), ivec3(0, -1, 0), ivec3(0, 0, 1), ivec3(0, 0, -1));
+			for (int i = 0; i < 6; i++) {
+				ivec3 q = p + dirs[i];
+				if (any(lessThan(q, ivec3(0))) || any(greaterThanEqual(q, ivec3(GRID)))) { continue; }
+				uint nid = uint(imageLoad(grid, q).r * 255.0 + 0.5);
+				if (nid != 0u && (elems[nid].flags & FLAG_LIQUID) != 0u) { wet++; }
+			}
+			if (wet <= 2) {
+				return 0u;
+			}
+		}
 		return 2u | (uint(liquid_density(v.z) * 255.0 + 0.5) << 16);
 	}
 	if ((flags & (FLAG_IMMOVABLE | FLAG_POWDER)) == 0u) {

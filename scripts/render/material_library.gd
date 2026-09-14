@@ -5,7 +5,7 @@ extends RefCounted
 ## Replace with CC0 textures (ambientCG) by loading images into the same arrays.
 
 const SIZE := 256
-const LAYERS := 4  # 0 stone, 1 sand, 2 plant, 3 generic
+const LAYERS := 5  # 0 stone, 1 sand, 2 plant, 3 generic, 4 wood
 
 static var _albedo: Texture2DArray
 static var _normal: Texture2DArray
@@ -34,6 +34,7 @@ static func _build() -> void:
 		[0.12, 3, 0.7, 2.0],   # sand: fine, low contrast
 		[0.06, 4, 1.1, 3.0],   # plant
 		[0.05, 4, 1.0, 3.0],   # generic
+		[0.05, 4, 1.4, 3.5],   # wood: squashed into vertical grain below
 	]
 	for i in LAYERS:
 		var n := FastNoiseLite.new()
@@ -42,6 +43,8 @@ static func _build() -> void:
 		n.frequency = params[i][0]
 		n.fractal_octaves = params[i][1]
 		var height := n.get_seamless_image(SIZE, SIZE, false, false, 0.1, true)
+		if i == 4:
+			height = _streaks(height, 8)
 		var albedo := height.duplicate()
 		albedo.convert(Image.FORMAT_RGB8)
 		albedo.adjust_bcs(1.0, params[i][2], 1.0)
@@ -67,3 +70,14 @@ static func _build() -> void:
 	_grain.depth = 32
 	_grain.seamless = true
 	_grain.noise = gn
+
+
+## Squash a seamless image horizontally by `factor` and tile it back to size,
+## giving grain that runs along Y (wood).
+static func _streaks(src: Image, factor: int) -> Image:
+	var strip := src.duplicate()
+	strip.resize(SIZE / factor, SIZE, Image.INTERPOLATE_CUBIC)
+	var out := Image.create(SIZE, SIZE, false, src.get_format())
+	for k in factor:
+		out.blit_rect(strip, Rect2i(0, 0, SIZE / factor, SIZE), Vector2i(k * SIZE / factor, 0))
+	return out

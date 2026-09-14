@@ -1,10 +1,15 @@
+class_name InstanceLayer
 extends MultiMeshInstance3D
-## Airborne-grain splats. Owns a MultiMesh whose instance buffer is filled on
-## the GPU each frame by the sim's splat_emit pass; nothing here touches
-## instance data from the CPU after allocation (that would re-enable Godot's
-## CPU-side cache and clobber the GPU writes).
+## A MultiMesh whose instance buffer is filled on the GPU (splat_emit.glsl,
+## fx.glsl). Nothing here touches instance data from the CPU after
+## allocation: that would re-enable Godot's CPU-side cache and clobber the
+## GPU writes. Unused instances are zero-size and cost nothing to draw.
 
-const CAPACITY := 131072
+## Instance slots; sets the storage buffer size (64 bytes each).
+@export var capacity := 131072
+## Which emit kernel output fills this layer: grains, leaves, droplets, fx.
+@export_enum("grains", "leaves", "droplets", "fx") var role := 0
+
 
 func _ready() -> void:
 	var mm := MultiMesh.new()
@@ -17,7 +22,7 @@ func _ready() -> void:
 	# A custom AABB on the resource stops Godot recomputing bounds from the
 	# buffer every frame (a GPU readback) once the GPU owns the instance data.
 	mm.custom_aabb = AABB(Vector3(-0.6, -0.6, -0.6), Vector3(1.2, 1.2, 1.2))
-	mm.instance_count = CAPACITY
+	mm.instance_count = capacity
 	multimesh = mm
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	# Debug: `splatdebug=1` places one CPU-set instance at the top of the box to

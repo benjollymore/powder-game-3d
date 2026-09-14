@@ -42,7 +42,8 @@ func _run() -> void:
 		["_test_brush_paints", 3], ["_test_occupancy", 3], ["_test_liquid_mass", 3],
 		["_test_u_bend", 3], ["_test_pressure_pipe", 3], ["_test_density_pass", 3],
 		["_test_fire_burns_plant", 0], ["_test_water_boils_on_fire", 0], ["_test_oil_floats", 3],
-		["_test_air_boundary", 3], ["_test_air_plume", 2], ["_test_splats", 3], ["_test_large_grid_smoke", 0],
+		["_test_air_boundary", 3], ["_test_air_plume", 2], ["_test_splats", 3], ["_test_sprites", 3],
+		["_test_large_grid_smoke", 0],
 	]
 	for t in tests:
 		if only != "":
@@ -581,3 +582,44 @@ func _test_splats() -> void:
 	_sim.request_splat_count()
 	var settled: int = await _sim.splat_count_ready
 	check(settled == 0, "a settled pile emits no splats (%d)" % settled)
+
+
+func _layer_counts() -> PackedInt32Array:
+	_sim.request_layer_counts()
+	return await _sim.layer_counts_ready
+
+
+func _test_sprites() -> void:
+	# Leaves grow on exposed plant, thin falling water becomes droplets, water
+	# that lands sets the landed bits, and fire feeds the FX pool with embers.
+	var data := _empty_world()
+	WorldBuilder.floor(data)
+	WorldBuilder.fill_sphere(data, Vector3(GRID / 2, 30, GRID / 2), 10.0, Elements.Id.PLANT)
+	WorldBuilder.fill_box(data, Vector3i(20, 16, 20), Vector3i(21, 40, 21), Elements.Id.WATER)
+	_sim.upload(data.to_byte_array())
+	await _run_and_read(2)
+	var counts := await _layer_counts()
+	check(counts[1] > 200, "exposed plant grows leaf cards (%d)" % counts[1])
+	check(counts[2] >= 20, "a thin falling stream is drawn as droplets (%d)" % counts[2])
+	check(counts[5] == 0, "no fx particles without fire or impacts (%d)" % counts[5])
+	# Landed bits: read the column every few ticks until the stream has come to rest.
+	var seen_landed := false
+	for i in 80:
+		var bytes := await _run_and_read(2)
+		for y in range(4, 12):
+			var w := bytes[VoxelCodec.index(20, y, 20) * 4 + 3]
+			if bytes[VoxelCodec.index(20, y, 20) * 4] == Elements.Id.WATER and (w >> 1) & 3 != 0:
+				seen_landed = true
+		if seen_landed:
+			break
+	check(seen_landed, "liquid that comes to rest carries the landed bits")
+
+	data = _empty_world()
+	WorldBuilder.floor(data)
+	WorldBuilder.fill_box(data, Vector3i(30, 4, 30), Vector3i(100, 8, 100), Elements.Id.FIRE)
+	_sim.upload(data.to_byte_array())
+	for i in 4:
+		await _run_and_read(2)
+	counts = await _layer_counts()
+	check(counts[5] > 0, "fire feeds embers into the fx pool (%d alive)" % counts[5])
+	check(counts[1] == 0, "no leaves without plant (%d)" % counts[1])

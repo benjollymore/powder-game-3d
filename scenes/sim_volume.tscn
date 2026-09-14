@@ -1,10 +1,13 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/sim/voxel_sim.gd" id="1_sim"]
 [ext_resource type="Shader" path="res://shaders/spatial/voxel_opaque.gdshader" id="2_opaque"]
 [ext_resource type="Shader" path="res://shaders/spatial/voxel_volume.gdshader" id="3_volume"]
 [ext_resource type="Shader" path="res://shaders/spatial/splat.gdshader" id="4_splat"]
-[ext_resource type="Script" path="res://scripts/render/splat_layer.gd" id="5_splats"]
+[ext_resource type="Script" path="res://scripts/render/instance_layer.gd" id="5_layer"]
+[ext_resource type="Shader" path="res://shaders/spatial/leaf.gdshader" id="6_leaf"]
+[ext_resource type="Shader" path="res://shaders/spatial/droplet.gdshader" id="7_droplet"]
+[ext_resource type="Shader" path="res://shaders/spatial/fx.gdshader" id="8_fx"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_unit"]
 
@@ -17,6 +20,17 @@ shader = ExtResource("3_volume")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_splat"]
 shader = ExtResource("4_splat")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_leaf"]
+shader = ExtResource("6_leaf")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_droplet"]
+render_priority = 1
+shader = ExtResource("7_droplet")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fx"]
+render_priority = 2
+shader = ExtResource("8_fx")
 
 [node name="SimVolume" type="Node3D"]
 script = ExtResource("1_sim")
@@ -33,4 +47,24 @@ mesh = SubResource("BoxMesh_unit")
 
 [node name="Splats" type="MultiMeshInstance3D" parent="."]
 material_override = SubResource("ShaderMaterial_splat")
-script = ExtResource("5_splats")
+script = ExtResource("5_layer")
+capacity = 131072
+role = 0
+
+[node name="Leaves" type="MultiMeshInstance3D" parent="."]
+material_override = SubResource("ShaderMaterial_leaf")
+script = ExtResource("5_layer")
+capacity = 262144
+role = 1
+
+[node name="Droplets" type="MultiMeshInstance3D" parent="."]
+material_override = SubResource("ShaderMaterial_droplet")
+script = ExtResource("5_layer")
+capacity = 65536
+role = 2
+
+[node name="Fx" type="MultiMeshInstance3D" parent="."]
+material_override = SubResource("ShaderMaterial_fx")
+script = ExtResource("5_layer")
+capacity = 32768
+role = 3

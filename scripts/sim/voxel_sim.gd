@@ -24,6 +24,8 @@ signal density_ready(bytes: PackedByteArray)
 signal scenario_changed(name: String)
 signal velocity_ready(bytes: PackedByteArray)
 signal splat_count_ready(count: int)
+## Per-frame sprite counts: grains, leaves, droplets, spawn requests, fx claims, fx alive.
+signal layer_counts_ready(counts: PackedInt32Array)
 
 var GRID: int = VoxelCodec.GRID
 ## Scene units are metres; every voxel is one centimetre, so the box is
@@ -48,6 +50,12 @@ const RULE_NO_AIR := 4
 const OCCUPANCY_SHADER_PATH := "res://shaders/compute/occupancy.glsl"
 const SUNVIS_SHADER_PATH := "res://shaders/compute/sunvis.glsl"
 const SPLAT_SHADER_PATH := "res://shaders/compute/splat_emit.glsl"
+const FX_SHADER_PATH := "res://shaders/compute/fx.glsl"
+## Spawn requests the emit pass may queue per frame for the FX pool.
+const FX_SPAWN_CAPACITY := 4096
+## Sprite layers filled by the GPU, indexed by InstanceLayer.role.
+enum Layer { GRAINS, LEAVES, DROPLETS, FX }
+const LAYER_COUNT := 4
 const SUNVIS_SLABS_PER_DISPATCH := 8
 ## The sun-visibility field is swept at half resolution (2 cm cells at 256^3).
 const SUNVIS_DIV := 2
@@ -68,7 +76,6 @@ const BRUSH_PUSH_INTS := 12
 
 @export var mesh_path: NodePath = ^"Mesh"
 @export var volume_mesh_path: NodePath = ^"VolumeMesh"
-@export var splats_path: NodePath = ^"Splats"
 @export var world_seed := 12345
 ## Set by TimeController normally; tests drive ticks directly.
 @export var listen_to_time_controller := true
@@ -80,6 +87,10 @@ const BRUSH_PUSH_INTS := 12
 @export var air_enabled := true
 ## Rebuild the sun-visibility field whenever the world changes.
 @export var sunvis_enabled := true
+## Fill the sprite layers (grains, leaves, droplets) after each world change.
+@export var sprites_enabled := true
+## Advance the FX particle pool (embers, dust, splash) each frame.
+@export var fx_enabled := true
 ## Capture GPU timestamps around each pass (read with profile_report()).
 @export var profile := false
 var volume_debug := 0
@@ -90,8 +101,12 @@ var volume_debug := 0
 ## Preset world loaded at start and by R / Reload. `scenario=Name` on the
 ## command line (after `--`) overrides it.
 @export var current_scenario := Scenarios.DEFAULT
+## Sim seconds per tick, for FX particles and leaf sway; taken from
+## TimeController when it drives the sim.
+@export var seconds_per_tick := 1.0 / 120.0
 
 var tick := 0
+var _frame := 0
 
 var _rd: RenderingDevice
 var _grid_rid := RID()
@@ -137,13 +152,18 @@ var _sunvis_texture := Texture3DRD.new()
 var _sunvis_shader := RID()
 var _sunvis_pipeline := RID()
 var _sunvis_set := RID()
-var _splat_multimesh := RID()
-var _splat_capacity := 0
-var _splat_buffer := RID()
-var _splat_counter := RID()
+var _layer_multimesh: Array = []   # MultiMesh RIDs per Layer
+var _layer_capacity: Array = []
+var _layer_buffer: Array = []      # RD storage buffers behind each MultiMesh
+var _splat_counter := RID()        # 16 uints: see splat_emit.glsl
 var _splat_shader := RID()
 var _splat_pipeline := RID()
 var _splat_set := RID()
+var _fx_shader := RID()
+var _fx_pipeline := RID()
+var _fx_set := RID()
+var _fx_pool := RID()
+var _fx_spawns := RID()
 var _occ_shader := RID()
 var _occ_pipeline := RID()
 var _occ_set := RID()
@@ -169,18 +189,30 @@ func _ready() -> void:
 			volume_debug = int(arg.substr(7))
 		elif arg == "sunvis=0":
 			sunvis_enabled = false
+		elif arg == "sprites=0":
+			sprites_enabled = false
+		elif arg == "fx=0":
+			fx_enabled = false
 	var mesh: MeshInstance3D = get_node(mesh_path)
 	_material = mesh.material_override
 	_volume_material = get_node(volume_mesh_path).material_override
-	var splats := get_node_or_null(splats_path)
 	_materials = [_material, _volume_material]
-	if splats:
-		_splat_multimesh = splats.multimesh.get_rid()
-		_splat_capacity = splats.CAPACITY
-		var sm: ShaderMaterial = splats.material_override
-		_materials.append(sm)
-		sm.set_shader_parameter("box_center", Vector3.ZERO)
-		sm.set_shader_parameter("box_half", 0.5 * world_size())
+	_layer_multimesh.resize(LAYER_COUNT)
+	_layer_capacity.resize(LAYER_COUNT)
+	_layer_buffer.resize(LAYER_COUNT)
+	_layer_multimesh.fill(RID())
+	_layer_capacity.fill(0)
+	_layer_buffer.fill(RID())
+	for child in get_children():
+		if child is InstanceLayer:
+			_layer_multimesh[child.role] = child.multimesh.get_rid()
+			_layer_capacity[child.role] = child.capacity
+			var sm: ShaderMaterial = child.material_override
+			_materials.append(sm)
+			sm.set_shader_parameter("box_center", Vector3.ZERO)
+			sm.set_shader_parameter("box_half", 0.5 * world_size())
+	if listen_to_time_controller:
+		seconds_per_tick = 1.0 / TimeController.TICKS_PER_SECOND
 	_material.set_shader_parameter("debug_mode", debug_mode)
 	_volume_material.set_shader_parameter("volume_debug", volume_debug)
 	set_param("grid_size", GRID)
@@ -232,6 +264,7 @@ func _process(_delta: float) -> void:
 		_occ_texture.texture_rd_rid = _occ_rid
 		_density_texture.texture_rd_rid = _density_rid
 		_sunvis_texture.texture_rd_rid = _sunvis_rid
+	set_param("sim_time", tick * seconds_per_tick)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -295,6 +328,13 @@ func request_readback(callback: Callable) -> void:
 func request_occupancy_readback() -> void:
 	if _rt_ready:
 		RenderingServer.call_on_render_thread(_rt_occupancy_readback)
+
+
+## Sprite counts of the last emit (see Layer and fx.glsl); `layer_counts_ready`
+## fires on the main thread with 16 ints.
+func request_layer_counts() -> void:
+	if _rt_ready:
+		RenderingServer.call_on_render_thread(_rt_layer_counts)
 
 
 ## Number of airborne-grain splats emitted last frame; `splat_count_ready`
@@ -404,9 +444,19 @@ func _rt_init() -> void:
 	_sunvis_rid = _rd.texture_create(sv_fmt, RDTextureView.new())
 	_rd.texture_clear(_sunvis_rid, Color(1, 1, 1, 1), 0, 1, 0, 1)
 
-	_splat_counter = _rd.storage_buffer_create(16, PackedByteArray([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
-	if _splat_multimesh.is_valid():
-		_splat_buffer = RenderingServer.multimesh_get_buffer_rd_rid(_splat_multimesh)
+	var zeros := PackedByteArray()
+	zeros.resize(64)
+	_splat_counter = _rd.storage_buffer_create(64, zeros)
+	for i in LAYER_COUNT:
+		if _layer_multimesh[i].is_valid():
+			_layer_buffer[i] = RenderingServer.multimesh_get_buffer_rd_rid(_layer_multimesh[i])
+	var spawn_zeros := PackedByteArray()
+	spawn_zeros.resize(FX_SPAWN_CAPACITY * 32)
+	_fx_spawns = _rd.storage_buffer_create(spawn_zeros.size(), spawn_zeros)
+	if _layer_capacity[Layer.FX] > 0:
+		var pool_zeros := PackedByteArray()
+		pool_zeros.resize(_layer_capacity[Layer.FX] * 48)
+		_fx_pool = _rd.storage_buffer_create(pool_zeros.size(), pool_zeros)
 
 	var den_fmt := RDTextureFormat.new()
 	den_fmt.format = RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM
@@ -531,8 +581,10 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	var mip_spirv := _rt_compile(FIELDS_MIP_SHADER_PATH, from_source)
 	var sunvis_spirv := _rt_compile(SUNVIS_SHADER_PATH, from_source)
 	var splat_spirv := _rt_compile(SPLAT_SHADER_PATH, from_source)
+	var fx_spirv := _rt_compile(FX_SHADER_PATH, from_source)
 	if sim_spirv == null or brush_spirv == null or occ_spirv == null or hydro_spirv == null \
-			or density_spirv == null or mip_spirv == null or sunvis_spirv == null or splat_spirv == null:
+			or density_spirv == null or mip_spirv == null or sunvis_spirv == null or splat_spirv == null \
+			or fx_spirv == null:
 		return
 	var air_spirv := {}
 	for k in AIR_KERNELS:
@@ -601,12 +653,24 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	_sunvis_set = _rd.uniform_set_create(
 		[_image_uniform(0, _sunvis_rid), _sampler_uniform(1, _density_rid)], _sunvis_shader, 0)
 
-	if _splat_buffer.is_valid():
+	var all_layers := true
+	for i in LAYER_COUNT:
+		if not _layer_buffer[i].is_valid():
+			all_layers = false
+	if all_layers:
 		_splat_shader = _rd.shader_create_from_spirv(splat_spirv)
 		_splat_pipeline = _rd.compute_pipeline_create(_splat_shader, _spec([GRID]))
 		_splat_set = _rd.uniform_set_create(
 			[_image_uniform(0), _image_uniform(1, _occ_rid), _buffer_uniform(2, _elements_buffer),
-			_buffer_uniform(3, _splat_counter), _buffer_uniform(4, _splat_buffer)], _splat_shader, 0)
+			_buffer_uniform(3, _splat_counter), _buffer_uniform(4, _layer_buffer[Layer.GRAINS]),
+			_buffer_uniform(5, _layer_buffer[Layer.LEAVES]), _buffer_uniform(6, _layer_buffer[Layer.DROPLETS]),
+			_buffer_uniform(7, _fx_spawns)], _splat_shader, 0)
+		_fx_shader = _rd.shader_create_from_spirv(fx_spirv)
+		_fx_pipeline = _rd.compute_pipeline_create(_fx_shader, _spec([GRID]))
+		_fx_set = _rd.uniform_set_create(
+			[_buffer_uniform(0, _fx_pool), _buffer_uniform(1, _fx_spawns), _buffer_uniform(2, _splat_counter),
+			_buffer_uniform(3, _layer_buffer[Layer.FX]), _sampler_uniform(4, _air_vel[0]),
+			_sampler_uniform(5, _density_rid)], _fx_shader, 0)
 
 	_occ_shader = _rd.shader_create_from_spirv(occ_spirv)
 	_occ_pipeline = _rd.compute_pipeline_create(_occ_shader)
@@ -624,7 +688,8 @@ func _rt_free_pipelines() -> void:
 	for rid in [_sim_set, _sim_pipeline, _sim_shader, _brush_set, _brush_pipeline, _brush_shader,
 			_occ_set, _occ_pipeline, _occ_shader, _hydro_set, _hydro_pipeline, _hydro_shader,
 			_density_set, _density_pipeline, _density_shader, _mip_pipeline, _mip_shader,
-			_sunvis_set, _sunvis_pipeline, _sunvis_shader, _splat_set, _splat_pipeline, _splat_shader]:
+			_sunvis_set, _sunvis_pipeline, _sunvis_shader, _splat_set, _splat_pipeline, _splat_shader,
+			_fx_set, _fx_pipeline, _fx_shader]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
 	_sim_set = RID()
@@ -650,6 +715,9 @@ func _rt_free_pipelines() -> void:
 	_splat_set = RID()
 	_splat_pipeline = RID()
 	_splat_shader = RID()
+	_fx_set = RID()
+	_fx_pipeline = RID()
+	_fx_shader = RID()
 	for d in [_air_sets, _air_pipelines, _air_shaders]:
 		for k in d:
 			if d[k].is_valid():
@@ -664,6 +732,7 @@ func _rt_free() -> void:
 			_rd.free_rid(v)
 	_fields_views = []
 	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid, _density_rid, _sunvis_rid, _splat_counter,
+			_fx_pool, _fx_spawns,
 			_air_vel[0], _air_vel[1], _air_pres[0], _air_pres[1], _air_div, _air_occ, _air_src, _air_sampler]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
@@ -738,6 +807,7 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		cl = _rd.compute_list_begin()
 	_rd.compute_list_end()
 	_rt_occupancy_update()
+	_rt_fx_step(count)
 	_stamp("frame_end")
 
 
@@ -915,25 +985,52 @@ func _rt_sunvis_sweep(cl: int) -> void:
 		k += SUNVIS_SLABS_PER_DISPATCH
 
 
-## Refill the splat instance buffer from the current grid.
+## Refill the per-cell sprite layers (grains, leaves, droplets) and the FX
+## spawn list from the current grid.
 func _rt_splat_emit() -> void:
-	if not _splat_pipeline.is_valid():
+	if not _splat_pipeline.is_valid() or not sprites_enabled:
 		return
-	_rd.buffer_clear(_splat_counter, 0, 16)
-	_rd.buffer_clear(_splat_buffer, 0, _splat_capacity * 64)
+	_frame += 1
+	_rd.buffer_clear(_splat_counter, 0, 64)
+	for i in [Layer.GRAINS, Layer.LEAVES, Layer.DROPLETS]:
+		_rd.buffer_clear(_layer_buffer[i], 0, _layer_capacity[i] * 64)
 	var cl := _rd.compute_list_begin()
 	_rd.compute_list_bind_compute_pipeline(cl, _splat_pipeline)
 	_rd.compute_list_bind_uniform_set(cl, _splat_set, 0)
-	var push := PackedInt32Array([_splat_capacity, 0, 0, 0]).to_byte_array()
+	var push := PackedInt32Array([_layer_capacity[Layer.GRAINS], _layer_capacity[Layer.LEAVES],
+		_layer_capacity[Layer.DROPLETS], FX_SPAWN_CAPACITY, _frame, 0, 0, 0]).to_byte_array()
 	_rd.compute_list_set_push_constant(cl, push, push.size())
 	var g := GRID / 8
 	_rd.compute_list_dispatch(cl, g, g, g)
 	_rd.compute_list_end()
+	_stamp("sprites")
+
+
+## Advance the FX particle pool by `ticks` of sim time: claim this frame's
+## spawn requests, integrate, and rewrite the Fx layer's instances.
+func _rt_fx_step(ticks: int) -> void:
+	if not _fx_pipeline.is_valid() or ticks <= 0 or not fx_enabled:
+		return
+	var pool: int = _layer_capacity[Layer.FX]
+	var cl := _rd.compute_list_begin()
+	_rd.compute_list_bind_compute_pipeline(cl, _fx_pipeline)
+	_rd.compute_list_bind_uniform_set(cl, _fx_set, 0)
+	var push := PackedFloat32Array([ticks * seconds_per_tick, 1.0 / seconds_per_tick, float(FX_SPAWN_CAPACITY), 0.0]).to_byte_array()
+	push.append_array(PackedInt32Array([pool, _frame, 0, 0]).to_byte_array())
+	_rd.compute_list_set_push_constant(cl, push, push.size())
+	_rd.compute_list_dispatch(cl, ceili(pool / 64.0), 1, 1)
+	_rd.compute_list_end()
+	_stamp("fx")
 
 
 func _rt_splat_count() -> void:
 	var bytes := _rd.buffer_get_data(_splat_counter, 0, 4)
 	splat_count_ready.emit.call_deferred(bytes.decode_u32(0))
+
+
+func _rt_layer_counts() -> void:
+	var bytes := _rd.buffer_get_data(_splat_counter, 0, 64)
+	layer_counts_ready.emit.call_deferred(bytes.to_int32_array())
 
 
 func _rt_density_readback() -> void:
