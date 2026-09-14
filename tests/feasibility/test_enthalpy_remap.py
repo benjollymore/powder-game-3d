@@ -16,6 +16,12 @@ def make(amounts, temperatures=None):
 
 
 class RemapTests(unittest.TestCase):
+    def test_snapshot_cannot_alias_mutable_energy(self):
+        # A frozen dataclass alone does not freeze a caller-owned energy list.
+        # Reject that alias before it can invalidate a saved runtime ledger.
+        with self.assertRaises(ValueError):
+            Session(Run(LIQUID, UNIT_MASS, (100,), [1.0])).snapshot()
+
     def assert_ledger(self, old, new, ledger):
         mass_error, energy_error = ledger.residuals(UNIT_MASS)
         self.assertLessEqual(abs(mass_error), 1e-15)

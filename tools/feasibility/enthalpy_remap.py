@@ -53,7 +53,8 @@ class Run:
     energy: tuple
 
     def __post_init__(self):
-        if amounts_checked(self.amounts) != self.amounts or len(self.energy) != len(self.amounts):
+        if (amounts_checked(self.amounts) != self.amounts or not isinstance(self.energy, tuple)
+                or len(self.energy) != len(self.amounts)):
             raise ValueError("Immutable aligned amount/energy tuples required")
         if not math.isfinite(self.mass_per_unit) or self.mass_per_unit <= 0:
             raise ValueError("A material-specific mass per amount unit is required")

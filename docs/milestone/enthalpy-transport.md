@@ -49,6 +49,8 @@ Ordered batches of 1, 3 or [7,2,5,1,9] produce identical binary64 snapshots afte
 
 This prototype accepts one fully liquid material per run. Partial *amounts* are supported; partially melted phase mixtures and unlike-material receivers are outside this model. No conduction, reaction energy, pressure work, species separation, physical density changes, GPU enthalpy arithmetic or transport performance is claimed. The artificial compressed amount profile is not an equation of state; adding compression heating would require a separate mechanical work/pressure contract.
 
+Independent integration review found that a frozen `Run` still accepted a caller-owned mutable energy list. Mutating that list changed an existing runtime snapshot without updating its ledger. Admission now requires an energy tuple, matching the immutable amount contract; the regression rejects the alias before a session can retain it. All **15 CPU tests** pass after this fix. [Independent log](evidence-thermal-gpu/remap-integrated.log).
+
 ## Concrete next contract
 
 A future material-motion operator should consume an immutable old mass/enthalpy state and return accepted transfers or an explicit permutation, plus a separate source ledger. Applying that result must update amount and enthalpy together, using the same accepted integer decisions and fixed operator order. Resolve every donor budget before mutating any receiver. For the current tick that means following the actual reactions/decay, vertical/wind/slump/spread/vertical/gas order, then the column hydro and alternating horizontal hydro passes. [Current tick schedule](../../scripts/sim/voxel_sim.gd#L1104).
