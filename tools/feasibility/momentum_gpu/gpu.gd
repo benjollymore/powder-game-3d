@@ -35,6 +35,8 @@ func reset(values: PackedFloat32Array) -> void:
 	assert(values.size()==count*20)
 	rd.buffer_update(_buffers[0],0,values.size()*4,values.to_byte_array())
 	rd.buffer_clear(_buffers[4],0,32)
+	# Invalid initial support halts P2G, so never expose a previous run's grid.
+	rd.buffer_clear(_buffers[2],0,shape.x*shape.y*shape.z*16)
 	var cl:=rd.compute_list_begin();_dispatch(cl,0,0.0);rd.compute_list_end()
 
 func advance(steps: int, dt: float) -> bool:
@@ -59,7 +61,7 @@ func _dispatch(cl: int, stage: int, dt: float) -> void:
 	var push:=PackedInt32Array([shape.x,shape.y,shape.z,count]).to_byte_array()
 	push.append_array(PackedFloat32Array([dx,dt,1.0 if apic else 0.0,0.0]).to_byte_array())
 	rd.compute_list_set_push_constant(cl,push,push.size())
-	var groups:=1 if stage==0 else ceili((shape.x*shape.y*shape.z if stage==1 else count)/64.0)
+	var groups:=1 if stage in [0,3] else ceili((shape.x*shape.y*shape.z if stage==1 else count)/64.0)
 	rd.compute_list_dispatch(cl,groups,1,1)
 
 func close() -> void:

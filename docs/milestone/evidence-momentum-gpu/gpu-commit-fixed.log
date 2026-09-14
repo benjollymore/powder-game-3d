@@ -1,0 +1,88 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: translation_pic initial complete support admitted
+ok: translation_pic attempted1 actual GPU acceptance status
+ok: translation_pic attempted1 particle mass bytes unchanged
+ok: translation_pic attempted10 actual GPU acceptance status
+ok: translation_pic attempted10 particle mass bytes unchanged
+ok: translation_pic attempted100 actual GPU acceptance status
+ok: translation_pic attempted100 particle mass bytes unchanged
+ok: rotation_pic initial complete support admitted
+ok: rotation_pic attempted1 actual GPU acceptance status
+ok: rotation_pic attempted1 particle mass bytes unchanged
+ok: rotation_pic attempted10 actual GPU acceptance status
+ok: rotation_pic attempted10 particle mass bytes unchanged
+ok: rotation_pic attempted100 actual GPU acceptance status
+ok: rotation_pic attempted100 particle mass bytes unchanged
+ok: nonaffine_pic initial complete support admitted
+ok: nonaffine_pic attempted1 actual GPU acceptance status
+ok: nonaffine_pic attempted1 particle mass bytes unchanged
+ok: nonaffine_pic attempted10 actual GPU acceptance status
+ok: nonaffine_pic attempted10 particle mass bytes unchanged
+ok: nonaffine_pic attempted100 actual GPU acceptance status
+ok: nonaffine_pic attempted100 particle mass bytes unchanged
+ok: translation_apic initial complete support admitted
+ok: translation_apic attempted1 actual GPU acceptance status
+ok: translation_apic attempted1 particle mass bytes unchanged
+ok: translation_apic attempted10 actual GPU acceptance status
+ok: translation_apic attempted10 particle mass bytes unchanged
+ok: translation_apic attempted100 actual GPU acceptance status
+ok: translation_apic attempted100 particle mass bytes unchanged
+ok: invalid initial support is rejected on GPU
+ok: valid run to invalid reset clears the previous grid
+ok: invalid initial support remains frozen through queued steps
+ok: invalid initial support cannot resurrect old grid data
+ok: rotation_apic initial complete support admitted
+ok: rotation_apic attempted1 actual GPU acceptance status
+ok: rotation_apic attempted1 particle mass bytes unchanged
+ok: rotation_apic attempted10 actual GPU acceptance status
+ok: rotation_apic attempted10 particle mass bytes unchanged
+ok: rotation_apic attempted100 actual GPU acceptance status
+ok: rotation_apic attempted100 particle mass bytes unchanged
+ok: nonaffine_apic initial complete support admitted
+ok: nonaffine_apic attempted1 actual GPU acceptance status
+ok: nonaffine_apic attempted1 particle mass bytes unchanged
+ok: nonaffine_apic attempted10 actual GPU acceptance status
+ok: nonaffine_apic attempted10 particle mass bytes unchanged
+ok: nonaffine_apic attempted100 actual GPU acceptance status
+ok: nonaffine_apic attempted100 particle mass bytes unchanged
+ok: nonaffine_apic batches[1] preserve particle and status bytes
+ok: nonaffine_apic batches[3] preserve particle and status bytes
+ok: nonaffine_apic batches[7, 2, 5, 1, 9] preserve particle and status bytes
+ok: nonaffine_apic invalid timestep does not mutate state
+ok: nonaffine_apic invalid timestep does not mutate state
+ok: nonaffine_apic invalid timestep does not mutate state
+ok: nonaffine_apic invalid timestep does not mutate state
+ok: nonaffine_apic invalid timestep does not mutate state
+ok: nonaffine_apic invalid timestep does not mutate state
+ok: affine_apic initial complete support admitted
+ok: affine_apic attempted1 actual GPU acceptance status
+ok: affine_apic attempted1 particle mass bytes unchanged
+ok: affine_apic attempted10 actual GPU acceptance status
+ok: affine_apic attempted10 particle mass bytes unchanged
+ok: affine_apic attempted100 actual GPU acceptance status
+ok: affine_apic attempted100 particle mass bytes unchanged
+ok: boundary_atomic_apic initial complete support admitted
+ok: boundary_atomic_apic attempted1 actual GPU acceptance status
+ok: boundary_atomic_apic attempted1 particle mass bytes unchanged
+ok: boundary_atomic_apic attempted2 actual GPU acceptance status
+ok: boundary_atomic_apic attempted2 particle mass bytes unchanged
+ok: boundary_atomic_apic attempted3 actual GPU acceptance status
+ok: boundary_atomic_apic attempted3 particle mass bytes unchanged
+ok: boundary_atomic_apic rejects whole step without moving any particle
+ok: boundary_atomic_apic rejected advection retains the grid of last authoritative particles
+ok: boundary_atomic_apic attempted5 actual GPU acceptance status
+ok: boundary_atomic_apic attempted5 particle mass bytes unchanged
+ok: boundary_atomic_apic rejects whole step without moving any particle
+ok: boundary_atomic_apic rejected advection retains the grid of last authoritative particles
+ok: boundary_atomic_apic batches[1] preserve particle and status bytes
+ok: boundary_atomic_apic batches[3] preserve particle and status bytes
+ok: boundary_atomic_apic batches[7, 2, 5, 1, 9] preserve particle and status bytes
+ok: boundary_atomic_apic invalid timestep does not mutate state
+ok: boundary_atomic_apic invalid timestep does not mutate state
+ok: boundary_atomic_apic invalid timestep does not mutate state
+ok: boundary_atomic_apic invalid timestep does not mutate state
+ok: boundary_atomic_apic invalid timestep does not mutate state
+ok: boundary_atomic_apic invalid timestep does not mutate state
+MOMENTUM_MOTION_GPU checks=84 failures=0

@@ -26,6 +26,7 @@ func _run() -> void:
 			_check(current.mass_hash==initial.mass_hash,"%s attempted%d particle mass bytes unchanged"%[case.name,expected.attempted])
 			if expected.halted:
 				_check(current.particle_hash==result.snapshots[-1].particle_hash,"%s rejects whole step without moving any particle"%case.name)
+				_check(current.grid_hash==result.snapshots[-1].grid_hash,"%s rejected advection retains the grid of last authoritative particles"%case.name)
 			result.snapshots.append(current);attempted=int(expected.attempted)
 		var final: Dictionary=result.snapshots[-1]
 		if case.name in ["nonaffine_apic","boundary_atomic_apic"]:
@@ -52,9 +53,11 @@ func _run() -> void:
 			RenderingServer.call_on_render_thread(_rt_reset.bind(invalid_positions))
 			var rejected: Dictionary=await ready_result
 			_check(rejected.status[0]==0 and rejected.status[1]==1 and rejected.status[3]==1,"invalid initial support is rejected on GPU")
+			_check(rejected.grid.all(func(v):return v==0.0),"valid run to invalid reset clears the previous grid")
 			RenderingServer.call_on_render_thread(_rt_advance.bind(3,case.dt))
 			var after: Dictionary=await ready_result
 			_check(after.particle_hash==rejected.particle_hash and after.status==rejected.status,"invalid initial support remains frozen through queued steps")
+			_check(after.grid_hash==rejected.grid_hash,"invalid initial support cannot resurrect old grid data")
 		RenderingServer.call_on_render_thread(_gpu.close)
 		await process_frame
 	_results.checks=_checks;_results.failures=_failures
@@ -82,7 +85,7 @@ func _serialize(raw: Dictionary) -> Dictionary:
 	var bytes: PackedByteArray=raw.particles
 	var mass:=PackedByteArray()
 	for i in bytes.size()/80:mass.append_array(bytes.slice(i*80+12,i*80+16))
-	return {"particles":Array(bytes.to_float32_array()),"particle_hash":_hash(bytes),"mass_hash":_hash(mass),"grid":Array(raw.grid),"status":Array(raw.status)}
+	return {"particles":Array(bytes.to_float32_array()),"particle_hash":_hash(bytes),"mass_hash":_hash(mass),"grid":Array(raw.grid),"grid_hash":_hash(raw.grid.to_byte_array()),"status":Array(raw.status)}
 
 func _hash(bytes: PackedByteArray) -> String:
 	var h:=HashingContext.new();h.start(HashingContext.HASH_SHA256);h.update(bytes);return h.finish().hex_encode()
