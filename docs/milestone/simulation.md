@@ -68,3 +68,42 @@ There are at most **32 pending clicks**, drained at most **four per tick**, befo
 `live_click.gd` passed **19 GPU checks at 128³**: distinct sand/water clicks retain their metadata, no pre-tick mutation, no duplicate on an already-emitting release, navigation cancellation, all reset paths, explicit queue/work bounds, and matching voxel bytes across one/three/irregular tick batches. [click128.log](evidence-simulation/click128.log) contains the expected overflow warning from the deliberate 33-click limit test.
 
 The original held-source regression also passed all **34 checks** after sharing its tick injection path with quick clicks: [emitter128-click.log](evidence-simulation/emitter128-click.log).
+
+## Opt-in render-preparation coalescing
+
+`sim.defer_render_preparation = true` (or user argument `defer=1`) enables coalescing; it remains **off by default**. Authoritative edits and fixed solver ticks still execute in their original order. Derived occupancy, fields, sprites, lighting, and elapsed cosmetic integration are prepared once before viewport drawing. Explicit `flush_render_preparation()` is an ordering barrier, not GPU completion. Public voxel/velocity/density/occupancy/sprite inspection readbacks flush pending preparation; asynchronous sound telemetry reads the last prepared frame without forcing an early rebuild.
+
+Scheduling uses `RenderingServer.frame_pre_draw`, not a guessed Node process priority. In the [Godot 4.6.3 implementation](https://github.com/godotengine/godot/blob/4.6.3-stable/servers/rendering/rendering_server_default.cpp#L406), this signal fires on the main thread immediately before viewport drawing is queued. Queuing our render-thread flush from that callback places it after ordinary edit/deferred callbacks and before the draw. Mode changes are themselves ordered render-thread commands; world replacement discards pending old-world presentation time.
+
+Validation: **12 preparation checks** prove ordered mixed edit/tick equivalence and seven→one recorded preparations, paused next-frame publication, inspection freshness, and mode/reset boundaries. **Four visible capture checks** add a wall in the next rendered image (37,258 changed pixels), then clear it after an inspection barrier; the resulting empty image has **zero residual changed pixels**. The viewport test disables temporal scaling/AA to make image comparison deterministic; it is a freshness check, not a proposed visual style. [preparation128.log](evidence-simulation/preparation128.log), [prepare-capture128.log](evidence-simulation/prepare-capture128.log), [filled capture](evidence-simulation/prepare-filled.png), [cleared capture](evidence-simulation/prepare-cleared.png).
+
+With `defer=1`, the existing **74 GPU128 invariants**, **31 presentation/reset checks**, and **34 held-source checks** also passed: [gpu128-deferred.log](evidence-simulation/gpu128-deferred.log), [presentation128-deferred.log](evidence-simulation/presentation128-deferred.log), [emitter128-deferred.log](evidence-simulation/emitter128-deferred.log). Cosmetic time/source sampling still has the declared per-presentation approximation; this option does not promise pixel-identical moving FX across different preparation groupings.
+
+### Fresh controlled measurements
+
+`tools/milestone/prepare_bench.gd` measures the **current fixed-air, fixed-source implementation**, not the earlier discovery algorithm. Visible always-on-top 1600×900 window, VSync disabled, default 0.75 scaling, fixed close camera, 30 warmup + 120 measured frames, two ticks per running frame, M5 Pro. Each case resets Demo and deterministic inputs. Two passes reverse variant order. The scheduler autoload is paused and ticks are requested manually; the soundscape remains loaded but sees the paused scheduler. A tiny final synchronous counter read includes outstanding GPU tail work in the aggregate mean; full voxel/air readbacks and hashing occur after timing stops. Each workload ends with identical voxel and air hashes in both variants (**16 paired comparisons passed** across both grid sizes).
+
+Numbers below are drained mean milliseconds, repeat 0 / repeat 1. They are whole-frame wall time, not isolated GPU pass cost. Frame p95s and hashes are in the raw logs.
+
+| Grid / workload | Immediate preparation | Coalesced preparation |
+|---|---:|---:|
+| 128³ active Demo | 5.049 / 4.877 | 4.797 / 4.934 |
+| 128³ ticks plus separate frame edit | 5.281 / 5.471 | 4.929 / 5.013 |
+| 128³ fixed-tick live source | 5.050 / 4.971 | 4.794 / 4.968 |
+| 128³ paused four-point stroke batch | 3.129 / 3.153 | 2.983 / 3.145 |
+| 256³ active Demo | 15.042 / 15.021 | 15.033 / 15.048 |
+| 256³ ticks plus separate frame edit | **18.347 / 18.342** | **15.043 / 15.050** |
+| 256³ fixed-tick live source | 15.070 / 15.080 | 15.068 / 15.054 |
+| 256³ paused four-point stroke batch | 5.592 / 5.630 | 5.604 / 5.483 |
+
+The separate tick-plus-edit workload falls from 300 to 150 preparations, improving its mean by **6.7–8.4% at 128³** and **about 18% at 256³**. Its 256³ frame p95 improves from 19.91/19.73 to 16.49/16.46 ms. This is an explicit synthetic ordered transaction, not a claim that the new editor's held-source path gains 18%: the fixed-tick live source already prepares once per tick batch and its control shows essentially no 256³ change. Likewise the paused stroke already batches four points into one preparation. Coalescing is useful infrastructure for multiple mutations, not a cure for dense simulation scaling.
+
+These are short main-scene trials, not the integrated editor's input-to-photon latency, long-session thermals, or broad hardware coverage. Full-main-scene benchmark/capture teardown sometimes emits the existing `ObjectDB instances leaked at exit` warning; logs retain it. The standalone simulation regression scenes exited without that warning. [prepare-bench128.log](evidence-simulation/prepare-bench128.log), [prepare-bench256.log](evidence-simulation/prepare-bench256.log).
+
+```sh
+godot --path . --always-on-top --disable-vsync --resolution 320x240 -s res://tests/milestone/render_preparation.gd -- grid=128
+godot --path . --always-on-top --disable-vsync --resolution 640x480 -s res://tests/milestone/prepare_capture.gd -- grid=128
+godot --path . --always-on-top --disable-vsync --resolution 320x240 -s res://tests/gpu/run_gpu_tests.gd -- grid=128 defer=1
+godot --path . --always-on-top --disable-vsync --resolution 1600x900 -s res://tools/milestone/prepare_bench.gd -- grid=128
+godot --path . --always-on-top --disable-vsync --resolution 1600x900 -s res://tools/milestone/prepare_bench.gd -- grid=256
+```

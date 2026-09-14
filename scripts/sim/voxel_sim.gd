@@ -1,9 +1,9 @@
 extends Node3D
-## Owns the 128^3 voxel world on the GPU and advances it when TimeController
+## Owns the configurable voxel world on the GPU and advances it when TimeController
 ## hands out ticks.
 ##
 ## The world is a single RGBA8 3D texture (one byte per channel: R = element
-## id, G = per-voxel seed, B/A reserved) created on the *global* RenderingDevice
+## id, G = per-voxel seed, B = liquid amount, A = movement flags) created on the *global* RenderingDevice
 ## so the raymarch material can sample it through Texture3DRD with no copies.
 ## RGBA8 rather than R32_UINT because Texture3DRD only accepts formats that map
 ## to an Image format, and unorm8 round-trips bytes exactly.
@@ -13,10 +13,9 @@ extends Node3D
 ##
 ## Size comes from VoxelCodec.GRID (project setting `powder/sim/grid_size`,
 ## `grid=N` override) and every dispatch size derives from it; compute shaders
-## receive it as a specialization constant. Measured with tools/bench.gd
-## (--disable-vsync, M5 Pro, 1600x900 Retina, display-capped at ~11 ms):
-##   128^3: 8 ticks/frame stays at the cap.
-##   256^3: 0-2 ticks/frame at the cap, 4 ticks 15 ms, ~2.05 ms per tick.
+## receive it as a specialization constant. Current fixed-cadence timing
+## evidence and its workload limits are in docs/milestone/simulation.md;
+## old batch-dependent-air measurements do not describe this implementation.
 
 signal readback_ready(bytes: PackedByteArray)
 signal occupancy_ready(bytes: PackedByteArray)
@@ -106,6 +105,15 @@ const BRUSH_PUSH_INTS := 12
 @export var sprites_enabled := true
 ## Advance the FX particle pool (embers, dust, splash) each frame.
 @export var fx_enabled := true
+## Opt-in coalescing: mutations stay ordered, but derived rendering is
+## prepared once before viewport drawing or at an inspection barrier.
+@export var defer_render_preparation := false:
+	set(value):
+		if defer_render_preparation == value:
+			return
+		defer_render_preparation = value
+		if is_node_ready():
+			RenderingServer.call_on_render_thread(_rt_set_deferred_preparation.bind(value))
 ## Capture GPU timestamps around each pass (read with profile_report()).
 @export var profile := false
 var volume_debug := 0
@@ -135,6 +143,13 @@ const MAX_PENDING_LIVE_CLICKS := 32
 const MAX_LIVE_CLICKS_PER_TICK := 4
 var _rt_pending_live_clicks: Array[Dictionary] = []
 var _rt_live_click_stamps := 0
+var _rt_defer_render_preparation := false
+var _rt_derived_dirty := false
+var _rt_preparing_render := false
+var _rt_pending_presentation_seconds := 0.0
+var _rt_pending_fx_ticks := 0
+## Diagnostic: actual derived dispatch groups recorded, not GPU completion.
+var _rt_render_preparation_count := 0
 var _param_overrides := {}
 
 var _rd: RenderingDevice
@@ -222,6 +237,8 @@ func _ready() -> void:
 			sprites_enabled = false
 		elif arg == "fx=0":
 			fx_enabled = false
+		elif arg == "defer=1":
+			defer_render_preparation = true
 		elif arg.begins_with("p:") and arg.contains("="):
 			# p:name=value sets a float shader parameter on every material (tuning).
 			var kv := arg.substr(2).split("=")
@@ -270,6 +287,7 @@ func _ready() -> void:
 	RenderingServer.call_on_render_thread(_rt_run_ops.bind(Scenarios.ops(current_scenario)))
 	if listen_to_time_controller:
 		TimeController.ticks_requested.connect(request_ticks)
+	RenderingServer.frame_pre_draw.connect(_prepare_frame)
 
 
 ## Set a shader parameter on both raymarch materials.
@@ -284,6 +302,8 @@ func sunvis_texture() -> Texture3DRD:
 
 
 func _exit_tree() -> void:
+	if RenderingServer.frame_pre_draw.is_connected(_prepare_frame):
+		RenderingServer.frame_pre_draw.disconnect(_prepare_frame)
 	# Detach the material's view first, otherwise the renderer rebuilds its
 	# uniform set against a freed texture at shutdown.
 	_texture.texture_rd_rid = RID()
@@ -300,6 +320,14 @@ func _process(_delta: float) -> void:
 		_density_texture.texture_rd_rid = _density_rid
 		_sunvis_texture.texture_rd_rid = _sunvis_rid
 	set_param("sim_time", tick * seconds_per_tick)
+
+
+func _prepare_frame() -> void:
+	# Godot emits frame_pre_draw on the main thread before queuing viewport
+	# drawing. This queues our flush after edits/deferred callbacks but before
+	# that draw, without relying on Node process priorities.
+	if defer_render_preparation and _rt_ready:
+		RenderingServer.call_on_render_thread(_rt_flush_render_preparation)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -328,6 +356,13 @@ func request_ticks(count: int) -> void:
 		return
 	RenderingServer.call_on_render_thread(_rt_tick.bind(tick, count))
 	tick += count
+
+
+## Submit any pending derived preparation. This is an ordering barrier, not
+## a GPU completion fence; inspection readbacks flush automatically.
+func flush_render_preparation() -> void:
+	if _rt_ready:
+		RenderingServer.call_on_render_thread(_rt_flush_render_preparation)
 
 
 ## Enable/update a source whose injection rate follows simulation time rather
@@ -685,6 +720,7 @@ static func mass(bytes: PackedByteArray, id: int) -> int:
 # --- render thread -------------------------------------------------------------
 
 func _rt_init() -> void:
+	_rt_defer_render_preparation = defer_render_preparation
 	_rd = RenderingServer.get_rendering_device()
 	assert(_rd != null, "No RenderingDevice: needs Forward+/Mobile renderer and a window (not --headless)")
 
@@ -1114,10 +1150,15 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		cl = _rd.compute_list_begin()
 	_rd.compute_list_end()
 	_frame = first_tick + count
-	_rt_presentation_seconds = count * seconds_per_tick
-	_rt_occupancy_update()
-	_rt_fx_step(count)
-	_rt_presentation_seconds = 0.0
+	if _rt_defer_render_preparation:
+		_rt_pending_presentation_seconds += count * seconds_per_tick
+		_rt_pending_fx_ticks += count
+		_rt_occupancy_update()
+	else:
+		_rt_presentation_seconds = count * seconds_per_tick
+		_rt_occupancy_update()
+		_rt_fx_step(count)
+		_rt_presentation_seconds = 0.0
 	_stamp("frame_end")
 
 
@@ -1215,6 +1256,7 @@ func _rt_air_step(cl: int, dt: int, tick_now: int) -> void:
 
 
 func _rt_velocity_readback() -> void:
+	_rt_flush_render_preparation()
 	var bytes := _rd.texture_get_data(_air_vel[0], 0)
 	velocity_ready.emit.call_deferred(bytes)
 
@@ -1229,6 +1271,10 @@ func _rt_air_clear() -> void:
 ## Regional edits/undo deliberately do not call this: this is a fresh test
 ## state, not a full-runtime snapshot restore.
 func _rt_reset_world_history() -> void:
+	# A replacement discards the old experiment, including unpresented time.
+	_rt_derived_dirty = false
+	_rt_pending_presentation_seconds = 0.0
+	_rt_pending_fx_ticks = 0
 	_rt_clear_live_emitter()
 	_rt_live_emitter_stamps = 0
 	_rt_pending_live_clicks.clear()
@@ -1344,12 +1390,36 @@ func _rt_clear() -> void:
 	_rt_occupancy_update()
 
 
+func _rt_set_deferred_preparation(enabled: bool) -> void:
+	# Mode changes are ordered with simulation commands on the render thread.
+	_rt_flush_render_preparation()
+	_rt_defer_render_preparation = enabled
+
+
+func _rt_flush_render_preparation() -> void:
+	if not _rt_derived_dirty:
+		return
+	_rt_preparing_render = true
+	_rt_derived_dirty = false
+	_rt_presentation_seconds = _rt_pending_presentation_seconds
+	_rt_occupancy_update()
+	_rt_fx_step(_rt_pending_fx_ticks)
+	_rt_presentation_seconds = 0.0
+	_rt_pending_presentation_seconds = 0.0
+	_rt_pending_fx_ticks = 0
+	_rt_preparing_render = false
+
+
 ## Recompute everything derived from the voxel texture: the coarse occupancy
 ## grid and the liquid density field the renderer samples. Geometry-only
 ## refreshes use zero elapsed time and must not age foam or emit new FX.
 func _rt_occupancy_update() -> void:
+	if _rt_defer_render_preparation and not _rt_preparing_render:
+		_rt_derived_dirty = true
+		return
 	if not _occ_pipeline.is_valid():
 		return
+	_rt_render_preparation_count += 1
 	var groups := OCCUPANCY_GRID / 4
 	var cl := _rd.compute_list_begin()
 	_rd.compute_list_bind_compute_pipeline(cl, _occ_pipeline)
@@ -1458,16 +1528,20 @@ func _rt_fx_step(ticks: int) -> void:
 
 
 func _rt_splat_count() -> void:
+	_rt_flush_render_preparation()
 	var bytes := _rd.buffer_get_data(_splat_counter, 0, 4)
 	splat_count_ready.emit.call_deferred(bytes.decode_u32(0))
 
 
 func _rt_layer_counts() -> void:
+	_rt_flush_render_preparation()
 	var bytes := _rd.buffer_get_data(_splat_counter, 0, COUNTER_BYTES)
 	layer_counts_ready.emit.call_deferred(bytes.to_int32_array())
 
 
 func _rt_activity() -> void:
+	# Asynchronous sound telemetry samples the last prepared frame. It must
+	# not defeat edit/tick coalescing by forcing an early geometry refresh.
 	_rd.buffer_get_data_async(_splat_counter, _on_activity_bytes, 0, COUNTER_BYTES)
 
 
@@ -1476,6 +1550,7 @@ func _on_activity_bytes(bytes: PackedByteArray) -> void:
 
 
 func _rt_density_readback() -> void:
+	_rt_flush_render_preparation()
 	_rd.texture_get_data_async(_density_rid, 0, _on_density_bytes)
 
 
@@ -1484,6 +1559,7 @@ func _on_density_bytes(bytes: PackedByteArray) -> void:
 
 
 func _rt_occupancy_readback() -> void:
+	_rt_flush_render_preparation()
 	_rd.texture_get_data_async(_occ_rid, 0, _on_occupancy_bytes)
 
 
@@ -1492,6 +1568,7 @@ func _on_occupancy_bytes(bytes: PackedByteArray) -> void:
 
 
 func _rt_readback(callback: Callable) -> void:
+	_rt_flush_render_preparation()
 	var bytes := _rd.texture_get_data(_grid_rid, 0)
 	callback.call_deferred(bytes)
 	readback_ready.emit.call_deferred(bytes)

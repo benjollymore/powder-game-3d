@@ -1,0 +1,29 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+CONFIG grid=256 warmup=30 measured=120 ticks/frame=2 resolution=(1600, 900) fixed_air=1
+CASE workload=active deferred=false repeat=0 frame_mean_ms=14.907 drained_mean_ms=15.042 p95_ms=16.455 rebuilds=150 voxels=8dfb644862eaec1dad88f3709793863a8240a058f472aa533f8d566649b51e56 air=3b872482b0d819c6ca6f72ce1baca6a5cde970f760a2141dc0d5f9cd466fe538
+CASE workload=active deferred=true repeat=0 frame_mean_ms=14.898 drained_mean_ms=15.033 p95_ms=16.492 rebuilds=150 voxels=8dfb644862eaec1dad88f3709793863a8240a058f472aa533f8d566649b51e56 air=3b872482b0d819c6ca6f72ce1baca6a5cde970f760a2141dc0d5f9cd466fe538
+EQUIVALENCE workload=active repeat=0 voxel_and_air=true
+CASE workload=frame_edit deferred=false repeat=0 frame_mean_ms=18.186 drained_mean_ms=18.347 p95_ms=19.908 rebuilds=300 voxels=c2c51e6c68a889f2c3e86d59dc09974b7db8d17235e1a0df44ee8f42f7cc4d91 air=0988b8ab92d6b5190189ac0575e84caf8d42bae65c2f70aa1581a36c364b163c
+CASE workload=frame_edit deferred=true repeat=0 frame_mean_ms=14.909 drained_mean_ms=15.043 p95_ms=16.491 rebuilds=150 voxels=c2c51e6c68a889f2c3e86d59dc09974b7db8d17235e1a0df44ee8f42f7cc4d91 air=0988b8ab92d6b5190189ac0575e84caf8d42bae65c2f70aa1581a36c364b163c
+EQUIVALENCE workload=frame_edit repeat=0 voxel_and_air=true
+CASE workload=live_source deferred=false repeat=0 frame_mean_ms=14.934 drained_mean_ms=15.070 p95_ms=16.463 rebuilds=150 voxels=b58bcaef7150c0853c5f8d18899b424684a44ed3ce1f638a168e1f918fb76deb air=a6ece1f61065a7b9d6f2fb07fd7204fab27d753ff6ef778b5f8273b62758254c
+CASE workload=live_source deferred=true repeat=0 frame_mean_ms=14.931 drained_mean_ms=15.068 p95_ms=16.476 rebuilds=150 voxels=b58bcaef7150c0853c5f8d18899b424684a44ed3ce1f638a168e1f918fb76deb air=a6ece1f61065a7b9d6f2fb07fd7204fab27d753ff6ef778b5f8273b62758254c
+EQUIVALENCE workload=live_source repeat=0 voxel_and_air=true
+CASE workload=paused_stroke deferred=false repeat=0 frame_mean_ms=5.545 drained_mean_ms=5.592 p95_ms=8.576 rebuilds=150 voxels=aebf2e4fbbac6800af4c044b0aaaa464816a851aaaf0cce5f0c7d49edf6272a4 air=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+CASE workload=paused_stroke deferred=true repeat=0 frame_mean_ms=5.532 drained_mean_ms=5.604 p95_ms=8.490 rebuilds=150 voxels=aebf2e4fbbac6800af4c044b0aaaa464816a851aaaf0cce5f0c7d49edf6272a4 air=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+EQUIVALENCE workload=paused_stroke repeat=0 voxel_and_air=true
+CASE workload=active deferred=true repeat=1 frame_mean_ms=14.910 drained_mean_ms=15.048 p95_ms=16.506 rebuilds=150 voxels=8dfb644862eaec1dad88f3709793863a8240a058f472aa533f8d566649b51e56 air=3b872482b0d819c6ca6f72ce1baca6a5cde970f760a2141dc0d5f9cd466fe538
+CASE workload=active deferred=false repeat=1 frame_mean_ms=14.885 drained_mean_ms=15.021 p95_ms=16.443 rebuilds=150 voxels=8dfb644862eaec1dad88f3709793863a8240a058f472aa533f8d566649b51e56 air=3b872482b0d819c6ca6f72ce1baca6a5cde970f760a2141dc0d5f9cd466fe538
+EQUIVALENCE workload=active repeat=1 voxel_and_air=true
+CASE workload=frame_edit deferred=true repeat=1 frame_mean_ms=14.917 drained_mean_ms=15.050 p95_ms=16.459 rebuilds=150 voxels=c2c51e6c68a889f2c3e86d59dc09974b7db8d17235e1a0df44ee8f42f7cc4d91 air=0988b8ab92d6b5190189ac0575e84caf8d42bae65c2f70aa1581a36c364b163c
+CASE workload=frame_edit deferred=false repeat=1 frame_mean_ms=18.182 drained_mean_ms=18.342 p95_ms=19.729 rebuilds=300 voxels=c2c51e6c68a889f2c3e86d59dc09974b7db8d17235e1a0df44ee8f42f7cc4d91 air=0988b8ab92d6b5190189ac0575e84caf8d42bae65c2f70aa1581a36c364b163c
+EQUIVALENCE workload=frame_edit repeat=1 voxel_and_air=true
+CASE workload=live_source deferred=true repeat=1 frame_mean_ms=14.918 drained_mean_ms=15.054 p95_ms=16.460 rebuilds=150 voxels=b58bcaef7150c0853c5f8d18899b424684a44ed3ce1f638a168e1f918fb76deb air=a6ece1f61065a7b9d6f2fb07fd7204fab27d753ff6ef778b5f8273b62758254c
+CASE workload=live_source deferred=false repeat=1 frame_mean_ms=14.938 drained_mean_ms=15.080 p95_ms=16.533 rebuilds=150 voxels=b58bcaef7150c0853c5f8d18899b424684a44ed3ce1f638a168e1f918fb76deb air=a6ece1f61065a7b9d6f2fb07fd7204fab27d753ff6ef778b5f8273b62758254c
+EQUIVALENCE workload=live_source repeat=1 voxel_and_air=true
+CASE workload=paused_stroke deferred=true repeat=1 frame_mean_ms=5.437 drained_mean_ms=5.483 p95_ms=8.277 rebuilds=150 voxels=aebf2e4fbbac6800af4c044b0aaaa464816a851aaaf0cce5f0c7d49edf6272a4 air=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+CASE workload=paused_stroke deferred=false repeat=1 frame_mean_ms=5.584 drained_mean_ms=5.630 p95_ms=8.482 rebuilds=150 voxels=aebf2e4fbbac6800af4c044b0aaaa464816a851aaaf0cce5f0c7d49edf6272a4 air=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+EQUIVALENCE workload=paused_stroke repeat=1 voxel_and_air=true
+PREPARE_BENCH failures=0

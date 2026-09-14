@@ -55,9 +55,10 @@ var _tps_window_time := 0.0
 func _init() -> void:
 	var g: int = VoxelCodec.GRID
 	if g >= 256:
-		# Measured on an M5 Pro at 256^3: ~2 ms per tick (Margolus + hydro) on top
-		# of an ~11 ms frame, so 2 ticks/frame at 60 fps with room for a 1.5x
-		# fast-forward. See tools/bench.gd.
+		# Bounded scheduling defaults, not a GPU cost estimate. Fixed-cadence
+		# air now runs every tick; pre-milestone per-tick timings no longer
+		# describe this path. Current whole-frame evidence is in
+		# docs/milestone/simulation.md; tune against the integrated workload.
 		TICKS_PER_SECOND = 120.0
 		MAX_TICKS_PER_FRAME = 3
 

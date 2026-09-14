@@ -117,20 +117,28 @@ func _warm_fire() -> void:
 		await RenderingServer.frame_post_draw
 
 func _rt_seed_foam() -> void:
+	_sim._rt_flush_render_preparation()
 	_sim._rd.texture_clear(_sim._density_rid, Color(0, 0, 0, 128.0 / 255.0), 0, _sim.FIELDS_MIPS, 0, 1)
 	_rt_refresh(1, 0.0)
 
 func _rt_refresh(count: int, elapsed: float) -> void:
+	_sim._rt_flush_render_preparation()
 	for i in count:
-		_sim._rt_presentation_seconds = elapsed
-		_sim._rt_occupancy_update()
-		_sim._rt_presentation_seconds = 0.0
+		if _sim._rt_defer_render_preparation:
+			_sim._rt_pending_presentation_seconds = elapsed
+			_sim._rt_occupancy_update()
+			_sim._rt_flush_render_preparation()
+		else:
+			_sim._rt_presentation_seconds = elapsed
+			_sim._rt_occupancy_update()
+			_sim._rt_presentation_seconds = 0.0
 
 func _snapshot() -> Dictionary:
 	RenderingServer.call_on_render_thread(_rt_snapshot)
 	return await snapshot_ready
 
 func _rt_snapshot() -> void:
+	_sim._rt_flush_render_preparation()
 	var air := PackedByteArray()
 	for texture in [_sim._air_vel[0], _sim._air_vel[1], _sim._air_pres[0], _sim._air_pres[1], _sim._air_div, _sim._air_occ, _sim._air_src]:
 		air.append_array(_sim._rd.texture_get_data(texture, 0))
