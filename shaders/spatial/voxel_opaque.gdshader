@@ -17,6 +17,8 @@ uniform float mat_rough[16];
 uniform float texture_tile = 16.0;
 uniform float texture_size = 256.0;
 uniform float ao_strength = 1.0;
+// Discovery control: zero removes decorative texture/grain work while preserving geometry.
+uniform float detail_strength : hint_range(0.0, 1.0) = 1.0;
 // Simulation seconds; animates the underwater caustic pattern.
 uniform float sim_time = 0.0;
 uniform float caustic_strength = 1.0;
@@ -136,15 +138,19 @@ void fragment() {
 
 	vec3 bw = pow(abs(n), vec3(4.0));
 	bw /= bw.x + bw.y + bw.z;
-	vec3 tex = triplanar(albedo_maps, ps, bw, layer, lod);
-	vec3 tn = triplanar(normal_maps, ps, bw, layer, lod) * 2.0 - 1.0;
-	vec3 pert = bw.x * vec3(0.0, tn.x, tn.y) + bw.y * vec3(tn.x, 0.0, tn.y) + bw.z * vec3(tn.x, tn.y, 0.0);
-	vec3 gn = texture(grain_noise, ps / 8.0).rgb * 2.0 - 1.0;
-	n = normalize(n + pert * 0.6 + gn * mat_grain[int(id)]);
-
+	vec3 tex = vec3(0.5);
 	vec4 pal = palette[int(id)];
-	vec3 base = pal.rgb * (0.94 + 0.12 * seed) * (0.55 + 0.9 * tex);
-	base *= 1.0 - clamp(lap * 0.5, -0.12, 0.12) * sm;
+	vec3 base = pal.rgb;
+	if (detail_strength > 0.001) {
+		tex = triplanar(albedo_maps, ps, bw, layer, lod);
+		vec3 tn = triplanar(normal_maps, ps, bw, layer, lod) * 2.0 - 1.0;
+		vec3 pert = bw.x * vec3(0.0, tn.x, tn.y) + bw.y * vec3(tn.x, 0.0, tn.y) + bw.z * vec3(tn.x, tn.y, 0.0);
+		vec3 gn = texture(grain_noise, ps / 8.0).rgb * 2.0 - 1.0;
+		n = normalize(n + detail_strength * (pert * 0.6 + gn * mat_grain[int(id)]));
+		base *= mix(1.0, (0.94 + 0.12 * seed), detail_strength);
+		base *= mix(vec3(1.0), 0.55 + 0.9 * tex, detail_strength);
+		base *= 1.0 - clamp(lap * 0.5, -0.12, 0.12) * sm * detail_strength;
+	}
 
 	float ao = 1.0;
 	ao -= 0.35 * field_g(ps + n_geo * 1.5, 0.0);
