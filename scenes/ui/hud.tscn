@@ -1,0 +1,102 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="Stats" type="Label" parent="."]
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 460.0
+offset_bottom = 100.0
+text = "FPS"
+
+[node name="FrozenBadge" type="Label" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -80.0
+offset_top = 12.0
+offset_right = 80.0
+offset_bottom = 44.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.55, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "FROZEN"
+horizontal_alignment = 1
+
+[node name="TimeBar" type="PanelContainer" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -280.0
+offset_top = -60.0
+offset_right = 280.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="H" type="HBoxContainer" parent="TimeBar"]
+layout_mode = 2
+
+[node name="PauseButton" type="Button" parent="TimeBar/H"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "Pause"
+
+[node name="StepButton" type="Button" parent="TimeBar/H"]
+layout_mode = 2
+text = "Step"
+
+[node name="ScaleSlider" type="HSlider" parent="TimeBar/H"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = -5.0
+max_value = 2.0
+step = 0.25
+value = 0.0
+
+[node name="ScaleLabel" type="Label" parent="TimeBar/H"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "x1"
+
+[node name="Tools" type="PanelContainer" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -120.0
+offset_right = 420.0
+offset_bottom = -76.0
+grow_vertical = 0
+
+[node name="V" type="VBoxContainer" parent="Tools"]
+layout_mode = 2
+
+[node name="Palette" type="HBoxContainer" parent="Tools/V"]
+layout_mode = 2
+
+[node name="RadiusRow" type="HBoxContainer" parent="Tools/V"]
+layout_mode = 2
+
+[node name="RadiusTitle" type="Label" parent="Tools/V/RadiusRow"]
+layout_mode = 2
+text = "Brush"
+
+[node name="RadiusSlider" type="HSlider" parent="Tools/V/RadiusRow"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_vertical = 4
+min_value = 1.0
+max_value = 12.0
+value = 4.0
+
+[node name="RadiusLabel" type="Label" parent="Tools/V/RadiusRow"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "4"
