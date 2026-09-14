@@ -61,6 +61,9 @@ var last_edit_bytes := 0
 var edit_message := ""
 signal edit_completed(result: Dictionary)
 var play_button: Button
+var test_time_controls: HBoxContainer
+var pause_button: Button
+var step_button: Button
 var stroke_radius := 3
 var stroke_element := Elements.Id.WATER
 var stroke_erase := false
@@ -224,6 +227,20 @@ func _build_ui() -> void:
 	play_button.text = "Run experiment · Space"
 	play_button.pressed.connect(run_or_restore)
 	column.add_child(play_button)
+	test_time_controls = HBoxContainer.new()
+	test_time_controls.visible = false
+	column.add_child(test_time_controls)
+	pause_button = Button.new()
+	pause_button.text = "Pause · P"
+	pause_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pause_button.pressed.connect(toggle_test_pause)
+	test_time_controls.add_child(pause_button)
+	step_button = Button.new()
+	step_button.text = "Single step · N"
+	step_button.tooltip_text = "Pause and advance the experiment by one simulation tick"
+	step_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	step_button.pressed.connect(step_test)
+	test_time_controls.add_child(step_button)
 	var undo := Button.new()
 	undo.text = "Undo build edit · Ctrl/Cmd Z"
 	undo.pressed.connect(undo_edit)
@@ -362,7 +379,38 @@ func _choose_material(id: int) -> void:
 	_refresh_palette()
 
 
+func toggle_test_pause() -> void:
+	if not testing or capturing:
+		return
+	_end_stroke()
+	TimeController.toggle_pause()
+	_refresh_test_controls()
+
+
+func step_test() -> void:
+	if not testing or capturing:
+		return
+	_end_stroke()
+	TimeController.step()
+	_refresh_test_controls()
+
+
+func _test_phase() -> String:
+	if not testing:
+		return "BUILD"
+	return "TEST · PAUSED" if TimeController.is_frozen() else "TEST · RUNNING"
+
+
+func _refresh_test_controls() -> void:
+	if test_time_controls:
+		test_time_controls.visible = testing
+		pause_button.text = "Resume · P" if TimeController.is_frozen() else "Pause · P"
+		pause_button.disabled = capturing
+		step_button.disabled = capturing
+
+
 func _refresh_palette() -> void:
+	_refresh_test_controls()
 	for id in material_buttons:
 		material_buttons[id].set_pressed_no_signal(id == element and not erase)
 	if erase_button:
@@ -641,7 +689,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_Z:
 				if event.ctrl_pressed or event.meta_pressed:
 					undo_edit()
-			KEY_R, KEY_N, KEY_0, KEY_COMMA, KEY_PERIOD, KEY_BACKSLASH:
+			KEY_P:
+				toggle_test_pause()
+			KEY_N:
+				step_test()
+			KEY_R, KEY_0, KEY_COMMA, KEY_PERIOD, KEY_BACKSLASH:
 				# This editor owns build/test state. Legacy time hotkeys must not
 				# advance the authored world behind the undo model.
 				pass
@@ -918,7 +970,7 @@ func _process(delta: float) -> void:
 		marker.scale = Vector3.ONE * (2 * radius + 1) * sim.world_size() / VoxelCodec.GRID
 	_update_live_emitter(over_ui)
 	_flush()
-	status.text = "%s · %s · r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % ["ERASE" if erase else "Add into empty space", Elements.TABLE[element].name, radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else ("PLAYING" if testing else "BUILD"), "Live edits reset on return; no live undo" if testing else "%d build edits can be undone" % undo_history.size()]
+	status.text = "%s · %s · r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % ["ERASE" if erase else "Add into empty space", Elements.TABLE[element].name, radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else _test_phase(), "Live edits reset on return; no live undo" if testing else "%d build edits can be undone" % undo_history.size()]
 	if edit_message != "":
 		status.text += "\n" + edit_message
 	if targeting_mode == TargetMode.SURFACE:
