@@ -2,6 +2,8 @@
 
 This experiment compares a fused update with the unchanged [two-pass FP32 reference](thermal-gpu.md). Both solve stationary, insulated, full-cell conduction with latent enthalpy. Neither binds production voxel state. The fused form meets the same numerical targets and cuts steady allocation by two thirds, but is slower on the tested GPU. Retain it as a storage tradeoff, not a speed improvement: at 256³ and four steps per frame it took about 23.87 ms versus 17.17–17.96 ms for the reference.
 
+The subsequent [center-temperature reuse experiment](thermal-reuse.md) preserves this first result and tests a narrower arithmetic optimization.
+
 ## Storage and arithmetic
 
 The fused update keeps two FP32 energy buffers and one uint material-ID buffer: **12 B/cell**, versus **36 B/cell** for the reference. It removes the stored face-transfer buffer and defers diagnostic temperature/fraction allocation until inspection. This reduces steady logical allocation from 72 to 24 MiB at 128³, and from 576 to 192 MiB at 256³. Calling `snapshot()` adds 8 B/cell and retains it until `close()`, yielding 20 B/cell (40/320 MiB) for an inspected instance. Small coefficient tables, driver resources and CPU staging are excluded. The benchmark never requests that diagnostic allocation.

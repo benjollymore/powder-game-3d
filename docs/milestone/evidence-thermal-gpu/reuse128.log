@@ -1,0 +1,20 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+THERMAL_COMPARE_CONFIG variant=fused n=128 logical_MiB=24 diagnostics_allocated=false
+CASE variant=fused n=128 steps_per_frame=0 repeat=0 drained_mean_ms=2.907729 frame_p95_ms=8.542000 ticks=0 interface_energy_J=[246.850006103516, 16.8500003814697]
+CASE variant=fused n=128 steps_per_frame=1 repeat=0 drained_mean_ms=2.715208 frame_p95_ms=8.234000 ticks=270 interface_energy_J=[224.363098144531, 38.7785682678223]
+CASE variant=fused n=128 steps_per_frame=4 repeat=0 drained_mean_ms=3.624508 frame_p95_ms=8.480000 ticks=1080 interface_energy_J=[192.222351074219, 84.776741027832]
+THERMAL_COMPARE_CONFIG variant=reuse n=128 logical_MiB=24 diagnostics_allocated=false
+CASE variant=reuse n=128 steps_per_frame=0 repeat=0 drained_mean_ms=2.143283 frame_p95_ms=6.031000 ticks=0 interface_energy_J=[246.850006103516, 16.8500003814697]
+CASE variant=reuse n=128 steps_per_frame=1 repeat=0 drained_mean_ms=2.360696 frame_p95_ms=6.361000 ticks=270 interface_energy_J=[224.363098144531, 38.7785682678223]
+CASE variant=reuse n=128 steps_per_frame=4 repeat=0 drained_mean_ms=2.927458 frame_p95_ms=8.578000 ticks=1080 interface_energy_J=[192.222351074219, 84.776741027832]
+THERMAL_COMPARE_CONFIG variant=reuse n=128 logical_MiB=24 diagnostics_allocated=false
+CASE variant=reuse n=128 steps_per_frame=4 repeat=1 drained_mean_ms=2.862837 frame_p95_ms=8.362000 ticks=1080 interface_energy_J=[192.222351074219, 84.776741027832]
+CASE variant=reuse n=128 steps_per_frame=1 repeat=1 drained_mean_ms=2.463708 frame_p95_ms=8.356000 ticks=270 interface_energy_J=[224.363098144531, 38.7785682678223]
+CASE variant=reuse n=128 steps_per_frame=0 repeat=1 drained_mean_ms=2.251958 frame_p95_ms=7.118000 ticks=0 interface_energy_J=[246.850006103516, 16.8500003814697]
+THERMAL_COMPARE_CONFIG variant=fused n=128 logical_MiB=24 diagnostics_allocated=false
+CASE variant=fused n=128 steps_per_frame=4 repeat=1 drained_mean_ms=3.524617 frame_p95_ms=8.345000 ticks=1080 interface_energy_J=[192.222351074219, 84.776741027832]
+CASE variant=fused n=128 steps_per_frame=1 repeat=1 drained_mean_ms=2.205546 frame_p95_ms=6.032000 ticks=270 interface_energy_J=[224.363098144531, 38.7785682678223]
+CASE variant=fused n=128 steps_per_frame=0 repeat=1 drained_mean_ms=2.125296 frame_p95_ms=6.151000 ticks=0 interface_energy_J=[246.850006103516, 16.8500003814697]
+THERMAL_COMPARE_BENCH failures=0

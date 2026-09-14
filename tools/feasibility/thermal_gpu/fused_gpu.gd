@@ -2,6 +2,8 @@ extends "res://tools/feasibility/thermal_gpu/thermal_gpu.gd"
 ## Fused experiment:12B/cell resident; diagnostic8B/cell allocated only on inspection.
 ## The two-pass reference remains unchanged in thermal_gpu.gd.
 var no_contraction_decorations := 0
+var heat_kernel := "fused_heat"
+var audit_kernel := "face_audit"
 
 func initialize(case: Dictionary) -> void:
 	rd = RenderingServer.get_rendering_device()
@@ -17,10 +19,10 @@ func initialize(case: Dictionary) -> void:
 	for material in case.materials:
 		coefficients.append_array(PackedFloat32Array(material))
 	_materials = rd.storage_buffer_create(coefficients.size()*4, coefficients.to_byte_array())
-	for path in ["fused_heat", "decode_state"]:
+	for path in [heat_kernel, "decode_state"]:
 		var file: RDShaderFile = load("res://tools/feasibility/thermal_gpu/%s.glsl" % path)
 		var spirv := file.get_spirv()
-		if path == "fused_heat":
+		if path == heat_kernel:
 			no_contraction_decorations = _count_no_contraction(spirv.bytecode_compute)
 		var shader := rd.shader_create_from_spirv(spirv)
 		_shaders.append(shader)
@@ -57,7 +59,7 @@ func snapshot() -> Dictionary:
 	return {"energy":rd.buffer_get_data(_energy[_current]).to_float32_array(),"state":rd.buffer_get_data(_states).to_float32_array(),"ticks":ticks}
 
 func audit_faces(dt: float) -> PackedByteArray:
-	var file: RDShaderFile = load("res://tools/feasibility/thermal_gpu/face_audit.glsl")
+	var file: RDShaderFile = load("res://tools/feasibility/thermal_gpu/" + audit_kernel + ".glsl")
 	var shader := rd.shader_create_from_spirv(file.get_spirv())
 	var pipeline := rd.compute_pipeline_create(shader)
 	var buffer := rd.storage_buffer_create(shape.x*shape.y*shape.z*32)

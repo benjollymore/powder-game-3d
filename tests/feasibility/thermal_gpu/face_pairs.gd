@@ -1,12 +1,15 @@
 extends SceneTree
 signal pairs_ready(result: Dictionary)
 var _gpu: RefCounted
+var _gpu_path := "res://tools/feasibility/thermal_gpu/fused_gpu.gd"
 var _failures := 0
 var _checks := 0
 
 func _initialize() -> void:
 	root.get_node("TimeController").paused = true
 	create_timer(90.0).timeout.connect(func(): push_error("Face audit timed out"); quit(1))
+	if "thermal_variant=reuse" in OS.get_cmdline_user_args():
+		_gpu_path = "res://tools/feasibility/thermal_gpu/reuse_gpu.gd"
 	call_deferred("_run")
 
 func _run() -> void:
@@ -14,7 +17,7 @@ func _run() -> void:
 	for case in fixtures.cases:
 		if case.name not in ["hotspot_3d", "interface_3d", "batch_phase", "varied_materials_3d"]:
 			continue
-		_gpu = load("res://tools/feasibility/thermal_gpu/fused_gpu.gd").new()
+		_gpu = load(_gpu_path).new()
 		RenderingServer.call_on_render_thread(_rt_audit.bind(case))
 		var result: Dictionary = await pairs_ready
 		_check(result.decorations > 0, "%s SPIR-V retains NoContraction decorations (%d)" % [case.name, result.decorations])

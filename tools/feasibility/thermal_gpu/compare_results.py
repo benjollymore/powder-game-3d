@@ -1,12 +1,14 @@
 """Quantify fused-vs-stored-face differences without claiming cross-kernel identity."""
+import argparse
 import json
 from pathlib import Path
 
 DIRECTORY = Path(__file__).resolve().parents[3] / "docs/milestone/evidence-thermal-gpu"
 
 
-def main():
-    variants = [json.loads((DIRECTORY / f"{v}-results.json").read_text()) for v in ["baseline", "fused"]]
+def main(first="baseline", second="fused"):
+    prefix = "reuse-" if second == "reuse" else ""
+    variants = [json.loads((DIRECTORY / f"{v}-results.json").read_text()) for v in [first, second]]
     assert len(variants[0]["cases"]) == len(variants[1]["cases"]) == 12
     assert all(v["failures"] == 0 and v["checks"] > 0 for v in variants)
     metrics = []
@@ -30,8 +32,12 @@ def main():
                       maximum_fraction_difference=max_f)
         metrics.append(metric)
         print("COMPARE", json.dumps(metric, sort_keys=True))
-    (DIRECTORY / "comparison.json").write_text(json.dumps(metrics, indent=2)+"\n")
+    (DIRECTORY / (prefix + "comparison.json")).write_text(json.dumps(metrics, indent=2)+"\n")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--first", choices=["baseline", "fused"], default="baseline")
+    parser.add_argument("--second", choices=["fused", "reuse"], default="fused")
+    args = parser.parse_args()
+    main(args.first, args.second)

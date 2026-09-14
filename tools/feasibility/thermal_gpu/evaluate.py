@@ -86,6 +86,6 @@ def evaluate(prefix=""):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--variant", choices=["baseline", "fused"])
+    parser.add_argument("--variant", choices=["baseline", "fused", "reuse"])
     args = parser.parse_args()
     raise SystemExit(bool(evaluate(args.variant + "-" if args.variant else "")))

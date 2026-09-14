@@ -1,0 +1,134 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ERROR: reuse_heat: Failed parse:
+ERROR: 0:3: '#include' : required extension not requested: Possible extensions include:
+GL_GOOGLE_include_directive
+GL_ARB_shading_language_include
+ERROR: 0:3: '#include' : must be followed by a header name
+ERROR: 0:3: '' : compilation terminated
+ERROR: 3 compilation errors.  No code generated.
+
+
+
+
+Stage 'compute' source code:
+
+1		#version 450
+2
+3		#include "fused_common.glslinc"
+4		// Same precise transfer arithmetic as canonical_transfer, but inputs have
+5		// already been decoded. Both neighbors still pass the lower-index cell first.
+6		float decoded_transfer(float ki, float kj, float ti, float tj) {
+7		    precise float conductance=(ki+kj==0.0) ? 0.0 : (2.0*ki*kj/(ki+kj))*pc.time.x;
+8		    precise float q=pc.time.y*conductance*(tj-ti);
+9		    return q;
+10		}
+11		void cell_faces(uvec3 p, out vec3 positive, out vec3 negative) {
+12		    uint i=index_of(p);
+13		    precise float center_t=state_of(i).x;
+14		    precise float center_k=materials.value[ids.value[i]].transport.y;
+15		    positive=vec3(0.0); negative=vec3(0.0);
+16		    for (uint axis=0u;axis<3u;axis++) {
+17		        uvec3 neighbor=p; neighbor[axis]++;
+18		        if (neighbor[axis]<pc.shape[axis]) {
+19		            uint j=index_of(neighbor);
+20		            precise float tj=state_of(j).x;
+21		            precise float kj=materials.value[ids.value[j]].transport.y;
+22		            positive[axis]=decoded_transfer(center_k,kj,center_t,tj);
+23		        }
+24		        if (p[axis]>0u) {
+25		            neighbor=p; neighbor[axis]--;
+26		            uint j=index_of(neighbor);
+27		            precise float tj=state_of(j).x;
+28		            precise float kj=materials.value[ids.value[j]].transport.y;
+29		            negative[axis]=decoded_transfer(kj,center_k,tj,center_t);
+30		        }
+31		    }
+32		}
+33
+34		layout(local_size_x=8,local_size_y=4,local_size_z=4) in;
+35		layout(std430,set=0,binding=3) writeonly buffer NextEnergy { float value[]; } next_energy;
+36		void main() {
+37		    uvec3 p=gl_GlobalInvocationID;
+38		    if (any(greaterThanEqual(p,pc.shape.xyz))) { return; }
+39		    uint i=index_of(p);
+40		    vec3 positive,negative;
+41		    cell_faces(p,positive,negative);
+42		    precise float delta=positive.x+positive.y+positive.z;
+43		    // Skip absent negative faces exactly as the original fused gather does.
+44		    for (uint axis=0u;axis<3u;axis++) {
+45		        if (p[axis]>0u) { delta-=negative[axis]; }
+46		    }
+47		    precise float value=energy.value[i]+delta;
+48		    next_energy.value[i]=value;
+49		}
+50
+51
+
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _initialize (res://tests/feasibility/thermal_gpu/shader_import.gd:9)
+ERROR: reuse_audit: Failed parse:
+ERROR: 0:3: '#include' : required extension not requested: Possible extensions include:
+GL_GOOGLE_include_directive
+GL_ARB_shading_language_include
+ERROR: 0:3: '#include' : must be followed by a header name
+ERROR: 0:3: '' : compilation terminated
+ERROR: 3 compilation errors.  No code generated.
+
+
+
+
+Stage 'compute' source code:
+
+1		#version 450
+2
+3		#include "fused_common.glslinc"
+4		// Same precise transfer arithmetic as canonical_transfer, but inputs have
+5		// already been decoded. Both neighbors still pass the lower-index cell first.
+6		float decoded_transfer(float ki, float kj, float ti, float tj) {
+7		    precise float conductance=(ki+kj==0.0) ? 0.0 : (2.0*ki*kj/(ki+kj))*pc.time.x;
+8		    precise float q=pc.time.y*conductance*(tj-ti);
+9		    return q;
+10		}
+11		void cell_faces(uvec3 p, out vec3 positive, out vec3 negative) {
+12		    uint i=index_of(p);
+13		    precise float center_t=state_of(i).x;
+14		    precise float center_k=materials.value[ids.value[i]].transport.y;
+15		    positive=vec3(0.0); negative=vec3(0.0);
+16		    for (uint axis=0u;axis<3u;axis++) {
+17		        uvec3 neighbor=p; neighbor[axis]++;
+18		        if (neighbor[axis]<pc.shape[axis]) {
+19		            uint j=index_of(neighbor);
+20		            precise float tj=state_of(j).x;
+21		            precise float kj=materials.value[ids.value[j]].transport.y;
+22		            positive[axis]=decoded_transfer(center_k,kj,center_t,tj);
+23		        }
+24		        if (p[axis]>0u) {
+25		            neighbor=p; neighbor[axis]--;
+26		            uint j=index_of(neighbor);
+27		            precise float tj=state_of(j).x;
+28		            precise float kj=materials.value[ids.value[j]].transport.y;
+29		            negative[axis]=decoded_transfer(kj,center_k,tj,center_t);
+30		        }
+31		    }
+32		}
+33
+34		layout(local_size_x=8,local_size_y=4,local_size_z=4) in;
+35		layout(std430,set=0,binding=3) writeonly buffer Audit { vec4 value[]; } audit;
+36		void main() {
+37		    uvec3 p=gl_GlobalInvocationID;
+38		    if (any(greaterThanEqual(p,pc.shape.xyz))) { return; }
+39		    uint i=index_of(p);
+40		    vec3 positive,negative;
+41		    cell_faces(p,positive,negative);
+42		    audit.value[i*2u]=vec4(positive,0.0);
+43		    audit.value[i*2u+1u]=vec4(negative,0.0);
+44		}
+45
+46
+
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _initialize (res://tests/feasibility/thermal_gpu/shader_import.gd:9)
+THERMAL_SHADER_IMPORT checks=7 failures=2

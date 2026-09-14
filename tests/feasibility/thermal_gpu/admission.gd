@@ -3,7 +3,7 @@ extends SceneTree
 func _initialize() -> void:
 	var failures := 0
 	var checks := 0
-	for path in ["thermal_gpu.gd", "fused_gpu.gd"]:
+	for path in ["thermal_gpu.gd", "fused_gpu.gd", "reuse_gpu.gd"]:
 		var gpu: RefCounted = load("res://tools/feasibility/thermal_gpu/" + path).new()
 		gpu.stable_dt = 0.1
 		for pair in [[1, -1.0], [1, 0.0], [1, INF], [1, NAN], [1, 1e-100], [1, 1e40], [-1, 0.05], [1, 0.2], [1, 0.1]]:

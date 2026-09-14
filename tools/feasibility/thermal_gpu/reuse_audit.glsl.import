@@ -1,0 +1,13 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://b77ho4dadfg0t"
+path="res://.godot/imported/reuse_audit.glsl-87003d77b3513fdf98f6eb63155082df.res"
+
+[deps]
+
+source_file="res://tools/feasibility/thermal_gpu/reuse_audit.glsl"
+dest_files=["res://.godot/imported/reuse_audit.glsl-87003d77b3513fdf98f6eb63155082df.res"]
+
+[params]

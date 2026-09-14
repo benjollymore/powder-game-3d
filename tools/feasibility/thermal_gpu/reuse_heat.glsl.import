@@ -1,0 +1,13 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://bvh5jb8dkvs4c"
+path="res://.godot/imported/reuse_heat.glsl-c9fca223f8bdf385a61a7c84c0ad30a2.res"
+
+[deps]
+
+source_file="res://tools/feasibility/thermal_gpu/reuse_heat.glsl"
+dest_files=["res://.godot/imported/reuse_heat.glsl-c9fca223f8bdf385a61a7c84c0ad30a2.res"]
+
+[params]
