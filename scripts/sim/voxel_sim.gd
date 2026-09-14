@@ -13,6 +13,7 @@ extends Node3D
 
 signal readback_ready(bytes: PackedByteArray)
 signal occupancy_ready(bytes: PackedByteArray)
+signal density_ready(bytes: PackedByteArray)
 
 const GRID := VoxelCodec.GRID
 const SIM_SHADER_PATH := "res://shaders/compute/sim.glsl"
@@ -21,6 +22,7 @@ const BRUSH_LOCAL_SIZE := 8
 const HYDRO_SHADER_PATH := "res://shaders/compute/hydro.glsl"
 ## Percent of the gap to a horizontal run's mean closed per hydro pass.
 const HYDRO_RELAX_PERCENT := 50
+const DENSITY_SHADER_PATH := "res://shaders/compute/density.glsl"
 const OCCUPANCY_SHADER_PATH := "res://shaders/compute/occupancy.glsl"
 ## One occupancy cell per 8^3 brick: 16^3 cells for a 128^3 world.
 const OCCUPANCY_GRID := 16
@@ -58,6 +60,11 @@ var _brush_set := RID()
 var _hydro_shader := RID()
 var _hydro_pipeline := RID()
 var _hydro_set := RID()
+var _density_rid := RID()
+var _density_texture := Texture3DRD.new()
+var _density_shader := RID()
+var _density_pipeline := RID()
+var _density_set := RID()
 var _occ_rid := RID()
 var _occ_texture := Texture3DRD.new()
 var _occ_shader := RID()
@@ -73,6 +80,10 @@ func _ready() -> void:
 	_material.set_shader_parameter("grid_size", GRID)
 	_material.set_shader_parameter("palette", Elements.palette())
 	_material.set_shader_parameter("liquid_mask", Elements.liquid_mask())
+	_material.set_shader_parameter("gas_mask", Elements.gas_mask())
+	_material.set_shader_parameter("extinction", Elements.extinction())
+	_material.set_shader_parameter("liquid_full", float(Elements.LIQUID_FULL))
+	_material.set_shader_parameter("density", _density_texture)
 	# Bound now, but only points at a real texture once the render thread has
 	# created it (see _process). Re-bound every run because the RD texture
 	# binding does not survive scene reloads.
@@ -89,6 +100,7 @@ func _exit_tree() -> void:
 	# uniform set against a freed texture at shutdown.
 	_texture.texture_rd_rid = RID()
 	_occ_texture.texture_rd_rid = RID()
+	_density_texture.texture_rd_rid = RID()
 	RenderingServer.call_on_render_thread(_rt_free)
 
 
@@ -96,6 +108,7 @@ func _process(_delta: float) -> void:
 	if _rt_ready and _texture.texture_rd_rid != _grid_rid:
 		_texture.texture_rd_rid = _grid_rid
 		_occ_texture.texture_rd_rid = _occ_rid
+		_density_texture.texture_rd_rid = _density_rid
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -161,6 +174,13 @@ func request_occupancy_readback() -> void:
 		RenderingServer.call_on_render_thread(_rt_occupancy_readback)
 
 
+## Fetch the liquid density field (one byte per voxel) without stalling;
+## `density_ready` fires on the main thread when it arrives.
+func request_density_readback() -> void:
+	if _rt_ready:
+		RenderingServer.call_on_render_thread(_rt_density_readback)
+
+
 ## Count voxels per element id from a readback.
 static func histogram(bytes: PackedByteArray) -> PackedInt64Array:
 	var counts := PackedInt64Array()
@@ -222,6 +242,20 @@ func _rt_init(initial: PackedByteArray) -> void:
 	)
 	_occ_rid = _rd.texture_create(occ_fmt, RDTextureView.new())
 
+	var den_fmt := RDTextureFormat.new()
+	den_fmt.format = RenderingDevice.DATA_FORMAT_R8_UNORM
+	den_fmt.texture_type = RenderingDevice.TEXTURE_TYPE_3D
+	den_fmt.width = GRID
+	den_fmt.height = GRID
+	den_fmt.depth = GRID
+	den_fmt.mipmaps = 1
+	den_fmt.usage_bits = (
+		RenderingDevice.TEXTURE_USAGE_STORAGE_BIT
+		| RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
+	)
+	_density_rid = _rd.texture_create(den_fmt, RDTextureView.new())
+
 	_rt_build_pipelines(false)
 	_rt_occupancy_update()
 	_rt_ready = true
@@ -269,7 +303,8 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	var brush_spirv := _rt_compile(BRUSH_SHADER_PATH, from_source)
 	var occ_spirv := _rt_compile(OCCUPANCY_SHADER_PATH, from_source)
 	var hydro_spirv := _rt_compile(HYDRO_SHADER_PATH, from_source)
-	if sim_spirv == null or brush_spirv == null or occ_spirv == null or hydro_spirv == null:
+	var density_spirv := _rt_compile(DENSITY_SHADER_PATH, from_source)
+	if sim_spirv == null or brush_spirv == null or occ_spirv == null or hydro_spirv == null or density_spirv == null:
 		return
 	_rt_free_pipelines()
 
@@ -293,6 +328,11 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	_hydro_pipeline = _rd.compute_pipeline_create(_hydro_shader)
 	_hydro_set = _rd.uniform_set_create([_image_uniform(0), _buffer_uniform(1, _elements_buffer)], _hydro_shader, 0)
 
+	_density_shader = _rd.shader_create_from_spirv(density_spirv)
+	_density_pipeline = _rd.compute_pipeline_create(_density_shader)
+	_density_set = _rd.uniform_set_create(
+		[_image_uniform(0), _image_uniform(1, _density_rid), _buffer_uniform(2, _elements_buffer)], _density_shader, 0)
+
 	_occ_shader = _rd.shader_create_from_spirv(occ_spirv)
 	_occ_pipeline = _rd.compute_pipeline_create(_occ_shader)
 	_occ_set = _rd.uniform_set_create(
@@ -303,7 +343,8 @@ func _rt_build_pipelines(from_source: bool) -> void:
 
 func _rt_free_pipelines() -> void:
 	for rid in [_sim_set, _sim_pipeline, _sim_shader, _brush_set, _brush_pipeline, _brush_shader,
-			_occ_set, _occ_pipeline, _occ_shader, _hydro_set, _hydro_pipeline, _hydro_shader]:
+			_occ_set, _occ_pipeline, _occ_shader, _hydro_set, _hydro_pipeline, _hydro_shader,
+			_density_set, _density_pipeline, _density_shader]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
 	_sim_set = RID()
@@ -318,17 +359,21 @@ func _rt_free_pipelines() -> void:
 	_hydro_set = RID()
 	_hydro_pipeline = RID()
 	_hydro_shader = RID()
+	_density_set = RID()
+	_density_pipeline = RID()
+	_density_shader = RID()
 
 
 func _rt_free() -> void:
 	_rt_free_pipelines()
-	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid]:
+	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid, _density_rid]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
 	_elements_buffer = RID()
 	_reactions_buffer = RID()
 	_grid_rid = RID()
 	_occ_rid = RID()
+	_density_rid = RID()
 	_rt_ready = false
 
 
@@ -406,7 +451,8 @@ func _rt_clear() -> void:
 	_rt_occupancy_update()
 
 
-## Recompute the coarse occupancy grid from the voxel texture.
+## Recompute everything derived from the voxel texture: the coarse occupancy
+## grid and the liquid density field the renderer samples.
 func _rt_occupancy_update() -> void:
 	if not _occ_pipeline.is_valid():
 		return
@@ -415,7 +461,21 @@ func _rt_occupancy_update() -> void:
 	_rd.compute_list_bind_compute_pipeline(cl, _occ_pipeline)
 	_rd.compute_list_bind_uniform_set(cl, _occ_set, 0)
 	_rd.compute_list_dispatch(cl, groups, groups, groups)
+	_rd.compute_list_add_barrier(cl)
+	if _density_pipeline.is_valid():
+		var dg := GRID / 8
+		_rd.compute_list_bind_compute_pipeline(cl, _density_pipeline)
+		_rd.compute_list_bind_uniform_set(cl, _density_set, 0)
+		_rd.compute_list_dispatch(cl, dg, dg, dg)
 	_rd.compute_list_end()
+
+
+func _rt_density_readback() -> void:
+	_rd.texture_get_data_async(_density_rid, 0, _on_density_bytes)
+
+
+func _on_density_bytes(bytes: PackedByteArray) -> void:
+	density_ready.emit.call_deferred(bytes)
 
 
 func _rt_occupancy_readback() -> void:

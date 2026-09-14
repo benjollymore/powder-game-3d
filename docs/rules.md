@@ -14,7 +14,8 @@ Rules run in this order inside a block (canonical frame, y up):
    liquid participant) and replaces both cells. MVP: fire+plant → fire+fire,
    fire+oil → fire+fire, fire+water → air+steam, plant+water → plant+plant.
 2. **Decay** — a cell with `decay > 0` turns into its `decay_to` with that
-   probability per tick. Fire → air, steam → water (slow, so it rains).
+   probability per tick. Fire → smoke, smoke → air (slowly), steam → water
+   (very slowly, so it rains).
 3. **Vertical** — in each of the 4 columns: if both cells are air or the same
    liquid, the liquid *amount* is split hydrostatically (see below); otherwise
    if the top cell is denser than the bottom and neither is immovable, swap.
@@ -57,3 +58,17 @@ time). A cell pairs with the cell below it on about half of all ticks, so a
 free-falling grain moves ~90 voxels per second.
 
 Tests for each rule live in `tests/gpu/run_gpu_tests.gd`.
+
+## Rendering
+
+`shaders/spatial/voxel_raymarch.gdshader` walks the voxel texture per pixel.
+Solids and powders are opaque lit cubes. Liquids are drawn as the 0.5
+isosurface of the density texture written by `shaders/compute/density.glsl`
+(trilinear, so partial cells give a smooth surface at the right height), with
+Fresnel reflection of the sky, a sun highlight, in-scattering in the liquid's
+palette colour and Beer-Lambert absorption of whatever lies behind. Gases
+(steam, fire, smoke) are participating media accumulated along the ray using
+each element's `extinction`; fire also carries `emission` so it blooms. The
+material is transparent with premultiplied alpha, so the ground and sky show
+through water and gas at the box faces, and it writes depth at the first
+surface so other meshes composite correctly.

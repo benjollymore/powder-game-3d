@@ -33,3 +33,11 @@ after every tick batch, brush stroke, upload and clear. The raymarcher leaps
 across empty bricks, and `scripts/sim/shadow_proxy.gd` reads it back
 asynchronously to place shadow-only cubes so the voxel mass casts a shadow on
 the ground without re-running the raymarch in the shadow pass.
+
+## Density field
+
+A 128³ R8 texture written by `shaders/compute/density.glsl` after every
+change: 0 for air and gases, 1 for solids and powders, and for liquids a remap
+of the fill level chosen so that trilinear sampling puts the 0.5 crossing
+exactly `fill` of the way up a partial cell resting on a full one. The
+raymarcher draws liquids as that isosurface.

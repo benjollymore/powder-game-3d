@@ -33,7 +33,7 @@ func _run() -> void:
 	var tests := [
 		["_test_sand_settles", 3], ["_test_water_levels", 3], ["_test_steam_rises", 3],
 		["_test_brush_paints", 3], ["_test_occupancy", 3], ["_test_liquid_mass", 3],
-		["_test_u_bend", 3], ["_test_pressure_pipe", 3],
+		["_test_u_bend", 3], ["_test_pressure_pipe", 3], ["_test_density_pass", 3],
 		["_test_fire_burns_plant", 0], ["_test_water_boils_on_fire", 0], ["_test_oil_floats", 3],
 	]
 	for t in tests:
@@ -399,3 +399,27 @@ func _test_pressure_pipe() -> void:
 	print("amounts: " + " ".join(dbg))
 	check(pipe >= tank - 3.0 and pipe <= tank + 2.0,
 		"pressure pushes water up the pipe to the tank level: pipe %.2f vs tank %.2f" % [pipe, tank])
+
+
+func _test_density_pass() -> void:
+	var data := _empty_world()
+	_fill_box(data, Vector3i(10, 10, 10), Vector3i(12, 12, 12), Elements.Id.WALL)
+	_fill_box(data, Vector3i(20, 10, 10), Vector3i(22, 12, 12), Elements.Id.SAND)
+	_fill_box(data, Vector3i(30, 10, 10), Vector3i(32, 12, 12), Elements.Id.WATER, 200)
+	_fill_box(data, Vector3i(40, 10, 10), Vector3i(42, 12, 12), Elements.Id.WATER, 100)
+	_fill_box(data, Vector3i(50, 10, 10), Vector3i(52, 12, 12), Elements.Id.WATER, 50)
+	_fill_box(data, Vector3i(60, 10, 10), Vector3i(62, 12, 12), Elements.Id.STEAM)
+	_sim.upload(data.to_byte_array())
+	await process_frame
+	await process_frame
+	_sim.request_density_readback()
+	var den: PackedByteArray = await _sim.density_ready
+	check(den.size() == GRID * GRID * GRID, "density readback is one byte per voxel")
+	var at := func(x: int) -> int: return den[VoxelCodec.index(x, 10, 10)]
+	check(at.call(5) == 0, "air density 0 (got %d)" % at.call(5))
+	check(at.call(10) == 255, "wall density 255 (got %d)" % at.call(10))
+	check(at.call(20) == 255, "sand density 255 (got %d)" % at.call(20))
+	check(at.call(30) == 255, "full water density 255 (got %d)" % at.call(30))
+	check(absi(at.call(40) - 128) <= 1, "half water density ~128 (got %d)" % at.call(40))
+	check(absi(at.call(50) - 85) <= 1, "quarter water density ~85 (got %d)" % at.call(50))
+	check(at.call(60) == 0, "steam density 0 (got %d)" % at.call(60))

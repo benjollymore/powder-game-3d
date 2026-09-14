@@ -13,7 +13,7 @@ Play, or run `godot --path .` from the repo root.
 | Key | Action |
 |---|---|
 | Left mouse (hold) | Paint with the brush at the sphere cursor |
-| 1–7 | Pick element (wall, sand, water, steam, fire, plant, oil) |
+| 1–8 | Pick element (wall, sand, water, steam, fire, plant, oil, smoke) |
 | X | Toggle erase |
 | [ / ] | Brush radius |
 | Shift + scroll | Move the brush cursor along the view ray |

@@ -4,7 +4,7 @@ extends Node3D
 ## sphere gizmo there, and paints while the left button is held. Works while
 ## time is frozen; the paint lands the same frame.
 ##
-## Keys: 1-7 pick an element, X toggles erase, [ ] change radius,
+## Keys: 1-9 pick an element, X toggles erase, [ ] change radius,
 ## Shift+scroll moves the cursor along the ray.
 
 signal changed
@@ -55,7 +55,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
-			KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7:
+			KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9:
 				var id: int = event.keycode - KEY_1 + 1
 				if id < Elements.count():
 					element = id

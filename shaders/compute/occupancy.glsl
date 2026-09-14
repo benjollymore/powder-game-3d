@@ -15,6 +15,10 @@ struct Elem {
 	float density;
 	float decay;
 	float spread;
+	float extinction;
+	float air_coupling;
+	float heat;
+	float pad;
 };
 layout(std430, set = 0, binding = 2) restrict readonly buffer Elems { Elem elems[]; };
 

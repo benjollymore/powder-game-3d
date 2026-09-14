@@ -5,7 +5,7 @@ extends RefCounted
 ## Adding an element = one row in TABLE (+ shader code only if it needs
 ## bespoke behaviour).
 
-enum Id { AIR, WALL, SAND, WATER, STEAM, FIRE, PLANT, OIL }
+enum Id { AIR, WALL, SAND, WATER, STEAM, FIRE, PLANT, OIL, SMOKE }
 
 const FLAG_IMMOVABLE := 1 << 0
 const FLAG_POWDER := 1 << 1
@@ -21,15 +21,18 @@ const LIQUID_FULL := 200
 
 ## Index = Id. density: lighter things rise through heavier ones.
 ## decay: per-tick chance to turn into `decay_to`. spread: sideways flow chance.
+## emission (optional): self-illumination strength; above ~1.2 it blooms.
+## extinction (gases): opacity per voxel travelled when rendered as a volume.
 const TABLE := [
 	{ "name": "Air",   "color": Color(0, 0, 0, 0),          "flags": FLAG_GAS,                     "density": 10.0,   "decay": 0.0,  "decay_to": 0, "spread": 0.0 },
 	{ "name": "Wall",  "color": Color(0.45, 0.45, 0.48),    "flags": FLAG_IMMOVABLE,               "density": 1000.0, "decay": 0.0,  "decay_to": 0, "spread": 0.0 },
 	{ "name": "Sand",  "color": Color(0.86, 0.72, 0.42),    "flags": FLAG_POWDER,                  "density": 200.0,  "decay": 0.0,  "decay_to": 0, "spread": 0.0 },
 	{ "name": "Water", "color": Color(0.2, 0.45, 0.9),      "flags": FLAG_LIQUID,                  "density": 100.0,  "decay": 0.0,  "decay_to": 0, "spread": 1.0 },
-	{ "name": "Steam", "color": Color(0.8, 0.85, 0.9),      "flags": FLAG_GAS,                     "density": 1.0,    "decay": 0.0005, "decay_to": 3, "spread": 0.6 },
-	{ "name": "Fire",  "color": Color(1.0, 0.45, 0.1),      "flags": FLAG_GAS,                     "density": 2.0,    "decay": 0.05, "decay_to": 0, "spread": 0.3, "emission": 2.2 },
+	{ "name": "Steam", "color": Color(0.86, 0.89, 0.93),    "flags": FLAG_GAS,                     "density": 1.0,    "decay": 0.0005, "decay_to": 3, "spread": 0.6, "extinction": 0.12 },
+	{ "name": "Fire",  "color": Color(1.0, 0.45, 0.1),      "flags": FLAG_GAS,                     "density": 2.0,    "decay": 0.05, "decay_to": 8, "spread": 0.3, "emission": 2.2, "extinction": 0.2 },
 	{ "name": "Plant", "color": Color(0.2, 0.7, 0.25),      "flags": FLAG_IMMOVABLE | FLAG_FLAMMABLE, "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0 },
 	{ "name": "Oil",   "color": Color(0.35, 0.25, 0.15),    "flags": FLAG_LIQUID | FLAG_FLAMMABLE, "density": 80.0,   "decay": 0.0,  "decay_to": 0, "spread": 0.5 },
+	{ "name": "Smoke", "color": Color(0.2, 0.2, 0.22),      "flags": FLAG_GAS,                     "density": 3.0,    "decay": 0.002, "decay_to": 0, "spread": 0.5, "extinction": 0.3 },
 ]
 
 
@@ -65,6 +68,28 @@ static func liquid_mask() -> int:
 	return mask
 
 
+static func is_gas(id: int) -> bool:
+	return (TABLE[id]["flags"] & FLAG_GAS) != 0
+
+
+## Bit per element id for gases (air excluded: it is never drawn).
+static func gas_mask() -> int:
+	var mask := 0
+	for id in range(1, TABLE.size()):
+		if is_gas(id):
+			mask |= 1 << id
+	return mask
+
+
+## Per-id volume opacity for the renderer (PALETTE_SIZE entries).
+static func extinction() -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	out.resize(PALETTE_SIZE)
+	for i in TABLE.size():
+		out[i] = float(TABLE[i].get("extinction", 0.0))
+	return out
+
+
 static func palette() -> PackedColorArray:
 	var out := PackedColorArray()
 	out.resize(PALETTE_SIZE)
@@ -75,18 +100,26 @@ static func palette() -> PackedColorArray:
 	return out
 
 
-## 16 bytes per element: uint flags, float density, float decay, float spread
-## (decay target packed into the high byte of flags). Matches `struct Elem` in sim.glsl.
+## 32 bytes per element: uint flags (decay target in the high byte), float
+## density, decay, spread, extinction, air_coupling, heat, pad. Matches
+## `struct Elem` in every compute shader.
+const ELEM_BYTES := 32
+
 static func property_bytes() -> PackedByteArray:
 	var out := PackedByteArray()
-	out.resize(TABLE.size() * 16)
+	out.resize(TABLE.size() * ELEM_BYTES)
 	for i in TABLE.size():
 		var e: Dictionary = TABLE[i]
+		var base := i * ELEM_BYTES
 		var flags: int = e["flags"] | (int(e["decay_to"]) << 24)
-		out.encode_u32(i * 16 + 0, flags)
-		out.encode_float(i * 16 + 4, e["density"])
-		out.encode_float(i * 16 + 8, e["decay"])
-		out.encode_float(i * 16 + 12, e["spread"])
+		out.encode_u32(base + 0, flags)
+		out.encode_float(base + 4, e["density"])
+		out.encode_float(base + 8, e["decay"])
+		out.encode_float(base + 12, e["spread"])
+		out.encode_float(base + 16, float(e.get("extinction", 0.0)))
+		out.encode_float(base + 20, float(e.get("air_coupling", 0.0)))
+		out.encode_float(base + 24, float(e.get("heat", 0.0)))
+		out.encode_float(base + 28, 0.0)
 	return out
 
 

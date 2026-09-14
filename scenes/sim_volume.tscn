@@ -7,6 +7,7 @@
 [sub_resource type="BoxMesh" id="BoxMesh_unit"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_voxels"]
+render_priority = -1
 shader = ExtResource("2_shader")
 
 [node name="SimVolume" type="Node3D"]
