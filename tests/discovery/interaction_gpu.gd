@@ -4,8 +4,14 @@ const Geometry := preload("res://scripts/discovery/edit_geometry.gd")
 var lab: Node3D
 var failures := 0
 var checks := 0
+var output_dir := "user://interaction-regression"
 
 func _initialize() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("output_dir="):
+			output_dir = arg.trim_prefix("output_dir=")
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(output_dir))
+	create_timer(90.0).timeout.connect(func(): quit(1))
 	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
 	lab = load("res://scenes/discovery/interaction.tscn").instantiate()
 	root.add_child(lab)
@@ -101,25 +107,33 @@ func _run() -> void:
 		await process_frame
 	var running := await read()
 	check(running != painted, "Run actually advances material simulation")
-	# Freeze ticks briefly to inspect a live paint gesture before sand can move.
+	# Live paint now belongs to simulation ticks, including a click released
+	# before its first tick. Pausing must preserve state until a tick is requested.
 	root.get_node("TimeController").paused = true
+	var before_live := await read()
 	lab.element = Elements.Id.SAND
 	lab.radius = 0
 	lab._unhandled_input(press)
-	lab._end_stroke()
-	check(id_at(await read(), cell) == Elements.Id.SAND, "paint gestures remain available during the live experiment")
+	var release := press.duplicate()
+	release.pressed = false
+	lab._input(release)
+	check(await read() == before_live, "released live click does not mutate a paused world before a tick")
+	lab.sim.request_ticks(1)
+	var after_live := await read()
+	check(lab.sim.histogram(after_live)[Elements.Id.SAND] == lab.sim.histogram(before_live)[Elements.Id.SAND] + 1,
+		"released live click adds one grain on the next simulation tick")
 	lab.run_or_restore()
 	check(await read() == painted, "Return to build restores authored voxel bytes exactly")
 	check(root.get_node("TimeController").paused, "Return to build freezes simulation")
 	for i in 8:
 		await process_frame
-	var path := "res://docs/discovery/interaction-front.png"
+	var path := output_dir.path_join("interaction-front.png")
 	check(root.get_texture().get_image().save_png(path) == OK, "front section screenshot saved")
 	lab.yaw = 0.65
 	lab.pitch = -0.4
 	lab._update_camera()
 	for i in 8:
 		await process_frame
-	check(root.get_texture().get_image().save_png("res://docs/discovery/interaction-angle.png") == OK, "angled section screenshot saved")
+	check(root.get_texture().get_image().save_png(output_dir.path_join("interaction-angle.png")) == OK, "angled section screenshot saved")
 	print("Interaction GPU: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

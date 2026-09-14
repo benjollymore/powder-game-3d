@@ -19,6 +19,10 @@ var archive_panel: Node
 var _queued_editor_action := ""
 var _editor_action_scheduled := false
 var live_emitter_signature := 0
+var material_buttons := {}
+var erase_button: Button
+var advanced_tools: VBoxContainer
+var advanced_toggle: CheckButton
 
 var sim: Node3D
 var camera: Camera3D
@@ -180,8 +184,63 @@ func _build_ui() -> void:
 	column.add_theme_constant_override("separation", 8)
 	scroll.add_child(column)
 	var title := Label.new()
-	title.text = "  PAINT & PLAY  /  discovery prototype  "
+	title.text = "  PAINT & PLAY  "
 	column.add_child(title)
+	var material_row := HBoxContainer.new()
+	column.add_child(material_row)
+	for id in [Elements.Id.SAND, Elements.Id.WATER, Elements.Id.WALL]:
+		_add_material_button(material_row, id)
+	var more := CheckButton.new()
+	more.text = "More materials"
+	column.add_child(more)
+	var extra := GridContainer.new()
+	extra.columns = 3
+	extra.visible = false
+	column.add_child(extra)
+	more.toggled.connect(func(enabled): extra.visible = enabled)
+	for id in [Elements.Id.OIL, Elements.Id.WOOD, Elements.Id.PLANT, Elements.Id.FIRE, Elements.Id.STEAM, Elements.Id.SMOKE]:
+		_add_material_button(extra, id)
+	var brush_row := HBoxContainer.new()
+	column.add_child(brush_row)
+	var radius_label := Label.new()
+	radius_label.text = "Brush radius  "
+	brush_row.add_child(radius_label)
+	radius_input = SpinBox.new()
+	radius_input.min_value = 0
+	radius_input.max_value = 12
+	radius_input.value = radius
+	radius_input.value_changed.connect(func(value):
+		_end_stroke()
+		radius = int(value))
+	brush_row.add_child(radius_input)
+	erase_button = Button.new()
+	erase_button.text = "Erase · X"
+	erase_button.toggle_mode = true
+	erase_button.pressed.connect(func():
+		_end_stroke()
+		erase = not erase)
+	brush_row.add_child(erase_button)
+	play_button = Button.new()
+	play_button.text = "Run experiment · Space"
+	play_button.pressed.connect(run_or_restore)
+	column.add_child(play_button)
+	var undo := Button.new()
+	undo.text = "Undo build edit · Ctrl/Cmd Z"
+	undo.pressed.connect(undo_edit)
+	column.add_child(undo)
+	var target_row := HBoxContainer.new()
+	column.add_child(target_row)
+	var target_label := Label.new()
+	target_label.text = "Paint on  "
+	target_row.add_child(target_label)
+	var target_choice := OptionButton.new()
+	target_choice.add_item("Workplane", TargetMode.PLANE)
+	target_choice.add_item("Material surface", TargetMode.SURFACE)
+	target_choice.item_selected.connect(func(value):
+		_end_stroke()
+		targeting_mode = value
+		_invalidate_picks())
+	target_row.add_child(target_choice)
 	var planes := HBoxContainer.new()
 	column.add_child(planes)
 	for a in 3:
@@ -211,83 +270,8 @@ func _build_ui() -> void:
 			depth_scroll_fraction = 0.0
 			depth_input.value += step)
 		row.add_child(button)
-	var material_row := HBoxContainer.new()
-	column.add_child(material_row)
-	column.move_child(material_row, 1)
-	selection_toggle = CheckButton.new()
-	selection_toggle.text = "Region tool · B (click two corners)"
-	selection_toggle.toggled.connect(func(enabled):
-		_end_stroke()
-		selecting = enabled)
-	column.add_child(selection_toggle)
-	selection_status = Label.new()
-	selection_status.text = "Region: no corners selected"
-	column.add_child(selection_status)
-	var fill := Button.new()
-	fill.text = "Fill selected region into air"
-	fill.pressed.connect(fill_selection)
-	column.add_child(fill)
-	for id in [Elements.Id.WALL, Elements.Id.SAND, Elements.Id.WATER]:
-		var button := Button.new()
-		button.text = Elements.TABLE[id].name
-		button.pressed.connect(func():
-			_end_stroke()
-			element = id
-			erase = false)
-		material_row.add_child(button)
-	var brush_row := HBoxContainer.new()
-	column.add_child(brush_row)
-	column.move_child(brush_row, 2)
-	var radius_label := Label.new()
-	radius_label.text = "Brush radius  "
-	brush_row.add_child(radius_label)
-	radius_input = SpinBox.new()
-	radius_input.min_value = 0
-	radius_input.max_value = 12
-	radius_input.value = radius
-	radius_input.value_changed.connect(func(value):
-		_end_stroke()
-		radius = int(value))
-	brush_row.add_child(radius_input)
-	var erase_button := Button.new()
-	erase_button.text = "Paint / erase · X"
-	erase_button.pressed.connect(func():
-		_end_stroke()
-		erase = not erase)
-	brush_row.add_child(erase_button)
-	var target_row := HBoxContainer.new()
-	column.add_child(target_row)
-	column.move_child(target_row, 3)
-	var target_label := Label.new()
-	target_label.text = "Paint on  "
-	target_row.add_child(target_label)
-	var target_choice := OptionButton.new()
-	target_choice.add_item("Workplane", TargetMode.PLANE)
-	target_choice.add_item("Material surface", TargetMode.SURFACE)
-	target_choice.item_selected.connect(func(value):
-		_end_stroke()
-		targeting_mode = value
-		_invalidate_picks())
-	target_row.add_child(target_choice)
-	var cut := CheckButton.new()
-	cut.text = "Section view (positive side hidden)"
-	cut.button_pressed = section
-	cut.toggled.connect(func(enabled):
-		section = enabled
-		_update_plane())
-	column.add_child(cut)
-	var undo := Button.new()
-	undo.text = "Undo build edit · Ctrl/Cmd Z"
-	undo.pressed.connect(undo_edit)
-	column.add_child(undo)
-	play_button = Button.new()
-	play_button.text = "Run experiment · Space"
-	play_button.pressed.connect(run_or_restore)
-	column.add_child(play_button)
-	column.move_child(play_button, 3)
 	var navigation_row := HBoxContainer.new()
 	column.add_child(navigation_row)
-	column.move_child(navigation_row, 4)
 	for action in ["Zoom −", "Zoom +", "Center · V"]:
 		var button := Button.new()
 		button.text = action
@@ -298,10 +282,46 @@ func _build_ui() -> void:
 			else:
 				_zoom(1.1 if action == "Zoom +" else 1.0 / 1.1))
 		navigation_row.add_child(button)
+	advanced_toggle = CheckButton.new()
+	advanced_toggle.text = "Construction & section tools"
+	column.add_child(advanced_toggle)
+	advanced_tools = VBoxContainer.new()
+	advanced_tools.visible = false
+	column.add_child(advanced_tools)
+	advanced_toggle.toggled.connect(_set_advanced)
+	selection_toggle = CheckButton.new()
+	selection_toggle.text = "Select region · B (two corners)"
+	selection_toggle.toggled.connect(func(enabled):
+		_end_stroke()
+		selecting = enabled
+		if enabled:
+			advanced_toggle.button_pressed = true
+			if selection_mesh and corner_a.x >= 0 and corner_b.x >= 0:
+				selection_mesh.show())
+	advanced_tools.add_child(selection_toggle)
+	selection_status = Label.new()
+	selection_status.text = "Region: no corners selected"
+	advanced_tools.add_child(selection_status)
+	var fill := Button.new()
+	fill.text = "Fill selected region into air"
+	fill.pressed.connect(fill_selection)
+	advanced_tools.add_child(fill)
+	var cut := CheckButton.new()
+	cut.text = "Section view (positive side hidden)"
+	cut.button_pressed = section
+	cut.toggled.connect(func(enabled):
+		_end_stroke()
+		section = enabled
+		_update_plane())
+	advanced_tools.add_child(cut)
 	var reset := Button.new()
 	reset.text = "Reset container (discards edits)"
 	reset.pressed.connect(reset_container)
-	column.add_child(reset)
+	advanced_tools.add_child(reset)
+	var empty := Button.new()
+	empty.text = "Empty build (discards edits)"
+	empty.pressed.connect(func(): call("new_empty_build"))
+	advanced_tools.add_child(empty)
 	var controls := Label.new()
 	controls.add_theme_font_size_override("font_size", 14)
 	controls.text = "Drag: paint · two fingers: orbit · pinch: zoom\nShift + two fingers: pan · Option + drag: orbit\nOption + Shift + drag: pan · RMB/wheel work too\nPlane: −/+ above · Shift-wheel · [ ] brush size\n1 wall · 2 sand · 3 water · X erase · F angle"
@@ -310,6 +330,55 @@ func _build_ui() -> void:
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	status.custom_minimum_size.x = 300
 	column.add_child(status)
+	get_tree().process_frame.connect(_refresh_palette)
+	_refresh_palette()
+
+
+func _add_material_button(parent: Container, id: int) -> void:
+	var button := Button.new()
+	button.text = Elements.TABLE[id].name
+	button.toggle_mode = true
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var accent: Color = Elements.TABLE[id].color
+	for state in ["normal", "hover", "pressed"]:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color("263442") if state == "normal" else Color("354958")
+		style.border_color = accent.lightened(0.25)
+		style.border_width_bottom = 4
+		if state == "pressed":
+			style.set_border_width_all(3)
+		style.set_content_margin_all(8)
+		style.set_corner_radius_all(4)
+		button.add_theme_stylebox_override(state, style)
+	button.pressed.connect(func(): _choose_material(id))
+	material_buttons[id] = button
+	parent.add_child(button)
+
+
+func _choose_material(id: int) -> void:
+	_end_stroke() # Commit using frozen stroke metadata before changing the tool.
+	element = id
+	erase = false
+	_refresh_palette()
+
+
+func _refresh_palette() -> void:
+	for id in material_buttons:
+		material_buttons[id].set_pressed_no_signal(id == element and not erase)
+	if erase_button:
+		erase_button.set_pressed_no_signal(erase)
+
+
+func _set_advanced(enabled: bool) -> void:
+	advanced_tools.visible = enabled
+	if enabled and selection_mesh and corner_a.x >= 0 and corner_b.x >= 0:
+		selection_mesh.show()
+	if not enabled:
+		_end_stroke()
+		selecting = false
+		selection_toggle.set_pressed_no_signal(false)
+		if selection_mesh:
+			selection_mesh.hide()
 
 
 func reset_container() -> void:
@@ -499,7 +568,7 @@ func _input(event: InputEvent) -> void:
 	# Releases must terminate even over UI or after leaving the viewport.
 	if event is InputEventMouseButton and not event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			_end_stroke()
+			_end_stroke(true)
 		if event.button_index == navigation_button:
 			_stop_navigation()
 	if event is InputEventMouseMotion and navigation_button != MOUSE_BUTTON_NONE:
@@ -730,6 +799,10 @@ func _receive_pick(result: Dictionary, intent: int) -> void:
 
 
 func _sample(mouse: Vector2) -> void:
+	if testing:
+		# Live input changes a source; only authoritative ticks may inject matter.
+		_set_live_source(mouse)
+		return
 	if stroke_target_mode == TargetMode.SURFACE:
 		var ray := _ray_at(mouse, stroke_view)
 		ray["connect"] = surface_connect
@@ -754,8 +827,12 @@ func _sample(mouse: Vector2) -> void:
 	previous = cell
 
 
-func _end_stroke() -> void:
-	_stop_live_emitter()
+func _end_stroke(completed: bool = false) -> void:
+	if completed and live_emitter_signature != 0 and sim.has_method("finish_live_emitter"):
+		sim.finish_live_emitter()
+		live_emitter_signature = 0
+	else:
+		_stop_live_emitter()
 	_flush()
 	if active_transaction >= 0:
 		sim.finish_edit_transaction(active_transaction)
@@ -777,11 +854,20 @@ func _update_live_emitter(over_ui: bool) -> void:
 	if not painting or not testing or over_ui or orbiting:
 		_stop_live_emitter()
 		return
-	var surface: Dictionary = _ray_at(get_viewport().get_mouse_position(), stroke_view) if stroke_target_mode == TargetMode.SURFACE else {}
-	if surface.is_empty() and target.x < 0:
+	_set_live_source(get_viewport().get_mouse_position())
+
+
+func _set_live_source(mouse: Vector2) -> void:
+	if not painting or not testing or not sim.has_method("set_live_emitter"):
+		return
+	if _over_tools(mouse) or orbiting:
 		_stop_live_emitter()
 		return
-	var center := target if surface.is_empty() else Vector3i.ZERO
+	var surface: Dictionary = _ray_at(mouse, stroke_view) if stroke_target_mode == TargetMode.SURFACE else {}
+	var center := _target_at(mouse) if surface.is_empty() else Vector3i.ZERO
+	if surface.is_empty() and center.x < 0:
+		_stop_live_emitter()
+		return
 	var mode: int = sim.BrushMode.ERASE if stroke_erase else sim.BrushMode.ONLY_AIR
 	var signature := hash([center, stroke_radius, stroke_element, mode, surface])
 	if signature != live_emitter_signature:
@@ -790,19 +876,20 @@ func _update_live_emitter(over_ui: bool) -> void:
 
 
 func _flush() -> void:
+	# A stroke without an authored transaction must never bypass tick cadence.
+	if testing or active_transaction < 0:
+		pending_surface.clear()
+		pending.clear()
+		return
 	if not pending_surface.is_empty() and sim != null:
 		var mode: int = sim.BrushMode.ERASE if stroke_erase else sim.BrushMode.ONLY_AIR
 		if active_transaction >= 0:
 			sim.record_surface_stroke(active_transaction, pending_surface, stroke_radius, stroke_element, mode, active_transaction)
-		else:
-			sim.paint_surface_stroke(pending_surface, stroke_radius, stroke_element, mode)
 		pending_surface.clear()
 	if not pending.is_empty() and sim != null:
 		var mode: int = sim.BrushMode.ERASE if stroke_erase else sim.BrushMode.ONLY_AIR
 		if active_transaction >= 0:
 			sim.record_stroke(active_transaction, pending, stroke_radius, stroke_element, mode, active_transaction)
-		else:
-			sim.paint_stroke(pending, stroke_radius, stroke_element, mode)
 		pending.clear()
 
 
