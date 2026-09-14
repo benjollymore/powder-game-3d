@@ -24,8 +24,11 @@ signal density_ready(bytes: PackedByteArray)
 signal scenario_changed(name: String)
 signal velocity_ready(bytes: PackedByteArray)
 signal splat_count_ready(count: int)
-## Per-frame sprite counts: grains, leaves, droplets, spawn requests, fx claims, fx alive.
+## Per-frame sprite counts: grains, leaves, droplets, spawn requests, fx claims, fx alive,
+## then activity tallies (see splat_emit.glsl): 32 ints.
 signal layer_counts_ready(counts: PackedInt32Array)
+## Same 32 ints, fetched without stalling (see request_activity).
+signal activity_ready(counts: PackedInt32Array)
 
 var GRID: int = VoxelCodec.GRID
 ## Scene units are metres; every voxel is one centimetre, so the box is
@@ -56,6 +59,10 @@ const FX_SPAWN_CAPACITY := 4096
 ## Sprite layers filled by the GPU, indexed by InstanceLayer.role.
 enum Layer { GRAINS, LEAVES, DROPLETS, FX }
 const LAYER_COUNT := 4
+## Sprite/activity counter buffer: 32 uints (layout in splat_emit.glsl).
+const COUNTER_BYTES := 128
+## Indices into the activity part of the counters.
+enum Activity { WATER = 8, FIRE = 12, STEAM = 16, LIQUID = 20 }
 const SUNVIS_SLABS_PER_DISPATCH := 8
 ## The sun-visibility field is swept at half resolution (2 cm cells at 256^3).
 const SUNVIS_DIV := 2
@@ -338,10 +345,17 @@ func request_occupancy_readback() -> void:
 
 
 ## Sprite counts of the last emit (see Layer and fx.glsl); `layer_counts_ready`
-## fires on the main thread with 16 ints.
+## fires on the main thread with 32 ints. Stalls the GPU: tests only.
 func request_layer_counts() -> void:
 	if _rt_ready:
 		RenderingServer.call_on_render_thread(_rt_layer_counts)
+
+
+## The same counters fetched asynchronously (a frame or two late, no stall);
+## `activity_ready` fires on the main thread. Used by the soundscape.
+func request_activity() -> void:
+	if _rt_ready:
+		RenderingServer.call_on_render_thread(_rt_activity)
 
 
 ## Number of airborne-grain splats emitted last frame; `splat_count_ready`
@@ -452,8 +466,8 @@ func _rt_init() -> void:
 	_rd.texture_clear(_sunvis_rid, Color(1, 1, 1, 1), 0, 1, 0, 1)
 
 	var zeros := PackedByteArray()
-	zeros.resize(64)
-	_splat_counter = _rd.storage_buffer_create(64, zeros)
+	zeros.resize(COUNTER_BYTES)
+	_splat_counter = _rd.storage_buffer_create(COUNTER_BYTES, zeros)
 	for i in LAYER_COUNT:
 		if _layer_multimesh[i].is_valid():
 			_layer_buffer[i] = RenderingServer.multimesh_get_buffer_rd_rid(_layer_multimesh[i])
@@ -1001,14 +1015,14 @@ func _rt_splat_emit() -> void:
 	if not _splat_pipeline.is_valid() or not sprites_enabled:
 		return
 	_frame += 1
-	_rd.buffer_clear(_splat_counter, 0, 64)
+	_rd.buffer_clear(_splat_counter, 0, COUNTER_BYTES)
 	for i in [Layer.GRAINS, Layer.LEAVES, Layer.DROPLETS]:
 		_rd.buffer_clear(_layer_buffer[i], 0, _layer_capacity[i] * 64)
 	var cl := _rd.compute_list_begin()
 	_rd.compute_list_bind_compute_pipeline(cl, _splat_pipeline)
 	_rd.compute_list_bind_uniform_set(cl, _splat_set, 0)
 	var push := PackedInt32Array([_layer_capacity[Layer.GRAINS], _layer_capacity[Layer.LEAVES],
-		_layer_capacity[Layer.DROPLETS], FX_SPAWN_CAPACITY, _frame, 0, 0, 0]).to_byte_array()
+		_layer_capacity[Layer.DROPLETS], FX_SPAWN_CAPACITY, _frame, Elements.Id.STEAM, 0, 0]).to_byte_array()
 	_rd.compute_list_set_push_constant(cl, push, push.size())
 	var g := GRID / 8
 	_rd.compute_list_dispatch(cl, g, g, g)
@@ -1039,8 +1053,16 @@ func _rt_splat_count() -> void:
 
 
 func _rt_layer_counts() -> void:
-	var bytes := _rd.buffer_get_data(_splat_counter, 0, 64)
+	var bytes := _rd.buffer_get_data(_splat_counter, 0, COUNTER_BYTES)
 	layer_counts_ready.emit.call_deferred(bytes.to_int32_array())
+
+
+func _rt_activity() -> void:
+	_rd.buffer_get_data_async(_splat_counter, _on_activity_bytes, 0, COUNTER_BYTES)
+
+
+func _on_activity_bytes(bytes: PackedByteArray) -> void:
+	activity_ready.emit.call_deferred(bytes.to_int32_array())
 
 
 func _rt_density_readback() -> void:

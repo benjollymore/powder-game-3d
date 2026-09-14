@@ -22,7 +22,7 @@ struct Spawn {
 	vec4 vel_seed;
 };
 layout(std430, set = 0, binding = 1) restrict readonly buffer Spawns { Spawn list[]; } spawns;
-layout(std430, set = 0, binding = 2) buffer Counters { uint count[16]; } counters;
+layout(std430, set = 0, binding = 2) buffer Counters { uint count[32]; } counters;
 layout(std430, set = 0, binding = 3) restrict writeonly buffer Instances { float data[]; } inst;
 layout(set = 0, binding = 4) uniform sampler3D air_vel;   // voxels per tick, AIR_GRID cells
 layout(set = 0, binding = 5) uniform sampler3D fields;    // G = smoothed opaque density

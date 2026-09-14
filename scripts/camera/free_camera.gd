@@ -14,7 +14,15 @@ enum Mode { FLY, ORBIT }
 @export var orbit_target := Vector3.ZERO
 @export var orbit_distance := 3.0
 @export var frame_position := Vector3(1.7, 1.3, 1.7)
+## Seconds to reach most of the target speed, and to coast to a stop.
+@export var accel_time := 0.12
+@export var brake_time := 0.18
+## Extra field of view while sprinting, eased in and out.
+@export var sprint_fov_boost := 8.0
 var world_size := 1.0
+var _velocity := Vector3.ZERO
+var _base_fov := 75.0
+var _fov_boost := 0.0
 
 var mode := Mode.FLY
 var _yaw := 0.0
@@ -33,6 +41,7 @@ func _ready() -> void:
 	fly_speed *= world_size
 	orbit_distance *= world_size
 	frame_position *= world_size
+	_base_fov = camera.fov
 	frame_box(false)
 
 
@@ -74,20 +83,29 @@ func _process(delta: float) -> void:
 		input.y += 1.0
 	if Input.is_key_pressed(KEY_Q):
 		input.y -= 1.0
-	if input == Vector3.ZERO:
-		return
-	var speed := fly_speed * (sprint_multiplier if Input.is_key_pressed(KEY_SHIFT) else 1.0)
+	var sprinting := input != Vector3.ZERO and Input.is_key_pressed(KEY_SHIFT)
+	var speed := fly_speed * (sprint_multiplier if sprinting else 1.0)
 	# Forward/right follow the view; up/down stay world-aligned so flying feels like a drone.
 	var basis := global_transform.basis
 	var move := (basis.x * input.x + basis.z * input.z)
 	move.y = 0.0
 	move = move.normalized() * Vector2(input.x, input.z).length() + Vector3.UP * input.y
-	global_position += move.normalized() * speed * delta
+	var wanted := move.normalized() * speed if input != Vector3.ZERO else Vector3.ZERO
+	# Ease toward the wanted velocity so starts and stops feel like mass, not a switch.
+	var tau := accel_time if wanted.length() > _velocity.length() else brake_time
+	_velocity = _velocity.lerp(wanted, 1.0 - exp(-delta / maxf(tau, 0.001)))
+	if _velocity.length() < 0.001 * world_size:
+		_velocity = Vector3.ZERO
+	global_position += _velocity * delta
+	# A touch of extra field of view while sprinting sells the speed.
+	_fov_boost = lerpf(_fov_boost, sprint_fov_boost if sprinting else 0.0, 1.0 - exp(-6.0 * delta))
+	camera.fov = _base_fov + _fov_boost
 
 
 func set_mode(new_mode: Mode) -> void:
 	if mode == new_mode:
 		return
+	_velocity = Vector3.ZERO
 	if new_mode == Mode.ORBIT:
 		orbit_distance = maxf(global_position.distance_to(orbit_target), 0.5)
 		global_position = orbit_target

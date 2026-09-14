@@ -31,8 +31,11 @@ struct Elem {
 	float smoothing;
 };
 layout(std430, set = 0, binding = 2) restrict readonly buffer Elems { Elem elems[]; };
-// grains, leaves, droplets, spawns, fx claim, unused...
-layout(std430, set = 0, binding = 3) buffer Counters { uint count[16]; } counters;
+// 0 grains, 1 leaves, 2 droplets, 3 spawns, 4 fx claim, 5 fx alive, 6-7 unused,
+// then activity for the soundscape, reduced once per workgroup:
+// 8-11 falling/landing liquid cells: count, sum x, sum y, sum z (cells);
+// 12-15 fire cells the same; 16-19 steam cells the same; 20 all liquid cells.
+layout(std430, set = 0, binding = 3) buffer Counters { uint count[32]; } counters;
 layout(std430, set = 0, binding = 4) restrict writeonly buffer Grains { float data[]; } grains;
 layout(std430, set = 0, binding = 5) restrict writeonly buffer Leaves { float data[]; } leaves;
 layout(std430, set = 0, binding = 6) restrict writeonly buffer Droplets { float data[]; } droplets;
@@ -44,7 +47,7 @@ layout(std430, set = 0, binding = 7) restrict writeonly buffer Spawns { Spawn li
 
 layout(push_constant, std430) uniform Params {
 	uvec4 cap;   // grain, leaf, droplet, spawn capacities
-	uvec4 misc;  // frame, unused
+	uvec4 misc;  // frame, steam element id, unused
 } pc;
 
 layout(constant_id = 0) const int GRID = 128;
@@ -255,29 +258,54 @@ void fire(ivec3 p, uvec4 v, uint h) {
 	}
 }
 
+const uint ACT_WATER = 8u, ACT_FIRE = 12u, ACT_STEAM = 16u, ACT_LIQUID = 20u;
+shared uint s_act[13];
+
+void tally(uint base, ivec3 p) {
+	uint k = base - ACT_WATER;
+	atomicAdd(s_act[k], 1u);
+	atomicAdd(s_act[k + 1u], uint(p.x));
+	atomicAdd(s_act[k + 2u], uint(p.y));
+	atomicAdd(s_act[k + 3u], uint(p.z));
+}
+
 void main() {
 	ivec3 brick = ivec3(gl_WorkGroupID);
 	vec4 occ = imageLoad(occupancy, brick);
 	if (occ.r < 0.5 && occ.g < 0.5) {
-		return;
+		return; // uniform per workgroup, so the barriers below stay balanced
 	}
+	if (gl_LocalInvocationIndex < 13u) {
+		s_act[gl_LocalInvocationIndex] = 0u;
+	}
+	barrier();
 	ivec3 p = ivec3(gl_GlobalInvocationID);
 	uvec4 v = cell(p);
 	uint id = v.x;
-	if (id == 0u) {
-		return;
-	}
-	uint flags = elems[id].flags;
-	uint h = hash(uvec3(p), v.y);
-	if ((flags & FLAG_POWDER) != 0u) {
-		powder(p, v, h);
-	} else if ((flags & FLAG_LIQUID) != 0u) {
-		liquid(p, v, h);
-	} else if ((flags & FLAG_GAS) != 0u) {
-		if (elems[id].heat >= 1.0) {
-			fire(p, v, h);
+	if (id != 0u) {
+		uint flags = elems[id].flags;
+		uint h = hash(uvec3(p), v.y);
+		if ((flags & FLAG_POWDER) != 0u) {
+			powder(p, v, h);
+		} else if ((flags & FLAG_LIQUID) != 0u) {
+			liquid(p, v, h);
+			atomicAdd(s_act[ACT_LIQUID - ACT_WATER], 1u);
+			if ((v.w & 7u) != 0u) {
+				tally(ACT_WATER, p);
+			}
+		} else if ((flags & FLAG_GAS) != 0u) {
+			if (elems[id].heat >= 1.0) {
+				fire(p, v, h);
+				tally(ACT_FIRE, p);
+			} else if (id == pc.misc.y) {
+				tally(ACT_STEAM, p);
+			}
+		} else if ((flags & FLAG_LEAFY) != 0u) {
+			plant(p, v, h);
 		}
-	} else if ((flags & FLAG_LEAFY) != 0u) {
-		plant(p, v, h);
+	}
+	barrier();
+	if (gl_LocalInvocationIndex < 13u && s_act[gl_LocalInvocationIndex] != 0u) {
+		atomicAdd(counters.count[ACT_WATER + gl_LocalInvocationIndex], s_act[gl_LocalInvocationIndex]);
 	}
 }

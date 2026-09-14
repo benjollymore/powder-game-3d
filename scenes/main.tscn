@@ -1,10 +1,11 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/camera/free_camera.gd" id="1_cam"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="3_hud"]
 [ext_resource type="PackedScene" path="res://scenes/sim_volume.tscn" id="4_sim"]
 [ext_resource type="Script" path="res://scripts/sim/brush.gd" id="5_brush"]
 [ext_resource type="PackedScene" path="res://scenes/environment.tscn" id="6_env"]
+[ext_resource type="Script" path="res://scripts/audio/soundscape.gd" id="7_audio"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_gizmo"]
 radius = 0.5
@@ -36,5 +37,8 @@ camera_path = NodePath("../CameraRig/Camera3D")
 cast_shadow = 0
 mesh = SubResource("SphereMesh_gizmo")
 surface_material_override/0 = SubResource("Mat_gizmo")
+
+[node name="Audio" type="Node3D" parent="."]
+script = ExtResource("7_audio")
 
 [node name="HUD" parent="." instance=ExtResource("3_hud")]
