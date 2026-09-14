@@ -1,0 +1,58 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: column0 exact amount target (3 cells)
+ok: column0 empty cells normalize to air
+ok: column0 integer mass preserved
+ok: column1 exact amount target (3 cells)
+ok: column1 empty cells normalize to air
+ok: column1 integer mass preserved
+ok: column2 exact amount target (3 cells)
+ok: column2 empty cells normalize to air
+ok: column2 integer mass preserved
+ok: column3 exact amount target (256 cells)
+ok: column3 empty cells normalize to air
+ok: column3 integer mass preserved
+ok: column4 exact amount target (256 cells)
+ok: column4 empty cells normalize to air
+ok: column4 integer mass preserved
+ok: column5 exact amount target (1 cells)
+ok: column5 empty cells normalize to air
+ok: column5 integer mass preserved
+ok: column6 exact amount target (2 cells)
+ok: column6 empty cells normalize to air
+ok: column6 integer mass preserved
+ok: column7 exact amount target (3 cells)
+ok: column7 empty cells normalize to air
+ok: column7 integer mass preserved
+ok: column8 exact amount target (7 cells)
+ok: column8 empty cells normalize to air
+ok: column8 integer mass preserved
+ok: column9 exact amount target (16 cells)
+ok: column9 empty cells normalize to air
+ok: column9 integer mass preserved
+ok: column10 exact amount target (31 cells)
+ok: column10 empty cells normalize to air
+ok: column10 integer mass preserved
+ok: column11 exact amount target (63 cells)
+ok: column11 empty cells normalize to air
+ok: column11 integer mass preserved
+ok: column12 exact amount target (127 cells)
+ok: column12 empty cells normalize to air
+ok: column12 integer mass preserved
+ok: column13 exact amount target (128 cells)
+ok: column13 empty cells normalize to air
+ok: column13 integer mass preserved
+ok: column14 exact amount target (129 cells)
+ok: column14 empty cells normalize to air
+ok: column14 integer mass preserved
+ok: column15 exact amount target (200 cells)
+ok: column15 empty cells normalize to air
+ok: column15 integer mass preserved
+ok: column16 exact amount target (255 cells)
+ok: column16 empty cells normalize to air
+ok: column16 integer mass preserved
+ok: column17 exact amount target (256 cells)
+ok: column17 empty cells normalize to air
+ok: column17 integer mass preserved
+PRODUCTION_COLUMN_REMAP checks=54 failures=0

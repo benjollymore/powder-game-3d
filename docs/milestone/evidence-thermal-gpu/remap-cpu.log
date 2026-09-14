@@ -1,0 +1,23 @@
+test_all_two_cell_amounts_conserve_integer_mass (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+test_coalescing_remap_events_changes_heat_even_if_amounts_return (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+test_column_known_profiles (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+test_compressed_amount_means_extra_mass_not_clamped_fill (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+test_donor_budgets_are_synchronous_not_reused_incoming_heat (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+test_frame_batching_keeps_ordered_events_exact (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+test_hydro_amount_endpoints_do_not_determine_heat_path (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+test_preserving_cell_temperature_naively_loses_energy (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+test_real_column_hot_cold_mixing (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+test_rejects_unsupported_or_invalid_contracts_atomically (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+test_replace_and_erase_have_explicit_external_ledgers (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+test_runtime_restore_and_authored_reset_have_distinct_ledgers (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+test_thousand_random_remaps_keep_mass_and_energy (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+test_uniform_temperature_partial_and_compressed (tests.feasibility.test_enthalpy_remap.RemapTests) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.180s
+
+OK
+METRIC coalescing_limit ordered_K=(350.0, 350.0, 500.0) skipped_K=(300.0, 400.0, 500.0)
+METRIC path_ambiguity monotone_K=(350.0, 500.0, None) retain_K=(400.0, 400.0, None) total_J=190.275
+METRIC naive_fixed_temperature energy_error_J=-100
+METRIC remap1000 mass_units=3441 relative_energy_drift=3.48811557443e-16 max_drift_J=9.09494701773e-13
