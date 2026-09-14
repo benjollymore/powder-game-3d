@@ -24,7 +24,7 @@ const TABLE := [
 	{ "name": "Sand",  "color": Color(0.86, 0.72, 0.42),    "flags": FLAG_POWDER,                  "density": 200.0,  "decay": 0.0,  "decay_to": 0, "spread": 0.0 },
 	{ "name": "Water", "color": Color(0.2, 0.45, 0.9),      "flags": FLAG_LIQUID,                  "density": 100.0,  "decay": 0.0,  "decay_to": 0, "spread": 1.0 },
 	{ "name": "Steam", "color": Color(0.8, 0.85, 0.9),      "flags": FLAG_GAS,                     "density": 1.0,    "decay": 0.0005, "decay_to": 3, "spread": 0.6 },
-	{ "name": "Fire",  "color": Color(1.0, 0.45, 0.1),      "flags": FLAG_GAS,                     "density": 2.0,    "decay": 0.05, "decay_to": 0, "spread": 0.3 },
+	{ "name": "Fire",  "color": Color(1.0, 0.45, 0.1),      "flags": FLAG_GAS,                     "density": 2.0,    "decay": 0.05, "decay_to": 0, "spread": 0.3, "emission": 2.2 },
 	{ "name": "Plant", "color": Color(0.2, 0.7, 0.25),      "flags": FLAG_IMMOVABLE | FLAG_FLAMMABLE, "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0 },
 	{ "name": "Oil",   "color": Color(0.35, 0.25, 0.15),    "flags": FLAG_LIQUID | FLAG_FLAMMABLE, "density": 80.0,   "decay": 0.0,  "decay_to": 0, "spread": 0.5 },
 ]
@@ -48,7 +48,9 @@ static func palette() -> PackedColorArray:
 	var out := PackedColorArray()
 	out.resize(PALETTE_SIZE)
 	for i in TABLE.size():
-		out[i] = TABLE[i]["color"]
+		var c: Color = TABLE[i]["color"]
+		c.a = float(TABLE[i].get("emission", 0.0))
+		out[i] = c
 	return out
 
 

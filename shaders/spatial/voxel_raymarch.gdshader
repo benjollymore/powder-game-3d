@@ -10,7 +10,10 @@ uniform sampler3D voxels : filter_nearest, repeat_disable;
 uniform vec4 palette[16];
 uniform int grid_size = 128;
 uniform vec3 light_dir = vec3(0.4, 1.0, 0.3);
-uniform float ambient = 0.35;
+uniform vec3 sun_color : source_color = vec3(1.0, 0.96, 0.9);
+uniform vec3 sky_color : source_color = vec3(0.74, 0.79, 0.84);
+uniform vec3 ground_color : source_color = vec3(0.82, 0.84, 0.86);
+uniform float ambient = 0.38;
 
 varying vec3 v_model;
 varying vec3 v_cam_model;
@@ -101,9 +104,14 @@ void fragment() {
 	vec4 hit_clip = PROJECTION_MATRIX * hit_view;
 	DEPTH = hit_clip.z / hit_clip.w;
 
-	vec3 base = palette[int(id)].rgb * (0.88 + 0.16 * seed);
+	vec4 pal = palette[int(id)];
+	vec3 base = pal.rgb * (0.88 + 0.16 * seed);
 	float diffuse = max(dot(normal_world, normalize(light_dir)), 0.0);
-	// Cheap directional tint so the three visible face orientations read differently.
-	float face_tint = 0.85 + 0.15 * abs(normal_model.y) + 0.05 * abs(normal_model.x);
-	ALBEDO = base * (ambient + (1.0 - ambient) * diffuse) * face_tint;
+	// Hemisphere ambient: sky from above, ground bounce from below.
+	vec3 hemi = mix(ground_color, sky_color, normal_world.y * 0.5 + 0.5);
+	// Subtle per-face tint keeps cube edges readable in flat light.
+	float face_tint = 0.9 + 0.1 * abs(normal_model.y) + 0.04 * abs(normal_model.x);
+	vec3 lit = base * face_tint * (hemi * ambient + sun_color * diffuse * (1.0 - ambient * 0.5));
+	// Palette alpha is emission strength; values above the glow threshold bloom.
+	ALBEDO = lit + pal.rgb * pal.a;
 }

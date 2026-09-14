@@ -1,0 +1,105 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/environment/atmosphere.gd" id="1_atmo"]
+[ext_resource type="Shader" path="res://shaders/spatial/bounds_outline.gdshader" id="2_outline"]
+[ext_resource type="Shader" path="res://shaders/post/timescale_fx.gdshader" id="3_fx"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+sky_top_color = Color(0.62, 0.7, 0.78, 1)
+sky_horizon_color = Color(0.86, 0.88, 0.9, 1)
+sky_curve = 0.12
+sky_energy_multiplier = 1.0
+ground_bottom_color = Color(0.82, 0.84, 0.86, 1)
+ground_horizon_color = Color(0.86, 0.88, 0.9, 1)
+sun_angle_max = 8.0
+sun_curve = 0.25
+use_debanding = true
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+ambient_light_sky_contribution = 1.0
+tonemap_mode = 4
+tonemap_exposure = 1.0
+adjustment_enabled = true
+adjustment_contrast = 1.08
+adjustment_saturation = 1.1
+ssao_enabled = true
+ssao_radius = 0.6
+ssao_intensity = 1.5
+glow_enabled = true
+glow_intensity = 0.35
+glow_strength = 0.9
+glow_bloom = 0.0
+glow_blend_mode = 0
+glow_hdr_threshold = 1.2
+fog_enabled = true
+fog_light_color = Color(0.86, 0.88, 0.9, 1)
+fog_light_energy = 1.0
+fog_sun_scatter = 0.03
+fog_density = 0.02
+fog_aerial_perspective = 0.3
+fog_sky_affect = 0.5
+fog_height = -0.5
+fog_height_density = 0.04
+
+[sub_resource type="PlaneMesh" id="GroundMesh"]
+size = Vector2(400, 400)
+
+[sub_resource type="StandardMaterial3D" id="GroundMat"]
+albedo_color = Color(0.88, 0.89, 0.91, 1)
+roughness = 1.0
+
+[sub_resource type="PlaneMesh" id="OutlineMesh"]
+size = Vector2(1.12, 1.12)
+
+[sub_resource type="ShaderMaterial" id="OutlineMat"]
+render_priority = 1
+shader = ExtResource("2_outline")
+
+[sub_resource type="ShaderMaterial" id="FxMat"]
+shader = ExtResource("3_fx")
+
+[node name="Environment" type="Node3D"]
+script = ExtResource("1_atmo")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8192, -0.4394, 0.3687, 0, 0.6428, 0.766, -0.5736, -0.6275, 0.5266, 0, 0, 0)
+light_color = Color(1, 0.96, 0.9, 1)
+light_energy = 1.3
+shadow_enabled = true
+shadow_blur = 2.5
+directional_shadow_mode = 1
+directional_shadow_split_1 = 0.25
+directional_shadow_blend_splits = true
+directional_shadow_max_distance = 30.0
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("GroundMesh")
+surface_material_override/0 = SubResource("GroundMat")
+
+[node name="BoundsOutline" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.498, 0)
+cast_shadow = 0
+mesh = SubResource("OutlineMesh")
+surface_material_override/0 = SubResource("OutlineMat")
+
+[node name="PostFX" type="CanvasLayer" parent="."]
+layer = 0
+
+[node name="TimeScaleFX" type="ColorRect" parent="PostFX"]
+material = SubResource("FxMat")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

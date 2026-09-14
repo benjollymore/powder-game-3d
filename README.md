@@ -23,6 +23,7 @@ Play, or run `godot --path .` from the repo root.
 | Scroll | Fly speed (fly mode) / distance (orbit mode) |
 | O | Toggle orbit mode around the box |
 | F | Frame the box |
+| T | Toggle tilt-shift depth of field |
 | Space | Pause / resume time |
 | N | Advance one tick while paused |
 | , / . | Halve / double time scale |
