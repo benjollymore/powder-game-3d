@@ -124,6 +124,12 @@ var tick := 0
 var _frame := 0
 ## Nonzero only while preparing presentation for elapsed simulation time.
 var _rt_presentation_seconds := 0.0
+## Render-thread-owned live source. Metadata updates never reset its phase.
+var _rt_live_emitter: Dictionary = {}
+var _rt_live_emitter_phase := 0.0
+var _rt_live_emitter_initial := false
+## Scheduled source stamps, not a count of cells accepted by ONLY_AIR.
+var _rt_live_emitter_stamps := 0
 var _param_overrides := {}
 
 var _rd: RenderingDevice
@@ -317,6 +323,34 @@ func request_ticks(count: int) -> void:
 		return
 	RenderingServer.call_on_render_thread(_rt_tick.bind(tick, count))
 	tick += count
+
+
+## Enable/update a source whose injection rate follows simulation time rather
+## than rendered frames. First enable stamps before the next tick. Position
+## updates preserve phase; a new seed denotes a new source session.
+## Optional surface metadata is resolved on the GPU immediately before each
+## stamp by the editing backend; missing surface support never falls back to
+## a potentially stale center. No time advancement means no source emission.
+func set_live_emitter(center: Vector3i, radius: int, element: int,
+		mode: BrushMode = BrushMode.ONLY_AIR, rate: float = 24.0, seed: int = 1,
+		surface: Dictionary = {}) -> void:
+	if not _rt_ready:
+		return
+	if element < 0 or element >= Elements.count() or not is_finite(rate) or rate <= 0.0:
+		clear_live_emitter()
+		return
+	var command := {
+		"center": center.clamp(Vector3i.ZERO, Vector3i.ONE * (GRID - 1)),
+		"radius": clampi(radius, 0, GRID), "element": element,
+		"mode": mode, "rate": rate, "seed": seed & 0x7FFFFFFF,
+		"surface": surface.duplicate(true),
+	}
+	RenderingServer.call_on_render_thread(_rt_set_live_emitter.bind(command))
+
+
+func clear_live_emitter() -> void:
+	if _rt_ready:
+		RenderingServer.call_on_render_thread(_rt_clear_live_emitter)
 
 
 ## Paint a sphere of `element` (voxel units). Runs this frame, before any ticks
@@ -918,6 +952,7 @@ func _rt_tick(first_tick: int, count: int) -> void:
 	var hydro_groups := GRID / 8  # 8x8 threads per group, one line per thread
 	for i in count:
 		var t := first_tick + i
+		_rt_live_emitter_step(cl)
 		# Air samples and projects at a fixed simulation cadence. Advancing it
 		# once with dt=count before a batch changes both the source sampling and
 		# numerical integration when render frames group ticks differently.
@@ -966,6 +1001,56 @@ func _rt_tick(first_tick: int, count: int) -> void:
 	_stamp("frame_end")
 
 
+func _rt_set_live_emitter(command: Dictionary) -> void:
+	# Surface resources must exist before the tick opens its compute list.
+	var surface: Dictionary = command["surface"]
+	if not surface.is_empty() and has_method("_rt_prepare_surface_emitter"):
+		call("_rt_prepare_surface_emitter")
+	var new_session: bool = _rt_live_emitter.is_empty() or _rt_live_emitter["seed"] != command["seed"]
+	_rt_live_emitter = command
+	if new_session:
+		_rt_live_emitter_phase = 0.0
+		_rt_live_emitter_initial = true
+		_rt_live_emitter_stamps = 0
+
+
+func _rt_clear_live_emitter() -> void:
+	_rt_live_emitter = {}
+	_rt_live_emitter_phase = 0.0
+	_rt_live_emitter_initial = false
+
+
+## Record at most one source stamp into the open tick list. Sampling occurs
+## before air and voxel transport, so ONLY_AIR sees the same preceding tick
+## state regardless of how a renderer groups ticks into submissions.
+func _rt_live_emitter_step(cl: int) -> void:
+	if _rt_live_emitter.is_empty():
+		return
+	if _rt_live_emitter_initial:
+		_rt_live_emitter_initial = false
+	else:
+		# Bounded even if a caller requests an extreme rate: at most one stamp
+		# per simulated tick, with no wall-clock backlog to replay after a stall.
+		_rt_live_emitter_phase += minf(float(_rt_live_emitter["rate"]) * seconds_per_tick, 1.0)
+		if _rt_live_emitter_phase < 1.0 - 1e-9:
+			return
+		_rt_live_emitter_phase = maxf(0.0, _rt_live_emitter_phase - 1.0)
+	var command := _rt_live_emitter
+	var seed := (int(command["seed"]) + _rt_live_emitter_stamps * 7919) & 0x7FFFFFFF
+	var surface: Dictionary = command["surface"]
+	if not surface.is_empty():
+		if not has_method("_rt_surface_emitter_stamp"):
+			return
+		# Editing owns the GPU pick+stamp implementation. It must add barriers
+		# after the pick and mutation; air/sim rebind their pipelines afterward.
+		call("_rt_surface_emitter_stamp", cl, surface, command["radius"], command["element"], command["mode"], seed)
+	else:
+		_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
+		_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
+		_rt_brush_sphere(cl, command["center"], command["radius"], command["element"], command["mode"], seed, Elements.default_amount(command["element"]))
+	_rt_live_emitter_stamps += 1
+
+
 ## One air-solver step covering `dt` ticks, recorded into an open compute list.
 func _rt_air_step(cl: int, dt: int, tick_now: int) -> void:
 	if not _air_pipelines.has("air_project"):
@@ -1001,6 +1086,8 @@ func _rt_air_clear() -> void:
 ## Regional edits/undo deliberately do not call this: this is a fresh test
 ## state, not a full-runtime snapshot restore.
 func _rt_reset_world_history() -> void:
+	_rt_clear_live_emitter()
+	_rt_live_emitter_stamps = 0
 	_rt_air_clear()
 	_frame = 0
 	_rt_presentation_seconds = 0.0

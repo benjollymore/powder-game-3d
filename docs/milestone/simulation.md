@@ -40,3 +40,21 @@ The new `presentation_reset.gd` checks eight repeated zero-time field refreshes 
 The previously unused voxel push-constant slot is now explicitly reserved/zero instead of carrying the batch-local loop index, preventing a future rule from accidentally depending on submission grouping.
 
 After presentation/reset changes, all **74 existing GPU128 checks** and **30 cadence checks** passed again: [gpu128-step2.log](evidence-simulation/gpu128-step2.log), [cadence128-step2.log](evidence-simulation/cadence128-step2.log).
+
+## Fixed-tick live sources
+
+A held live source is an ordered simulator command, rather than a list of duplicate render-frame stamps. `set_live_emitter(center, radius, element, mode, rate, seed, surface={})` enables or updates it; `clear_live_emitter()` stops it. The first enable stamps before the next simulation tick. Repeated position/rate metadata updates preserve fractional phase; a new seed denotes a fresh source session. Each later stamp executes between individual physical ticks, before air/voxel transport, so ONLY_AIR sees the same intervening particle motion independently of submission grouping.
+
+Rate is stamps per **simulated second**. Pausing emits nothing, wall-clock stalls create no separate emission backlog, and work is bounded to one source stamp per simulation tick even for extreme requested rates. If simulation cannot keep up with wall time, both the world and source slow together. Source-attempt counts are not accepted material mass: cells blocked by ONLY_AIR may reject a stamp. The regression compares complete voxel state and actual sand count/water amount, not just scheduler counters.
+
+The optional surface dictionary is deeply copied, then resolved by the editing backend on the GPU immediately before a due source stamp. `_rt_prepare_surface_emitter()` prepares lazy resources outside a compute list; `_rt_surface_emitter_stamp(cl, surface, radius, element, mode, seed)` adds pick/write barriers inside the tick list. If surface support is unavailable, the source skips the stamp rather than falling back to stale center coordinates. Whole-world restore disables any active source.
+
+`tests/milestone/live_emitter.gd` passed **34 checks at 128³**. Moving source metadata and a 24→36 stamps/s rate change at fixed tick boundaries produced **1,161 sand cells** or **366,600 water amount units** after 96 ticks, byte-identical across `[1]`, `[3]`, and `[7,2,5,1,9]` batch schedules; all internal air textures also matched. Each replay scheduled 25 source attempts. Lifecycle checks cover paused enable, first-tick injection, metadata updates preserving phase, release, a one-stamp-per-tick work bound, and disabling on world replacement. [emitter128-step3.log](evidence-simulation/emitter128-step3.log).
+
+```sh
+godot --path . --always-on-top --disable-vsync --resolution 320x240 -s res://tests/milestone/live_emitter.gd -- grid=128
+```
+
+The source test covers cell/workplane targets. The editor's atomic surface hook requires its separate integration regression; this simulator-only branch does not claim to validate the missing backend. New cadence/reset/source GPU harnesses have a 120-second watchdog so an unexpected script error cannot leave a test window running indefinitely.
+
+After source integration, **30 cadence checks** and **31 presentation/reset checks** passed again: [cadence128-step3.log](evidence-simulation/cadence128-step3.log), [presentation128-step3.log](evidence-simulation/presentation128-step3.log).

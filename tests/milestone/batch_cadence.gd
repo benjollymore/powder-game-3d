@@ -12,6 +12,7 @@ var _checks := 0
 var _failures := 0
 
 func _initialize() -> void:
+	create_timer(120.0).timeout.connect(_timeout)
 	root.get_node("TimeController").paused = true
 	call_deferred("_run")
 
@@ -94,3 +95,7 @@ func _check(ok: bool, message: String) -> void:
 	else:
 		_failures += 1
 		push_error(message)
+
+func _timeout() -> void:
+	push_error("GPU regression exceeded its 120-second watchdog")
+	quit(1)
