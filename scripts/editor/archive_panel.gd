@@ -34,6 +34,7 @@ func bind_editor(target: Node3D, column: VBoxContainer) -> void:
 	message = Label.new()
 	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message.custom_minimum_size.x = 300
+	message.visible = false
 	column.add_child(message)
 	column.move_child(message, mini(6, column.get_child_count() - 1))
 	save_dialog = _dialog(FileDialog.FILE_MODE_SAVE_FILE)
@@ -131,6 +132,7 @@ func open_path(path: String) -> void:
 func _process(_delta: float) -> void:
 	if editor == null:
 		return
+	message.visible = not message.text.is_empty()
 	var busy := operation != "" or queued_dialog != ""
 	save_button.disabled = busy
 	open_button.disabled = busy

@@ -15,6 +15,7 @@ var pick_signature := 0
 var pick_cache := {}
 var last_pick_ms := 0
 var tools_column: VBoxContainer
+var archive_panel: Node
 var live_emitter_signature := 0
 
 var sim: Node3D
@@ -92,6 +93,7 @@ func _ready() -> void:
 	environment.environment.ambient_light_color = Color.WHITE
 	environment.environment.ambient_light_energy = 0.8
 	add_child(environment)
+	preload("res://scripts/render/editor_presentation.gd").apply(sim, environment, self)
 	marker = MeshInstance3D.new()
 	var sphere := SphereMesh.new()
 	sphere.radius = 0.5
@@ -108,11 +110,41 @@ func _ready() -> void:
 	selection_mesh.visible = false
 	add_child(selection_mesh)
 	_build_ui()
+	preload("res://scripts/editor/editor_theme.gd").apply(tools_panel)
+	archive_panel = preload("res://scripts/editor/archive_panel.gd").new()
+	archive_panel.name = "AuthoredFiles"
+	add_child(archive_panel)
+	archive_panel.bind_editor(self, tools_column)
 	_face_plane()
 	_update_plane()
 	# Upload queues behind GPU initialization; no CPU state mirror is retained.
 	reset_container()
 	_ready_to_edit = true
+
+
+## File payloads are validated by WorldArchive before reaching this boundary.
+## Replacement starts a new authored world, never a partial runtime rewind.
+func replace_authored(bytes: PackedByteArray) -> bool:
+	if capturing or painting or bytes.size() != VoxelCodec.GRID * VoxelCodec.GRID * VoxelCodec.GRID * 4:
+		return false
+	_end_stroke()
+	_invalidate_picks()
+	_reset_gesture()
+	_stop_navigation()
+	TimeController.paused = true
+	testing = false
+	undo_history.clear()
+	undo_bytes = 0
+	last_edit_bytes = 0
+	edit_message = ""
+	build_snapshot.clear()
+	corner_a = Vector3i(-1, -1, -1)
+	corner_b = Vector3i(-1, -1, -1)
+	selection_mesh.visible = false
+	selection_status.text = "Region: no corners selected"
+	play_button.text = "Run experiment · Space"
+	sim.upload(bytes)
+	return true
 
 
 func _overlay_material(color: Color) -> StandardMaterial3D:

@@ -24,9 +24,19 @@ static func _valid_grid(grid: int) -> bool:
 	return grid >= 16 and grid <= MAX_GRID and grid % 8 == 0
 
 
+static func _unsupported_material(bytes: PackedByteArray) -> int:
+	var material_count := Elements.count()
+	for offset in range(0, bytes.size(), 4):
+		if bytes[offset] >= material_count:
+			return bytes[offset]
+	return -1
+
+
 static func save_authored(path: String, bytes: PackedByteArray, grid: int) -> Dictionary:
 	if not _valid_grid(grid) or bytes.size() != grid * grid * grid * 4:
 		return _error("The authored world has an unsupported size.")
+	if _unsupported_material(bytes) >= 0:
+		return _error("The authored world contains an unsupported material.")
 	var payload := bytes.compress(FileAccess.COMPRESSION_ZSTD)
 	if payload.is_empty():
 		return _error("The world could not be compressed.")
@@ -96,4 +106,10 @@ static func load_authored(path: String, expected_grid: int = 0) -> Dictionary:
 	var bytes := payload.decompress(byte_count, FileAccess.COMPRESSION_ZSTD)
 	if bytes.size() != byte_count or _hash(bytes) != header.sha256:
 		return _error("The world data is damaged or incomplete.")
+	# Compute kernels index the element table directly. A valid checksum does
+	# not make an unknown material safe to upload. This scan runs in ArchiveJob
+	# for editor loads; all seed/amount/flag bytes remain exact.
+	var unsupported := _unsupported_material(bytes)
+	if unsupported >= 0:
+		return _error("This world contains an unsupported material (%d)." % unsupported)
 	return {"ok": true, "bytes": bytes, "header": header}

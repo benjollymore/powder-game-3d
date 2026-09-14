@@ -1,0 +1,31 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: authoritative pick includes liquid and skips gas by default
+ok: add selects adjacent outside cell with outward face normal
+ok: radius-three add centers brush outside the selected solid surface
+ok: erase targets actual hit material
+ok: explicit material mask skips intervening liquid and gas
+ok: section pick ignores hidden positive-side matter without deleting it
+ok: add does not redirect into hidden space beyond the cut plane
+ok: erase can target the retained section boundary
+ok: out-of-world ray is a miss
+ok: invalid zero-length ray is rejected
+ok: all preview picking leaves exact GPU material bytes unchanged
+surface two-ray transaction completion_us=6527 undo_bytes=6144
+ok: fast flat-face surface stroke is connected at radius zero
+ok: surface additive stroke preserves every underlying wall cell
+ok: surface undo captures local tiles, not the world
+ok: surface stroke undo restores all packed bytes exactly
+ok: old preview initially sees original wall
+ok: live GPU stamp re-picks a newly inserted nearer surface atomically
+ok: old ray/gesture intent cannot replace newer preview
+ok: changed authored edit revision rejects stale preview
+ok: world reset epoch rejects otherwise matching preview
+ok: live preview tolerates world evolution while atomic stamping owns correctness
+ok: surface held source adds 24 actual grains over120 ticks at batch1, got24
+ok: surface held source adds 24 actual grains over120 ticks at batch3, got24
+ok: atomic surface emission and material state are identical at batch3
+ok: surface held source adds 24 actual grains over120 ticks at batch7, got24
+ok: atomic surface emission and material state are identical at batch7
+Surface GPU: 26 checks, 0 failures

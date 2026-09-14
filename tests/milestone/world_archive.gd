@@ -27,6 +27,8 @@ func _initialize() -> void:
 	bytes.resize(16 * 16 * 16 * 4)
 	for i in bytes.size():
 		bytes[i] = (i * 17 + i / 4) % 256
+	for offset in range(0, bytes.size(), 4):
+		bytes[offset] = (offset / 4) % Elements.count()
 	var saved := Archive.save_authored(path, bytes, 16)
 	check(saved.ok, "authored save is written")
 	var loaded := Archive.load_authored(path, 16)
@@ -60,6 +62,13 @@ func _initialize() -> void:
 	header = saved.header.duplicate()
 	write_header(bad_path, header, bytes.compress(FileAccess.COMPRESSION_ZSTD))
 	check(not Archive.load_authored(bad_path).ok, "checksum detects changed payload")
+	var unsupported := bytes.duplicate()
+	unsupported[unsupported.size() - 4] = 255
+	header.sha256 = Archive._hash(unsupported)
+	write_header(bad_path, header, unsupported.compress(FileAccess.COMPRESSION_ZSTD))
+	var rejected := Archive.load_authored(bad_path)
+	check(not rejected.ok and rejected.error.contains("unsupported material"), "checksum-valid unknown material is rejected before GPU upload")
+	check(not Archive.save_authored(path, unsupported, 16).ok and Archive.load_authored(path, 16).bytes == bytes, "unsupported material cannot replace an existing valid save")
 	# Files belong solely to this test's unique directory.
 	for name in DirAccess.get_files_at(folder):
 		DirAccess.remove_absolute(folder.path_join(name))
