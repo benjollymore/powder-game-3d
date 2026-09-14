@@ -379,6 +379,9 @@ func set_live_emitter(center: Vector3i, radius: int, element: int,
 	if element < 0 or element >= Elements.count() or not is_finite(rate) or rate <= 0.0:
 		clear_live_emitter()
 		return
+	# A source update is user edit intent even before its next physical tick.
+	# Async file loads must not overwrite a newer completed live gesture.
+	edit_revision += 1
 	var command := {
 		"center": center.clamp(Vector3i.ZERO, Vector3i.ONE * (GRID - 1)),
 		"radius": clampi(radius, 0, GRID), "element": element,

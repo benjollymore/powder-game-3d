@@ -17,7 +17,10 @@ var last_pick_ms := 0
 var tools_column: VBoxContainer
 var archive_panel: Node
 var _queued_editor_action := ""
+var _queued_editor_epoch := -1
 var _editor_action_scheduled := false
+var _owns_time_input := false
+var _previous_time_input := true
 var live_emitter_signature := 0
 var material_buttons := {}
 var erase_button: Button
@@ -82,6 +85,12 @@ var gesture_trace := false
 
 
 func _ready() -> void:
+	# The editor owns Build/Test transitions, including while a file chooser
+	# temporarily suspends its own handlers. Legacy sandbox keys must not run
+	# the authored world through an unhandled-input gap.
+	_previous_time_input = TimeController.is_processing_unhandled_input()
+	TimeController.set_process_unhandled_input(false)
+	_owns_time_input = true
 	gesture_trace = "gesture_trace=1" in OS.get_cmdline_user_args()
 	if gesture_trace:
 		print("GESTURE_TRACE ready: native pan/pinch events and routing will be logged")
@@ -112,7 +121,10 @@ func _ready() -> void:
 	marker.material_override = _overlay_material(Color(1.0, 0.78, 0.25, 0.42))
 	add_child(marker)
 	guide = MeshInstance3D.new()
-	guide.material_override = _overlay_material(Color(0.34, 0.75, 0.95, 0.25))
+	var guide_material := _overlay_material(Color(0.34, 0.75, 0.95, 0.10))
+	guide_material.no_depth_test = false
+	guide_material.render_priority = 0
+	guide.material_override = guide_material
 	add_child(guide)
 	selection_mesh = MeshInstance3D.new()
 	selection_mesh.mesh = BoxMesh.new()
@@ -130,6 +142,12 @@ func _ready() -> void:
 	# Upload queues behind GPU initialization; no CPU state mirror is retained.
 	reset_container()
 	_ready_to_edit = true
+
+
+func _exit_tree() -> void:
+	if _owns_time_input and is_instance_valid(TimeController):
+		TimeController.set_process_unhandled_input(_previous_time_input)
+	_owns_time_input = false
 
 
 ## File payloads are validated by WorldArchive before reaching this boundary.
@@ -458,6 +476,7 @@ func _wait_for_edit(action: String) -> bool:
 		_queued_editor_action = ""
 		return false
 	_queued_editor_action = action
+	_queued_editor_epoch = sim.edit_epoch
 	_schedule_editor_action()
 	edit_message = "Finishing edit…"
 	return true
@@ -478,9 +497,14 @@ func _resume_editor_action() -> void:
 		return
 	var action := _queued_editor_action
 	_queued_editor_action = ""
+	if _queued_editor_epoch != sim.edit_epoch:
+		if edit_message == "Finishing edit…":
+			edit_message = ""
+		return
 	match action:
 		"undo": undo_edit()
-		"run": run_or_restore()
+		"start_test": _set_testing(true)
+		"return_build": _set_testing(false)
 		"reset": reset_container()
 		"empty": new_empty_build()
 
@@ -789,9 +813,17 @@ func undo_edit() -> void:
 
 
 func run_or_restore() -> void:
-	if _wait_for_edit("run"):
+	_set_testing(not testing)
+
+
+func _set_testing(desired: bool) -> void:
+	# A repeated press on the still-visible Run button requests the same
+	# phase; it must not become a Return after the pending capture completes.
+	if testing == desired:
 		return
-	if testing:
+	if _wait_for_edit("start_test" if desired else "return_build"):
+		return
+	if not desired:
 		TimeController.paused = true
 		sim.upload(build_snapshot)
 		# This reset restores the exact authored revision, so its existing build
@@ -810,6 +842,7 @@ func run_or_restore() -> void:
 				edit_message = "The build changed while preparing the experiment; run it again."
 				return
 			build_snapshot = bytes
+			edit_message = ""
 			testing = true
 			TimeController.time_scale = 1.0
 			TimeController.paused = false

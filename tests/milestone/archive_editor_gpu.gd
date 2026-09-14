@@ -5,6 +5,7 @@ var sim: Node3D
 var panel: Node
 var checks := 0
 var failures := 0
+var prior_time_input := true
 
 func _initialize() -> void:
 	create_timer(90.0).timeout.connect(func():
@@ -27,6 +28,7 @@ func wait_for_file() -> void:
 		await process_frame
 
 func run() -> void:
+	prior_time_input = root.get_node("TimeController").is_processing_unhandled_input()
 	editor = load("res://scenes/discovery/interaction.tscn").instantiate()
 	root.add_child(editor)
 	current_scene = editor
@@ -72,6 +74,24 @@ func run() -> void:
 	panel.open_path(path + ".missing")
 	await wait_for_file()
 	check(await read() == authored, "failed open leaves actual GPU state intact")
+	var controller := root.get_node("TimeController")
+	var tick_before: int = controller.tick
+	panel._begin_modal()
+	for key in [KEY_N, KEY_SPACE]:
+		var event := InputEventKey.new()
+		event.keycode = key
+		event.pressed = true
+		root.push_input(event, true)
+	for i in 2:
+		await process_frame
+	check(controller.paused and controller.tick == tick_before, "modal input ownership blocks legacy time shortcuts in Build")
+	panel._end_modal()
+	panel.open_path(path)
+	sim.set_live_emitter(centers[0], 1, Elements.Id.SAND)
+	sim.finish_live_emitter()
+	await wait_for_file()
+	check(panel.message.text.contains("changed"), "a completed newer live-source gesture invalidates an asynchronous Open")
+	sim.clear_live_emitter()
 	panel.open_path(path)
 	sim.paint(centers[0] + Vector3i(8, 0, 0), 0, Elements.Id.WALL, sim.BrushMode.ONLY_AIR)
 	await wait_for_file()
@@ -79,5 +99,8 @@ func run() -> void:
 	var current := await read()
 	check(not editor.replace_authored(PackedByteArray()) and await read() == current, "invalid replacement bytes are rejected without mutation")
 	DirAccess.remove_absolute(path)
+	editor.queue_free()
+	await process_frame
+	check(controller.is_processing_unhandled_input() == prior_time_input, "editor teardown restores previous legacy time input ownership")
 	print("Archive editor GPU: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
