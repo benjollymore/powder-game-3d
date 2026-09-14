@@ -19,6 +19,8 @@ Validation completed with no failures:
 - Existing regressions: editor actions 13, interaction 20, active-frame editor workflow 24, regional undo/cap 17 at 256³, keyboard routing 8, paint tools 9, Test phase controls 9, and native gesture routing 10.
 - Headless editor import completed with no parser errors. It regenerated several pre-existing missing UID files; unrelated generated files are excluded from this change.
 
+The coordinator independently reran Redo at both grids, the active editor workflow and queued-action guards after integration: **22 + 25 + 24 + 13 GPU checks passed**. [Integrated GPU manifest](redo-integrated/gpu-results-93dd96d6.json). The **18 history guards and eight keyboard checks** also passed. [Integrated CPU manifest](redo-integrated/cpu-results-f934b109.json). Raw logs accompany each manifest; these are separate runs from the worker's timing samples above.
+
 ```sh
 godot --headless --path . -s res://tests/milestone/history_guards.gd
 godot --headless --path . -s res://tests/milestone/editor_keyboard.gd

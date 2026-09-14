@@ -1,7 +1,7 @@
 extends RefCounted
 ## Paint-first material presentation, independent of editing and physical state.
 ## Apply once after the sim/environment enter the tree. Keeps every physical
-## representation and section uniform intact. Main-game defaults are unchanged.
+## representation and section uniform intact. The legacy scenario viewer is independent.
 
 static func apply(sim: Node3D, world: WorldEnvironment, parent: Node3D) -> DirectionalLight3D:
 	if world.environment == null:

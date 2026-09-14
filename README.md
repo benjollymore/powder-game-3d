@@ -36,12 +36,13 @@ Pause/Resume and Single step let you inspect a live experiment without restoring
 | [ / ] | Brush radius |
 | X | Paint / erase |
 | Ctrl/Cmd Z | Undo authored edit |
+| Ctrl/Cmd Shift Z | Redo authored edit |
 | Space | Run / return to build |
 | P / N, during Test | Pause/resume / single step |
 | V / F | Center on the workplane / angled view |
 | B | Optional two-corner region tool |
 
-Construction tools include region filling and fresh empty/container builds. Live edits are discarded on Return; Build undo is not a runtime rewind.
+Construction tools include region filling and fresh empty/container builds. Undo and Redo share a bounded regional history; a changed new edit clears Redo. Live edits are discarded on Return; authored history is not a runtime rewind.
 
 ## Verification
 

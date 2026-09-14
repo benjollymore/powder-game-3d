@@ -1,0 +1,30 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: mixed paint/region/erase creates one authored transaction
+ok: mixed transaction retains two first-touch tiles (4096 bytes)
+ok: mixed additive painting preserves the container wall
+ok: Undo captures the inverse and restores every original packed byte
+ok: Undo transfers the retained byte accounting to Redo, without doubling it
+ok: Redo restores exact mixed authored bytes, seeds, amounts and flags
+ok: repeated reverse operation returns exactly to the original state
+ok: occupied ONLY_AIR gesture is a verified no-op and preserves Redo
+ok: missed gesture preserves Redo without a regional inspection
+ok: Redo remains exact after occupied and missed no-op gestures
+ok: accepted changed authored edit clears the obsolete Redo chain
+ok: multiple edits retain contiguous past and future with one combined budget
+ok: history-bearing construction enters inspectable paused Test
+ok: experiment advances real material before Return
+ok: Test cannot apply authored Undo or Redo
+ok: Return restores authored packed bytes and retains both history directions
+ok: Redo record epoch is correctly rebound after Return
+ok: Undo chain remains exact after Run/Return/Redo
+ok: Open/replacement clears both history stacks and byte totals
+ok: Empty requested during inverse capture remains queued
+ok: queued Empty executes after Undo and clears both directions
+ok: reset during inverse capture rejects stale restoration and clears unavailable history
+ok: over-cap region changes nothing, reports limit and retains only accepted prefix history
+ok: partial accepted transaction remains exactly undoable after cap rejection
+ok: Redo restores only the accepted prefix, never the rejected oversized region
+REDO_MEASUREMENT grid=256 full_bytes=67108864 tiny_bytes=4096 action_completion_us=[7704, 22465, 6883, 6718, 6645, 6921, 3611, 6886, 7071, 3696, 6812]
+Editor Redo GPU: 25 checks, 0 failures

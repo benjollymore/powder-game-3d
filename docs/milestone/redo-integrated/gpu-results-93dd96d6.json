@@ -1,0 +1,82 @@
+[
+  {
+    "name": "actions128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 1.34,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/editor_actions_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/redo-integrated/actions128"
+    ]
+  },
+  {
+    "name": "workflow128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 2.2,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/editor_workflow_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/redo-integrated/workflow128"
+    ]
+  },
+  {
+    "name": "redo128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 1.16,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/editor_redo_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/redo-integrated/redo128"
+    ]
+  },
+  {
+    "name": "redo256",
+    "pass": true,
+    "exit": 0,
+    "seconds": 2.23,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/editor_redo_gpu.gd",
+      "--",
+      "grid=256",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/redo-integrated/redo256"
+    ]
+  }
+]
