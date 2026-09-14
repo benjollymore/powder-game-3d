@@ -3,7 +3,19 @@ extends Node3D
 const Geometry := preload("res://scripts/discovery/edit_geometry.gd")
 const SimScene := preload("res://scenes/sim_volume.tscn")
 const Emission := preload("res://scripts/discovery/brush_emission.gd")
-var emitter := Emission.new()
+enum TargetMode { PLANE, SURFACE }
+var targeting_mode := TargetMode.PLANE
+var stroke_target_mode := TargetMode.PLANE
+var pending_surface: Array = []
+var surface_connect := false
+var stroke_view := {}
+var pick_pending := false
+var pick_intent := 0
+var pick_signature := 0
+var pick_cache := {}
+var last_pick_ms := 0
+var tools_column: VBoxContainer
+var live_emitter_signature := 0
 
 var sim: Node3D
 var camera: Camera3D
@@ -127,6 +139,7 @@ func _build_ui() -> void:
 	get_viewport().size_changed.connect(func():
 		panel.size.y = maxf(100.0, get_viewport().get_visible_rect().size.y - 32.0))
 	var column := VBoxContainer.new()
+	tools_column = column
 	column.add_theme_constant_override("separation", 8)
 	scroll.add_child(column)
 	var title := Label.new()
@@ -205,6 +218,20 @@ func _build_ui() -> void:
 		_end_stroke()
 		erase = not erase)
 	brush_row.add_child(erase_button)
+	var target_row := HBoxContainer.new()
+	column.add_child(target_row)
+	column.move_child(target_row, 3)
+	var target_label := Label.new()
+	target_label.text = "Paint on  "
+	target_row.add_child(target_label)
+	var target_choice := OptionButton.new()
+	target_choice.add_item("Workplane", TargetMode.PLANE)
+	target_choice.add_item("Material surface", TargetMode.SURFACE)
+	target_choice.item_selected.connect(func(value):
+		_end_stroke()
+		targeting_mode = value
+		_invalidate_picks())
+	target_row.add_child(target_choice)
 	var cut := CheckButton.new()
 	cut.text = "Section view (positive side hidden)"
 	cut.button_pressed = section
@@ -282,6 +309,7 @@ func _face_plane() -> void:
 
 
 func _update_camera() -> void:
+	_invalidate_picks()
 	var direction := Vector3(sin(yaw) * cos(pitch), -sin(pitch), cos(yaw) * cos(pitch))
 	camera.position = (camera_target + direction * distance) * sim.world_size()
 	camera.look_at(camera_target * sim.world_size(), Vector3.UP)
@@ -366,6 +394,7 @@ func _wheel_depth(amount: float) -> void:
 
 
 func _update_plane() -> void:
+	_invalidate_picks()
 	sim.set_param("section_enabled", section)
 	sim.set_param("section_axis", axis)
 	sim.set_param("section_cell", depth)
@@ -435,14 +464,17 @@ func _unhandled_input(event: InputEvent) -> void:
 					return
 				elif selecting:
 					_select_corner(_target_at(event.position))
-				elif not capturing and _target_at(event.position).x >= 0:
+				elif not capturing and (targeting_mode == TargetMode.SURFACE or _target_at(event.position).x >= 0):
+					_invalidate_picks()
+					stroke_target_mode = targeting_mode
+					stroke_view = {"section": section, "axis": axis, "depth": depth}
+					surface_connect = false
 					stroke_radius = radius
 					stroke_element = element
 					stroke_erase = erase
 					if not testing:
 						_begin_authored_edit()
 					painting = true
-					emitter.reset()
 					_sample(event.position)
 			MOUSE_BUTTON_RIGHT:
 				_end_stroke()
@@ -590,7 +622,53 @@ func _target_at(mouse: Vector2) -> Vector3i:
 	return Geometry.target(inverse * camera.project_ray_origin(mouse), inverse.basis * camera.project_ray_normal(mouse), axis, depth, VoxelCodec.GRID)
 
 
+func _ray_at(mouse: Vector2, view: Dictionary = {}) -> Dictionary:
+	var inverse := sim.global_transform.affine_inverse()
+	return {"origin": inverse * camera.project_ray_origin(mouse),
+		"direction": (inverse.basis * camera.project_ray_normal(mouse)).normalized(),
+		"section": view.get("section", section), "axis": view.get("axis", axis), "depth": view.get("depth", depth)}
+
+
+func _invalidate_picks() -> void:
+	pick_intent += 1
+	pick_signature = 0
+	pick_cache.clear()
+
+
+func _request_preview(mouse: Vector2) -> void:
+	var ray := _ray_at(mouse)
+	var signature := hash([ray, radius, erase, sim.edit_epoch, 0 if testing else sim.edit_revision])
+	if signature != pick_signature:
+		pick_intent += 1
+		pick_signature = signature
+		pick_cache.clear()
+	if pick_pending or (not pick_cache.is_empty() and (not testing or Time.get_ticks_msec() - last_pick_ms < 50)):
+		return
+	pick_pending = true
+	last_pick_ms = Time.get_ticks_msec()
+	var intent := pick_intent
+	sim.request_surface_pick(ray, radius, erase, func(result: Dictionary): _receive_pick(result, intent))
+
+
+func _receive_pick(result: Dictionary, intent: int) -> void:
+	pick_pending = false
+	if intent != pick_intent or result.epoch != sim.edit_epoch or (not testing and result.revision != sim.edit_revision):
+		return
+	pick_cache = result
+
+
 func _sample(mouse: Vector2) -> void:
+	if stroke_target_mode == TargetMode.SURFACE:
+		var ray := _ray_at(mouse, stroke_view)
+		ray["connect"] = surface_connect
+		# Retain the first and latest pointer sample per frame. GPU-resolved points
+		# on the same face are joined; depth/normal discontinuities break the line.
+		if pending_surface.size() >= 2:
+			pending_surface[1] = ray
+		else:
+			pending_surface.append(ray)
+		surface_connect = true
+		return
 	var cell := _target_at(mouse)
 	if cell.x < 0:
 		previous = cell
@@ -605,16 +683,48 @@ func _sample(mouse: Vector2) -> void:
 
 
 func _end_stroke() -> void:
+	_stop_live_emitter()
 	_flush()
 	if active_transaction >= 0:
 		sim.finish_edit_transaction(active_transaction)
 		active_transaction = -1
 	painting = false
-	emitter.reset()
 	previous = Vector3i(-1, -1, -1)
+	surface_connect = false
+
+
+func _stop_live_emitter() -> void:
+	if live_emitter_signature != 0 and sim != null and sim.has_method("clear_live_emitter"):
+		sim.clear_live_emitter()
+	live_emitter_signature = 0
+
+
+func _update_live_emitter(over_ui: bool) -> void:
+	if not sim.has_method("set_live_emitter"):
+		return # the companion simulation checkpoint supplies authoritative cadence
+	if not painting or not testing or over_ui or orbiting:
+		_stop_live_emitter()
+		return
+	var surface: Dictionary = _ray_at(get_viewport().get_mouse_position(), stroke_view) if stroke_target_mode == TargetMode.SURFACE else {}
+	if surface.is_empty() and target.x < 0:
+		_stop_live_emitter()
+		return
+	var center := target if surface.is_empty() else Vector3i.ZERO
+	var mode: int = sim.BrushMode.ERASE if stroke_erase else sim.BrushMode.ONLY_AIR
+	var signature := hash([center, stroke_radius, stroke_element, mode, surface])
+	if signature != live_emitter_signature:
+		live_emitter_signature = signature
+		sim.set_live_emitter(center, stroke_radius, stroke_element, mode, Emission.RATE, 1, surface)
 
 
 func _flush() -> void:
+	if not pending_surface.is_empty() and sim != null:
+		var mode: int = sim.BrushMode.ERASE if stroke_erase else sim.BrushMode.ONLY_AIR
+		if active_transaction >= 0:
+			sim.record_surface_stroke(active_transaction, pending_surface, stroke_radius, stroke_element, mode, active_transaction)
+		else:
+			sim.paint_surface_stroke(pending_surface, stroke_radius, stroke_element, mode)
+		pending_surface.clear()
 	if not pending.is_empty() and sim != null:
 		var mode: int = sim.BrushMode.ERASE if stroke_erase else sim.BrushMode.ONLY_AIR
 		if active_transaction >= 0:
@@ -635,17 +745,22 @@ func _process(delta: float) -> void:
 	var over_ui := get_viewport().gui_get_hovered_control() != null
 	if over_ui:
 		previous = Vector3i(-1, -1, -1)
-	target = _target_at(get_viewport().get_mouse_position())
+		surface_connect = false
+	if targeting_mode == TargetMode.SURFACE and not selecting:
+		if not over_ui and not orbiting:
+			_request_preview(get_viewport().get_mouse_position())
+		target = pick_cache.target if pick_cache.get("valid", false) else Vector3i(-1, -1, -1)
+	else:
+		target = _target_at(get_viewport().get_mouse_position())
+	guide.visible = targeting_mode == TargetMode.PLANE or selecting
 	marker.visible = target.x >= 0 and not over_ui and not orbiting
 	if marker.visible:
 		marker.position = ((Vector3(target) + Vector3.ONE * 0.5) / VoxelCodec.GRID - Vector3.ONE * 0.5) * sim.world_size()
 		marker.scale = Vector3.ONE * (2 * radius + 1) * sim.world_size() / VoxelCodec.GRID
-	if painting and testing and marker.visible:
-		for stamp in emitter.advance(delta):
-			pending.append(target)
-	elif not marker.visible:
-		emitter.reset()
+	_update_live_emitter(over_ui)
 	_flush()
 	status.text = "%s · %s · r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % ["ERASE" if erase else "Add into empty space", Elements.TABLE[element].name, radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else ("PLAYING" if testing else "BUILD"), "Live edits reset on return; no live undo" if testing else "%d build edits can be undone" % undo_history.size()]
 	if edit_message != "":
 		status.text += "\n" + edit_message
+	if targeting_mode == TargetMode.SURFACE:
+		status.text += "\n" + ("Finding surface…" if pick_pending and pick_cache.is_empty() else "Surface: add outside · erase hit material")

@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://bnj7xan7fvlnv"
+path="res://.godot/imported/surface_pick.glsl-86d5b4916f3483a199a58f31809d82c3.res"
+
+[deps]
+
+source_file="res://shaders/compute/editor/surface_pick.glsl"
+dest_files=["res://.godot/imported/surface_pick.glsl-86d5b4916f3483a199a58f31809d82c3.res"]
+
+[params]
+

@@ -31,6 +31,7 @@ signal layer_counts_ready(counts: PackedInt32Array)
 signal activity_ready(counts: PackedInt32Array)
 signal edit_transaction_ready(result: Dictionary)
 const EditGPU := preload("res://scripts/sim/voxel_edit_gpu.gd")
+const EditGeometry := preload("res://scripts/discovery/edit_geometry.gd")
 var edit_epoch := 0 # reset boundary; ticks do not invalidate authored history
 var edit_revision := 0 # ordered voxel edit submissions, distinct from tick
 var _edit_sequence := 0
@@ -416,6 +417,113 @@ func record_region(id: int, lo: Vector3i, hi: Vector3i, element: int) -> void:
 
 func finish_edit_transaction(id: int) -> void:
 	RenderingServer.call_on_render_thread(_rt_finish_edit.bind(id))
+
+
+## Preview is asynchronous and tagged; painting re-picks from its frozen ray.
+func request_surface_pick(ray: Dictionary, radius: int, erase: bool, callback: Callable) -> void:
+	var checked := _checked_surface(ray)
+	var metadata := {"epoch": edit_epoch, "revision": edit_revision, "tick": tick}
+	if checked.is_empty() or radius < 0 or radius > 12:
+		metadata.merge(EditGPU.decode_pick(PackedByteArray()))
+		callback.call_deferred(metadata)
+		return
+	RenderingServer.call_on_render_thread(_rt_request_surface_pick.bind(checked, radius, erase, metadata, callback))
+
+
+func record_surface_stroke(id: int, rays: Array, radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR, seed: int = 1) -> void:
+	if _edit_epochs.get(id, -1) != edit_epoch or radius < 0 or radius > 12 or element < 0 or element >= Elements.count() or mode not in [BrushMode.ONLY_AIR, BrushMode.ERASE]:
+		return
+	var checked := _checked_rays(rays)
+	if not checked.is_empty():
+		edit_revision += 1
+		RenderingServer.call_on_render_thread(_rt_record_surface_stroke.bind(id, checked, radius, element, mode, seed))
+
+
+func paint_surface_stroke(rays: Array, radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR, seed: int = 1) -> void:
+	if radius < 0 or radius > 12 or element < 0 or element >= Elements.count() or mode not in [BrushMode.ONLY_AIR, BrushMode.ERASE]:
+		return
+	var checked := _checked_rays(rays)
+	if not checked.is_empty():
+		edit_revision += 1
+		RenderingServer.call_on_render_thread(_rt_paint_surface_stroke.bind(checked, radius, element, mode, seed))
+
+
+func _checked_surface(ray: Dictionary) -> Dictionary:
+	var origin: Vector3 = ray.get("origin", Vector3.ZERO)
+	var direction: Vector3 = ray.get("direction", Vector3.ZERO)
+	if not origin.is_finite() or not direction.is_finite() or direction.length_squared() < 0.00000001:
+		return {}
+	return {"origin": origin, "direction": direction.normalized(), "section": bool(ray.get("section", false)),
+		"axis": clampi(int(ray.get("axis", 2)), 0, 2), "depth": clampi(int(ray.get("depth", GRID - 1)), 0, GRID - 1),
+		"mask": int(ray.get("mask", ((1 << Elements.count()) - 1) & ~Elements.gas_mask() & ~1)),
+		"connect": bool(ray.get("connect", false))}
+
+
+func _checked_rays(rays: Array) -> Array:
+	var checked: Array = []
+	for ray in rays:
+		var value := _checked_surface(ray)
+		if not value.is_empty():
+			checked.append(value)
+	return checked
+
+
+func _rt_request_surface_pick(ray: Dictionary, radius: int, erase: bool, metadata: Dictionary, callback: Callable) -> void:
+	_rt_edit_gpu().request_pick(ray, radius, erase, metadata, callback)
+
+
+func _rt_record_surface_stroke(id: int, rays: Array, radius: int, element: int, mode: int, seed: int) -> void:
+	var editor := _rt_edit_gpu()
+	if not editor.transactions.has(id):
+		return
+	var tx: Dictionary = editor.transactions[id]
+	var mutated := false
+	for ray in rays:
+		if not ray.connect:
+			tx.erase("surface_previous")
+		var picked: Dictionary = editor.pick_sync(ray, radius, mode == BrushMode.ERASE)
+		if not picked.valid:
+			tx.erase("surface_previous")
+			continue
+		var centers: Array[Vector3i] = [picked.target]
+		if tx.has("surface_previous"):
+			var previous: Dictionary = tx.surface_previous
+			var normal: Vector3i = picked.normal
+			var axis := normal.abs().max_axis_index()
+			if normal != Vector3i.ZERO and previous.normal == normal and previous.target[axis] == picked.target[axis]:
+				centers = EditGeometry.stroke(previous.target, picked.target)
+		if not editor.capture_stroke(id, centers, radius):
+			break
+		var cl := _rd.compute_list_begin()
+		_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
+		_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
+		for center in centers:
+			_rt_brush_sphere(cl, center, radius, element, mode, seed, Elements.default_amount(element))
+		_rd.compute_list_end()
+		tx.surface_previous = picked
+		mutated = true
+	if mutated:
+		_rt_occupancy_update()
+
+
+func _rt_paint_surface_stroke(rays: Array, radius: int, element: int, mode: int, seed: int) -> void:
+	_rt_prepare_surface_emitter()
+	var cl := _rd.compute_list_begin()
+	for ray in rays:
+		_rt_surface_emitter_stamp(cl, ray, radius, element, mode, seed)
+	_rd.compute_list_end()
+	_rt_occupancy_update()
+
+
+func _rt_prepare_surface_emitter() -> void:
+	_rt_edit_gpu().ensure_surface()
+
+
+## Called inside the simulator's authoritative tick list. No CPU pick is used.
+func _rt_surface_emitter_stamp(cl: int, surface: Dictionary, radius: int, element: int, mode: int, seed: int) -> void:
+	var ray := _checked_surface(surface)
+	if not ray.is_empty():
+		_rt_edit_gpu().stamp_surface(cl, ray, radius, element, mode, seed, Elements.default_amount(element))
 
 
 func restore_edit_transaction(result: Dictionary) -> bool:

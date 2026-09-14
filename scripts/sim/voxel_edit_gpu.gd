@@ -12,13 +12,98 @@ var pipeline := RID()
 var transactions := {}
 var pending_buffers := {}
 var disposed := false
+var compile_shader: Callable
+var pick_shader := RID()
+var pick_pipeline := RID()
+var stamp_shader := RID()
+var stamp_pipeline := RID()
+var surface_buffer := RID()
+var surface_pick_set := RID()
+var surface_stamp_set := RID()
 
 func _init(device: RenderingDevice, texture: RID, grid_size: int, compile: Callable) -> void:
 	rd = device
 	grid = texture
 	size = grid_size
+	compile_shader = compile
 	shader = rd.shader_create_from_spirv(compile.call(COPY_PATH, false))
 	pipeline = rd.compute_pipeline_create(shader)
+
+func ensure_surface() -> void:
+	if pick_pipeline.is_valid():
+		return
+	pick_shader = rd.shader_create_from_spirv(compile_shader.call("res://shaders/compute/editor/surface_pick.glsl", false))
+	pick_pipeline = rd.compute_pipeline_create(pick_shader)
+	stamp_shader = rd.shader_create_from_spirv(compile_shader.call("res://shaders/compute/editor/surface_stamp.glsl", false))
+	stamp_pipeline = rd.compute_pipeline_create(stamp_shader)
+	surface_buffer = rd.storage_buffer_create(64)
+	surface_pick_set = _uniforms(surface_buffer, pick_shader)
+	surface_stamp_set = _uniforms(surface_buffer, stamp_shader)
+
+func request_pick(ray: Dictionary, radius: int, erase: bool, metadata: Dictionary, callback: Callable) -> void:
+	ensure_surface()
+	var buffer := rd.storage_buffer_create(64)
+	var uniforms := _uniforms(buffer, pick_shader)
+	pending_buffers[buffer] = uniforms
+	var cl := rd.compute_list_begin()
+	_dispatch_pick(cl, ray, radius, erase, uniforms)
+	rd.compute_list_end()
+	var err := rd.buffer_get_data_async(buffer, _received_pick.bind(buffer, metadata, callback))
+	if err != OK:
+		_finish_pick(rd.buffer_get_data(buffer), buffer, metadata, callback)
+
+func _received_pick(bytes: PackedByteArray, buffer: RID, metadata: Dictionary, callback: Callable) -> void:
+	RenderingServer.call_on_render_thread(_finish_pick.bind(bytes, buffer, metadata, callback))
+
+func _finish_pick(bytes: PackedByteArray, buffer: RID, metadata: Dictionary, callback: Callable) -> void:
+	if disposed:
+		return
+	if pending_buffers.has(buffer):
+		rd.free_rid(pending_buffers[buffer])
+		rd.free_rid(buffer)
+		pending_buffers.erase(buffer)
+	var result := decode_pick(bytes)
+	result.merge(metadata)
+	callback.call_deferred(result)
+
+func pick_sync(ray: Dictionary, radius: int, erase: bool) -> Dictionary:
+	ensure_surface()
+	var cl := rd.compute_list_begin()
+	_dispatch_pick(cl, ray, radius, erase, surface_pick_set)
+	rd.compute_list_end()
+	# Build surface commands need the actual tile coordinates before recording
+	# undo. This fence downloads 64 bytes, never the voxel texture.
+	return decode_pick(rd.buffer_get_data(surface_buffer))
+
+static func decode_pick(bytes: PackedByteArray) -> Dictionary:
+	if bytes.size() != 64:
+		return {"valid": false, "hit": Vector3i(-1, -1, -1), "normal": Vector3i.ZERO, "target": Vector3i(-1, -1, -1), "element": 0, "visited": 0}
+	return {"valid": bytes.decode_s32(44) != 0, "hit": Vector3i(bytes.decode_s32(0), bytes.decode_s32(4), bytes.decode_s32(8)),
+		"normal": Vector3i(bytes.decode_s32(16), bytes.decode_s32(20), bytes.decode_s32(24)),
+		"target": Vector3i(bytes.decode_s32(32), bytes.decode_s32(36), bytes.decode_s32(40)),
+		"element": bytes.decode_s32(12), "visited": bytes.decode_s32(48)}
+
+func _dispatch_pick(cl: int, ray: Dictionary, radius: int, erase: bool, uniforms: RID) -> void:
+	var origin: Vector3 = ray.origin
+	var direction: Vector3 = ray.direction
+	var push := PackedFloat32Array([origin.x, origin.y, origin.z, 0.0, direction.x, direction.y, direction.z, 0.0]).to_byte_array()
+	push.append_array(PackedInt32Array([size, radius, int(erase), ray.mask, int(ray.section), ray.axis, ray.depth, 0]).to_byte_array())
+	rd.compute_list_bind_compute_pipeline(cl, pick_pipeline)
+	rd.compute_list_bind_uniform_set(cl, uniforms, 0)
+	rd.compute_list_set_push_constant(cl, push, push.size())
+	rd.compute_list_dispatch(cl, 1, 1, 1)
+	rd.compute_list_add_barrier(cl)
+
+func stamp_surface(cl: int, ray: Dictionary, radius: int, element: int, mode: int, seed: int, amount: int) -> void:
+	ensure_surface()
+	_dispatch_pick(cl, ray, radius, mode == 2, surface_pick_set)
+	rd.compute_list_bind_compute_pipeline(cl, stamp_pipeline)
+	rd.compute_list_bind_uniform_set(cl, surface_stamp_set, 0)
+	var push := PackedInt32Array([size, radius, element, mode, seed, amount, 0, 0]).to_byte_array()
+	rd.compute_list_set_push_constant(cl, push, push.size())
+	var groups := ceili(float(2 * radius + 1) / 8.0)
+	rd.compute_list_dispatch(cl, groups, groups, groups)
+	rd.compute_list_add_barrier(cl)
 
 func begin(id: int, epoch: int, callback: Callable) -> void:
 	transactions[id] = {"id": id, "epoch": epoch, "callback": callback, "seen": {},
@@ -157,7 +242,7 @@ func restore(regions: Array) -> void:
 		rd.free_rid(uniforms)
 		rd.free_rid(buffer)
 
-func _uniforms(buffer: RID) -> RID:
+func _uniforms(buffer: RID, for_shader: RID = RID()) -> RID:
 	var image := RDUniform.new()
 	image.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
 	image.binding = 0
@@ -166,7 +251,7 @@ func _uniforms(buffer: RID) -> RID:
 	data.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
 	data.binding = 1
 	data.add_id(buffer)
-	return rd.uniform_set_create([image, data], shader, 0)
+	return rd.uniform_set_create([image, data], for_shader if for_shader.is_valid() else shader, 0)
 
 func _dispatch(cl: int, lo: Vector3i, hi: Vector3i, offset: int, restore_mode: bool) -> void:
 	var extent := hi - lo
@@ -182,6 +267,6 @@ func free_resources() -> void:
 		rd.free_rid(buffer)
 	pending_buffers.clear()
 	transactions.clear()
-	for rid in [pipeline, shader]:
+	for rid in [surface_pick_set, surface_stamp_set, surface_buffer, pick_pipeline, pick_shader, stamp_pipeline, stamp_shader, pipeline, shader]:
 		if rid.is_valid():
 			rd.free_rid(rid)
