@@ -123,11 +123,12 @@ func _run() -> void:
 	button(MOUSE_BUTTON_WHEEL_UP, true, false, true, 10.0)
 	button(MOUSE_BUTTON_WHEEL_DOWN, true, false, true, 1.0)
 	check(lab.depth == VoxelCodec.GRID - 2, "depth boundary accumulates no hidden overscroll debt")
-	# Gesture events can pass through GUI to _unhandled_input; guard by position,
-	# not by the previously hovered control. This is an actual Viewport route.
+	# New gesture sequences starting over tools must stay with the GUI. This is
+	# an actual Viewport route rather than a direct call to the editor handler.
 	var saved_transform: Transform3D = lab.camera.transform
 	initial_depth = lab.depth
 	var initial_radius: int = lab.radius
+	lab._reset_gesture() # these are new gestures starting on the toolbar
 	pan(Vector2(5, 5), false, Vector2(40, 40))
 	pinch(1.3, Vector2(40, 40))
 	check(lab.camera.transform == saved_transform, "pan and pinch over toolbar never navigate camera")

@@ -45,9 +45,16 @@ var navigation_button := MOUSE_BUTTON_NONE
 var navigation_pan := false
 var depth_scroll_fraction := 0.0
 var last_depth_scroll_ms := 0
+const GESTURE_IDLE_MS := 350
+var gesture_owner := -1 # -1: no sequence, 0: tools, 1: scene
+var last_gesture_ms := -1
+var gesture_trace := false
 
 
 func _ready() -> void:
+	gesture_trace = "gesture_trace=1" in OS.get_cmdline_user_args()
+	if gesture_trace:
+		print("GESTURE_TRACE ready: native pan/pinch events and routing will be logged")
 	TimeController.paused = true
 	depth = VoxelCodec.GRID / 2
 	sim = SimScene.instantiate()
@@ -301,6 +308,39 @@ func _stop_navigation() -> void:
 	navigation_pan = false
 
 
+func _reset_gesture() -> void:
+	gesture_owner = -1
+	last_gesture_ms = -1
+
+
+func _route_gesture(event: InputEventGesture) -> void:
+	# Godot's native gesture events carry no begin/end phase. Keep the initial
+	# owner across a stream, releasing after an idle gap or explicit input/focus
+	# boundary. Route scene gestures before GUI dispatch can swallow an update.
+	var now := Time.get_ticks_msec()
+	if last_gesture_ms < 0 or now - last_gesture_ms > GESTURE_IDLE_MS:
+		gesture_owner = 0 if _over_tools(event.position) else 1
+	last_gesture_ms = now
+	_end_stroke()
+	_stop_navigation()
+	depth_scroll_fraction = 0.0
+	if gesture_owner == 1:
+		if event is InputEventPanGesture:
+			_navigate(event.delta, event.shift_pressed, true)
+		elif event is InputEventMagnifyGesture:
+			_zoom(event.factor)
+		get_viewport().set_input_as_handled()
+	elif not _over_tools(event.position):
+		# A toolbar scroll moving into the scene must not become navigation.
+		get_viewport().set_input_as_handled()
+	if gesture_trace:
+		print("GESTURE_TRACE ", JSON.stringify({"ms": now, "type": event.get_class(),
+			"position": str(event.position), "owner": "scene" if gesture_owner == 1 else "tools",
+			"over_tools": _over_tools(event.position), "shift": event.shift_pressed,
+			"amount": event.factor if event is InputEventMagnifyGesture else str(event.delta),
+			"distance": distance, "target": str(camera_target)}))
+
+
 func _wheel_depth(amount: float) -> void:
 	var now := Time.get_ticks_msec()
 	if now - last_depth_scroll_ms > 350:
@@ -338,15 +378,13 @@ func _update_plane() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventPanGesture or event is InputEventMagnifyGesture:
+		_route_gesture(event)
+		return
 	if event is InputEventMouseButton and event.pressed and event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
+		_reset_gesture()
 		depth_scroll_fraction = 0.0
 	if event is InputEventKey and event.pressed and event.keycode != KEY_SHIFT:
-		depth_scroll_fraction = 0.0
-	# A native gesture may be handled by a GUI control later. It must still
-	# terminate a stroke first, but must never move the camera over the toolbar.
-	if event is InputEventGesture:
-		_end_stroke()
-		_stop_navigation()
 		depth_scroll_fraction = 0.0
 	if event is InputEventKey and not event.pressed and event.keycode == KEY_SHIFT:
 		depth_scroll_fraction = 0.0
@@ -364,27 +402,18 @@ func _input(event: InputEvent) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_reset_gesture()
 		_end_stroke()
 		_stop_navigation()
 		depth_scroll_fraction = 0.0
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventGesture or event is InputEventMouseButton:
+	if event is InputEventMouseButton:
 		if _over_tools(event.position):
 			depth_scroll_fraction = 0.0
 			return
-	if event is InputEventPanGesture:
-		_end_stroke()
-		_stop_navigation()
-		_navigate(event.delta, event.shift_pressed, true)
-		get_viewport().set_input_as_handled()
-	elif event is InputEventMagnifyGesture:
-		_end_stroke()
-		_stop_navigation()
-		_zoom(event.factor)
-		get_viewport().set_input_as_handled()
-	elif event is InputEventMouseButton and event.pressed:
+	if event is InputEventMouseButton and event.pressed:
 		match event.button_index:
 			MOUSE_BUTTON_LEFT:
 				if event.alt_pressed:
