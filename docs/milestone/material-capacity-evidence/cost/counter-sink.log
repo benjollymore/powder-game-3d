@@ -1,0 +1,9 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+{"frame_median_ms":1.711,"frame_p95_ms":8.417,"physical_cells":19683,"preparation_sync_median_ms":0.624,"preparation_sync_p95_ms":0.705,"repeat":0,"variant":"legacy"}
+{"frame_median_ms":1.887,"frame_p95_ms":8.328,"physical_cells":19683,"preparation_sync_median_ms":0.798,"preparation_sync_p95_ms":0.873,"repeat":0,"variant":"candidate"}
+{"frame_median_ms":2.031,"frame_p95_ms":7.947,"physical_cells":19683,"preparation_sync_median_ms":0.809,"preparation_sync_p95_ms":0.905,"repeat":1,"variant":"candidate"}
+{"frame_median_ms":1.929,"frame_p95_ms":7.13,"physical_cells":19683,"preparation_sync_median_ms":0.681,"preparation_sync_p95_ms":0.769,"repeat":1,"variant":"legacy"}
+{"frame_median_ms":1.97,"frame_p95_ms":7.088,"physical_cells":19683,"preparation_sync_median_ms":0.66,"preparation_sync_p95_ms":0.7,"repeat":2,"variant":"legacy"}
+{"frame_median_ms":1.732,"frame_p95_ms":4.275,"physical_cells":19683,"preparation_sync_median_ms":0.813,"preparation_sync_p95_ms":0.885,"repeat":2,"variant":"candidate"}

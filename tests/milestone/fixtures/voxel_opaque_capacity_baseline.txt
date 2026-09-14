@@ -11,18 +11,6 @@ uniform sampler2DArray albedo_maps : source_color, filter_linear_mipmap_anisotro
 uniform sampler2DArray normal_maps : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler3D grain_noise : filter_linear, repeat_enable;
 uniform int mat_layer[16];
-uniform sampler3D physical_overflow : filter_nearest, repeat_disable;
-uniform int powder_mask = 0;
-uniform int leafy_mask = 0;
-
-bool coarse_physical(ivec3 cell, uvec4 value, bvec2 fallback) {
-	if (fallback.y && (leafy_mask & (1 << int(value.x))) != 0) { return true; }
-	if (fallback.x && (powder_mask & (1 << int(value.x))) != 0 && ((value.w >> 1u) & 3u) != 0u && cell.y > 0) {
-		uint below = voxel_at(cell - ivec3(0, 1, 0)).x;
-		return below == 0u || is_gas(below);
-	}
-	return false;
-}
 uniform float mat_smooth[16];
 uniform float mat_grain[16];
 uniform float mat_rough[16];
@@ -59,8 +47,6 @@ void fragment() {
 	}
 	float G = float(grid_size);
 	float t = 0.0;
-	bvec2 fallback = greaterThan(texelFetch(physical_overflow, ivec3(0), 0).rg, vec2(0.5));
-	bool coarse_hit = false;
 	bool hit = false;
 	float t_hit = 0.0;
 	uvec4 value = uvec4(0u);
@@ -68,8 +54,7 @@ void fragment() {
 	float t_prev = 0.0;
 	{
 		uint id0 = voxel_at(r.cell).x;
-		coarse_hit = any(fallback) && coarse_physical(r.cell, voxel_at(r.cell), fallback);
-		if (coarse_hit || (is_opaque(id0) && g_prev >= 0.5)) {
+		if (is_opaque(id0) && g_prev >= 0.5) {
 			hit = true; // camera inside a solid
 			value = voxel_at(r.cell);
 		}
@@ -84,13 +69,6 @@ void fragment() {
 			g_prev = 0.0;
 			t_prev = t;
 			continue;
-		}
-		if (any(fallback) && coarse_physical(r.cell, voxel_at(r.cell), fallback)) {
-			coarse_hit = true;
-			hit = true;
-			t_hit = t;
-			value = voxel_at(r.cell);
-			break;
 		}
 		float t_next = min(r.t_max.x, min(r.t_max.y, r.t_max.z));
 		float g = field(r.p0 + r.dir * t_next).g;
@@ -129,7 +107,6 @@ void fragment() {
 	if (!is_opaque(hv.x)) {
 		hv = value;
 	}
-	if (coarse_hit) { hv = value; }
 	uint id = is_opaque(hv.x) ? hv.x : 1u;
 	float seed = float(hv.y) / 255.0;
 	// A bisected density hit is approximate: selecting the nearest integer
@@ -140,11 +117,6 @@ void fragment() {
 	int hit_axis = (grad_abs.x > grad_abs.y && grad_abs.x > grad_abs.z) ? 0 : ((grad_abs.y > grad_abs.z) ? 1 : 2);
 	vec3 face_model = vec3(0.0);
 	face_model[hit_axis] = -sign(grad[hit_axis]);
-	if (coarse_hit) {
-		face_model = vec3(0.0);
-		face_model[r.axis] = -float(r.step_dir[r.axis]);
-		n_model = face_model;
-	}
 	if (t_hit == 0.0) {
 		// Entering a clipped volume creates an axis-aligned cap. Ray-facing
 		// normals made that flat cross-section shade like a curved surface.

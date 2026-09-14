@@ -1,0 +1,789 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount1 front analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":1,"max_error_cells":0.17108041793108,"samples":6084,"tolerance_cells":0.035,"view":"front","wrong":25}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount1 oblique analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":1,"max_error_cells":0.213785469532013,"samples":6078,"tolerance_cells":0.035,"view":"oblique","wrong":24}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount1 inside analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":1,"max_error_cells":0.0983836594969034,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":6084}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount1 cap-x analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":1,"max_error_cells":0.17108041793108,"samples":6084,"tolerance_cells":0.035,"view":"cap-x","wrong":25}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount1 cap-y analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":1,"max_error_cells":0.17108041793108,"samples":6084,"tolerance_cells":0.035,"view":"cap-y","wrong":25}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount1 cap-z analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":1,"max_error_cells":0.17108041793108,"samples":6084,"tolerance_cells":0.035,"view":"cap-z","wrong":25}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+{"amount":1,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount50 front analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":50,"max_error_cells":0.635560415685177,"samples":6084,"tolerance_cells":0.035,"view":"front","wrong":529}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount50 oblique analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":50,"max_error_cells":0.806963071227074,"samples":6066,"tolerance_cells":0.035,"view":"oblique","wrong":402}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount50 inside analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":50,"max_error_cells":0.362448440864682,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":6084}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount50 cap-x analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":50,"max_error_cells":0.635560601949692,"samples":6084,"tolerance_cells":0.035,"view":"cap-x","wrong":529}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount50 cap-y analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":50,"max_error_cells":0.635560601949692,"samples":6084,"tolerance_cells":0.035,"view":"cap-y","wrong":529}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount50 cap-z analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":50,"max_error_cells":0.635560415685177,"samples":6084,"tolerance_cells":0.035,"view":"cap-z","wrong":529}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+{"amount":50,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount100 front analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":100,"max_error_cells":0.804165191948414,"samples":6084,"tolerance_cells":0.035,"view":"front","wrong":841}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount100 oblique analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":100,"max_error_cells":1.02021917700768,"samples":6055,"tolerance_cells":0.035,"view":"oblique","wrong":648}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount100 inside analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":100,"max_error_cells":0.45665642246604,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":6084}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount100 cap-x analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":100,"max_error_cells":0.804165191948414,"samples":6084,"tolerance_cells":0.035,"view":"cap-x","wrong":841}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount100 cap-y analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":100,"max_error_cells":0.804165191948414,"samples":6084,"tolerance_cells":0.035,"view":"cap-y","wrong":841}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount100 cap-z analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":100,"max_error_cells":0.804165191948414,"samples":6084,"tolerance_cells":0.035,"view":"cap-z","wrong":841}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+{"amount":100,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount200 front analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":200,"max_error_cells":1.01830493658781,"samples":6007,"tolerance_cells":0.035,"view":"front","wrong":1444}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount200 oblique analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":200,"max_error_cells":1.29991844296455,"samples":6038,"tolerance_cells":0.035,"view":"oblique","wrong":1039}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount200 inside analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":200,"max_error_cells":0.575351063162088,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":6084}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount200 cap-x analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":200,"max_error_cells":1.01830512285233,"samples":6007,"tolerance_cells":0.035,"view":"cap-x","wrong":1444}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount200 cap-y analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":200,"max_error_cells":1.01830493658781,"samples":6007,"tolerance_cells":0.035,"view":"cap-y","wrong":1444}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount200 cap-z analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":200,"max_error_cells":1.01830493658781,"samples":6007,"tolerance_cells":0.035,"view":"cap-z","wrong":1444}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+{"amount":200,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount255 front analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":255,"max_error_cells":1.29833879414946,"samples":6007,"tolerance_cells":0.035,"view":"front","wrong":1444}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount255 oblique analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":255,"max_error_cells":1.65739601477981,"samples":6045,"tolerance_cells":0.035,"view":"oblique","wrong":1046}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount255 inside analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":255,"max_error_cells":0.733572605531663,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":6084}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount255 cap-x analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":255,"max_error_cells":1.29833903163671,"samples":6007,"tolerance_cells":0.035,"view":"cap-x","wrong":1444}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount255 cap-y analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":255,"max_error_cells":1.29833879414946,"samples":6007,"tolerance_cells":0.035,"view":"cap-y","wrong":1444}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: amount255 cap-z analytic optical interval
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _run (res://tests/milestone/material_proxy_geometry_gpu.gd:97)
+{"amount":255,"max_error_cells":1.29833879414946,"samples":6007,"tolerance_cells":0.035,"view":"cap-z","wrong":1444}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+{"amount":255,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: element2 front exact opaque fallback coverage
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _opaque_geometry (res://tests/milestone/material_proxy_geometry_gpu.gd:155)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: element2 oblique exact opaque fallback coverage
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _opaque_geometry (res://tests/milestone/material_proxy_geometry_gpu.gd:155)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: element2 inside exact opaque fallback coverage
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _opaque_geometry (res://tests/milestone/material_proxy_geometry_gpu.gd:155)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: element2 cap-x exact opaque fallback coverage
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _opaque_geometry (res://tests/milestone/material_proxy_geometry_gpu.gd:155)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: element2 cap-y exact opaque fallback coverage
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _opaque_geometry (res://tests/milestone/material_proxy_geometry_gpu.gd:155)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: element2 cap-z exact opaque fallback coverage
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _opaque_geometry (res://tests/milestone/material_proxy_geometry_gpu.gd:155)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: element6 front exact opaque fallback coverage
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _opaque_geometry (res://tests/milestone/material_proxy_geometry_gpu.gd:155)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: element6 oblique exact opaque fallback coverage
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _opaque_geometry (res://tests/milestone/material_proxy_geometry_gpu.gd:155)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: element6 inside exact opaque fallback coverage
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _opaque_geometry (res://tests/milestone/material_proxy_geometry_gpu.gd:155)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: element6 cap-x exact opaque fallback coverage
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _opaque_geometry (res://tests/milestone/material_proxy_geometry_gpu.gd:155)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: element6 cap-y exact opaque fallback coverage
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _opaque_geometry (res://tests/milestone/material_proxy_geometry_gpu.gd:155)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: element6 cap-z exact opaque fallback coverage
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:181)
+       [1] _opaque_geometry (res://tests/milestone/material_proxy_geometry_gpu.gd:155)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)
+PROXY_GEOMETRY_CHECKS 145 FAILURES 42
+ERROR: Condition "!res" is true. Returning: false
+   at: prepare_camera (servers/rendering/rendering_light_culler.cpp:544)

@@ -1,0 +1,98 @@
+[
+	{
+		"allocation_counter": 28,
+		"capacity": 16,
+		"case": "small-grains",
+		"eligible": 100,
+		"fallback": true,
+		"physical_candidates": 100
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 100,
+		"case": "small-grains",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 101,
+		"case": "small-grains",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100
+	},
+	{
+		"allocation_counter": 18,
+		"capacity": 16,
+		"case": "small-droplets",
+		"eligible": 100,
+		"fallback": true,
+		"physical_candidates": 100
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 100,
+		"case": "small-droplets",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 101,
+		"case": "small-droplets",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100
+	},
+	{
+		"allocation_counter": 26,
+		"capacity": 16,
+		"case": "small-leaves",
+		"eligible": 100,
+		"fallback": true,
+		"physical_candidates": 100
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 100,
+		"case": "small-leaves",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 101,
+		"case": "small-leaves",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100
+	},
+	{
+		"allocation_counter": 131217,
+		"capacity": 131072,
+		"case": "actual-grain-capacity",
+		"eligible": 131328,
+		"fallback": true,
+		"physical_candidates": 131328
+	},
+	{
+		"allocation_counter": 65686,
+		"capacity": 65536,
+		"case": "actual-droplet-capacity",
+		"eligible": 65792,
+		"fallback": true,
+		"physical_candidates": 65792
+	},
+	{
+		"allocation_counter": 262296,
+		"capacity": 262144,
+		"case": "actual-leaf-capacity",
+		"eligible": 262400,
+		"fallback": true,
+		"physical_candidates": 262400
+	}
+]

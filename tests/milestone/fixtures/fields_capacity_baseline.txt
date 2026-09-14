@@ -31,17 +31,9 @@ struct Elem {
 };
 layout(std430, set = 0, binding = 2) restrict readonly buffer Elems { Elem elems[]; };
 
-// No CPU readback: exact eligibility selects the whole layer's representation.
-layout(std430, set = 0, binding = 3) readonly buffer Counters { uint count[32]; } counters;
-layout(std430, set = 0, binding = 4) restrict writeonly buffer Grains { float data[]; } grains;
-layout(std430, set = 0, binding = 5) restrict writeonly buffer Leaves { float data[]; } leaves;
-layout(std430, set = 0, binding = 6) restrict writeonly buffer Droplets { float data[]; } droplets;
-layout(rgba8, set = 0, binding = 7) uniform restrict writeonly image3D physical_overflow;
-
 layout(constant_id = 0) const int GRID = 128;
 
 layout(push_constant, std430) uniform PresentationTime {
-	uvec4 cap; // physical capacities; w: sprite emission enabled
 	vec4 elapsed; // x: simulated seconds; zero for edits/inspection rebuilds
 } pc;
 const float FOAM_HALF_LIFE_SECONDS = 0.16;
@@ -50,17 +42,12 @@ const uint FLAG_IMMOVABLE = 1u << 0;
 const uint FLAG_POWDER = 1u << 1;
 const uint FLAG_LIQUID = 1u << 2;
 const uint FLAG_GAS = 1u << 3;
-const uint FLAG_LEAFY = 1u << 5;
 const float FULL = 200.0;
 const int TILE = 10;
 
 // Per staged cell: bit 0 opaque, bit 1 liquid, bit 2 foam source (falling or
 // just landed liquid), bits 8-15 smooth * 255, bits 16-23 liquid density * 255.
 shared uint tile[TILE * TILE * TILE];
-
-bool overflow(uint layer) {
-	return pc.cap.w != 0u && counters.count[21u + layer] > pc.cap[layer];
-}
 
 float liquid_density(uint amount) {
 	float f = clamp(float(amount) / FULL, 0.0, 1.0);
@@ -106,10 +93,9 @@ uint stage(ivec3 p) {
 		// drawn as a splat, not as part of the heap.
 		uint below = uint(imageLoad(grid, p - ivec3(0, 1, 0)).r * 255.0 + 0.5);
 		if (below == 0u || (elems[below].flags & FLAG_GAS) != 0u) {
-			return overflow(0u) ? 1u : 0u;
+			return 0u;
 		}
 	}
-	if ((flags & FLAG_LEAFY) != 0u && overflow(1u)) { return 1u; }
 	return 1u | (uint(clamp(elems[id].smoothing, 0.0, 1.0) * 255.0 + 0.5) << 8);
 }
 
@@ -118,21 +104,6 @@ float weight(int manhattan) {
 }
 
 void main() {
-	uint index = gl_GlobalInvocationID.x + uint(GRID) * (gl_GlobalInvocationID.y + uint(GRID) * gl_GlobalInvocationID.z);
-	bvec3 fallback = bvec3(overflow(0u), overflow(1u), overflow(2u));
-	if (index == 0u) {
-		imageStore(physical_overflow, ivec3(0), vec4(vec3(fallback), 0.0));
-	}
-	// Overflow implies capacity < candidates <= GRID^3, so this existing pass
-	// covers every allocated record. Clear all basis/origin/custom components,
-	// including off-diagonal leaf rotations; no nondeterministic partial layer.
-	if (any(fallback)) {
-		for (uint j = 0u; j < 16u; j++) {
-			if (fallback.x && index < pc.cap.x) { grains.data[index * 16u + j] = 0.0; }
-			if (fallback.y && index < pc.cap.y) { leaves.data[index * 16u + j] = 0.0; }
-			if (fallback.z && index < pc.cap.z) { droplets.data[index * 16u + j] = 0.0; }
-		}
-	}
 	ivec3 base = ivec3(gl_WorkGroupID) * 8 - 1;
 	for (uint i = gl_LocalInvocationIndex; i < uint(TILE * TILE * TILE); i += 512u) {
 		ivec3 l = ivec3(int(i) % TILE, (int(i) / TILE) % TILE, int(i) / (TILE * TILE));

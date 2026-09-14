@@ -1,0 +1,68 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: small-grains exact physical bytes unchanged
+{"capacity":16,"case":"small-grains","counter":30,"field_peak_byte":0,"missing_instance_cells":84,"nonfinite_records":0,"physical_candidates":100,"unique_instance_cells":16}
+ok: small-grains finite instance origins
+ok: small-grains every instance belongs to a physical cell
+ok: small-grains emitted cells reach allocated capacity
+ok: small-grains no fallback isosurface exists anywhere
+ok: small-grains reproduces unrepresented physical cells
+ok: capture small-grains-capped
+ok: small-grains exact physical bytes unchanged
+{"capacity":100,"case":"small-grains","counter":100,"field_peak_byte":0,"missing_instance_cells":0,"nonfinite_records":0,"physical_candidates":100,"unique_instance_cells":100}
+ok: small-grains finite instance origins
+ok: small-grains every instance belongs to a physical cell
+ok: small-grains emitted cells reach allocated capacity
+ok: small-grains no fallback isosurface exists anywhere
+ok: capture small-grains-enough-capacity
+ok: small-grains more physical instances visibly change image
+ok: small-droplets exact physical bytes unchanged
+{"capacity":16,"case":"small-droplets","counter":20,"field_peak_byte":0,"missing_instance_cells":84,"nonfinite_records":0,"physical_candidates":100,"unique_instance_cells":16}
+ok: small-droplets finite instance origins
+ok: small-droplets every instance belongs to a physical cell
+ok: small-droplets emitted cells reach allocated capacity
+ok: small-droplets no fallback isosurface exists anywhere
+ok: small-droplets reproduces unrepresented physical cells
+ok: capture small-droplets-capped
+ok: small-droplets exact physical bytes unchanged
+{"capacity":100,"case":"small-droplets","counter":100,"field_peak_byte":0,"missing_instance_cells":0,"nonfinite_records":0,"physical_candidates":100,"unique_instance_cells":100}
+ok: small-droplets finite instance origins
+ok: small-droplets every instance belongs to a physical cell
+ok: small-droplets emitted cells reach allocated capacity
+ok: small-droplets no fallback isosurface exists anywhere
+ok: capture small-droplets-enough-capacity
+ok: small-droplets more physical instances visibly change image
+ok: small-leaves exact physical bytes unchanged
+{"capacity":16,"case":"small-leaves","counter":36,"field_peak_byte":102,"missing_instance_cells":84,"nonfinite_records":0,"physical_candidates":100,"unique_instance_cells":16}
+ok: small-leaves finite instance origins
+ok: small-leaves every instance belongs to a physical cell
+ok: small-leaves emitted cells reach allocated capacity
+ok: small-leaves no fallback isosurface exists anywhere
+ok: small-leaves reproduces unrepresented physical cells
+ok: capture small-leaves-capped
+ok: small-leaves exact physical bytes unchanged
+{"capacity":100,"case":"small-leaves","counter":100,"field_peak_byte":102,"missing_instance_cells":0,"nonfinite_records":0,"physical_candidates":100,"unique_instance_cells":100}
+ok: small-leaves finite instance origins
+ok: small-leaves every instance belongs to a physical cell
+ok: small-leaves emitted cells reach allocated capacity
+ok: small-leaves no fallback isosurface exists anywhere
+ok: capture small-leaves-enough-capacity
+ok: small-leaves more physical instances visibly change image
+ok: actual-grain-capacity exact physical bytes unchanged
+{"capacity":131072,"case":"actual-grain-capacity","counter":131272,"field_peak_byte":0,"missing_instance_cells":256,"nonfinite_records":0,"physical_candidates":131328,"unique_instance_cells":131072}
+ok: actual-grain-capacity finite instance origins
+ok: actual-grain-capacity every instance belongs to a physical cell
+ok: actual-grain-capacity emitted cells reach allocated capacity
+ok: actual-grain-capacity no fallback isosurface exists anywhere
+ok: actual-grain-capacity reproduces unrepresented physical cells
+ok: capture actual-grain-capacity-capped
+ok: actual-droplet-capacity exact physical bytes unchanged
+{"capacity":65536,"case":"actual-droplet-capacity","counter":65566,"field_peak_byte":0,"missing_instance_cells":256,"nonfinite_records":0,"physical_candidates":65792,"unique_instance_cells":65536}
+ok: actual-droplet-capacity finite instance origins
+ok: actual-droplet-capacity every instance belongs to a physical cell
+ok: actual-droplet-capacity emitted cells reach allocated capacity
+ok: actual-droplet-capacity no fallback isosurface exists anywhere
+ok: actual-droplet-capacity reproduces unrepresented physical cells
+ok: capture actual-droplet-capacity-capped
+CAPACITY_PROBE_CHECKS 56 FAILURES 0

@@ -183,6 +183,8 @@ var _air_pipelines := {}
 var _air_sets := {}
 var _density_rid := RID()  # the RGBA8 "fields" texture (R liquid, G smoothed opaque, B gas)
 var _density_texture := Texture3DRD.new()
+var _physical_overflow_rid := RID() # one RGBA8 texel: whole-layer fallback flags
+var _physical_overflow_texture := Texture3DRD.new()
 var _density_shader := RID()
 var _density_pipeline := RID()
 var _density_set := RID()
@@ -200,7 +202,7 @@ var _sunvis_set := RID()
 var _layer_multimesh: Array = []   # MultiMesh RIDs per Layer
 var _layer_capacity: Array = []
 var _layer_buffer: Array = []      # RD storage buffers behind each MultiMesh
-var _splat_counter := RID()        # 16 uints: see splat_emit.glsl
+var _splat_counter := RID()        # 32 uints: see splat_emit.glsl
 var _splat_shader := RID()
 var _splat_pipeline := RID()
 var _splat_set := RID()
@@ -273,6 +275,14 @@ func _ready() -> void:
 	_volume_material.set_shader_parameter("extinction", Elements.extinction())
 	_volume_material.set_shader_parameter("liquid_full", float(Elements.LIQUID_FULL))
 	set_param("fields", _density_texture)
+	set_param("physical_overflow", _physical_overflow_texture)
+	var powder_mask := 0
+	var leafy_mask := 0
+	for id in Elements.TABLE.size():
+		if (Elements.TABLE[id].flags & Elements.FLAG_POWDER) != 0: powder_mask |= 1 << id
+		if (Elements.TABLE[id].flags & Elements.FLAG_LEAFY) != 0: leafy_mask |= 1 << id
+	_material.set_shader_parameter("powder_mask", powder_mask)
+	_material.set_shader_parameter("leafy_mask", leafy_mask)
 	set_param("sunvis", _sunvis_texture)
 	MaterialLibrary.apply(_material)
 	# Bound now, but only points at a real texture once the render thread has
@@ -310,6 +320,7 @@ func _exit_tree() -> void:
 	_texture.texture_rd_rid = RID()
 	_occ_texture.texture_rd_rid = RID()
 	_density_texture.texture_rd_rid = RID()
+	_physical_overflow_texture.texture_rd_rid = RID()
 	_sunvis_texture.texture_rd_rid = RID()
 	RenderingServer.call_on_render_thread(_rt_free)
 
@@ -319,6 +330,7 @@ func _process(_delta: float) -> void:
 		_texture.texture_rd_rid = _grid_rid
 		_occ_texture.texture_rd_rid = _occ_rid
 		_density_texture.texture_rd_rid = _density_rid
+		_physical_overflow_texture.texture_rd_rid = _physical_overflow_rid
 		_sunvis_texture.texture_rd_rid = _sunvis_rid
 	set_param("sim_time", tick * seconds_per_tick)
 
@@ -895,6 +907,16 @@ func _rt_init() -> void:
 		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT
 	)
 	_density_rid = _rd.texture_create(den_fmt, RDTextureView.new())
+	var overflow_fmt := RDTextureFormat.new()
+	overflow_fmt.format = den_fmt.format
+	overflow_fmt.texture_type = den_fmt.texture_type
+	overflow_fmt.usage_bits = den_fmt.usage_bits
+	overflow_fmt.width = 1
+	overflow_fmt.height = 1
+	overflow_fmt.depth = 1
+	overflow_fmt.mipmaps = 1
+	_physical_overflow_rid = _rd.texture_create(overflow_fmt, RDTextureView.new())
+	_rd.texture_clear(_physical_overflow_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
 	# The froth channel (A) carries over between updates, so start it clean.
 	_rd.texture_clear(_density_rid, Color(0, 0, 0, 0), 0, FIELDS_MIPS, 0, 1)
 	_fields_views = []
@@ -1065,8 +1087,16 @@ func _rt_build_pipelines(from_source: bool) -> void:
 
 	_density_shader = _rd.shader_create_from_spirv(density_spirv)
 	_density_pipeline = _rd.compute_pipeline_create(_density_shader, _spec([GRID]))
+	# Custom scenes may omit physical layers. Their emission pipeline is disabled;
+	# bind an existing buffer as an unused placeholder (cap.w prevents writes).
+	var field_buffers: Array[RID] = []
+	for i in 3:
+		field_buffers.append(_layer_buffer[i] if _layer_buffer[i].is_valid() else _fx_spawns)
 	_density_set = _rd.uniform_set_create(
-		[_image_uniform(0), _image_uniform(1, _fields_views[0]), _buffer_uniform(2, _elements_buffer)], _density_shader, 0)
+		[_image_uniform(0), _image_uniform(1, _fields_views[0]), _buffer_uniform(2, _elements_buffer),
+		_buffer_uniform(3, _splat_counter), _buffer_uniform(4, field_buffers[0]),
+		_buffer_uniform(5, field_buffers[1]), _buffer_uniform(6, field_buffers[2]),
+		_image_uniform(7, _physical_overflow_rid)], _density_shader, 0)
 	_mip_shader = _rd.shader_create_from_spirv(mip_spirv)
 	_mip_pipeline = _rd.compute_pipeline_create(_mip_shader)
 	_mip_sets = []
@@ -1160,7 +1190,7 @@ func _rt_free() -> void:
 		if v.is_valid():
 			_rd.free_rid(v)
 	_fields_views = []
-	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid, _density_rid, _sunvis_rid, _splat_counter,
+	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid, _density_rid, _physical_overflow_rid, _sunvis_rid, _splat_counter,
 			_fx_pool, _fx_spawns,
 			_air_vel[0], _air_vel[1], _air_pres[0], _air_pres[1], _air_div, _air_occ, _air_src, _air_sampler]:
 		if rid.is_valid():
@@ -1170,6 +1200,7 @@ func _rt_free() -> void:
 	_grid_rid = RID()
 	_occ_rid = RID()
 	_density_rid = RID()
+	_physical_overflow_rid = RID()
 	_rt_ready = false
 
 
@@ -1537,7 +1568,9 @@ func _rt_occupancy_update() -> void:
 		var dg := GRID / 8
 		_rd.compute_list_bind_compute_pipeline(cl, _density_pipeline)
 		_rd.compute_list_bind_uniform_set(cl, _density_set, 0)
-		var field_time := PackedFloat32Array([_rt_presentation_seconds, 0.0, 0.0, 0.0]).to_byte_array()
+		var field_time := PackedInt32Array([_layer_capacity[Layer.GRAINS], _layer_capacity[Layer.LEAVES],
+			_layer_capacity[Layer.DROPLETS], int(sprites_enabled and _splat_pipeline.is_valid())]).to_byte_array()
+		field_time.append_array(PackedFloat32Array([_rt_presentation_seconds, 0.0, 0.0, 0.0]).to_byte_array())
 		_rd.compute_list_set_push_constant(cl, field_time, field_time.size())
 		_rd.compute_list_dispatch(cl, dg, dg, dg)
 		_rd.compute_list_add_barrier(cl)

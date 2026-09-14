@@ -12,36 +12,6 @@ render_mode cull_front, unshaded, blend_premul_alpha, depth_draw_always;
 uniform sampler2D depth_tex : hint_depth_texture, filter_nearest;
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
 uniform float extinction[16];
-// One derived texel. No capacity decisions or atomic winner masks in physical state.
-uniform sampler3D physical_overflow : filter_nearest, repeat_disable;
-
-bool thin_spray(ivec3 cell, uvec4 value) {
-	if ((value.w & 1u) == 0u) { return false; }
-	int wet = 0;
-	for (int axis = 0; axis < 3; axis++) {
-		ivec3 offset = ivec3(0);
-		offset[axis] = 1;
-		ivec3 a = cell + offset;
-		ivec3 b = cell - offset;
-		if (all(greaterThanEqual(a, ivec3(0))) && all(lessThan(a, ivec3(grid_size))) && is_liquid(voxel_at(a).x)) { wet++; }
-		if (all(greaterThanEqual(b, ivec3(0))) && all(lessThan(b, ivec3(grid_size))) && is_liquid(voxel_at(b).x)) { wet++; }
-	}
-	return wet <= 2;
-}
-
-// Coarse overflow proxy: a centered cube with volume min(amount/FULL, 1)
-// voxel^3. Above FULL its optical density scales by amount/FULL. Thus the
-// integrated density over the box equals amount/FULL even for compressed cells.
-// The caller clips this interval to the current DDA cell and visible section.
-vec2 droplet_proxy_interval(Ray r, ivec3 cell, float fill) {
-	float half_side = 0.5 * pow(clamp(fill, 0.0, 1.0), 1.0 / 3.0);
-	vec3 center = vec3(cell) + 0.5;
-	vec3 lo = (center - half_side - r.p0) * r.inv;
-	vec3 hi = (center + half_side - r.p0) * r.inv;
-	vec3 near3 = min(lo, hi);
-	vec3 far3 = max(lo, hi);
-	return vec2(max(near3.x, max(near3.y, near3.z)), min(far3.x, min(far3.y, far3.z)));
-}
 // Screen-space refraction offset (UV units) through the first liquid surface.
 uniform float refraction = 0.045;
 // How strongly froth (fields.A) whitens surfaces and interiors.
@@ -87,7 +57,6 @@ void fragment() {
 	}
 	float debug_t = t_stop / r.t_box;
 
-	bool droplet_fallback = texelFetch(physical_overflow, ivec3(0), 0).b > 0.5;
 	float t = 0.0;
 	vec3 trans = vec3(1.0);
 	vec3 emitted = vec3(0.0);
@@ -110,7 +79,7 @@ void fragment() {
 	float dbg_leaps = 0.0;
 	{
 		uint id0 = voxel_at(r.cell).x;
-		if (is_liquid(id0) && f_prev >= 0.5 && !(droplet_fallback && thin_spray(r.cell, voxel_at(r.cell)))) {
+		if (is_liquid(id0) && f_prev >= 0.5) {
 			in_liquid = true;
 			liquid_id = id0;
 			liquid_col = palette[int(id0)].rgb;
@@ -141,8 +110,7 @@ void fragment() {
 		uvec4 value = voxel_at(r.cell);
 		uint id = value.x;
 		float t_next = min(min(r.t_max.x, min(r.t_max.y, r.t_max.z)), t_stop);
-		bool proxy = droplet_fallback && is_liquid(id) && thin_spray(r.cell, value);
-		bool liquid = is_liquid(id) && !proxy;
+		bool liquid = is_liquid(id);
 		float f = field(r.p0 + r.dir * t_next).r;
 		if (liquid) { dbg_visited = 1.0; }
 
@@ -160,7 +128,7 @@ void fragment() {
 			}
 		}
 
-		if (in_liquid && (proxy || (liquid && id != liquid_id))) {
+		if (in_liquid && liquid && id != liquid_id) {
 			// Crossing between two liquids (oil on water): close the segment in
 			// the old colour and start a new one, with no surface in between.
 			float len = max(t - t_in, 0.0);
@@ -172,12 +140,11 @@ void fragment() {
 			t_in = t;
 			liquid_id = id;
 			liquid_col = palette[int(id)].rgb;
-			if (proxy) { in_liquid = false; }
 		}
 		// Sampling can reach the density exit after the first non-liquid cell,
 		// especially at grazing boundaries. Keep checking any open segment;
 		// otherwise it can absorb/scatter all the way to the volume box exit.
-		if (!proxy && (in_liquid || liquid || prev_liquid)) {
+		if (in_liquid || liquid || prev_liquid) {
 			if (!in_liquid && f >= 0.5) {
 				float ts = bisect(r.p0, r.dir, t_prev, t_next, 0, true);
 				vec3 ps = r.p0 + r.dir * ts;
@@ -227,19 +194,6 @@ void fragment() {
 				trans *= exp(-(absorb + vec3(0.35 * foam)) * len);
 				liquid_len += len;
 				in_liquid = false;
-			}
-		}
-		if (proxy) {
-			float fill = float(value.z) / liquid_full;
-			vec2 interval = droplet_proxy_interval(r, r.cell, fill);
-			float start = max(t, interval.x);
-			float end = min(t_next, interval.y);
-			float len = max(end - start, 0.0) * max(fill, 1.0);
-			if (len > 0.0) {
-				emitted += trans * palette[int(id)].rgb * liquid_shade * (1.0 - exp(-scatter * len));
-				trans *= exp(-absorb * len);
-				liquid_len += len;
-				if (t_first < 0.0) { t_first = start; }
 			}
 		}
 		f_prev = f;

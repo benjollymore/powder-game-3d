@@ -1,0 +1,56 @@
+[
+	{
+		"frame_median_ms": 1.732,
+		"frame_p95_ms": 8.449,
+		"physical_cells": 19683,
+		"preparation_sync_median_ms": 0.722,
+		"preparation_sync_p95_ms": 0.787,
+		"repeat": 0,
+		"variant": "legacy"
+	},
+	{
+		"frame_median_ms": 1.898,
+		"frame_p95_ms": 8.319,
+		"physical_cells": 19683,
+		"preparation_sync_median_ms": 0.882,
+		"preparation_sync_p95_ms": 1.509,
+		"repeat": 0,
+		"variant": "candidate"
+	},
+	{
+		"frame_median_ms": 1.922,
+		"frame_p95_ms": 8.503,
+		"physical_cells": 19683,
+		"preparation_sync_median_ms": 0.89,
+		"preparation_sync_p95_ms": 0.941,
+		"repeat": 1,
+		"variant": "candidate"
+	},
+	{
+		"frame_median_ms": 2.048,
+		"frame_p95_ms": 5.645,
+		"physical_cells": 19683,
+		"preparation_sync_median_ms": 0.683,
+		"preparation_sync_p95_ms": 1.611,
+		"repeat": 1,
+		"variant": "legacy"
+	},
+	{
+		"frame_median_ms": 1.904,
+		"frame_p95_ms": 8.519,
+		"physical_cells": 19683,
+		"preparation_sync_median_ms": 0.691,
+		"preparation_sync_p95_ms": 0.825,
+		"repeat": 2,
+		"variant": "legacy"
+	},
+	{
+		"frame_median_ms": 1.929,
+		"frame_p95_ms": 8.317,
+		"physical_cells": 19683,
+		"preparation_sync_median_ms": 0.832,
+		"preparation_sync_p95_ms": 0.919,
+		"repeat": 2,
+		"variant": "candidate"
+	}
+]

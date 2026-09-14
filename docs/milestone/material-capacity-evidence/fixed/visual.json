@@ -1,0 +1,83 @@
+[
+	{
+		"allocation_counter": 20,
+		"capacity": 16,
+		"case": "small-grains",
+		"eligible": 100,
+		"fallback": true,
+		"physical_candidates": 100,
+		"voxel_sha256": "ef2e838b62b75f043abe04706848c1e68afd77c589afdf80da9601005b5a4c69"
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 100,
+		"case": "small-grains",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100,
+		"voxel_sha256": "ef2e838b62b75f043abe04706848c1e68afd77c589afdf80da9601005b5a4c69"
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 101,
+		"case": "small-grains",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100,
+		"voxel_sha256": "ef2e838b62b75f043abe04706848c1e68afd77c589afdf80da9601005b5a4c69"
+	},
+	{
+		"allocation_counter": 26,
+		"capacity": 16,
+		"case": "small-droplets",
+		"eligible": 100,
+		"fallback": true,
+		"physical_candidates": 100,
+		"voxel_sha256": "253ff4394dbb1dad06af7d6f7a07ce2d425dabb45375e506cb59f8823f8127bb"
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 100,
+		"case": "small-droplets",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100,
+		"voxel_sha256": "253ff4394dbb1dad06af7d6f7a07ce2d425dabb45375e506cb59f8823f8127bb"
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 101,
+		"case": "small-droplets",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100,
+		"voxel_sha256": "253ff4394dbb1dad06af7d6f7a07ce2d425dabb45375e506cb59f8823f8127bb"
+	},
+	{
+		"allocation_counter": 28,
+		"capacity": 16,
+		"case": "small-leaves",
+		"eligible": 100,
+		"fallback": true,
+		"physical_candidates": 100,
+		"voxel_sha256": "51d625d578da398cda83d1fe1fdac5c9e40b87ece529a9b8b47cbcde72cbce61"
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 100,
+		"case": "small-leaves",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100,
+		"voxel_sha256": "51d625d578da398cda83d1fe1fdac5c9e40b87ece529a9b8b47cbcde72cbce61"
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 101,
+		"case": "small-leaves",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100,
+		"voxel_sha256": "51d625d578da398cda83d1fe1fdac5c9e40b87ece529a9b8b47cbcde72cbce61"
+	}
+]

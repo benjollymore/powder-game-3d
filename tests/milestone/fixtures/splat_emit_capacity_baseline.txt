@@ -35,7 +35,6 @@ layout(std430, set = 0, binding = 2) restrict readonly buffer Elems { Elem elems
 // then activity for the soundscape, reduced once per workgroup:
 // 8-11 falling/landing liquid cells: count, sum x, sum y, sum z (cells);
 // 12-15 fire cells the same; 16-19 steam cells the same; 20 all liquid cells.
-// 21-23 exact eligible grains/leaves/droplets, independent of capped allocation.
 layout(std430, set = 0, binding = 3) buffer Counters { uint count[32]; } counters;
 layout(std430, set = 0, binding = 4) restrict writeonly buffer Grains { float data[]; } grains;
 layout(std430, set = 0, binding = 5) restrict writeonly buffer Leaves { float data[]; } leaves;
@@ -65,8 +64,6 @@ const float FULL = 200.0;
 const float KIND_EMBER = 1.0;
 const float KIND_DUST = 2.0;
 const float KIND_SPLASH = 3.0;
-
-shared uint s_physical[3];
 
 const uint GRAINS = 0u, LEAVES = 1u, DROPLETS = 2u, SPAWNS = 3u;
 
@@ -144,7 +141,6 @@ void powder(ivec3 p, uvec4 v, uint h) {
 	bool airborne = open(id_at(p - ivec3(0, 1, 0)));
 	vec3 jitter = (vec3(unit(h, 0), unit(h, 1), unit(h, 2)) - 0.5) * 0.7;
 	if (airborne) {
-		atomicAdd(s_physical[GRAINS], 1u);
 		// Per-grain jitter from the seed byte hides the voxel lattice in a falling stream.
 		float size = 0.8 + 0.5 * unit(h, 3);
 		emit_sprite(GRAINS, vec3(p) + 0.5 + jitter, size, vec4(float(v.x), float(v.y) / 255.0, float(age), 0.0));
@@ -210,7 +206,6 @@ void plant(ivec3 p, uvec4 v, uint h) {
 	if (above >= T && below >= T) {
 		return; // bark
 	}
-	atomicAdd(s_physical[LEAVES], 1u);
 	if (counters.count[LEAVES] >= pc.cap[LEAVES]) {
 		return;
 	}
@@ -250,7 +245,6 @@ void liquid(ivec3 p, uvec4 v, uint h) {
 			if (id != 0u && (elems[id].flags & FLAG_LIQUID) != 0u) { wet++; }
 		}
 		if (wet <= 2) {
-			atomicAdd(s_physical[DROPLETS], 1u);
 			// Thin spray: drawn as droplets, left out of the liquid surface (fields.glsl agrees).
 			float fill = clamp(float(v.z) / FULL, 0.05, 1.0);
 			vec3 jitter = (vec3(unit(h, 0), unit(h, 1), unit(h, 2)) - 0.5) * 0.6;
@@ -303,9 +297,6 @@ void main() {
 	if (occ.r < 0.5 && occ.g < 0.5) {
 		return; // uniform per workgroup, so the barriers below stay balanced
 	}
-	if (gl_LocalInvocationIndex < 3u) {
-		s_physical[gl_LocalInvocationIndex] = 0u;
-	}
 	if (gl_LocalInvocationIndex < 13u) {
 		s_act[gl_LocalInvocationIndex] = 0u;
 	}
@@ -336,9 +327,6 @@ void main() {
 		}
 	}
 	barrier();
-	if (gl_LocalInvocationIndex < 3u && s_physical[gl_LocalInvocationIndex] != 0u) {
-		atomicAdd(counters.count[21u + gl_LocalInvocationIndex], s_physical[gl_LocalInvocationIndex]);
-	}
 	if (gl_LocalInvocationIndex < 13u && s_act[gl_LocalInvocationIndex] != 0u) {
 		atomicAdd(counters.count[ACT_WATER + gl_LocalInvocationIndex], s_act[gl_LocalInvocationIndex]);
 	}

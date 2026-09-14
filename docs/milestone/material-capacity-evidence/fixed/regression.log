@@ -1,0 +1,117 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: small-grains exact physical bytes unchanged
+ok: small-grains exact eligibility independent of cap
+ok: small-grains whole-layer overflow flag
+ok: small-grains every partial sprite record suppressed
+ok: small-grains every physical cell has an opaque field center
+{"allocation_counter":28,"capacity":16,"case":"small-grains","eligible":100,"fallback":true,"physical_candidates":100}
+ok: capture small-grains-capped
+ok: small-grains deterministic repeated fallback
+ok: small-grains preparation preserves physical voxels and all seven air textures
+ok: small-grains recovers to exact sprite path below cap
+ok: small-grains reset clears stale fallback and sprites
+ok: small-grains exact physical bytes unchanged
+ok: small-grains exact eligibility independent of cap
+ok: small-grains whole-layer overflow flag
+ok: small-grains every under-capacity physical instance represented
+ok: small-grains exact legacy density and foam bytes
+ok: small-grains exact legacy records, ignoring atomic ordering
+ok: small-grains legacy comparison preserves voxels and all seven air textures
+{"allocation_counter":100,"capacity":100,"case":"small-grains","eligible":100,"fallback":false,"physical_candidates":100}
+ok: capture small-grains-enough-capacity
+ok: small-grains fallback visibly differs from physical sprites
+ok: small-grains exact physical bytes unchanged
+ok: small-grains exact eligibility independent of cap
+ok: small-grains whole-layer overflow flag
+ok: small-grains every under-capacity physical instance represented
+ok: small-grains exact legacy density and foam bytes
+ok: small-grains exact legacy records, ignoring atomic ordering
+ok: small-grains legacy comparison preserves voxels and all seven air textures
+{"allocation_counter":100,"capacity":101,"case":"small-grains","eligible":100,"fallback":false,"physical_candidates":100}
+ok: capture small-grains-enough-capacity
+ok: small-grains fallback visibly differs from physical sprites
+ok: small-droplets exact physical bytes unchanged
+ok: small-droplets exact eligibility independent of cap
+ok: small-droplets whole-layer overflow flag
+ok: small-droplets every partial sprite record suppressed
+{"allocation_counter":22,"capacity":16,"case":"small-droplets","eligible":100,"fallback":true,"physical_candidates":100}
+ok: capture small-droplets-capped
+ok: small-droplets deterministic repeated fallback
+ok: small-droplets preparation preserves physical voxels and all seven air textures
+ok: small-droplets recovers to exact sprite path below cap
+ok: small-droplets reset clears stale fallback and sprites
+ok: small-droplets exact physical bytes unchanged
+ok: small-droplets exact eligibility independent of cap
+ok: small-droplets whole-layer overflow flag
+ok: small-droplets every under-capacity physical instance represented
+ok: small-droplets exact legacy density and foam bytes
+ok: small-droplets exact legacy records, ignoring atomic ordering
+ok: small-droplets legacy comparison preserves voxels and all seven air textures
+{"allocation_counter":100,"capacity":100,"case":"small-droplets","eligible":100,"fallback":false,"physical_candidates":100}
+ok: capture small-droplets-enough-capacity
+ok: small-droplets fallback visibly differs from physical sprites
+ok: small-droplets exact physical bytes unchanged
+ok: small-droplets exact eligibility independent of cap
+ok: small-droplets whole-layer overflow flag
+ok: small-droplets every under-capacity physical instance represented
+ok: small-droplets exact legacy density and foam bytes
+ok: small-droplets exact legacy records, ignoring atomic ordering
+ok: small-droplets legacy comparison preserves voxels and all seven air textures
+{"allocation_counter":100,"capacity":101,"case":"small-droplets","eligible":100,"fallback":false,"physical_candidates":100}
+ok: capture small-droplets-enough-capacity
+ok: small-droplets fallback visibly differs from physical sprites
+ok: small-leaves exact physical bytes unchanged
+ok: small-leaves exact eligibility independent of cap
+ok: small-leaves whole-layer overflow flag
+ok: small-leaves every partial sprite record suppressed
+ok: small-leaves every physical cell has an opaque field center
+{"allocation_counter":30,"capacity":16,"case":"small-leaves","eligible":100,"fallback":true,"physical_candidates":100}
+ok: capture small-leaves-capped
+ok: small-leaves deterministic repeated fallback
+ok: small-leaves preparation preserves physical voxels and all seven air textures
+ok: small-leaves recovers to exact sprite path below cap
+ok: small-leaves reset clears stale fallback and sprites
+ok: small-leaves exact physical bytes unchanged
+ok: small-leaves exact eligibility independent of cap
+ok: small-leaves whole-layer overflow flag
+ok: small-leaves every under-capacity physical instance represented
+ok: small-leaves exact legacy density and foam bytes
+ok: small-leaves exact legacy records, ignoring atomic ordering
+ok: small-leaves legacy comparison preserves voxels and all seven air textures
+{"allocation_counter":100,"capacity":100,"case":"small-leaves","eligible":100,"fallback":false,"physical_candidates":100}
+ok: capture small-leaves-enough-capacity
+ok: small-leaves fallback visibly differs from physical sprites
+ok: small-leaves exact physical bytes unchanged
+ok: small-leaves exact eligibility independent of cap
+ok: small-leaves whole-layer overflow flag
+ok: small-leaves every under-capacity physical instance represented
+ok: small-leaves exact legacy density and foam bytes
+ok: small-leaves exact legacy records, ignoring atomic ordering
+ok: small-leaves legacy comparison preserves voxels and all seven air textures
+{"allocation_counter":100,"capacity":101,"case":"small-leaves","eligible":100,"fallback":false,"physical_candidates":100}
+ok: capture small-leaves-enough-capacity
+ok: small-leaves fallback visibly differs from physical sprites
+ok: actual-grain-capacity exact physical bytes unchanged
+ok: actual-grain-capacity exact eligibility independent of cap
+ok: actual-grain-capacity whole-layer overflow flag
+ok: actual-grain-capacity every partial sprite record suppressed
+ok: actual-grain-capacity every physical cell has an opaque field center
+{"allocation_counter":131177,"capacity":131072,"case":"actual-grain-capacity","eligible":131328,"fallback":true,"physical_candidates":131328}
+ok: capture actual-grain-capacity-capped
+ok: actual-grain-capacity deterministic repeated fallback
+ok: actual-grain-capacity preparation preserves physical voxels and all seven air textures
+ok: actual-grain-capacity recovers to exact sprite path below cap
+ok: actual-grain-capacity reset clears stale fallback and sprites
+ok: actual-droplet-capacity exact physical bytes unchanged
+ok: actual-droplet-capacity exact eligibility independent of cap
+ok: actual-droplet-capacity whole-layer overflow flag
+ok: actual-droplet-capacity every partial sprite record suppressed
+{"allocation_counter":65660,"capacity":65536,"case":"actual-droplet-capacity","eligible":65792,"fallback":true,"physical_candidates":65792}
+ok: capture actual-droplet-capacity-capped
+ok: actual-droplet-capacity deterministic repeated fallback
+ok: actual-droplet-capacity preparation preserves physical voxels and all seven air textures
+ok: actual-droplet-capacity recovers to exact sprite path below cap
+ok: actual-droplet-capacity reset clears stale fallback and sprites
+CAPACITY_FALLBACK_CHECKS 102 FAILURES 0
