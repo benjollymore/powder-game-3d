@@ -1,0 +1,21 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+CONFIG (1600, 900) viewport=[P: (0.0, 0.0), S: (1600.0, 900.0)] vsync=0
+{"case":"demo_default_running","fps":56.9114893547059,"grid":256,"mean_ms":17.5711444444444,"p50_ms":16.373,"p95_ms":25.909,"p99_ms":26.736,"scale":0.75,"size":"(1600, 900)","tps":119.514127644882}
+{"case":"demo_default_paused","fps":333.656485818673,"grid":256,"mean_ms":2.99709444444444,"p50_ms":2.818,"p95_ms":3.315,"p99_ms":9.816,"scale":0.75,"size":"(1600, 900)","tps":0.0}
+{"case":"demo_close_paused","fps":211.734813908625,"grid":256,"mean_ms":4.72288888888889,"p50_ms":4.458,"p95_ms":5.587,"p99_ms":17.067,"scale":0.75,"size":"(1600, 900)","tps":0.0}
+{"case":"demo_close_running","fps":59.3791317979209,"grid":256,"mean_ms":16.8409333333333,"p50_ms":16.337,"p95_ms":22.055,"p99_ms":22.472,"scale":0.75,"size":"(1600, 900)","tps":120.077799858018}
+{"case":"demo_close_painting","fps":40.5346155483129,"grid":256,"mean_ms":24.6702722222222,"p50_ms":24.439,"p95_ms":28.759,"p99_ms":29.337,"scale":0.75,"size":"(1600, 900)","tps":115.073269695488}
+{"case":"demo_close_paused_painting","fps":105.732088984126,"grid":256,"mean_ms":9.45786666666667,"p50_ms":9.324,"p95_ms":10.186,"p99_ms":14.922,"scale":0.75,"size":"(1600, 900)","tps":0.0}
+INPUT key1 element=1 paused=true scale=0.5
+INPUT zero_then_space paused=false scale=0.0 frozen=true
+INPUT canvas_press painting=true
+INPUT toolbar_release painting=false
+INPUT return_canvas painting=false
+{"case":"dam_break_close_running","fps":46.7197784028999,"grid":256,"mean_ms":21.4042111111111,"p50_ms":21.147,"p95_ms":28.647,"p99_ms":29.926,"scale":0.75,"size":"(1600, 900)","tps":117.05900033171}
+{"case":"forest_fire_close_running","fps":54.2337093235881,"grid":256,"mean_ms":18.4387166666667,"p50_ms":17.109,"p95_ms":26.428,"p99_ms":32.851,"scale":0.75,"size":"(1600, 900)","tps":117.807668586239}
+{"case":"u-bend_close_running","fps":53.3212313886685,"grid":256,"mean_ms":18.7542555555556,"p50_ms":15.759,"p95_ms":39.093,"p99_ms":40.632,"scale":0.75,"size":"(1600, 900)","tps":108.71606622023}
+{"case":"oil_spill_close_running","fps":56.4838431104774,"grid":256,"mean_ms":17.7041777777778,"p50_ms":17.262,"p95_ms":21.37,"p99_ms":22.321,"scale":0.75,"size":"(1600, 900)","tps":120.18506617396}
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Powder 3D · discovery review</title>
+<style>
+:root{color-scheme:dark;font:16px/1.6 system-ui,sans-serif;background:#111b24;color:#e1e9ed}body{max-width:1120px;margin:auto;padding:32px 24px 72px}h1{font-size:clamp(28px,4vw,46px);line-height:1.15;max-width:850px}h2{margin-top:42px}p{max-width:850px}a{color:#91d9df}small,.muted{color:#a5bac5}.tag{color:#83d9c7;letter-spacing:.12em;font-size:12px;text-transform:uppercase}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin:28px 0}.card{background:#1d2b36;padding:20px;border-radius:10px}.card strong{display:block;font-size:23px}.compare{position:relative;aspect-ratio:16/9;background:#253743;overflow:hidden;border-radius:10px}.compare img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.compare .after{clip-path:inset(0 0 0 var(--split,50%))}.divider{position:absolute;top:0;bottom:0;left:var(--split,50%);width:2px;background:#fff;pointer-events:none}.labels{display:flex;justify-content:space-between;margin-bottom:8px}input[type=range]{display:block;width:100%;margin:14px 0;accent-color:#83d9c7}select{font:inherit;background:#1d2b36;color:inherit;padding:8px;border-radius:6px;margin:10px 0 18px}figure{margin:24px 0}figure img{width:100%;border-radius:10px}figcaption{font-size:14px;color:#a5bac5}code{background:#1d2b36;padding:3px 6px;border-radius:4px}table{border-collapse:collapse;width:100%;font-size:14px}td,th{text-align:left;padding:10px;border-bottom:1px solid #314552}footer{margin-top:40px;color:#a5bac5}
+</style>
+<main>
+<div class="tag">14 September 2026 · Three-agent discovery</div>
+<h1>A better painting foundation.<br>A physics model still to resolve.</h1>
+<p>Keep the useful GPU infrastructure. Establish explicit editing, state and time boundaries before choosing the permanent simulation backend. WorldPainter supplies the paint-first interaction direction; precise authoring remains available underneath.</p>
+<p><a href="summary.md">Read the recommendation</a> · <a href="../current-implementation-audit.md">Original audit</a></p>
+<div class="cards">
+ <div class="card"><strong>16–18%</strong>Lower painting frame time in the controlled coalescing experiment. Averaged means: 25.81 → 21.46 ms.</div>
+ <div class="card"><strong>Tick grouping matters</strong>The same 60 ticks produce different physical state with air enabled. This defect remains to be fixed.</div>
+ <div class="card"><strong>Paint, run, restore</strong>A real GPU editor prototype demonstrates exact placement, protected walls, construction undo and live edits.</div>
+</div>
+<h2>Appearance comparison</h2>
+<p>The cleaner treatment tests readability. It is not final art direction and did not demonstrate a speedup. Geometry, camera and voxel state are matched; the water and spray are frozen authored state.</p>
+<label for="scene">Scene</label><br>
+<select id="scene"><option value="material-lab">Material lab</option><option value="dam-break">Dam break</option></select>
+<div class="labels"><span>Existing materials</span><span>Clean diagnostic</span></div>
+<div class="compare" id="comparison">
+ <img id="before" src="rendering-evidence/material-lab-baseline.png" alt="Existing material lab renderer with noisy textures and blue water">
+ <img id="after" class="after" src="rendering-evidence/material-lab-clean.png" alt="Same frozen material lab with restrained slate surfaces and clearer teal water">
+ <div class="divider"></div>
+</div>
+<label for="split">Move the comparison boundary</label>
+<input id="split" type="range" min="0" max="100" value="50">
+<p class="muted">Dark speckles, grid-scale surface ripples and foliage noise remain. A shader cannot supply missing fluid momentum. <a href="rendering.md">Method, timing and limitations</a></p>
+<h2>Editing behavior, still rough presentation</h2>
+<figure><img src="interaction-angle.png" alt="Paint-first discovery editor with material buttons, workplane grid, two-corner region and a section through the tank"><figcaption>Automated acceptance capture. The displayed FPS includes test readbacks and CPU assertions; it is not an editor performance measurement. Panels and material appearance remain unfinished.</figcaption></figure>
+<p>Use material + brush + Run as the main loop. Precise planes and regions are useful optional tools. Surface-following paint, timed stationary emission, persistent saves, redo and production delta undo remain outstanding.</p>
+<p>The runnable prototype and controls are in <a href="interaction.md">the interaction report</a>. It uses the production GPU backend; the separate appearance and coalescing experiments are not automatically applied to it.</p>
+<h2>What passed together</h2>
+<table><thead><tr><th>Combined branch validation</th><th>Result</th></tr></thead><tbody>
+<tr><td>Existing CPU / interaction geometry and time</td><td>37 + 20 checks passed</td></tr>
+<tr><td>Existing GPU128 / interaction acceptance</td><td>74 + 19 checks passed</td></tr>
+<tr><td>Shorter 256³ deterministic coalescing replay</td><td>All 10 voxel/air equivalence pairs passed</td></tr>
+<tr><td>Frozen renderer integration rerun</td><td>8 phases, 2 unchanged-state hashes</td></tr>
+</tbody></table>
+<p><a href="integration-evidence/README.md">Independent verification and caveats</a> · <a href="simulation.md">Physical model and scaling analysis</a></p>
+<footer>Local review artifact · <code>discovery/review</code> · No full overhaul or final visual direction is claimed.</footer>
+</main>
+<script>
+const split=document.getElementById('split'), comparison=document.getElementById('comparison');
+split.addEventListener('input',()=>comparison.style.setProperty('--split',split.value+'%'));
+document.getElementById('scene').addEventListener('change',event=>{
+ const scene=event.target.value;
+ document.getElementById('before').src='rendering-evidence/'+scene+'-baseline.png';
+ document.getElementById('after').src='rendering-evidence/'+scene+'-clean.png';
+ document.getElementById('before').alt='Existing renderer, frozen '+scene+' scene';
+ document.getElementById('after').alt='Clean diagnostic renderer, same frozen '+scene+' scene';
+});
+</script>
+</html>

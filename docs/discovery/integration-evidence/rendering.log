@@ -1,0 +1,15 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+{"frames":240,"grid":256,"mean_ms":5.6349875,"p95_ms":16.548,"repeat":0,"scale":0.75,"scene":"material-lab","sha256":"824275b86eeb0eb06c7d0bdc987e927dbb49c8fc71305ef84898b05c3b7afcc3","tick":0,"variant":"baseline","viewport":"(1600, 900)"}
+{"frames":240,"grid":256,"mean_ms":5.59264166666667,"p95_ms":17.116,"repeat":0,"scale":0.75,"scene":"material-lab","sha256":"824275b86eeb0eb06c7d0bdc987e927dbb49c8fc71305ef84898b05c3b7afcc3","tick":0,"variant":"clean","viewport":"(1600, 900)"}
+{"frames":240,"grid":256,"mean_ms":6.100875,"p95_ms":16.955,"repeat":1,"scale":0.75,"scene":"material-lab","sha256":"824275b86eeb0eb06c7d0bdc987e927dbb49c8fc71305ef84898b05c3b7afcc3","tick":0,"variant":"baseline","viewport":"(1600, 900)"}
+{"frames":240,"grid":256,"mean_ms":3.16062083333333,"p95_ms":3.543,"repeat":1,"scale":0.75,"scene":"material-lab","sha256":"824275b86eeb0eb06c7d0bdc987e927dbb49c8fc71305ef84898b05c3b7afcc3","tick":0,"variant":"clean","viewport":"(1600, 900)"}
+STATE_UNCHANGED material-lab 824275b86eeb0eb06c7d0bdc987e927dbb49c8fc71305ef84898b05c3b7afcc3
+{"frames":240,"grid":256,"mean_ms":4.40493333333334,"p95_ms":6.791,"repeat":0,"scale":0.75,"scene":"dam-break","sha256":"37152f8f482b825c18a9eb909e94f8204cdeea886ac5e77924203660f2d17268","tick":0,"variant":"baseline","viewport":"(1600, 900)"}
+{"frames":240,"grid":256,"mean_ms":3.89775416666667,"p95_ms":4.286,"repeat":0,"scale":0.75,"scene":"dam-break","sha256":"37152f8f482b825c18a9eb909e94f8204cdeea886ac5e77924203660f2d17268","tick":0,"variant":"clean","viewport":"(1600, 900)"}
+{"frames":240,"grid":256,"mean_ms":8.3855,"p95_ms":16.857,"repeat":1,"scale":0.75,"scene":"dam-break","sha256":"37152f8f482b825c18a9eb909e94f8204cdeea886ac5e77924203660f2d17268","tick":0,"variant":"baseline","viewport":"(1600, 900)"}
+{"frames":240,"grid":256,"mean_ms":11.1792166666667,"p95_ms":17.018,"repeat":1,"scale":0.75,"scene":"dam-break","sha256":"37152f8f482b825c18a9eb909e94f8204cdeea886ac5e77924203660f2d17268","tick":0,"variant":"clean","viewport":"(1600, 900)"}
+STATE_UNCHANGED dam-break 37152f8f482b825c18a9eb909e94f8204cdeea886ac5e77924203660f2d17268
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)

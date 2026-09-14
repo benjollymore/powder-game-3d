@@ -1,0 +1,37 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+CONFIG grid=256 warmup=30 measured=30 ticks/frame=2 seed=12345 resolution=(1600, 900)
+CASE workload=empty variant=baseline repeat=0 mean_ms=19.043 p95_ms=21.210 rebuilds=60 voxel_sha256=3b6a07d0d404fab4e23b6d34bc6696a6a312dd92821332385e5af7c01c421351 air_sha256=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+CASE workload=empty variant=coalesced repeat=0 mean_ms=16.124 p95_ms=20.050 rebuilds=60 voxel_sha256=3b6a07d0d404fab4e23b6d34bc6696a6a312dd92821332385e5af7c01c421351 air_sha256=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+EQUIVALENCE workload=empty repeat=0 voxels=true air=true
+CASE workload=settled variant=baseline repeat=0 mean_ms=17.265 p95_ms=18.183 rebuilds=60 voxel_sha256=df86c7baf897cd923d5650a756e6e5843673e60478d8799d78397ad8931b9793 air_sha256=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+CASE workload=settled variant=coalesced repeat=0 mean_ms=16.036 p95_ms=18.577 rebuilds=60 voxel_sha256=df86c7baf897cd923d5650a756e6e5843673e60478d8799d78397ad8931b9793 air_sha256=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+EQUIVALENCE workload=settled repeat=0 voxels=true air=true
+CASE workload=active variant=baseline repeat=0 mean_ms=18.974 p95_ms=20.092 rebuilds=60 voxel_sha256=49a62465c58e5dcbd0357a6dd4dc0d162c33e35ba9dc3d8ec4895dbb8518fbf4 air_sha256=a3ade4ac33fb2632eba0af35b8b08e00b5ff5ea53a42deb655fe257ed40e8eaa
+CASE workload=active variant=coalesced repeat=0 mean_ms=22.949 p95_ms=27.054 rebuilds=60 voxel_sha256=49a62465c58e5dcbd0357a6dd4dc0d162c33e35ba9dc3d8ec4895dbb8518fbf4 air_sha256=a3ade4ac33fb2632eba0af35b8b08e00b5ff5ea53a42deb655fe257ed40e8eaa
+EQUIVALENCE workload=active repeat=0 voxels=true air=true
+CASE workload=painting variant=baseline repeat=0 mean_ms=26.723 p95_ms=33.123 rebuilds=120 voxel_sha256=e9f27bbef20d4fed71f5ce99b01654dc6d9bacc05cfc37bedd378e51513e8c9c air_sha256=d56431ec9deb9c0c529f1aa25c1bcd703c220c7b1b9690f51660220fe3ccc2a1
+CASE workload=painting variant=coalesced repeat=0 mean_ms=22.037 p95_ms=25.472 rebuilds=60 voxel_sha256=e9f27bbef20d4fed71f5ce99b01654dc6d9bacc05cfc37bedd378e51513e8c9c air_sha256=d56431ec9deb9c0c529f1aa25c1bcd703c220c7b1b9690f51660220fe3ccc2a1
+EQUIVALENCE workload=painting repeat=0 voxels=true air=true
+CASE workload=paused_painting variant=baseline repeat=0 mean_ms=10.016 p95_ms=17.271 rebuilds=60 voxel_sha256=f0d036f64caf7e08f4d0137df6773aa443bc75e8b09873990a54c7ff8f2b3f80 air_sha256=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+CASE workload=paused_painting variant=coalesced repeat=0 mean_ms=7.858 p95_ms=9.630 rebuilds=60 voxel_sha256=f0d036f64caf7e08f4d0137df6773aa443bc75e8b09873990a54c7ff8f2b3f80 air_sha256=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+EQUIVALENCE workload=paused_painting repeat=0 voxels=true air=true
+CASE workload=empty variant=coalesced repeat=1 mean_ms=14.219 p95_ms=14.477 rebuilds=60 voxel_sha256=3b6a07d0d404fab4e23b6d34bc6696a6a312dd92821332385e5af7c01c421351 air_sha256=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+CASE workload=empty variant=baseline repeat=1 mean_ms=18.806 p95_ms=21.363 rebuilds=60 voxel_sha256=3b6a07d0d404fab4e23b6d34bc6696a6a312dd92821332385e5af7c01c421351 air_sha256=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+EQUIVALENCE workload=empty repeat=1 voxels=true air=true
+CASE workload=settled variant=coalesced repeat=1 mean_ms=18.427 p95_ms=21.553 rebuilds=60 voxel_sha256=df86c7baf897cd923d5650a756e6e5843673e60478d8799d78397ad8931b9793 air_sha256=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+CASE workload=settled variant=baseline repeat=1 mean_ms=14.375 p95_ms=15.140 rebuilds=60 voxel_sha256=df86c7baf897cd923d5650a756e6e5843673e60478d8799d78397ad8931b9793 air_sha256=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+EQUIVALENCE workload=settled repeat=1 voxels=true air=true
+CASE workload=active variant=coalesced repeat=1 mean_ms=20.425 p95_ms=22.679 rebuilds=60 voxel_sha256=49a62465c58e5dcbd0357a6dd4dc0d162c33e35ba9dc3d8ec4895dbb8518fbf4 air_sha256=a3ade4ac33fb2632eba0af35b8b08e00b5ff5ea53a42deb655fe257ed40e8eaa
+CASE workload=active variant=baseline repeat=1 mean_ms=17.495 p95_ms=20.372 rebuilds=60 voxel_sha256=49a62465c58e5dcbd0357a6dd4dc0d162c33e35ba9dc3d8ec4895dbb8518fbf4 air_sha256=a3ade4ac33fb2632eba0af35b8b08e00b5ff5ea53a42deb655fe257ed40e8eaa
+EQUIVALENCE workload=active repeat=1 voxels=true air=true
+CASE workload=painting variant=coalesced repeat=1 mean_ms=18.118 p95_ms=19.776 rebuilds=60 voxel_sha256=e9f27bbef20d4fed71f5ce99b01654dc6d9bacc05cfc37bedd378e51513e8c9c air_sha256=d56431ec9deb9c0c529f1aa25c1bcd703c220c7b1b9690f51660220fe3ccc2a1
+CASE workload=painting variant=baseline repeat=1 mean_ms=23.110 p95_ms=24.554 rebuilds=120 voxel_sha256=e9f27bbef20d4fed71f5ce99b01654dc6d9bacc05cfc37bedd378e51513e8c9c air_sha256=d56431ec9deb9c0c529f1aa25c1bcd703c220c7b1b9690f51660220fe3ccc2a1
+EQUIVALENCE workload=painting repeat=1 voxels=true air=true
+CASE workload=paused_painting variant=coalesced repeat=1 mean_ms=7.289 p95_ms=11.549 rebuilds=60 voxel_sha256=f0d036f64caf7e08f4d0137df6773aa443bc75e8b09873990a54c7ff8f2b3f80 air_sha256=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+CASE workload=paused_painting variant=baseline repeat=1 mean_ms=10.704 p95_ms=17.192 rebuilds=60 voxel_sha256=f0d036f64caf7e08f4d0137df6773aa443bc75e8b09873990a54c7ff8f2b3f80 air_sha256=5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee
+EQUIVALENCE workload=paused_painting repeat=1 voxels=true air=true
+BATCH_INVARIANCE scenario=Forest_fire ticks=60 air_enabled=false voxels_equal=true air_equal=true one={ "voxels": "8bf4b0c01fbbabba2da071470a53c5a2268e9c828ab05a705dd6af7ef7b33997", "air": "5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee" } three={ "voxels": "8bf4b0c01fbbabba2da071470a53c5a2268e9c828ab05a705dd6af7ef7b33997", "air": "5647f05ec18958947d32874eeb788fa396a05d0bab7c1b71f112ceb7e9b31eee" }
+BATCH_INVARIANCE scenario=Forest_fire ticks=60 air_enabled=true voxels_equal=false air_equal=false one={ "voxels": "4e60dd991d9f0fc09be2370ffe4eec82192b9bfa006bfd7f8f6f402651ff1be1", "air": "68dc71a98a4ee8ef40f560776f3f7e2c2756abe2de773bd522e5d013d22e110f" } three={ "voxels": "e53134b970c1bb03a924bc7a3325da476a9900b6d701afbd634c26d8608a756e", "air": "d3b906997a32bf2f784a4bba8c94e8cb0b3c78f489625b881ac9ee9c2ab03b0f" }
+DISCOVERY failures=0

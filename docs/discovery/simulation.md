@@ -1,6 +1,6 @@
 # Simulation architecture discovery
 
-This branch is a bounded experiment, not a production overhaul. The production simulation, shaders, scenes, and controls are unchanged. An additive subclass and harness test whether edit and tick work can share their derived rendering rebuild. The long-term target includes construction, rich interactions, convincing fluids, destruction/machinery, and visual realism, with fundamentals first.
+This simulation experiment is bounded, not a production overhaul. Its original `discovery/simulation` commit leaves production simulation, shaders, scenes, and controls unchanged; the combined review branch also contains the separate interaction and rendering prototypes. An additive subclass and harness test whether edit and tick work can share their derived rendering rebuild. The long-term target includes construction, rich interactions, convincing fluids, destruction/machinery, and visual realism, with fundamentals first.
 
 ## Decision
 
