@@ -7,7 +7,7 @@
 shader_type spatial;
 render_mode cull_front, unshaded, blend_premul_alpha, depth_draw_always;
 
-#include "res://shaders/spatial/voxel_dda.gdshaderinc"
+#include "res://tests/milestone/fixtures/voxel_dda_baseline.gdshaderinc"
 
 uniform sampler2D depth_tex : hint_depth_texture, filter_nearest;
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
@@ -83,13 +83,6 @@ void fragment() {
 			in_liquid = true;
 			liquid_id = id0;
 			liquid_col = palette[int(id0)].rgb;
-			// A positive-side section can begin inside a liquid segment. There
-			// is no density crossing to initialize its visible depth later, so
-			// use the cut entry plane rather than falling back to the box exit.
-			// Do not invent a reflective air/water interface on the cut face.
-			if (section_enabled && r.t_enter >= 0.0 && r.axis == section_axis && r.step_dir[section_axis] < 0) {
-				t_first = 0.0;
-			}
 		}
 	}
 

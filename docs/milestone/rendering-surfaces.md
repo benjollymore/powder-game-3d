@@ -56,7 +56,7 @@ The visible process ran on Apple M5 Pro / Metal 4.0 / Godot 4.6.3. Keep its wind
 
 An additional camera-inside fixture preserves the previous ray-facing fallback when the camera is embedded in physical material: there is no entry face in front of that camera. Its 3,996 visible samples match the expected varying ray normal in both versions (maximum error 0.01249). The fixed axis normal applies only to a real volume entry.
 
-Remaining work: broad mixtures and silhouette/thin-feature coverage; liquid/gas section compositing; final art direction. Matched shaded captures and an opt-in presentation module are documented separately. The evidence does not establish elimination of every kind of visual noise, a final high-fidelity art direction, or an improvement in fluid physics.
+Remaining work: broad mixtures and silhouette/thin-feature coverage; liquid/gas compositing beyond the separately verified section-entry depth fix; final art direction. Matched shaded captures and an opt-in presentation module are documented separately. The evidence does not establish elimination of every kind of visual noise, a final high-fidelity art direction, or an improvement in fluid physics.
 
 
 ## Section planes now clip sprite geometry
