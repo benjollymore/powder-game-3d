@@ -32,6 +32,9 @@ layout(std430, set = 0, binding = 1) restrict readonly buffer Elems { Elem elems
 // x = a | b << 8 | out_a << 16 | out_b << 24, y = probability * 65535.
 layout(std430, set = 0, binding = 2) restrict readonly buffer Reacts { uvec4 reacts[]; };
 
+// Coarse air velocity field (xyz in voxels per tick, w = heat), linear sampled.
+layout(set = 0, binding = 3) uniform sampler3D air_vel;
+
 layout(push_constant, std430) uniform Params {
 	uvec4 a; // tick, seed, substep, rule flags
 	uvec4 b; // partition offset x, y, z, reaction count
@@ -39,6 +42,7 @@ layout(push_constant, std430) uniform Params {
 
 const uint RULE_NO_REACTIONS = 1u;
 const uint RULE_NO_DECAY = 2u;
+const uint RULE_NO_AIR = 4u;
 
 const int GRID = 128;
 const uint AIR = 0u;
@@ -59,6 +63,7 @@ const uint MIN_KEEP = 6u;      // cells below this donate everything to a neighb
 const uint FALLING = 1u;       // byte w flag: this liquid is falling (do not spray sideways)
 
 // Per-invocation block state.
+ivec3 origin;
 ivec3 pos[8];
 uvec4 c[8];
 uvec4 before[8];
@@ -96,6 +101,7 @@ uint flags_of(uint id) { return elems[id].flags & 0xFFu; }
 float density_of(uint id) { return elems[id].density; }
 float spread_of(uint id) { return elems[id].spread; }
 float decay_of(uint id) { return elems[id].decay; }
+float coupling_of(uint id) { return elems[id].air_coupling; }
 uint decay_target(uint id) { return (elems[id].flags >> 24) & 0xFFu; }
 bool immovable(uint id) { return (flags_of(id) & FLAG_IMMOVABLE) != 0u; }
 bool is_powder(uint id) { return (flags_of(id) & FLAG_POWDER) != 0u; }
@@ -246,6 +252,51 @@ void rule_vertical_liquids() {
 	}
 }
 
+// Wind: cells drift with the air velocity sampled at the block centre. A cell
+// moves to its block partner along one axis, chosen in proportion to the
+// velocity components, when the partner lies downwind and is air or gas
+// (anything denser must also be lighter than the mover). The chance is
+// doubled because a given partner is in the block only on half the ticks.
+void rule_wind() {
+	vec3 centre = (vec3(origin) + 1.0) / float(GRID);
+	vec3 u = texture(air_vel, centre).xyz;
+	vec3 a = abs(u);
+	float mag = a.x + a.y + a.z;
+	if (mag < 0.02) {
+		return;
+	}
+	for (int i = 0; i < 8; i++) {
+		uint id = c[i].x;
+		if (id == AIR || c[i].x != before[i].x) {
+			continue;
+		}
+		float coupling = coupling_of(id);
+		if (coupling <= 0.0) {
+			continue;
+		}
+		float r = rnd() * mag;
+		int axis = (r < a.x) ? 0 : ((r < a.x + a.y) ? 1 : 2);
+		int bit = 1 << axis;
+		bool positive = u[axis] > 0.0;
+		bool i_is_low = (i & bit) == 0;
+		if (positive != i_is_low) {
+			continue; // partner is upwind
+		}
+		if (rnd() > min(a[axis] * coupling * 2.0, 1.0)) {
+			continue;
+		}
+		int j = i ^ bit;
+		uint other = c[j].x;
+		bool ok = (other == AIR || is_gas(other)) && !immovable(other);
+		if (ok && !is_gas(id)) {
+			ok = density_of(other) < density_of(id);
+		}
+		if (ok && other != id) {
+			swap_cells(i, j);
+		}
+	}
+}
+
 // A powder that could not fall straight down tries a diagonal neighbour in
 // the block (random order), forming piles.
 void rule_slump() {
@@ -375,7 +426,7 @@ void rule_gas_spread() {
 // --- kernel ----------------------------------------------------------------
 
 void main() {
-	ivec3 origin = ivec3(gl_GlobalInvocationID) * 2 - ivec3(pc.b.xyz);
+	origin = ivec3(gl_GlobalInvocationID) * 2 - ivec3(pc.b.xyz);
 	if (any(greaterThanEqual(origin, ivec3(GRID)))) {
 		return;
 	}
@@ -406,6 +457,9 @@ void main() {
 		rule_decay();
 	}
 	rule_vertical();
+	if ((pc.a.w & RULE_NO_AIR) == 0u) {
+		rule_wind();
+	}
 	rule_slump();
 	rule_liquid_spread();
 	rule_vertical_liquids();

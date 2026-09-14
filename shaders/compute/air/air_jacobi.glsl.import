@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://ckwk8ad1c8dbm"
+path="res://.godot/imported/air_jacobi.glsl-894d4fa86bbf52c7b624dfe3233b48aa.res"
+
+[deps]
+
+source_file="res://shaders/compute/air/air_jacobi.glsl"
+dest_files=["res://.godot/imported/air_jacobi.glsl-894d4fa86bbf52c7b624dfe3233b48aa.res"]
+
+[params]
+

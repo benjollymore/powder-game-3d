@@ -29,7 +29,11 @@ Rules run in this order inside a block (canonical frame, y up):
    resting on something) and splits it evenly. Tiny remnants join a neighbour.
 6. **Vertical again** for liquids, so water that spread over an edge falls the
    same tick.
-7. **Gas spread** — gases on the bottom row drift into a random same-layer gas
+7. **Wind** — cells drift with the coarse air velocity sampled at the block
+   centre, moving to the downwind partner when it is air or gas, with a chance
+   proportional to the velocity and the element's `air_coupling` (gases 1,
+   liquids 0.1, sand 0.05).
+8. **Gas spread** — gases on the bottom row drift into a random same-layer gas
    neighbour, which diffuses clouds.
 
 Only cells that changed are written back.
@@ -58,6 +62,19 @@ time). A cell pairs with the cell below it on about half of all ticks, so a
 free-falling grain moves ~90 voxels per second.
 
 Tests for each rule live in `tests/gpu/run_gpu_tests.gd`.
+
+## Air solver
+
+`shaders/compute/air/` holds a coarse Eulerian air simulation on a 32³ grid
+(4³ voxels per cell), run once per tick batch before the Margolus ticks:
+downsample (solid fraction from walls, powders and liquid fill; heat from fire,
+steam and smoke) → semi-Lagrangian advection of velocity and heat with
+buoyancy, drag and a speed clamp → divergence → 20 Jacobi iterations of the
+pressure Poisson equation with Neumann walls → projection that also zeroes flow
+into solids. The resulting velocity field (voxels per tick) feeds the wind rule,
+so fire makes convection plumes that mushroom at the ceiling and recirculate.
+Velocity and pressure are cleared on upload and clear, and the whole run is
+deterministic from a given upload.
 
 ## Rendering
 

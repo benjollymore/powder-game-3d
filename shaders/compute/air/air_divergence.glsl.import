@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://dov1lfnve6ftj"
+path="res://.godot/imported/air_divergence.glsl-a8527c80d4e03e06ec6002b5f9403230.res"
+
+[deps]
+
+source_file="res://shaders/compute/air/air_divergence.glsl"
+dest_files=["res://.godot/imported/air_divergence.glsl-a8527c80d4e03e06ec6002b5f9403230.res"]
+
+[params]
+

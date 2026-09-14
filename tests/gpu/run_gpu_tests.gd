@@ -40,6 +40,7 @@ func _run() -> void:
 		["_test_brush_paints", 3], ["_test_occupancy", 3], ["_test_liquid_mass", 3],
 		["_test_u_bend", 3], ["_test_pressure_pipe", 3], ["_test_density_pass", 3],
 		["_test_fire_burns_plant", 0], ["_test_water_boils_on_fire", 0], ["_test_oil_floats", 3],
+		["_test_air_boundary", 3], ["_test_air_plume", 2],
 	]
 	for t in tests:
 		if only != "":
@@ -421,3 +422,87 @@ func _test_density_pass() -> void:
 	check(absi(at.call(40) - 128) <= 1, "half water density ~128 (got %d)" % at.call(40))
 	check(absi(at.call(50) - 85) <= 1, "quarter water density ~85 (got %d)" % at.call(50))
 	check(at.call(60) == 0, "steam density 0 (got %d)" % at.call(60))
+
+
+func _air_cell_stats(vel: PackedByteArray, lo: Vector3i, hi: Vector3i) -> Dictionary:
+	var sum := Vector3.ZERO
+	var n := 0
+	var max_abs := Vector3.ZERO
+	for z in range(lo.z, hi.z):
+		for y in range(lo.y, hi.y):
+			for x in range(lo.x, hi.x):
+				var v: Vector4 = _sim.velocity_at(vel, x, y, z)
+				sum += Vector3(v.x, v.y, v.z)
+				max_abs = max_abs.max(Vector3(v.x, v.y, v.z).abs())
+				n += 1
+	return {"mean": sum / maxf(n, 1), "max_abs": max_abs}
+
+
+func _steam_stats(bytes: PackedByteArray) -> Dictionary:
+	var sum := Vector3.ZERO
+	var sum2 := Vector3.ZERO
+	var n := 0
+	for i in GRID * GRID * GRID:
+		if bytes[i * 4] == Elements.Id.STEAM:
+			var x := i % GRID
+			var y := (i / GRID) % GRID
+			var z := i / (GRID * GRID)
+			var p := Vector3(x, y, z)
+			sum += p
+			sum2 += p * p
+			n += 1
+	var mean := sum / maxf(n, 1)
+	var var_ := sum2 / maxf(n, 1) - mean * mean
+	return {"n": n, "centroid": mean, "spread_xz": sqrt(maxf(var_.x, 0.0) + maxf(var_.z, 0.0))}
+
+
+func _test_air_boundary() -> void:
+	# A thick solid slab: air cells fully inside it must hold exactly zero velocity,
+	# and the whole simulation must be deterministic from a given upload.
+	var data := _empty_world()
+	_fill_box(data, Vector3i(0, 0, 0), Vector3i(GRID, 48, GRID), Elements.Id.WALL)
+	_fill_box(data, Vector3i(40, 48, 40), Vector3i(56, 56, 56), Elements.Id.FIRE)
+	_fill_box(data, Vector3i(30, 70, 30), Vector3i(70, 90, 70), Elements.Id.STEAM)
+	var world := data.to_byte_array()
+	_sim.rule_flags = 2 # keep fire alive
+	_sim.upload(world)
+	var first: PackedByteArray = await _run_and_read(120)
+	_sim.request_velocity_readback()
+	var vel: PackedByteArray = await _sim.velocity_ready
+	var inside := _air_cell_stats(vel, Vector3i(0, 0, 0), Vector3i(_sim.AIR_GRID, 11, _sim.AIR_GRID))
+	check(inside["max_abs"] == Vector3.ZERO, "air velocity is exactly zero inside solids (max %s)" % [inside["max_abs"]])
+	var above := _air_cell_stats(vel, Vector3i(10, 12, 10), Vector3i(14, 16, 14))
+	check(above["mean"].y > 0.02, "air rises above the fire (mean v_y %.3f)" % above["mean"].y)
+	_sim.upload(world)
+	var second: PackedByteArray = await _run_and_read(120)
+	check(first == second, "simulation is deterministic from the same upload")
+
+
+func _test_air_plume() -> void:
+	# Fire on the floor under a steam cube: the cube should rise and spread out.
+	var data := _empty_world()
+	WorldBuilder.floor(data)
+	_fill_box(data, Vector3i(56, 4, 56), Vector3i(72, 12, 72), Elements.Id.FIRE)
+	_fill_box(data, Vector3i(56, 30, 56), Vector3i(72, 46, 72), Elements.Id.STEAM)
+	var world := data.to_byte_array()
+	var before := _steam_stats(world)
+	_sim.upload(world)
+	# Velocity is checked early, while the plume is still developing; once the
+	# closed box has heated through, circulation cancels the mean updraft.
+	await _run_and_read(120)
+	_sim.request_velocity_readback()
+	var vel_early: PackedByteArray = await _sim.velocity_ready
+	var after_bytes: PackedByteArray = await _run_and_read(280)
+	var after := _steam_stats(after_bytes)
+	check(after["n"] == before["n"], "steam count conserved in the plume (%d -> %d)" % [before["n"], after["n"]])
+	check(after["centroid"].y > before["centroid"].y + 20.0,
+		"steam plume rose (centroid y %.1f -> %.1f)" % [before["centroid"].y, after["centroid"].y])
+	check(after["spread_xz"] > before["spread_xz"] * 1.3,
+		"plume spread sideways (xz spread %.1f -> %.1f)" % [before["spread_xz"], after["spread_xz"]])
+	var col := _air_cell_stats(vel_early, Vector3i(14, 3, 14), Vector3i(18, 12, 18))
+	check(col["mean"].y > 0.05, "updraft above the fire (mean v_y %.3f)" % col["mean"].y)
+	_sim.request_velocity_readback()
+	var vel: PackedByteArray = await _sim.velocity_ready
+	var all := _air_cell_stats(vel, Vector3i(0, 1, 0), Vector3i(_sim.AIR_GRID, _sim.AIR_GRID, _sim.AIR_GRID))
+	check(all["max_abs"].x > 0.02 or all["max_abs"].z > 0.02,
+		"flow recirculates sideways somewhere (max |v_x| %.3f, |v_z| %.3f)" % [all["max_abs"].x, all["max_abs"].z])

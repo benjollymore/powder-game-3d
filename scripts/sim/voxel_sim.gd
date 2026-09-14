@@ -15,6 +15,7 @@ signal readback_ready(bytes: PackedByteArray)
 signal occupancy_ready(bytes: PackedByteArray)
 signal density_ready(bytes: PackedByteArray)
 signal scenario_changed(name: String)
+signal velocity_ready(bytes: PackedByteArray)
 
 const GRID := VoxelCodec.GRID
 const SIM_SHADER_PATH := "res://shaders/compute/sim.glsl"
@@ -24,6 +25,12 @@ const HYDRO_SHADER_PATH := "res://shaders/compute/hydro.glsl"
 ## Percent of the gap to a horizontal run's mean closed per hydro pass.
 const HYDRO_RELAX_PERCENT := 50
 const DENSITY_SHADER_PATH := "res://shaders/compute/density.glsl"
+const AIR_SHADER_DIR := "res://shaders/compute/air/"
+const AIR_KERNELS := ["air_downsample", "air_advect", "air_divergence", "air_jacobi", "air_project"]
+## Coarse air grid: 4^3 voxels per cell, 4^3 threads per workgroup.
+const AIR_GRID := 32
+const AIR_GROUPS := 8
+const RULE_NO_AIR := 4
 const OCCUPANCY_SHADER_PATH := "res://shaders/compute/occupancy.glsl"
 ## One occupancy cell per 8^3 brick: 16^3 cells for a 128^3 world.
 const OCCUPANCY_GRID := 16
@@ -43,6 +50,12 @@ const PUSH_CONSTANT_INTS := 8
 @export var rule_flags := 0
 ## Run the line-based liquid pressure solver after each tick.
 @export var hydro_enabled := true
+## Run the coarse air (velocity/pressure) solver once per tick batch.
+@export var air_enabled := true
+@export var jacobi_iterations := 20
+@export var air_buoyancy := 0.03
+@export var air_drag := 0.01
+@export var air_max_speed := 1.5
 ## Preset world loaded at start and by R / Reload. `scenario=Name` on the
 ## command line (after `--`) overrides it.
 @export var current_scenario := Scenarios.DEFAULT
@@ -64,6 +77,15 @@ var _brush_set := RID()
 var _hydro_shader := RID()
 var _hydro_pipeline := RID()
 var _hydro_set := RID()
+var _air_vel := [RID(), RID()]
+var _air_pres := [RID(), RID()]
+var _air_div := RID()
+var _air_occ := RID()
+var _air_src := RID()
+var _air_sampler := RID()
+var _air_shaders := {}
+var _air_pipelines := {}
+var _air_sets := {}
 var _density_rid := RID()
 var _density_texture := Texture3DRD.new()
 var _density_shader := RID()
@@ -182,6 +204,19 @@ func request_occupancy_readback() -> void:
 		RenderingServer.call_on_render_thread(_rt_occupancy_readback)
 
 
+## Copy the air velocity field (32^3 RGBA16F: xyz voxels/tick, w heat) back;
+## `velocity_ready` fires on the main thread. Stalls the GPU; tests only.
+func request_velocity_readback() -> void:
+	if _rt_ready:
+		RenderingServer.call_on_render_thread(_rt_velocity_readback)
+
+
+## Decode one air cell from a velocity readback.
+static func velocity_at(bytes: PackedByteArray, x: int, y: int, z: int) -> Vector4:
+	var base := (x + AIR_GRID * (y + AIR_GRID * z)) * 8
+	return Vector4(bytes.decode_half(base), bytes.decode_half(base + 2), bytes.decode_half(base + 4), bytes.decode_half(base + 6))
+
+
 ## Fetch the liquid density field (one byte per voxel) without stalling;
 ## `density_ready` fires on the main thread when it arrives.
 func request_density_readback() -> void:
@@ -264,9 +299,52 @@ func _rt_init(initial: PackedByteArray) -> void:
 	)
 	_density_rid = _rd.texture_create(den_fmt, RDTextureView.new())
 
+	for i in 2:
+		_air_vel[i] = _rt_air_texture(RenderingDevice.DATA_FORMAT_R16G16B16A16_SFLOAT)
+		_air_pres[i] = _rt_air_texture(RenderingDevice.DATA_FORMAT_R16_SFLOAT)
+	_air_div = _rt_air_texture(RenderingDevice.DATA_FORMAT_R16_SFLOAT)
+	_air_occ = _rt_air_texture(RenderingDevice.DATA_FORMAT_R8_UNORM)
+	_air_src = _rt_air_texture(RenderingDevice.DATA_FORMAT_R16G16B16A16_SFLOAT)
+	var ss := RDSamplerState.new()
+	ss.min_filter = RenderingDevice.SAMPLER_FILTER_LINEAR
+	ss.mag_filter = RenderingDevice.SAMPLER_FILTER_LINEAR
+	ss.repeat_u = RenderingDevice.SAMPLER_REPEAT_MODE_CLAMP_TO_EDGE
+	ss.repeat_v = RenderingDevice.SAMPLER_REPEAT_MODE_CLAMP_TO_EDGE
+	ss.repeat_w = RenderingDevice.SAMPLER_REPEAT_MODE_CLAMP_TO_EDGE
+	_air_sampler = _rd.sampler_create(ss)
+
 	_rt_build_pipelines(false)
 	_rt_occupancy_update()
 	_rt_ready = true
+
+
+func _rt_air_texture(format: RenderingDevice.DataFormat) -> RID:
+	var fmt := RDTextureFormat.new()
+	fmt.format = format
+	fmt.texture_type = RenderingDevice.TEXTURE_TYPE_3D
+	fmt.width = AIR_GRID
+	fmt.height = AIR_GRID
+	fmt.depth = AIR_GRID
+	fmt.mipmaps = 1
+	fmt.usage_bits = (
+		RenderingDevice.TEXTURE_USAGE_STORAGE_BIT
+		| RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_UPDATE_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT
+	)
+	var rid := _rd.texture_create(fmt, RDTextureView.new())
+	_rd.texture_clear(rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
+	return rid
+
+
+func _sampler_uniform(binding: int, texture: RID) -> RDUniform:
+	var u := RDUniform.new()
+	u.uniform_type = RenderingDevice.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
+	u.binding = binding
+	u.add_id(_air_sampler)
+	u.add_id(texture)
+	return u
 
 
 ## Compile a compute shader. `from_source` reads the .glsl from disk so edits
@@ -314,6 +392,12 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	var density_spirv := _rt_compile(DENSITY_SHADER_PATH, from_source)
 	if sim_spirv == null or brush_spirv == null or occ_spirv == null or hydro_spirv == null or density_spirv == null:
 		return
+	var air_spirv := {}
+	for k in AIR_KERNELS:
+		var sp := _rt_compile(AIR_SHADER_DIR + k + ".glsl", from_source)
+		if sp == null:
+			return
+		air_spirv[k] = sp
 	_rt_free_pipelines()
 
 	_sim_shader = _rd.shader_create_from_spirv(sim_spirv)
@@ -326,7 +410,30 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	u_reacts.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
 	u_reacts.binding = 2
 	u_reacts.add_id(_reactions_buffer)
-	_sim_set = _rd.uniform_set_create([_image_uniform(0), u_elems, u_reacts], _sim_shader, 0)
+	_sim_set = _rd.uniform_set_create(
+		[_image_uniform(0), u_elems, u_reacts, _sampler_uniform(3, _air_vel[0])], _sim_shader, 0)
+
+	# Air solver: downsample -> advect (vel0 -> vel1) -> divergence -> jacobi
+	# (pres ping-pong, even count so the result lands in pres0) -> project (vel1 -> vel0).
+	for k in AIR_KERNELS:
+		_air_shaders[k] = _rd.shader_create_from_spirv(air_spirv[k])
+		_air_pipelines[k] = _rd.compute_pipeline_create(_air_shaders[k])
+	_air_sets["air_downsample"] = _rd.uniform_set_create(
+		[_image_uniform(0), _image_uniform(1, _air_occ), _image_uniform(2, _air_src), _buffer_uniform(3, _elements_buffer)],
+		_air_shaders["air_downsample"], 0)
+	_air_sets["air_advect"] = _rd.uniform_set_create(
+		[_sampler_uniform(0, _air_vel[0]), _image_uniform(1, _air_occ), _image_uniform(2, _air_src), _image_uniform(3, _air_vel[1])],
+		_air_shaders["air_advect"], 0)
+	_air_sets["air_divergence"] = _rd.uniform_set_create(
+		[_image_uniform(0, _air_vel[1]), _image_uniform(1, _air_occ), _image_uniform(2, _air_div)],
+		_air_shaders["air_divergence"], 0)
+	for i in 2:
+		_air_sets["air_jacobi%d" % i] = _rd.uniform_set_create(
+			[_image_uniform(0, _air_pres[i]), _image_uniform(1, _air_div), _image_uniform(2, _air_occ), _image_uniform(3, _air_pres[1 - i])],
+			_air_shaders["air_jacobi"], 0)
+	_air_sets["air_project"] = _rd.uniform_set_create(
+		[_image_uniform(0, _air_vel[1]), _image_uniform(1, _air_pres[0]), _image_uniform(2, _air_occ), _image_uniform(3, _air_vel[0])],
+		_air_shaders["air_project"], 0)
 
 	_brush_shader = _rd.shader_create_from_spirv(brush_spirv)
 	_brush_pipeline = _rd.compute_pipeline_create(_brush_shader)
@@ -370,11 +477,17 @@ func _rt_free_pipelines() -> void:
 	_density_set = RID()
 	_density_pipeline = RID()
 	_density_shader = RID()
+	for d in [_air_sets, _air_pipelines, _air_shaders]:
+		for k in d:
+			if d[k].is_valid():
+				_rd.free_rid(d[k])
+		d.clear()
 
 
 func _rt_free() -> void:
 	_rt_free_pipelines()
-	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid, _density_rid]:
+	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid, _density_rid,
+			_air_vel[0], _air_vel[1], _air_pres[0], _air_pres[1], _air_div, _air_occ, _air_src, _air_sampler]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
 	_elements_buffer = RID()
@@ -389,6 +502,8 @@ func _rt_tick(first_tick: int, count: int) -> void:
 	if not _sim_pipeline.is_valid():
 		return
 	var cl := _rd.compute_list_begin()
+	if air_enabled:
+		_rt_air_step(cl, count, first_tick)
 	var push := PackedInt32Array()
 	push.resize(PUSH_CONSTANT_INTS)
 	var hydro_groups := GRID / 8
@@ -398,7 +513,7 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		push[0] = t
 		push[1] = world_seed
 		push[2] = i
-		push[3] = rule_flags
+		push[3] = rule_flags | (0 if air_enabled else RULE_NO_AIR)
 		push[4] = offset.x
 		push[5] = offset.y
 		push[6] = offset.z
@@ -421,6 +536,37 @@ func _rt_tick(first_tick: int, count: int) -> void:
 			_rd.compute_list_add_barrier(cl)
 	_rd.compute_list_end()
 	_rt_occupancy_update()
+
+
+## One air-solver step covering `dt` ticks, recorded into an open compute list.
+func _rt_air_step(cl: int, dt: int, tick_now: int) -> void:
+	if not _air_pipelines.has("air_project"):
+		return
+	var params := PackedFloat32Array([float(dt), air_buoyancy, air_drag, air_max_speed]).to_byte_array()
+	params.append_array(PackedInt32Array([tick_now, 0, 0, 0]).to_byte_array())
+	var iters := jacobi_iterations + (jacobi_iterations & 1) # even, so the result is in pres0
+	var order: Array = ["air_downsample", "air_advect", "air_divergence"]
+	for i in iters:
+		order.append("air_jacobi%d" % (i & 1))
+	order.append("air_project")
+	for step in order:
+		var kernel: String = step.trim_suffix("0").trim_suffix("1") if step.begins_with("air_jacobi") else step
+		_rd.compute_list_bind_compute_pipeline(cl, _air_pipelines[kernel])
+		_rd.compute_list_bind_uniform_set(cl, _air_sets[step], 0)
+		_rd.compute_list_set_push_constant(cl, params, params.size())
+		_rd.compute_list_dispatch(cl, AIR_GROUPS, AIR_GROUPS, AIR_GROUPS)
+		_rd.compute_list_add_barrier(cl)
+
+
+func _rt_velocity_readback() -> void:
+	var bytes := _rd.texture_get_data(_air_vel[0], 0)
+	velocity_ready.emit.call_deferred(bytes)
+
+
+func _rt_air_clear() -> void:
+	for rid in [_air_vel[0], _air_vel[1], _air_pres[0], _air_pres[1]]:
+		if rid.is_valid():
+			_rd.texture_clear(rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
 
 
 ## Which of the 8 Margolus partitions to use on a given tick. Hashed rather
@@ -451,11 +597,13 @@ func _rt_paint(center: Vector3i, radius: int, element: int, mode: int, seed: int
 
 func _rt_upload(bytes: PackedByteArray) -> void:
 	_rd.texture_update(_grid_rid, 0, bytes)
+	_rt_air_clear()
 	_rt_occupancy_update()
 
 
 func _rt_clear() -> void:
 	_rd.texture_clear(_grid_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
+	_rt_air_clear()
 	_rt_occupancy_update()
 
 
