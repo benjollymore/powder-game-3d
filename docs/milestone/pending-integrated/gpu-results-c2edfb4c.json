@@ -1,0 +1,42 @@
+[
+  {
+    "name": "pending-paint128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 1.7,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/pending_paint_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/pending-integrated/pending-paint128"
+    ]
+  },
+  {
+    "name": "pending-paint256",
+    "pass": true,
+    "exit": 0,
+    "seconds": 4.99,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/pending_paint_gpu.gd",
+      "--",
+      "grid=256",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/pending-integrated/pending-paint256"
+    ]
+  }
+]

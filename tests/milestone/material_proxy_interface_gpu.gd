@@ -4,6 +4,10 @@ extends "res://tests/milestone/material_proxy_geometry_gpu.gd"
 const SURFACE_OUT := "res://docs/milestone/material-interface-evidence/gates"
 
 func _run() -> void:
+	var destination := SURFACE_OUT
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("output_dir="):
+			destination = argument.trim_prefix("output_dir=")
 	root.size = Vector2i(320,320)
 	root.scaling_3d_scale = 1.0
 	root.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
@@ -50,7 +54,7 @@ func _run() -> void:
 	blocker.position = center+Vector3(0,0,0.8)*cell_size
 	blocker.visible = false
 	stage.add_child(blocker)
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(SURFACE_OUT))
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(destination))
 	var cases := [
 		{"name":"front","amount":200,"expected":1},
 		{"name":"inside","amount":200,"expected":0},
@@ -93,13 +97,13 @@ func _run() -> void:
 			var actual := image.get_pixel(160,160).srgb_to_linear().r*4
 			var expected: float = c.expected if enabled else 0
 			_check(absf(actual-expected)<0.035,c.name+" correct number of physical reflection entries")
-			_check(image.save_png(SURFACE_OUT+"/%s-%s.png"%[c.name,"on" if enabled else "off"])==OK,"save interface gate")
+			_check(image.save_png(destination+"/%s-%s.png"%[c.name,"on" if enabled else "off"])==OK,"save interface gate")
 			results.append({"case":c.name,"reflection":enabled,"expected_entries":expected,"measured_entries":actual})
 		RenderingServer.call_on_render_thread(_rt_snapshot)
 		var state: Dictionary = await snapshot_ready
 		_check(state.voxels==bytes,"surface shading preserves complete physical bytes")
 		_check(state.overflow[2]==255,"fixture uses actual overflow mode")
-	var file := FileAccess.open(SURFACE_OUT+"/regression.json",FileAccess.WRITE)
+	var file := FileAccess.open(destination+"/regression.json",FileAccess.WRITE)
 	file.store_string(JSON.stringify(results,"\t"))
 	file.close()
 	print("PROXY_INTERFACE_CHECKS %d FAILURES %d"%[checks,failures])

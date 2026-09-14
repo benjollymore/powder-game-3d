@@ -1,0 +1,53 @@
+[
+  {
+    "name": "history-guards",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.27,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/history_guards.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/pending-integrated/history-guards"
+    ]
+  },
+  {
+    "name": "pending-gesture",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.17,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/pending_gesture.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/pending-integrated/pending-gesture"
+    ]
+  },
+  {
+    "name": "archive-panel",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.46,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/archive_panel.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/pending-integrated/archive-panel"
+    ]
+  }
+]

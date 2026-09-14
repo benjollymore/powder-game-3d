@@ -1,6 +1,6 @@
 # Autonomous milestone status
 
-Updated 2026-09-14 22:25 UTC. Work continues until the user checks in; four hours is an estimate, not a deadline. Integration checkout: `powder-game-3d-discovery/fundamentals`, branch `milestone/fundamentals`. The original main checkout is preserved.
+Updated 2026-09-14 22:45 UTC. Work continues until the user checks in; four hours is an estimate, not a deadline. Integration checkout: `powder-game-3d-discovery/fundamentals`, branch `milestone/fundamentals`. The original main checkout is preserved.
 
 ## Current result
 
@@ -16,6 +16,9 @@ Subsequent active-input testing fixed Space also activating a focused GUI button
 
 ## Validation and performance
 
+- [Rapid authored paint](pending-paint.md) now retains one bounded gesture during asynchronous history capture. Coordinator GPU reruns pass 28 checks at each grid size; focused CPU checks cover seven pending-gesture, 19 history and seven archive cases. [Evidence](pending-integrated/).
+- [Physical capacity fallback](material-capacity.md) and [water interfaces](material-interface.md) are integrated. Coordinator reruns pass 74 simulation, 112 capacity, 145 proxy geometry, 66 interface, 61 section-depth and 102 liquid-exit checks. Coverage survives overflow, with a conspicuous coarse representation at the threshold; this is not final visual fidelity. [Evidence](capacity-integrated/).
+
 - A coordinator run of 15 GPU suites passed **484 checks**, including regional undo at 256³ and physical/render/input/archive suites at 128³. Seven CPU suites passed **94 checks**. [Combined evidence](verification.md) states the revision scope and later targeted checks.
 - Latest targeted lifecycle/phase/preparation runs passed **16 + 13 + 8 + 12 + 4 GPU checks**. Gesture, paint-tool and phase CPU checks passed **10 + 9 + 9 checks**. Do not add these overlapping runs into a unique coverage total.
 - Independently rerun thermal and PIC/APIC reference suites passed **22 tests**. These are isolated CPU references, not production solver capabilities.
@@ -26,10 +29,10 @@ Subsequent active-input testing fixed Space also activating a focused GUI button
 
 ## Active follow-through
 
-1. Preserve rapid authored gestures that arrive while asynchronous history capture is pending. The input audit reproduced a held press being dropped; a bounded gesture buffer is under review.
-2. Evaluate physical-sprite overflow coverage and appearance together. The renderer candidate covers every physical cell, but its whole-layer coarse transition is conspicuous; water-interface readability is being improved before integration.
-3. Carry mass and enthalpy together in an isolated transport reference. The [stationary thermal comparison](thermal-cached.md) is complete: cached temperature uses 256 MiB and measured 13.2 ms for four 256³ steps, versus 576 MiB and 17–18 ms for the original reference. This is not production thermal physics.
-4. Continue integrated usability and longer-session checks, including normal scheduling, retained history, memory trends and exact authored Return. Preserve explicit viewport configuration in future performance reports.
+1. Protect unsaved authored builds when Reset, Empty, Open or normal window close would replace them. Exact saved checkpoints must survive Undo/Redo and reject stale asynchronous Save completion as permission to discard newer edits.
+2. Fix a separate ordinary-liquid omission: paused isolated water/oil cells can be pickable but invisible even without overflow. A pinned negative control reproduces this with actual radius-zero painting; a bounded thin-feature representation is being evaluated.
+3. Review finite-motion GPU PIC/APIC against the binary64 reference. The [enthalpy transport reference](enthalpy-transport.md) now demonstrates two conservative routes for the same production amount update; production still needs an explicit accepted-transfer contract. The [stationary thermal comparison](thermal-cached.md) remains an isolated 256 MiB, 13.2 ms/four-step candidate at 256³, not production thermal physics.
+4. Continue integrated repeated-session checks through ordinary input, periodic asynchronous Save/Open, retained history, memory trends and exact authored Return. Initial 128³ smoke passed five complete cycles; longer measurements are underway with explicit viewport settings.
 
 ## Architectural position
 

@@ -1,0 +1,21 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: shared cap counts both stacks and evicts oldest past while preserving the contiguous future
+ok: when past is exhausted cap removes farthest future, preserving next Redo
+ok: exact cap boundary does not discard history
+ok: empty history remains empty
+ok: aligned exact regional history is accepted
+ok: duplicate inverse tiles are rejected before GPU submission
+ok: unaligned history bounds are rejected
+ok: truncated packed regional bytes are rejected
+ok: truncated inverse fails before any restoration submission
+ok: wrong region inverse fails before any restoration submission
+ok: readback error inverse fails before any restoration submission
+ok: stale revision inverse fails before any restoration submission
+ok: stale tick inverse fails before any restoration submission
+ok: stale epoch inverse fails before any restoration submission
+ok: read-only branch inspection detects an exact no-op without mutating material
+ok: packed-byte branch inspection detects a real authored change
+ok: source Undo remains retained while inverse capture is pending
+ok: failed inverse capture leaves the only recoverable Undo entry and its exact bytes intact
+History guards: 18 checks, 0 failures

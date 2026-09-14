@@ -1,0 +1,10 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: complete batch retains its captured frame identity
+ok: repeated passes accumulate exact nanoseconds-to-milliseconds rather than overwrite
+ok: separate batch idle gaps are excluded
+ok: unsupported zero timestamps do not publish zero-cost pass measurements
+ok: backward GPU time is rejected
+ok: incomplete batches cannot become a partial performance report
+ok: engine and out-of-batch markers do not masquerade as simulation cost
+GPU profile CPU: 7 checks, 0 failures

@@ -32,6 +32,7 @@ def budget(root, n):
     allocations = {
         "voxel_rgba8": 4 * cells,
         "fields_rgba8_with_mips": 4 * sum((n >> m) ** 3 for m in range(mips)),
+        "physical_overflow_metadata_rgba8": 4 if "_physical_overflow_rid" in sim else 0,
         "occupancy_rgba8": 4 * (n // constant(sim, "BRICK")) ** 3,
         "sunvis_r8": (n // constant(sim, "SUNVIS_DIV")) ** 3,
         "air_velocity_ping_pong_rgba16f": 16 * air,
