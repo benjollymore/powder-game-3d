@@ -1,0 +1,15 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: every exposed mask emits one leaf; fully buried mask emits none
+ok: leaf reconstruction preserves exact authoritative voxel bytes
+SYMMETRIC mask=3 finite=false origin=(nan, nan, nan) offset=(nan, nan, nan)
+SYMMETRIC mask=12 finite=false origin=(nan, nan, nan) offset=(nan, nan, nan)
+SYMMETRIC mask=15 finite=false origin=(nan, nan, nan) offset=(nan, nan, nan)
+SYMMETRIC mask=48 finite=false origin=(nan, nan, nan) offset=(nan, nan, nan)
+SYMMETRIC mask=51 finite=false origin=(nan, nan, nan) offset=(nan, nan, nan)
+SYMMETRIC mask=60 finite=false origin=(nan, nan, nan) offset=(nan, nan, nan)
+SYMMETRIC mask=63 finite=false origin=(nan, nan, nan) offset=(nan, nan, nan)
+ok: fixture covers all seven nonempty symmetric exposure masks
+LEAF_PROBE symmetric=7 nonfinite=7 zero_offsets=0
+LEAF_FINITE grid=128 checks=3 failures=0 probe=true

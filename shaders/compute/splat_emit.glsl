@@ -156,15 +156,37 @@ void powder(ivec3 p, uvec4 v, uint h) {
 
 // --- plants ---------------------------------------------------------------------
 
+// Opposite exposed faces can cancel, including all six faces of an isolated
+// plant voxel. Keep nonzero directions unchanged; otherwise choose a seeded
+// exposed face so origin placement never normalizes a zero vector.
+vec3 leaf_offset_direction(vec3 outward, uint open_faces, uint h) {
+	if (dot(outward, outward) > 0.0) {
+		return normalize(outward);
+	}
+	uint chosen = h % uint(bitCount(open_faces)); // plant() guarantees exposure
+	for (uint face = 0u; face < 6u; face++) {
+		if ((open_faces & (1u << face)) == 0u) { continue; }
+		if (chosen == 0u) {
+			vec3 direction = vec3(0.0);
+			direction[int(face / 2u)] = (face & 1u) == 0u ? 1.0 : -1.0;
+			return direction;
+		}
+		chosen--;
+	}
+	return vec3(0.0, 1.0, 0.0); // unreachable for a nonempty exposure mask
+}
+
 // A plant cell is bark when it sits in a vertical run of plant at least
 // 2*T tall on both sides; everything else exposed to air grows leaf cards.
 void plant(ivec3 p, uvec4 v, uint h) {
 	vec3 outward = vec3(0.0);
 	int exposed = 0;
+	uint open_faces = 0u;
 	const ivec3 dirs[6] = ivec3[6](ivec3(1, 0, 0), ivec3(-1, 0, 0), ivec3(0, 1, 0), ivec3(0, -1, 0), ivec3(0, 0, 1), ivec3(0, 0, -1));
 	for (int i = 0; i < 6; i++) {
 		if (open(id_at(p + dirs[i]))) {
 			outward += vec3(dirs[i]);
+			open_faces |= 1u << uint(i);
 			exposed++;
 		}
 	}
@@ -205,7 +227,7 @@ void plant(ivec3 p, uvec4 v, uint h) {
 	n = cross(axis, side);
 	float len = (2.6 + 1.6 * unit(hash(uvec3(p), 99u), 0)) / float(GRID);
 	float wid = len * (0.42 + 0.2 * unit(hash(uvec3(p), 7u), 1));
-	vec3 origin = model_pos(vec3(p) + 0.5 + normalize(outward) * 0.45);
+	vec3 origin = model_pos(vec3(p) + 0.5 + leaf_offset_direction(outward, open_faces, h) * 0.45);
 	write_instance(LEAVES, idx, side * wid, axis * len, n * len, origin,
 		vec4(float(v.x), float(v.y) / 255.0, unit(h, 3), float(exposed)));
 }
