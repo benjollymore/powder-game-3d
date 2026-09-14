@@ -6,6 +6,9 @@ const Emission := preload("res://scripts/discovery/brush_emission.gd")
 const HistoryBudget := preload("res://scripts/editor/history_budget.gd")
 enum TargetMode { PLANE, SURFACE }
 var targeting_mode := TargetMode.PLANE
+var target_choice: OptionButton
+var section_toggle: CheckButton
+var section_action: Button
 var stroke_target_mode := TargetMode.PLANE
 var pending_surface: Array = []
 var surface_connect := false
@@ -284,14 +287,24 @@ func _build_ui() -> void:
 	var target_label := Label.new()
 	target_label.text = "Paint on  "
 	target_row.add_child(target_label)
-	var target_choice := OptionButton.new()
+	target_choice = OptionButton.new()
 	target_choice.add_item("Workplane", TargetMode.PLANE)
 	target_choice.add_item("Material surface", TargetMode.SURFACE)
-	target_choice.item_selected.connect(func(value):
-		_end_stroke()
-		targeting_mode = value
-		_invalidate_picks())
+	target_choice.item_selected.connect(_set_target_mode)
+	target_choice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	target_row.add_child(target_choice)
+	section_toggle = CheckButton.new()
+	section_toggle.text = "Cutaway"
+	section_toggle.tooltip_text = "Hide cells beyond the selected plane to see inside. Material stays in the world."
+	section_toggle.button_pressed = section
+	section_toggle.toggled.connect(_set_section)
+	target_row.add_child(section_toggle)
+	section_action = Button.new()
+	section_action.text = "Cutaway blocks paint here · Show whole world"
+	section_action.tooltip_text = "This surface faces the hidden side. Show the whole world, then aim at its visible surface."
+	section_action.visible = false
+	section_action.pressed.connect(func(): _set_section(false))
+	column.add_child(section_action)
 	var planes := HBoxContainer.new()
 	column.add_child(planes)
 	for a in 3:
@@ -334,7 +347,7 @@ func _build_ui() -> void:
 				_zoom(1.1 if action == "Zoom +" else 1.0 / 1.1))
 		navigation_row.add_child(button)
 	advanced_toggle = CheckButton.new()
-	advanced_toggle.text = "Construction & section tools"
+	advanced_toggle.text = "Construction & shortcuts"
 	column.add_child(advanced_toggle)
 	advanced_tools = VBoxContainer.new()
 	advanced_tools.visible = false
@@ -362,14 +375,6 @@ func _build_ui() -> void:
 	grid_toggle.button_pressed = show_workplane_grid
 	grid_toggle.toggled.connect(func(enabled): show_workplane_grid = enabled)
 	advanced_tools.add_child(grid_toggle)
-	var cut := CheckButton.new()
-	cut.text = "Section view (positive side hidden)"
-	cut.button_pressed = section
-	cut.toggled.connect(func(enabled):
-		_end_stroke()
-		section = enabled
-		_update_plane())
-	advanced_tools.add_child(cut)
 	var reset := Button.new()
 	reset.text = "Reset container (discards edits)"
 	reset.pressed.connect(reset_container)
@@ -380,7 +385,12 @@ func _build_ui() -> void:
 	advanced_tools.add_child(empty)
 	var controls := Label.new()
 	controls.add_theme_font_size_override("font_size", 14)
-	controls.text = "Drag: paint · two fingers: orbit · pinch: zoom\nShift + two fingers: pan · Option + drag: orbit\nOption + Shift + drag: pan · RMB/wheel work too\nPlane: −/+ above · Shift-wheel · [ ] brush size\n1 wall · 2 sand · 3 water · X erase · F angle"
+	controls.text = "Drag: paint · two fingers: orbit · pinch: zoom\nShift + two fingers: pan · Option + drag: orbit"
+	var secondary_controls := Label.new()
+	secondary_controls.add_theme_font_size_override("font_size", 14)
+	secondary_controls.text = "Option + Shift + drag: pan · RMB/wheel work too\nPlane: −/+ above · Shift-wheel · [ ] brush size\n1 wall · 2 sand · 3 water · X erase · F angle"
+	advanced_tools.add_child(secondary_controls)
+	controls.tooltip_text = controls.text + "\n" + secondary_controls.text
 	column.add_child(controls)
 	status = Label.new()
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -450,6 +460,7 @@ func _refresh_test_controls() -> void:
 
 func _refresh_palette() -> void:
 	_refresh_test_controls()
+	_refresh_target_controls()
 	if undo_button:
 		undo_button.disabled = testing or (undo_history.is_empty() and not capturing)
 		redo_button.disabled = testing or (redo_history.is_empty() and not capturing)
@@ -526,6 +537,57 @@ func _resume_editor_action() -> void:
 		"return_build": _set_testing(false)
 		"reset": reset_container()
 		"empty": new_empty_build()
+
+
+func _set_target_mode(value: int) -> void:
+	_end_stroke()
+	targeting_mode = value
+	target_choice.select(value)
+	_invalidate_picks()
+	_refresh_target_controls()
+
+
+func _set_section(enabled: bool) -> void:
+	_end_stroke()
+	section = enabled
+	section_toggle.set_pressed_no_signal(enabled)
+	_update_plane()
+	_refresh_target_controls()
+
+
+func _surface_block_reason() -> String:
+	if pick_cache.is_empty() or pick_cache.get("valid", false):
+		return ""
+	var hit: Vector3i = pick_cache.get("hit", Vector3i(-1, -1, -1))
+	if not VoxelCodec.in_bounds(hit):
+		return "miss"
+	var cell: Vector3i = pick_cache.get("target", Vector3i(-1, -1, -1))
+	if not VoxelCodec.in_bounds(cell):
+		return "boundary"
+	if section and cell[axis] > depth:
+		return "section"
+	if pick_cache.get("normal", Vector3i.ZERO) == Vector3i.ZERO:
+		return "inside"
+	return "unavailable"
+
+
+func _surface_feedback() -> String:
+	if pick_cache.is_empty():
+		return "Finding surface…" if pick_pending else "Aim at a visible material surface"
+	match _surface_block_reason():
+		"section": return "Cutaway blocks adding here · Show whole world above"
+		"boundary": return "Target leaves the world · use a smaller brush or another face"
+		"inside": return "View starts inside material · orbit to an outside face"
+		"miss": return "No surface here · aim at visible material"
+		"unavailable": return "Surface target unavailable · aim at another face"
+	return "Surface: erase hit material" if erase else "Surface: add outside visible material"
+
+
+func _refresh_target_controls() -> void:
+	if section_action:
+		section_action.visible = targeting_mode == TargetMode.SURFACE and _surface_block_reason() == "section"
+	if section_toggle:
+		section_toggle.set_pressed_no_signal(section)
 
 
 func set_plane(value: int) -> void:
@@ -1134,5 +1196,5 @@ func _process(delta: float) -> void:
 	status.text = "%s · %s · r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % ["ERASE" if erase else "Add into empty space", Elements.TABLE[element].name, radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else _test_phase(), "Live edits reset on return; no live undo" if testing else "%d undo · %d redo" % [undo_history.size(), redo_history.size()]]
 	if edit_message != "":
 		status.text += "\n" + edit_message
-	if targeting_mode == TargetMode.SURFACE:
-		status.text += "\n" + ("Finding surface…" if pick_pending and pick_cache.is_empty() else "Surface: add outside · erase hit material")
+	if targeting_mode == TargetMode.SURFACE and not section_action.visible:
+		status.text += "\n" + _surface_feedback()

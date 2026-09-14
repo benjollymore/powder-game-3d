@@ -1,0 +1,26 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: actual default editor keeps both frame loops active with a visible cutaway and closed construction tools
+ok: parsed GUI click opens the actual targeting dropdown
+ok: selecting Surface keeps the explicit cutaway geometry
+CUTAWAY_BLOCKED_PICK { "valid": false, "hit": (128, 52, 128), "normal": (0, 0, 1), "target": (128, 52, 132), "element": 3, "visited": 1, "epoch": 1, "revision": 1, "tick": 0 }
+ok: default water cut face produces explicit blocked feedback and visible recovery
+ok: Cutaway and recovery controls fit a 1280×800 laptop window
+ok: actual recovery click shows the whole world without changing any packed material
+ok: recovery preserves exact plane, surface tool and Build phase
+WHOLE_WORLD_PICK { "valid": true, "hit": (128, 67, 191), "normal": (0, 0, 1), "target": (128, 67, 195), "element": 1, "visited": 80, "epoch": 1, "revision": 1, "tick": 0 }
+ok: same real hover obtains a usable whole-world surface preview
+ok: parsed surface stroke after recovery changes the GPU at its visible target and records authored Undo
+ok: recovered additive stroke preserves every original container wall
+ok: recovered surface stroke undoes exactly
+ok: Erase on the original cut face remains valid without demanding whole-world recovery
+ok: parsed cut-face erase removes the intended material
+ok: cut-face erasing undoes exact seeds, amounts and flags
+ok: same scene enters paused Test for source-boundary validation
+ok: paused primary hold creates a live source with the whole-world view
+ok: Cutaway view command terminates the source while preserving paused Test
+ok: Test controls and full status remain inside the 1280×800 sidebar with cutaway feedback
+ok: next authoritative tick receives no stale pre-cutaway live stamp
+ok: Return restores authored material after view changes and live inspection
+Surface feedback GPU: 20 checks, 0 failures; evidence=/tmp/editor-surface-feedback/grid256
