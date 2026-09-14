@@ -82,6 +82,7 @@ const GESTURE_IDLE_MS := 350
 var gesture_owner := -1 # -1: no sequence, 0: tools, 1: scene
 var last_gesture_ms := -1
 var gesture_trace := false
+var _space_owned := false
 
 
 func _ready() -> void:
@@ -632,7 +633,42 @@ func _update_plane() -> void:
 	guide.mesh = mesh
 
 
+func _route_space(event: InputEventKey) -> bool:
+	if event.keycode != KEY_SPACE:
+		return false
+	if not event.pressed:
+		if not _space_owned:
+			return false
+		_space_owned = false
+		get_viewport().set_input_as_handled()
+		return true
+	if event.echo:
+		if _space_owned:
+			get_viewport().set_input_as_handled()
+		return _space_owned
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused is LineEdit or focused is TextEdit:
+		return false
+	if event.alt_pressed or event.ctrl_pressed or event.meta_pressed:
+		return false
+	if event.window_id != get_window().get_window_id():
+		return false
+	if is_instance_valid(archive_panel) and archive_panel._modal:
+		return false
+	if focused is OptionButton and focused.get_popup().visible:
+		return false
+	# Claim both edges before GUI dispatch: a focused Button otherwise also
+	# activates on Space release after the editor starts Run on the press.
+	_space_owned = true
+	depth_scroll_fraction = 0.0
+	get_viewport().set_input_as_handled()
+	run_or_restore()
+	return true
+
+
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey and _route_space(event):
+		return
 	if event is InputEventPanGesture or event is InputEventMagnifyGesture:
 		_route_gesture(event)
 		return
@@ -657,6 +693,7 @@ func _input(event: InputEvent) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_space_owned = false
 		_reset_gesture()
 		_end_stroke()
 		_stop_navigation()
@@ -714,8 +751,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and not event.echo:
 		_end_stroke()
 		match event.keycode:
-			KEY_SPACE:
-				run_or_restore()
 			KEY_Z:
 				if event.ctrl_pressed or event.meta_pressed:
 					undo_edit()
