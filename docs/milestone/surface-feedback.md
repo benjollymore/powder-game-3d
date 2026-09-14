@@ -27,4 +27,6 @@ godot --path . --resolution 1280x800 --always-on-top --disable-vsync -s res://te
 godot --path . --resolution 1280x800 --always-on-top --disable-vsync -s res://tests/milestone/surface_feedback_gpu.gd -- grid=256
 ```
 
-Fresh captures are written under `/tmp/editor-surface-feedback/grid128` or `grid256`, leaving historical discovery evidence intact. Raw final logs are also preserved with this report. This unit changes presentation and feedback around existing geometric rules; it does not alter region selection, surface masks, material simulation, history format or the default exact workplane.
+Fresh captures default to `/tmp/editor-surface-feedback/grid128` or `grid256`; `output_dir=` selects a separate evidence directory. Raw final logs are also preserved with this report. This unit changes presentation and feedback around existing geometric rules; it does not alter region selection, surface masks, material simulation, history format or the default exact workplane.
+
+Coordinator integration checks also pass: 20 GPU checks at each grid size, 10 feedback CPU checks and eight keyboard checks. Raw logs, distinct captures and command manifests are preserved in [cutaway-integrated](cutaway-integrated/). The integration harness honors output-directory overrides so reruns preserve earlier evidence.

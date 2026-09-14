@@ -6,6 +6,7 @@ var seconds := 20.0
 var scenario := "bowl"
 var output_dir := "/tmp/editor-soak"
 var surface_hover := false
+var quality := "editor"
 var original_cursor := Vector2i.ZERO
 var cursor_moved := false
 var surface_requests := 0
@@ -34,6 +35,8 @@ func _initialize() -> void:
 			output_dir = argument.trim_prefix("output_dir=")
 		elif argument == "surface_hover=1":
 			surface_hover = true
+		elif argument.begins_with("quality="):
+			quality = argument.trim_prefix("quality=")
 	create_timer(seconds + 90.0).timeout.connect(func():
 		_restore_cursor()
 		push_error("Editor soak watchdog")
@@ -83,6 +86,14 @@ func close_window(now: int) -> void:
 	window_first_sample = intervals.size()
 
 func run() -> void:
+	if quality not in ["editor", "project", "native-fxaa", "native-smaa", "metalfx-fxaa"]:
+		push_error("Unknown soak quality")
+		quit(1)
+		return
+	if quality not in ["editor", "project"]:
+		root.scaling_3d_scale = 0.75 if quality == "metalfx-fxaa" else 1.0
+		root.scaling_3d_mode = Viewport.SCALING_3D_MODE_METALFX_SPATIAL if quality == "metalfx-fxaa" else Viewport.SCALING_3D_MODE_BILINEAR
+		root.screen_space_aa = Viewport.SCREEN_SPACE_AA_SMAA if quality == "native-smaa" else Viewport.SCREEN_SPACE_AA_FXAA
 	if scenario != "bowl" and scenario not in Scenarios.names():
 		push_error("Unknown soak scenario")
 		quit(1)
@@ -103,15 +114,8 @@ func run() -> void:
 	if surface_hover:
 		# This workload exercises ordinary valid surface picks. The default cut
 		# cap can correctly reject outward placement beyond its visible slab.
-		editor.section = false
-		editor._update_plane()
-		for control in editor.find_children("*", "CheckButton", true, false):
-			if control.text.begins_with("Section view") or control.text.begins_with("Cutaway"):
-				control.set_pressed_no_signal(false)
-		for control in editor.find_children("*", "OptionButton", true, false):
-			if control.item_count == 2 and control.get_item_text(0) == "Workplane":
-				control.select(1)
-				control.item_selected.emit(1)
+		editor._set_section(false)
+		editor._set_target_mode(editor.TargetMode.SURFACE)
 		original_cursor = DisplayServer.mouse_get_position()
 		var pointer: Vector2 = editor.camera.unproject_position(sim.global_position + Vector3(0.0, -0.3, 0.0) * sim.world_size())
 		Input.warp_mouse(pointer)
@@ -134,6 +138,8 @@ func run() -> void:
 		return
 	print("EDITOR_SOAK_CONFIG ", JSON.stringify({"grid": VoxelCodec.GRID, "scenario": scenario,
 		"resolution": str(root.size), "seconds": seconds,
+		"quality": quality, "render_scale": root.scaling_3d_scale,
+		"render_scaling_mode": root.scaling_3d_mode, "screen_space_aa": root.screen_space_aa,
 		"surface_hover": surface_hover,
 		"section_enabled": editor.section,
 		"vsync_mode": DisplayServer.window_get_vsync_mode(), "target_tps": clock.TICKS_PER_SECOND,

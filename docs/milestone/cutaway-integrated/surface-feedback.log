@@ -1,0 +1,13 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: Surface preserves the explicit cutaway state and exposes it with advanced tools closed
+ok: actual cut-face rejection explains its cause and exposes whole-world recovery
+ok: valid cut-face erasing is not misreported as blocked
+ok: world-boundary rejection does not offer an ineffective cutaway recovery
+ok: empty-space miss gets distinct feedback
+ok: camera inside material suggests orbiting instead of unrelated plane placement
+ok: pending preview is distinguished from a rejected target
+ok: view change cancels an active live source instead of completing a stale click
+ok: explicit recovery preserves phase, exact plane coordinates and surface mode
+ok: whole-world recovery synchronizes visible state and invalidates old picks
+Surface feedback CPU: 10 checks, 0 failures

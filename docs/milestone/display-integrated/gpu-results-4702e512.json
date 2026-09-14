@@ -1,0 +1,42 @@
+[
+  {
+    "name": "workflow128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 2.2,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/editor_workflow_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/display-integrated/workflow128"
+    ]
+  },
+  {
+    "name": "gui-crossing128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 1.24,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/editor_gui_crossing_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/display-integrated/gui-crossing128"
+    ]
+  }
+]

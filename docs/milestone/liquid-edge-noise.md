@@ -51,7 +51,7 @@ Same state/camera/settings after:
 
 ![Corrected liquid exit](liquid-edge-evidence/cap-2-oblique-fixed-normal.png)
 
-[`capture_liquid_exit_stage.gd`](../../tools/milestone/capture_liquid_exit_stage.gd) reuses the authored water/oil/container/steps/sand/plant/steam specimen and changes only the volume shader. Six 1600×900 captures cover ordinary, X-section, and Z-section views at the existing 0.75 MetalFX scale plus FXAA. Grains, droplets, leaves, gas, and the opaque material pass remain enabled. Cosmetic live FX is disabled in this frozen fixture. The complete physical bytes remain identical, SHA-256:
+[`capture_liquid_exit_stage.gd`](../../tools/milestone/capture_liquid_exit_stage.gd) reuses the authored water/oil/container/steps/sand/plant/steam specimen and changes only the volume shader. Six 1600×900 captures cover ordinary, X-section, and Z-section views at the existing 0.75 render scale plus FXAA. The earlier description called this MetalFX based on the base project setting; later runtime inspection found Godot's macOS override selects bilinear mode. This script does not override that setting. Grains, droplets, leaves, gas, and the opaque material pass remain enabled. Cosmetic live FX is disabled in this frozen fixture. The complete physical bytes remain identical, SHA-256:
 
 ```text
 f99c9df0d8b9ccfc316c3befcd35495fca290e9aa45b002adc6999378e40a76e

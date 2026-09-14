@@ -1,0 +1,29 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: production editor and time loops remain enabled
+ok: GUI material click and bracket shortcut select a radius-two wall brush
+ok: parsed primary hold survives four active editor frames
+ok: fast parsed drag paints a connected ramp while preserving container walls
+ok: parsed release ends Input hold and completes one authored history entry
+ok: GUI Undo restores exact original packed bytes
+ok: parsed Space runs Test without also activating the focused Undo button
+ok: GUI Return after keyboard Run restores the untouched construction
+ok: second GUI-selected material produces sand above the ramp without replacing walls
+ok: parsed Option-primary drag orbits and releases cleanly
+ok: parsed pan and pinch reach camera controls
+ok: navigation and GUI Center leave exact authored matter and history unchanged
+ok: verified authored construction is exported as a reusable .p3d fixture
+ok: GUI Run captures the completed construction and starts Test
+ok: GUI Pause preserves GPU state with both frame loops active
+ok: GUI Single step advances exactly one tick through the active time loop
+ok: paused parsed press/hold/release makes no unscheduled material mutation
+ok: GUI step consumes the completed paused click exactly once
+ok: live held source survives the production per-frame Input guard
+ok: active-frame held source adds multiple real grains while simulation runs
+ok: live painting leaves authored snapshot/history separate
+WORKFLOW_MATERIAL sand_before_click=587 sand_after_step=588 sand_after_live_hold=597
+ok: GUI Return restores exact authored construction after live input
+ok: GUI Undo after Return removes only the last authored sand stroke
+ok: workflow restores the original OS cursor position
+Editor workflow GPU: 24 checks, 0 failures; evidence=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/display-integrated/workflow128

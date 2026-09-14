@@ -1,0 +1,164 @@
+{
+  "achieved_tps": 120.045468283572,
+  "authored_return_exact": true,
+  "cap_frames": 0,
+  "experiment_sha256": "eda7e112820b1b0fa0e2e43c8f0b2546d89e14cec163005afd1980fc076092ef",
+  "final_memory": {
+    "godot_static_bytes": 418180232,
+    "renderer_buffer_bytes": 46839164,
+    "renderer_texture_bytes": 207029504,
+    "renderer_video_bytes": 375390208
+  },
+  "frames": 1786,
+  "frames_drawn": 1786,
+  "max_ms": 17.071,
+  "mean_ms": 11.1986282194849,
+  "p95_ms": 15.267,
+  "surface_hit_frames": 0,
+  "surface_requests": 0,
+  "target_tps": 120.0,
+  "ticks": 2401,
+  "wall_s": 20.000755,
+  "windows": [
+    {
+      "elapsed_s": 2.013394,
+      "frames": 200,
+      "max_ms": 14.713,
+      "mean_ms": 10.06697,
+      "memory": {
+        "godot_static_bytes": 283894016,
+        "renderer_buffer_bytes": 46824932,
+        "renderer_texture_bytes": 207029504,
+        "renderer_video_bytes": 375390208
+      },
+      "p95_ms": 13.687,
+      "ticks_per_second": 119.201706173754
+    },
+    {
+      "elapsed_s": 4.013874,
+      "frames": 138,
+      "max_ms": 17.071,
+      "mean_ms": 14.496231884058,
+      "memory": {
+        "godot_static_bytes": 283901876,
+        "renderer_buffer_bytes": 46824932,
+        "renderer_texture_bytes": 207029504,
+        "renderer_video_bytes": 375390208
+      },
+      "p95_ms": 16.693,
+      "ticks_per_second": 120.471086939135
+    },
+    {
+      "elapsed_s": 6.015052,
+      "frames": 171,
+      "max_ms": 15.505,
+      "mean_ms": 11.7027953216374,
+      "memory": {
+        "godot_static_bytes": 283909204,
+        "renderer_buffer_bytes": 46824932,
+        "renderer_texture_bytes": 207029504,
+        "renderer_video_bytes": 375390208
+      },
+      "p95_ms": 15.105,
+      "ticks_per_second": 119.929361606014
+    },
+    {
+      "elapsed_s": 8.017049,
+      "frames": 179,
+      "max_ms": 14.539,
+      "mean_ms": 11.1843407821229,
+      "memory": {
+        "godot_static_bytes": 283910812,
+        "renderer_buffer_bytes": 46824932,
+        "renderer_texture_bytes": 207029504,
+        "renderer_video_bytes": 375390208
+      },
+      "p95_ms": 14.359,
+      "ticks_per_second": 120.379800768932
+    },
+    {
+      "elapsed_s": 10.025288,
+      "frames": 182,
+      "max_ms": 14.453,
+      "mean_ms": 11.0342802197802,
+      "memory": {
+        "godot_static_bytes": 283920892,
+        "renderer_buffer_bytes": 46824932,
+        "renderer_texture_bytes": 207029504,
+        "renderer_video_bytes": 375390208
+      },
+      "p95_ms": 14.279,
+      "ticks_per_second": 119.507688078959
+    },
+    {
+      "elapsed_s": 12.039325,
+      "frames": 182,
+      "max_ms": 14.948,
+      "mean_ms": 11.0661373626374,
+      "memory": {
+        "godot_static_bytes": 283922404,
+        "renderer_buffer_bytes": 46824932,
+        "renderer_texture_bytes": 207029504,
+        "renderer_video_bytes": 375390208
+      },
+      "p95_ms": 14.278,
+      "ticks_per_second": 120.15668033904
+    },
+    {
+      "elapsed_s": 14.041944,
+      "frames": 181,
+      "max_ms": 14.566,
+      "mean_ms": 11.0641933701657,
+      "memory": {
+        "godot_static_bytes": 283936780,
+        "renderer_buffer_bytes": 46824932,
+        "renderer_texture_bytes": 207029504,
+        "renderer_video_bytes": 375390208
+      },
+      "p95_ms": 14.301,
+      "ticks_per_second": 120.342411611994
+    },
+    {
+      "elapsed_s": 16.044394,
+      "frames": 182,
+      "max_ms": 14.506,
+      "mean_ms": 11.0024725274725,
+      "memory": {
+        "godot_static_bytes": 283938292,
+        "renderer_buffer_bytes": 46824932,
+        "renderer_texture_bytes": 207029504,
+        "renderer_video_bytes": 375390208
+      },
+      "p95_ms": 14.274,
+      "ticks_per_second": 120.352568104073
+    },
+    {
+      "elapsed_s": 18.052911,
+      "frames": 187,
+      "max_ms": 14.271,
+      "mean_ms": 10.7407326203209,
+      "memory": {
+        "godot_static_bytes": 283958980,
+        "renderer_buffer_bytes": 46824932,
+        "renderer_texture_bytes": 207029504,
+        "renderer_video_bytes": 375390208
+      },
+      "p95_ms": 14.097,
+      "ticks_per_second": 119.989026729672
+    },
+    {
+      "elapsed_s": 20.000755,
+      "frames": 184,
+      "max_ms": 14.117,
+      "mean_ms": 10.5860815217391,
+      "memory": {
+        "godot_static_bytes": 283960660,
+        "renderer_buffer_bytes": 46824932,
+        "renderer_texture_bytes": 207029504,
+        "renderer_video_bytes": 375390208
+      },
+      "p95_ms": 13.826,
+      "ticks_per_second": 120.132823778496
+    }
+  ]
+}

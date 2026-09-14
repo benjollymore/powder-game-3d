@@ -141,6 +141,7 @@ func _ready() -> void:
 	selection_mesh.visible = false
 	add_child(selection_mesh)
 	_build_ui()
+	preload("res://scripts/editor/display_preferences.gd").mount(self, advanced_tools)
 	preload("res://scripts/editor/editor_theme.gd").apply(tools_panel)
 	archive_panel = preload("res://scripts/editor/archive_panel.gd").new()
 	archive_panel.name = "AuthoredFiles"
@@ -347,7 +348,7 @@ func _build_ui() -> void:
 				_zoom(1.1 if action == "Zoom +" else 1.0 / 1.1))
 		navigation_row.add_child(button)
 	advanced_toggle = CheckButton.new()
-	advanced_toggle.text = "Construction & shortcuts"
+	advanced_toggle.text = "Tools & view options"
 	column.add_child(advanced_toggle)
 	advanced_tools = VBoxContainer.new()
 	advanced_tools.visible = false

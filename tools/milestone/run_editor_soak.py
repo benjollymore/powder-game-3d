@@ -19,6 +19,7 @@ def main() -> int:
     parser.add_argument("--seconds", type=float, default=20.0)
     parser.add_argument("--uncapped", action="store_true", help="disable VSync instead of ordinary play pacing")
     parser.add_argument("--surface-hover", action="store_true", help="warp cursor over the world and exercise live surface readbacks")
+    parser.add_argument("--quality", choices=["editor", "project", "native-fxaa", "native-smaa", "metalfx-fxaa"], default="editor")
     parser.add_argument("--output", default="docs/milestone/soak-" + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S"))
     args = parser.parse_args()
     if not 2 <= args.seconds <= 600:
@@ -37,7 +38,8 @@ def main() -> int:
             if args.uncapped:
                 command.append("--disable-vsync")
             command += ["-s", "res://tools/milestone/editor_soak.gd", "--", f"grid={grid}",
-                        f"seconds={args.seconds}", "scenario=" + scenario, "output_dir=" + str(case_dir)]
+                        f"seconds={args.seconds}", "scenario=" + scenario, "output_dir=" + str(case_dir),
+                        "quality=" + args.quality]
             if args.surface_hover:
                 command.append("surface_hover=1")
             started = time.monotonic()

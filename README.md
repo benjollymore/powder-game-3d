@@ -42,7 +42,7 @@ Pause/Resume and Single step let you inspect a live experiment without restoring
 | V / F | Center on the workplane / angled view |
 | B | Optional two-corner region tool |
 
-Construction tools include region filling and fresh empty/container builds. Undo and Redo share a bounded regional history; a changed new edit clears Redo. Live edits are discarded on Return; authored history is not a runtime rewind.
+Tools & view options include region filling, fresh empty/container builds, and a saved **Sharper / Faster** picture preference. Sharper is the full-resolution editor default; Faster lowers picture resolution without changing the simulation grid. Undo and Redo share a bounded regional history; a changed new edit clears Redo. Live edits are discarded on Return; authored history is not a runtime rewind.
 
 ## Verification
 

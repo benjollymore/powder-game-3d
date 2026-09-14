@@ -1,0 +1,74 @@
+[
+  {
+    "image": "front-default.png",
+    "quality": "default",
+    "resolution": "(1600, 900)",
+    "scale": 0.75,
+    "scaling_mode": 0,
+    "screen_aa": 1,
+    "view": "front"
+  },
+  {
+    "image": "front-metalfx-fxaa.png",
+    "quality": "metalfx-fxaa",
+    "resolution": "(1600, 900)",
+    "scale": 0.75,
+    "scaling_mode": 3,
+    "screen_aa": 1,
+    "view": "front"
+  },
+  {
+    "image": "front-native-fxaa.png",
+    "quality": "native-fxaa",
+    "resolution": "(1600, 900)",
+    "scale": 1.0,
+    "scaling_mode": 0,
+    "screen_aa": 1,
+    "view": "front"
+  },
+  {
+    "image": "front-native-smaa.png",
+    "quality": "native-smaa",
+    "resolution": "(1600, 900)",
+    "scale": 1.0,
+    "scaling_mode": 0,
+    "screen_aa": 2,
+    "view": "front"
+  },
+  {
+    "image": "angle-default.png",
+    "quality": "default",
+    "resolution": "(1600, 900)",
+    "scale": 0.75,
+    "scaling_mode": 0,
+    "screen_aa": 1,
+    "view": "angle"
+  },
+  {
+    "image": "angle-metalfx-fxaa.png",
+    "quality": "metalfx-fxaa",
+    "resolution": "(1600, 900)",
+    "scale": 0.75,
+    "scaling_mode": 3,
+    "screen_aa": 1,
+    "view": "angle"
+  },
+  {
+    "image": "angle-native-fxaa.png",
+    "quality": "native-fxaa",
+    "resolution": "(1600, 900)",
+    "scale": 1.0,
+    "scaling_mode": 0,
+    "screen_aa": 1,
+    "view": "angle"
+  },
+  {
+    "image": "angle-native-smaa.png",
+    "quality": "native-smaa",
+    "resolution": "(1600, 900)",
+    "scale": 1.0,
+    "scaling_mode": 0,
+    "screen_aa": 2,
+    "view": "angle"
+  }
+]

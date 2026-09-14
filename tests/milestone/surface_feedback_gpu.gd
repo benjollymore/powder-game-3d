@@ -13,6 +13,9 @@ func capture_pointer(name: String) -> void:
 	root.get_texture().get_image().save_png(output_dir.path_join(name + ".png"))
 func run() -> void:
 	output_dir = "/tmp/editor-surface-feedback/grid%d" % VoxelCodec.GRID
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("output_dir="):
+			output_dir = argument.trim_prefix("output_dir=")
 	DirAccess.make_dir_recursive_absolute(output_dir)
 	original_cursor = DisplayServer.mouse_get_position()
 	original_accumulation = Input.use_accumulated_input

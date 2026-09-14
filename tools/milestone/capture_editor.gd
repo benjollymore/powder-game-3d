@@ -31,6 +31,7 @@ func run() -> void:
 	root.add_child(editor)
 	current_scene = editor
 	await draw_frames(20)
+	print("EDITOR_DISPLAY scale=", root.scaling_3d_scale, " mode=", root.scaling_3d_mode, " aa=", root.screen_space_aa)
 	await capture("build-front")
 	editor.yaw = 0.65
 	editor.pitch = -0.4
@@ -43,5 +44,12 @@ func run() -> void:
 	await capture("test-paused")
 	editor.run_or_restore()
 	await capture("returned-build")
+	while editor.capturing:
+		await process_frame
+	editor.advanced_toggle.button_pressed = true
+	await capture("construction-and-picture")
 	print("EDITOR_CAPTURE complete")
+	editor.queue_free()
+	await process_frame
+	await process_frame
 	quit(0)
