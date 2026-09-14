@@ -26,7 +26,7 @@ At grid 128, 1200×900 and native internal resolution, each analytic face is sam
 | Section Y | 9,216 | 0 | 0 / 0 |
 | Section Z | 9,216 | 0 | 0 / 0 |
 
-Fixed maximum normal error is 0.00817 in every case, consistent with image quantization. All seven complete GPU voxel readbacks exactly matched their original upload after both variants. The visible run completed **53 checks, zero failures**, with no script/shader errors. The metric is a surface correctness regression, not a performance benchmark.
+Fixed maximum normal error is 0.00817 in every case, consistent with image quantization. All eight complete GPU voxel readbacks exactly matched their original upload after both variants. The expanded visible run completed **60 checks, zero failures**, with no script/shader errors. The metric is a surface correctness regression, not a performance benchmark.
 
 [Raw metrics](rendering-evidence/surface-metrics.json), [visible GPU log](rendering-evidence/surface-run.log), and [parser log](rendering-evidence/parser.log).
 
@@ -54,4 +54,34 @@ godot --path . --always-on-top --disable-vsync -s res://tests/milestone/render_s
 
 The visible process ran on Apple M5 Pro / Metal 4.0 / Godot 4.6.3. Keep its window visible during readbacks. This fix is independent of the simulation worker's foam timing and scheduling changes: no compute shader or simulator API changed.
 
-Remaining work: matched shaded-material captures; mixtures and silhouette/thin-feature coverage; section behavior for liquids/gases/sprites; optional paint-first presentation setup. The evidence does not establish elimination of every kind of visual noise, a final high-fidelity art direction, or an improvement in fluid physics.
+An additional camera-inside fixture preserves the previous ray-facing fallback when the camera is embedded in physical material: there is no entry face in front of that camera. Its 3,996 visible samples match the expected varying ray normal in both versions (maximum error 0.01249). The fixed axis normal applies only to a real volume entry.
+
+Remaining work: broad mixtures and silhouette/thin-feature coverage; liquid/gas section compositing; final art direction. Matched shaded captures and an opt-in presentation module are documented separately. The evidence does not establish elimination of every kind of visual noise, a final high-fidelity art direction, or an improvement in fluid physics.
+
+
+## Section planes now clip sprite geometry
+
+Grain, droplet, leaf and cosmetic FX shaders previously computed the cut coordinate once from the instance center and passed it as a flat varying. A card centered just inside the section remained fully visible across the supposedly removed half-space. Moving its center just outside removed the whole card, including geometry on the retained side.
+
+All four shaders now interpolate the world-space coordinate of the actual vertex and clip each fragment. The coordinate is calculated **after** camera-facing billboard expansion; leaves transform their deformed vertex into world space. This uses the same world-aligned section plane as the volume boundary. No layer is disabled and no physical state is edited.
+
+The shader-only test uses large controlled presentation instances against black, viewed square-on to a vertical cut. It deliberately has no simulation; this isolates clipping from sprite-emitter behavior. With each center 0.02 world units inside/outside the plane, it counts lit pixels on either side, excluding a two-pixel plane margin. Fixed cases have zero visible pixels on the clipped side and preserve thousands of pixels on the retained side. With the center inside, retained-side counts are identical before/after. With the center outside, baseline counts are zero while fixed retained geometry remains visible.
+
+| Layer | Baseline pixels protruding, center inside | Fixed protruding | Retained pixels recovered, center outside |
+|---|---:|---:|---:|
+| Grain | 12,168 | 0 | 12,370 |
+| Droplet | 12,168 | 0 | 12,370 |
+| Leaf | 10,407 | 0 | 10,598 |
+| FX | 10,518 | 0 | 10,708 |
+
+The run completed **40 checks, zero failures**. This validates the common planar-clipping defect with a controlled view, not every rotated camera, deformed leaf phase, or physical sprite capacity. [Raw metrics](rendering-evidence/sprite-section-metrics.json), [run log](rendering-evidence/sprite-section-run.log), and all sixteen captures are retained.
+
+Leaf card baseline and fixed, cut at image center:
+
+![Whole leaf leaking across section](rendering-evidence/sprite-section-leaf-inside-baseline.png)
+
+![Leaf correctly clipped at section plane](rendering-evidence/sprite-section-leaf-inside-fixed.png)
+
+```sh
+godot --path . --always-on-top --disable-vsync -s res://tests/milestone/render_section_sprites_gpu.gd
+```

@@ -1,5 +1,21 @@
 [
 	{
+		"case": "camera-inside",
+		"max_normal_error": 0.0124840848147869,
+		"missing": 0,
+		"samples": 3996,
+		"variant": "baseline",
+		"wrong_normals": 0
+	},
+	{
+		"case": "camera-inside",
+		"max_normal_error": 0.0124840848147869,
+		"missing": 0,
+		"samples": 3996,
+		"variant": "fixed",
+		"wrong_normals": 0
+	},
+	{
 		"case": "floor-oblique",
 		"max_normal_error": 1.41014921665192,
 		"missing": 0,

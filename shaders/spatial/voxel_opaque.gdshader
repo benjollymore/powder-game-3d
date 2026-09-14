@@ -120,8 +120,14 @@ void fragment() {
 	if (t_hit == 0.0) {
 		// Entering a clipped volume creates an axis-aligned cap. Ray-facing
 		// normals made that flat cross-section shade like a curved surface.
-		face_model = vec3(0.0);
-		face_model[r.axis] = -float(r.step_dir[r.axis]);
+		if (r.t_enter >= 0.0) {
+			face_model = vec3(0.0);
+			face_model[r.axis] = -float(r.step_dir[r.axis]);
+		} else {
+			// Preserve the existing fallback for a camera embedded in material;
+			// there is no entry face between the camera and the sample.
+			face_model = -r.dir;
+		}
 		n_model = face_model;
 	}
 

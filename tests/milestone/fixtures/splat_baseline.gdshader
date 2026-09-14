@@ -15,9 +15,7 @@ uniform vec3 light_dir = vec3(0.4, 1.0, 0.3); // toward the sun, world space
 varying vec2 v_uv;
 varying flat vec4 v_custom;
 varying float v_vis;
-// Interpolated per fragment: clipping the instance center lets geometry
-// protrude across the section and makes whole cards pop at the boundary.
-varying float v_section_cell;
+varying flat float v_section_cell;
 uniform bool section_enabled = false;
 uniform int section_axis = 2;
 uniform int section_cell = 127;
@@ -27,13 +25,13 @@ void vertex() {
 	// With world_vertex_coords VERTEX arrives in world space, so the quad's
 	// local corner comes from UV instead.
 	vec3 origin = MODEL_MATRIX[3].xyz;
+	v_section_cell = (origin[section_axis] - box_center[section_axis] + box_half) / (2.0 * box_half) * float(grid_size);
 	float size = length(MODEL_MATRIX[0].xyz);
 	v_uv = UV - 0.5;
 	v_custom = INSTANCE_CUSTOM;
 	vec3 right = INV_VIEW_MATRIX[0].xyz;
 	vec3 up = INV_VIEW_MATRIX[1].xyz;
 	VERTEX = origin + (right * v_uv.x + up * v_uv.y) * size;
-	v_section_cell = (VERTEX[section_axis] - box_center[section_axis] + box_half) / (2.0 * box_half) * float(grid_size);
 	NORMAL = INV_VIEW_MATRIX[2].xyz;
 	vec3 uvw = (origin - (box_center - vec3(box_half))) / (2.0 * box_half) + normalize(light_dir) * 0.02;
 	v_vis = texture(sunvis, clamp(uvw, vec3(0.002), vec3(0.998))).r;

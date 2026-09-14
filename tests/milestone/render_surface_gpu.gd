@@ -43,6 +43,7 @@ func _run() -> void:
 	for i in 30:
 		await process_frame
 	var cases: Array[Dictionary] = [
+		{"name": "camera-inside", "lo": Vector3i.ZERO, "hi": Vector3i(128,128,128), "axis": 2, "plane": 0, "section": false, "camera": Vector3.ZERO, "inside": true},
 		{"name": "floor-oblique", "lo": Vector3i(8,16,8), "hi": Vector3i(120,20,120), "axis": 1, "plane": 20, "section": false, "camera": Vector3(0.82,0.50,0.90)},
 		{"name": "floor-reverse", "lo": Vector3i(8,16,8), "hi": Vector3i(120,20,120), "axis": 1, "plane": 20, "section": false, "camera": Vector3(-0.90,0.70,0.42)},
 		{"name": "floor-grazing", "lo": Vector3i(8,16,8), "hi": Vector3i(120,20,120), "axis": 1, "plane": 20, "section": false, "camera": Vector3(0.75,-0.18,1.10)},
@@ -79,7 +80,7 @@ func _run() -> void:
 			print(JSON.stringify(row))
 			_check(img.save_png(out_dir + "/" + c.name + "-" + row.variant + "-normals.png") == OK, "capture " + c.name + " " + row.variant)
 			if not baseline:
-				_check(row.samples > 3000, c.name + " has a substantial visible analytic surface sample")
+				_check(row.samples > (1500 if c.get("inside",false) else 3000), c.name + " has a substantial visible analytic surface sample")
 				_check(row.missing == 0, c.name + " has complete interior surface coverage")
 				_check(row.wrong_normals == 0, c.name + " has constant correct flat-surface normals")
 		if c.name == "floor-oblique" or c.name.begins_with("section-"):
@@ -126,6 +127,8 @@ func _measure(img: Image, c: Dictionary) -> Dictionary:
 			if maxf(col.r, maxf(col.g, col.b)) < 0.1:
 				missing += 1
 				continue
+			if c.get("inside",false):
+				normal = -camera.project_ray_normal(Vector2(pixel) + Vector2.ONE * 0.5)
 			var observed := Vector3(col.r, col.g, col.b) * 2.0 - Vector3.ONE
 			var err := observed.distance_to(normal)
 			max_error = maxf(max_error, err)
