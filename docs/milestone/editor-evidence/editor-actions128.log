@@ -1,0 +1,15 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: Undo ends the stroke and retains the action while history is pending
+ok: queued Undo restores exact GPU bytes after the capture completes
+ok: Run requested during capture is retained
+ok: queued Run starts with the completed authored stroke
+ok: Return restores the exact construction captured by queued Run
+ok: authored Undo still applies after Run and Return
+ok: latest explicit replacement supersedes an older queued action
+ok: queued Reset produces the fresh container without replaying Empty afterward
+ok: Empty build resets GPU state, selection mode and history
+ok: stale Run readback cannot activate a replaced world
+ok: Reset requested during Run preparation is carried through to paused Build
+Editor actions GPU: 11 checks, 0 failures

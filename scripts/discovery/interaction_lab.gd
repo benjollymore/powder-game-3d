@@ -16,6 +16,8 @@ var pick_cache := {}
 var last_pick_ms := 0
 var tools_column: VBoxContainer
 var archive_panel: Node
+var _queued_editor_action := ""
+var _editor_action_scheduled := false
 var live_emitter_signature := 0
 
 var sim: Node3D
@@ -128,6 +130,7 @@ func replace_authored(bytes: PackedByteArray) -> bool:
 	if capturing or painting or bytes.size() != VoxelCodec.GRID * VoxelCodec.GRID * VoxelCodec.GRID * 4:
 		return false
 	_end_stroke()
+	_queued_editor_action = ""
 	_invalidate_picks()
 	_reset_gesture()
 	_stop_navigation()
@@ -140,6 +143,8 @@ func replace_authored(bytes: PackedByteArray) -> bool:
 	build_snapshot.clear()
 	corner_a = Vector3i(-1, -1, -1)
 	corner_b = Vector3i(-1, -1, -1)
+	selecting = false
+	selection_toggle.button_pressed = false
 	selection_mesh.visible = false
 	selection_status.text = "Region: no corners selected"
 	play_button.text = "Run experiment · Space"
@@ -308,21 +313,53 @@ func _build_ui() -> void:
 
 
 func reset_container() -> void:
-	if capturing:
+	if _wait_for_edit("reset"):
 		return
-	_end_stroke()
-	testing = false
-	undo_history.clear()
-	undo_bytes = 0
-	build_snapshot.clear()
-	if play_button:
-		play_button.text = "Run experiment · Space"
-	TimeController.paused = true
 	var n := VoxelCodec.GRID
 	var data := WorldBuilder.empty()
 	WorldBuilder.fill_bowl(data, Vector3i(n / 4, n / 6, n / 4), Vector3i(n * 3 / 4, n * 2 / 3, n * 3 / 4), maxi(2, n / 64))
 	WorldBuilder.fill_box(data, Vector3i(n / 3, n / 5, n / 3), Vector3i(n * 2 / 3, n / 3, n * 2 / 3), Elements.Id.WATER)
-	sim.upload(data.to_byte_array())
+	replace_authored(data.to_byte_array())
+
+
+func new_empty_build() -> void:
+	if not _wait_for_edit("empty"):
+		replace_authored(WorldBuilder.empty().to_byte_array())
+
+
+## Preserve the latest explicit action while the finished stroke's regional
+## history is arriving. This is a single intent, never an unbounded click queue.
+func _wait_for_edit(action: String) -> bool:
+	_end_stroke()
+	if not capturing:
+		_queued_editor_action = ""
+		return false
+	_queued_editor_action = action
+	_schedule_editor_action()
+	edit_message = "Finishing edit…"
+	return true
+
+
+func _schedule_editor_action() -> void:
+	if not _editor_action_scheduled:
+		_editor_action_scheduled = true
+		get_tree().process_frame.connect(_resume_editor_action, CONNECT_ONE_SHOT)
+
+
+func _resume_editor_action() -> void:
+	_editor_action_scheduled = false
+	if _queued_editor_action.is_empty():
+		return
+	if capturing:
+		_schedule_editor_action()
+		return
+	var action := _queued_editor_action
+	_queued_editor_action = ""
+	match action:
+		"undo": undo_edit()
+		"run": run_or_restore()
+		"reset": reset_container()
+		"empty": new_empty_build()
 
 
 func set_plane(value: int) -> void:
@@ -615,9 +652,8 @@ func _begin_authored_edit() -> void:
 
 
 func undo_edit() -> void:
-	if capturing or testing:
+	if testing or _wait_for_edit("undo"):
 		return
-	_end_stroke()
 	if not undo_history.is_empty():
 		var result: Dictionary = undo_history.pop_back()
 		undo_bytes -= result.bytes
@@ -626,9 +662,8 @@ func undo_edit() -> void:
 
 
 func run_or_restore() -> void:
-	if capturing:
+	if _wait_for_edit("run"):
 		return
-	_end_stroke()
 	if testing:
 		TimeController.paused = true
 		sim.upload(build_snapshot)
@@ -640,9 +675,14 @@ func run_or_restore() -> void:
 		play_button.text = "Run experiment · Space"
 	else:
 		capturing = true
+		var epoch: int = sim.edit_epoch
+		var revision: int = sim.edit_revision
 		sim.request_readback(func(bytes: PackedByteArray):
-			build_snapshot = bytes
 			capturing = false
+			if sim.edit_epoch != epoch or sim.edit_revision != revision:
+				edit_message = "The build changed while preparing the experiment; run it again."
+				return
+			build_snapshot = bytes
 			testing = true
 			TimeController.time_scale = 1.0
 			TimeController.paused = false
