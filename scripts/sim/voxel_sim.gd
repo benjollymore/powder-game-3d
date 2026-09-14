@@ -25,6 +25,9 @@ signal scenario_changed(name: String)
 signal velocity_ready(bytes: PackedByteArray)
 
 var GRID: int = VoxelCodec.GRID
+## Scene units are metres; every voxel is one centimetre, so the box is
+## GRID cm across (1.28 m at 128, 2.56 m at 256).
+const METRES_PER_VOXEL := 0.01
 const SIM_SHADER_PATH := "res://shaders/compute/sim.glsl"
 const BRUSH_SHADER_PATH := "res://shaders/compute/brush.glsl"
 const BRUSH_LOCAL_SIZE := 8
@@ -44,12 +47,14 @@ const OCCUPANCY_SHADER_PATH := "res://shaders/compute/occupancy.glsl"
 const BRICK := 8
 var OCCUPANCY_GRID: int = GRID / BRICK
 
-enum BrushMode { REPLACE, ONLY_AIR, ERASE }
+enum BrushMode { REPLACE, ONLY_AIR, ERASE, BOX }
 ## 2x2x2 blocks with a partition offset straddle the edge: GRID/2 + 1 blocks
 ## per axis, 4x4x4 threads per workgroup.
 var DISPATCH_GROUPS: int = ceili((GRID / 2 + 1) / 4.0)
 ## Push constants: uvec4 a (tick, seed, substep, flags) + uvec4 b (offset xyz, 0).
 const PUSH_CONSTANT_INTS := 8
+## Brush push constants: ivec4 center/lo + radius, uvec4 element/mode/seed/amount, ivec4 box hi.
+const BRUSH_PUSH_INTS := 12
 
 @export var mesh_path: NodePath = ^"Mesh"
 @export var world_seed := 12345
@@ -109,8 +114,14 @@ var _elements_buffer := RID()
 var _reactions_buffer := RID()
 
 
+## Box edge length in scene units for the current grid.
+static func world_size() -> float:
+	return VoxelCodec.GRID * METRES_PER_VOXEL
+
+
 func _ready() -> void:
 	add_to_group("sim")
+	scale = Vector3.ONE * world_size()
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("scenario="):
 			current_scenario = arg.substr(9)
@@ -129,7 +140,9 @@ func _ready() -> void:
 	_material.set_shader_parameter("voxels", _texture)
 	_material.set_shader_parameter("occupancy", _occ_texture)
 	_material.set_shader_parameter("brick_size", GRID / OCCUPANCY_GRID)
-	RenderingServer.call_on_render_thread(_rt_init.bind(build_test_pattern()))
+	RenderingServer.call_on_render_thread(_rt_init)
+	# The first world is built on the GPU right after the textures exist.
+	RenderingServer.call_on_render_thread(_rt_run_ops.bind(Scenarios.ops(current_scenario)))
 	if listen_to_time_controller:
 		TimeController.ticks_requested.connect(request_ticks)
 
@@ -256,7 +269,7 @@ static func mass(bytes: PackedByteArray, id: int) -> int:
 
 # --- render thread -------------------------------------------------------------
 
-func _rt_init(initial: PackedByteArray) -> void:
+func _rt_init() -> void:
 	_rd = RenderingServer.get_rendering_device()
 	assert(_rd != null, "No RenderingDevice: needs Forward+/Mobile renderer and a window (not --headless)")
 
@@ -274,7 +287,8 @@ func _rt_init(initial: PackedByteArray) -> void:
 		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
 		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT
 	)
-	_grid_rid = _rd.texture_create(fmt, RDTextureView.new(), [initial])
+	_grid_rid = _rd.texture_create(fmt, RDTextureView.new())
+	_rd.texture_clear(_grid_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
 
 	var props := Elements.property_bytes()
 	_elements_buffer = _rd.storage_buffer_create(props.size(), props)
@@ -603,15 +617,51 @@ static func partition_offset(t: int) -> Vector3i:
 func _rt_paint(center: Vector3i, radius: int, element: int, mode: int, seed: int) -> void:
 	if not _brush_pipeline.is_valid():
 		return
-	var groups := ceili(float(2 * radius + 1) / BRUSH_LOCAL_SIZE)
-	var push := PackedInt32Array([center.x, center.y, center.z, radius, element, mode, seed,
-		Elements.default_amount(element)])
-	var bytes := push.to_byte_array()
 	var cl := _rd.compute_list_begin()
 	_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
 	_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
+	_rt_brush_sphere(cl, center, radius, element, mode, seed, Elements.default_amount(element))
+	_rd.compute_list_end()
+	_rt_occupancy_update()
+
+
+func _rt_brush_sphere(cl: int, center: Vector3i, radius: int, element: int, mode: int, seed: int, amount: int) -> void:
+	var groups := ceili(float(2 * radius + 1) / BRUSH_LOCAL_SIZE)
+	var push := PackedInt32Array([center.x, center.y, center.z, radius, element, mode, seed, amount, 0, 0, 0, 0])
+	var bytes := push.to_byte_array()
 	_rd.compute_list_set_push_constant(cl, bytes, bytes.size())
 	_rd.compute_list_dispatch(cl, groups, groups, groups)
+	_rd.compute_list_add_barrier(cl)
+
+
+func _rt_brush_box(cl: int, lo: Vector3i, hi: Vector3i, element: int, seed: int, amount: int) -> void:
+	var size := (hi - lo).max(Vector3i.ZERO)
+	if size.x == 0 or size.y == 0 or size.z == 0:
+		return
+	var push := PackedInt32Array([lo.x, lo.y, lo.z, 0, element, BrushMode.BOX, seed, amount, hi.x, hi.y, hi.z, 0])
+	var bytes := push.to_byte_array()
+	_rd.compute_list_set_push_constant(cl, bytes, bytes.size())
+	_rd.compute_list_dispatch(cl, ceili(size.x / float(BRUSH_LOCAL_SIZE)), ceili(size.y / float(BRUSH_LOCAL_SIZE)), ceili(size.z / float(BRUSH_LOCAL_SIZE)))
+	_rd.compute_list_add_barrier(cl)
+
+
+## Clear the world and replay scenario ops (see Scenarios.ops) on the GPU.
+func _rt_run_ops(ops: Array) -> void:
+	if not _brush_pipeline.is_valid():
+		return
+	_rd.texture_clear(_grid_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
+	_rt_air_clear()
+	var cl := _rd.compute_list_begin()
+	_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
+	_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
+	var seed := 1
+	for op in ops:
+		seed += 7919
+		if op["type"] == "box":
+			_rt_brush_box(cl, op["lo"], op["hi"], op["id"], seed, op["amount"])
+		else:
+			var c: Vector3 = op["center"]
+			_rt_brush_sphere(cl, Vector3i(c.round()), int(round(op["radius"])), op["id"], BrushMode.REPLACE, seed, op["amount"])
 	_rd.compute_list_end()
 	_rt_occupancy_update()
 
@@ -685,7 +735,10 @@ func build_test_pattern() -> PackedByteArray:
 	return Scenarios.build(current_scenario)
 
 
+## Build a preset world on the GPU (box and sphere fills), no CPU voxel loops.
 func load_scenario(name: String) -> void:
 	current_scenario = name
-	upload(Scenarios.build(name))
+	RenderingServer.call_on_render_thread(_rt_run_ops.bind(Scenarios.ops(name)))
+	tick = 0
+	TimeController.reset_tick_counter()
 	scenario_changed.emit(name)

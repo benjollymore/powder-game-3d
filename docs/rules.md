@@ -89,3 +89,11 @@ each element's `extinction`; fire also carries `emission` so it blooms. The
 material is transparent with premultiplied alpha, so the ground and sky show
 through water and gas at the box faces, and it writes depth at the first
 surface so other meshes composite correctly.
+
+## Scenarios
+
+`scripts/scenarios/scenarios.gd` authors presets in a 128-voxel reference box
+as a list of box and sphere fills, scaled to the real grid. The sim replays the
+list on the GPU through the brush kernel's box mode (`load_scenario`), so a
+256³ world loads without a CPU voxel loop; `Scenarios.build` replays the same
+list on the CPU for tests.

@@ -4,9 +4,9 @@ A 3D falling-sand physics sandbox in the spirit of Powder Game / The Powder Toy,
 built with Godot 4 as a learning project. Fly anywhere around a glass box,
 freeze time, step it, slow it down, paint elements in, and let it go.
 
-World size is the project setting `powder/sim/grid_size` (128 by default, a
-multiple of 8; 256 is the target for play and costs ~8x per tick) and can be
-overridden per run with `-- grid=256`.
+World size is the project setting `powder/sim/grid_size` (256 by default, a
+multiple of 8; every voxel is one centimetre so the box is 2.56 m) and can be
+overridden per run with `-- grid=128`, which is what the tests use.
 
 Requires **Godot 4.6.3** (4.7.x hangs at startup on Apple M4/M5 + macOS 26,
 see godotengine/godot#123479). Open `project.godot` in the editor and press
@@ -43,9 +43,9 @@ to start in a preset.
 
 ```sh
 # CPU-only unit tests (headless)
-godot --headless --path . -s res://tests/unit/run_unit.gd
+godot --headless --path . -s res://tests/unit/run_unit.gd -- grid=128
 # GPU simulation tests (need a window: headless has no RenderingDevice)
-godot --path . --resolution 320x240 -s res://tests/gpu/run_gpu_tests.gd
+godot --path . --resolution 320x240 -s res://tests/gpu/run_gpu_tests.gd -- grid=128
 ```
 
 See `docs/` for the voxel format and simulation rules.

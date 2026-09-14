@@ -34,6 +34,8 @@ func _run() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("only="):
 			only = arg.substr(5)
+	if GRID != 128 and only == "":
+		push_warning("GPU tests are authored for grid=128; running the full suite at %d will fail on coordinates" % GRID)
 	# [name, rule_flags]: 3 = movement only (no reactions, no decay).
 	var tests := [
 		["_test_sand_settles", 3], ["_test_water_levels", 3], ["_test_steam_rises", 3],

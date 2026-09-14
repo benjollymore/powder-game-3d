@@ -21,7 +21,7 @@ window/size/viewport_height=900
 
 [powder]
 
-sim/grid_size=128
+sim/grid_size=256
 
 [rendering]
 

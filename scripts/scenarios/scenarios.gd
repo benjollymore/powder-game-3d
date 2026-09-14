@@ -2,6 +2,9 @@ class_name Scenarios
 extends RefCounted
 ## Preset worlds. Each builder returns the full world as bytes. They double as
 ## living demos of the simulation milestones.
+##
+## Scenarios are authored in a 128-voxel reference box and scaled to the
+## actual grid, so a 256^3 world gets the same layout at twice the resolution.
 
 const AIR := Elements.Id.AIR
 const WALL := Elements.Id.WALL
@@ -13,14 +16,24 @@ const PLANT := Elements.Id.PLANT
 const OIL := Elements.Id.OIL
 
 const DEFAULT := "Demo"
+## Reference box the coordinates below are written in.
+const REF := 128
 
 
 static func names() -> PackedStringArray:
 	return PackedStringArray(["Demo", "Dam break", "U-bend", "Pressure pipe", "Forest fire", "Oil spill", "Steam vent", "Empty"])
 
 
-static func build(name: String) -> PackedByteArray:
-	var data := WorldBuilder.empty()
+## Primitive ops (already scaled to the grid) that make up a scenario.
+## Each is {"type": "box", "lo", "hi", "id", "amount"} or
+## {"type": "sphere", "center", "radius", "id", "amount"}. The sim replays them
+## on the GPU; `build` replays them on the CPU for tests.
+static var _ops: Array = []
+
+
+static func ops(name: String) -> Array:
+	_ops = []
+	var data := PackedInt32Array()
 	match name:
 		"Dam break": _dam_break(data)
 		"U-bend": _u_bend(data)
@@ -28,99 +41,146 @@ static func build(name: String) -> PackedByteArray:
 		"Forest fire": _forest_fire(data)
 		"Oil spill": _oil_spill(data)
 		"Steam vent": _steam_vent(data)
-		"Empty": WorldBuilder.floor(data)
+		"Empty": _floor(data)
 		_: _demo(data)
+	var out := _ops
+	_ops = []
+	return out
+
+
+static func build(name: String) -> PackedByteArray:
+	var data := WorldBuilder.empty()
+	for op in ops(name):
+		if op["type"] == "box":
+			WorldBuilder.fill_box(data, op["lo"], op["hi"], op["id"], op["amount"])
+		else:
+			WorldBuilder.fill_sphere(data, op["center"], op["radius"], op["id"], op["amount"])
 	return data.to_byte_array()
 
 
 ## A bit of everything: sand pile, bowl catching a water cube, steam, a tree
 ## that catches fire, an oil pool.
 static func _demo(data: PackedInt32Array) -> void:
-	WorldBuilder.floor(data)
-	WorldBuilder.fill_sphere(data, Vector3(VoxelCodec.GRID * 0.5, VoxelCodec.GRID * 0.55, VoxelCodec.GRID * 0.5), VoxelCodec.GRID * 0.2, SAND)
-	WorldBuilder.fill_bowl(data, Vector3i(4, 0, 4), Vector3i(44, 30, 44))
-	WorldBuilder.fill_box(data, Vector3i(10, 60, 10), Vector3i(34, 84, 34), WATER)
-	WorldBuilder.fill_box(data, Vector3i(84, 8, 8), Vector3i(104, 28, 28), STEAM)
+	_floor(data)
+	_sphere(data, Vector3(REF * 0.5, REF * 0.55, REF * 0.5), REF * 0.2, SAND)
+	_bowl(data, Vector3i(4, 0, 4), Vector3i(44, 30, 44))
+	_box(data, Vector3i(10, 60, 10), Vector3i(34, 84, 34), WATER)
+	_box(data, Vector3i(84, 8, 8), Vector3i(104, 28, 28), STEAM)
 	_tree(data, Vector3i(106, 4, 106), 36, 12, 36)
-	WorldBuilder.fill_box(data, Vector3i(96, 4, 100), Vector3i(100, 8, 112), FIRE)
-	WorldBuilder.fill_box(data, Vector3i(50, 4, 100), Vector3i(62, 16, 124), OIL)
+	_box(data, Vector3i(96, 4, 100), Vector3i(100, 8, 112), FIRE)
+	_box(data, Vector3i(50, 4, 100), Vector3i(62, 16, 124), OIL)
 
 
 ## A reservoir held back by a wall with a notch already cut in it.
 static func _dam_break(data: PackedInt32Array) -> void:
-	WorldBuilder.floor(data)
-	WorldBuilder.fill_box(data, Vector3i(60, 4, 0), Vector3i(64, 70, VoxelCodec.GRID), WALL)      # dam
-	WorldBuilder.fill_box(data, Vector3i(60, 4, 52), Vector3i(64, 30, 76), AIR)        # breach
-	WorldBuilder.fill_box(data, Vector3i(2, 4, 2), Vector3i(60, 60, VoxelCodec.GRID - 2), WATER)  # reservoir
-	WorldBuilder.fill_sphere(data, Vector3(100, 12, 40), 10.0, SAND)                   # downstream pile
+	_floor(data)
+	_box(data, Vector3i(60, 4, 0), Vector3i(64, 70, REF), WALL)      # dam
+	_box(data, Vector3i(60, 4, 52), Vector3i(64, 30, 76), AIR)        # breach
+	_box(data, Vector3i(2, 4, 2), Vector3i(60, 60, REF - 2), WATER)  # reservoir
+	_sphere(data, Vector3(100, 12, 40), 10.0, SAND)                   # downstream pile
 	_tree(data, Vector3i(104, 4, 90), 24, 6, 24)
 
 
 ## One arm filled; water finds its level through the bottom channel.
 static func _u_bend(data: PackedInt32Array) -> void:
-	WorldBuilder.floor(data)
-	WorldBuilder.fill_box(data, Vector3i(20, 4, 44), Vector3i(108, 100, 84), WALL)
-	WorldBuilder.fill_box(data, Vector3i(26, 10, 50), Vector3i(42, 100, 78), AIR)     # left arm
-	WorldBuilder.fill_box(data, Vector3i(86, 10, 50), Vector3i(102, 100, 78), AIR)    # right arm
-	WorldBuilder.fill_box(data, Vector3i(26, 10, 50), Vector3i(102, 18, 78), AIR)     # channel
-	WorldBuilder.fill_box(data, Vector3i(26, 18, 50), Vector3i(42, 90, 78), WATER)
+	_floor(data)
+	_box(data, Vector3i(20, 4, 44), Vector3i(108, 100, 84), WALL)
+	_box(data, Vector3i(26, 10, 50), Vector3i(42, 100, 78), AIR)     # left arm
+	_box(data, Vector3i(86, 10, 50), Vector3i(102, 100, 78), AIR)    # right arm
+	_box(data, Vector3i(26, 10, 50), Vector3i(102, 18, 78), AIR)     # channel
+	_box(data, Vector3i(26, 18, 50), Vector3i(42, 90, 78), WATER)
 
 
 ## An open tank feeds a narrow riser outside it; water climbs to the tank level.
 static func _pressure_pipe(data: PackedInt32Array) -> void:
-	WorldBuilder.floor(data)
-	WorldBuilder.fill_bowl(data, Vector3i(20, 4, 30), Vector3i(76, 80, 86), 3)
-	WorldBuilder.fill_box(data, Vector3i(23, 7, 33), Vector3i(73, 60, 83), WATER)
-	WorldBuilder.fill_box(data, Vector3i(76, 4, 52), Vector3i(92, 100, 64), WALL)      # riser casing
-	WorldBuilder.fill_box(data, Vector3i(73, 7, 56), Vector3i(86, 10, 60), AIR)        # floor channel
-	WorldBuilder.fill_box(data, Vector3i(82, 7, 56), Vector3i(86, 100, 60), AIR)       # riser
+	_floor(data)
+	_bowl(data, Vector3i(20, 4, 30), Vector3i(76, 80, 86), 3)
+	_box(data, Vector3i(23, 7, 33), Vector3i(73, 60, 83), WATER)
+	_box(data, Vector3i(76, 4, 52), Vector3i(92, 100, 64), WALL)      # riser casing
+	_box(data, Vector3i(73, 7, 56), Vector3i(86, 10, 60), AIR)        # floor channel
+	_box(data, Vector3i(82, 7, 56), Vector3i(86, 100, 60), AIR)       # riser
 
 
 ## A grove on sand with undergrowth to carry the fire, and a spark at one trunk.
 static func _forest_fire(data: PackedInt32Array) -> void:
-	WorldBuilder.floor(data)
-	WorldBuilder.fill_box(data, Vector3i(0, 4, 0), Vector3i(VoxelCodec.GRID, 7, VoxelCodec.GRID), SAND)
-	WorldBuilder.fill_box(data, Vector3i(4, 7, 4), Vector3i(VoxelCodec.GRID - 4, 8, VoxelCodec.GRID - 4), PLANT)
+	_floor(data)
+	_box(data, Vector3i(0, 4, 0), Vector3i(REF, 7, REF), SAND)
+	_box(data, Vector3i(4, 7, 4), Vector3i(REF - 4, 8, REF - 4), PLANT)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	var first := Vector3i.ZERO
 	for i in 14:
-		var x := rng.randi_range(12, VoxelCodec.GRID - 20)
-		var z := rng.randi_range(12, VoxelCodec.GRID - 20)
+		var x := rng.randi_range(12, REF - 20)
+		var z := rng.randi_range(12, REF - 20)
 		var h := rng.randi_range(22, 40)
 		var w := rng.randi_range(14, 24)
 		_tree(data, Vector3i(x, 8, z), h, 5, w)
 		if i == 0:
 			first = Vector3i(x, 8, z)
 	# Spark against the first trunk so the blaze starts immediately.
-	WorldBuilder.fill_box(data, first + Vector3i(3, 0, -2), first + Vector3i(7, 6, 2), FIRE)
+	_box(data, first + Vector3i(3, 0, -2), first + Vector3i(7, 6, 2), FIRE)
 
 
 ## Oil dropped into a pool of water floats, then meets a flame.
 static func _oil_spill(data: PackedInt32Array) -> void:
-	WorldBuilder.floor(data)
-	WorldBuilder.fill_bowl(data, Vector3i(14, 0, 14), Vector3i(114, 40, 114), 3)
-	WorldBuilder.fill_box(data, Vector3i(17, 4, 17), Vector3i(111, 26, 111), WATER)
-	WorldBuilder.fill_sphere(data, Vector3(64, 70, 64), 16.0, OIL)
-	WorldBuilder.fill_box(data, Vector3i(100, 26, 100), Vector3i(106, 30, 106), FIRE)
+	_floor(data)
+	_bowl(data, Vector3i(14, 0, 14), Vector3i(114, 40, 114), 3)
+	_box(data, Vector3i(17, 4, 17), Vector3i(111, 26, 111), WATER)
+	_sphere(data, Vector3(64, 70, 64), 16.0, OIL)
+	_box(data, Vector3i(100, 26, 100), Vector3i(106, 30, 106), FIRE)
 
 
 ## A pool with embers underneath: it boils, steam rises and rains back down.
 static func _steam_vent(data: PackedInt32Array) -> void:
-	WorldBuilder.floor(data)
-	WorldBuilder.fill_bowl(data, Vector3i(30, 0, 30), Vector3i(98, 50, 98), 3)
-	WorldBuilder.fill_box(data, Vector3i(33, 4, 33), Vector3i(95, 12, 95), FIRE)
-	WorldBuilder.fill_box(data, Vector3i(33, 12, 33), Vector3i(95, 36, 95), WATER)
+	_floor(data)
+	_bowl(data, Vector3i(30, 0, 30), Vector3i(98, 50, 98), 3)
+	_box(data, Vector3i(33, 4, 33), Vector3i(95, 12, 95), FIRE)
+	_box(data, Vector3i(33, 12, 33), Vector3i(95, 36, 95), WATER)
 
 
 ## Trunk plus a blocky canopy; face-connected so fire can climb it.
 static func _tree(data: PackedInt32Array, base: Vector3i, height: int, trunk: int, canopy: int) -> void:
 	var half_t := trunk / 2
 	var half_c := canopy / 2
-	WorldBuilder.fill_box(data, Vector3i(base.x - half_t, base.y, base.z - half_t),
+	_box(data, Vector3i(base.x - half_t, base.y, base.z - half_t),
 		Vector3i(base.x + half_t, base.y + height, base.z + half_t), PLANT)
 	var top := base.y + height
-	WorldBuilder.fill_box(data, Vector3i(base.x - half_c, top - 4, base.z - half_c),
+	_box(data, Vector3i(base.x - half_c, top - 4, base.z - half_c),
 		Vector3i(base.x + half_c, top + 4, base.z + half_c), PLANT)
-	WorldBuilder.fill_box(data, Vector3i(base.x - half_c / 2, top + 4, base.z - half_c / 2),
+	_box(data, Vector3i(base.x - half_c / 2, top + 4, base.z - half_c / 2),
 		Vector3i(base.x + half_c / 2, top + 8, base.z + half_c / 2), PLANT)
+
+
+# --- reference-unit primitives ------------------------------------------------
+
+static func _k() -> float:
+	return float(VoxelCodec.GRID) / float(REF)
+
+
+static func _sc(v: Vector3i) -> Vector3i:
+	return Vector3i((Vector3(v) * _k()).round())
+
+
+static func _box(_data: PackedInt32Array, lo: Vector3i, hi: Vector3i, id: int, amount: int = -1) -> void:
+	if amount < 0:
+		amount = Elements.default_amount(id)
+	_ops.append({"type": "box", "lo": _sc(lo), "hi": _sc(hi), "id": id, "amount": amount})
+
+
+static func _sphere(_data: PackedInt32Array, center: Vector3, radius: float, id: int, amount: int = -1) -> void:
+	if amount < 0:
+		amount = Elements.default_amount(id)
+	_ops.append({"type": "sphere", "center": center * _k(), "radius": radius * _k(), "id": id, "amount": amount})
+
+
+static func _bowl(data: PackedInt32Array, lo: Vector3i, hi: Vector3i, wall := 2) -> void:
+	var w := maxi(1, int(round(wall * _k())))
+	var a := _sc(lo)
+	var b := _sc(hi)
+	_ops.append({"type": "box", "lo": a, "hi": b, "id": WALL, "amount": 0})
+	_ops.append({"type": "box", "lo": a + Vector3i(w, w, w), "hi": Vector3i(b.x - w, b.y, b.z - w), "id": AIR, "amount": 0})
+
+
+static func _floor(data: PackedInt32Array) -> void:
+	var h := maxi(1, int(round(4 * _k())))
+	_ops.append({"type": "box", "lo": Vector3i.ZERO, "hi": Vector3i(VoxelCodec.GRID, h, VoxelCodec.GRID), "id": WALL, "amount": 0})

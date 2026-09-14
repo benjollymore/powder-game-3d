@@ -51,7 +51,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif event.pressed and event.shift_pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
 			var dir := 1.0 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1.0
-			cursor_depth = clampf(cursor_depth + dir * 0.03, 0.0, 2.0)
+			cursor_depth = clampf(cursor_depth + dir * 0.03, 0.0, 2.0)  # unit-box units
 			get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
@@ -75,7 +75,8 @@ func _process(_delta: float) -> void:
 	_update_cursor()
 	_gizmo.visible = cursor_valid
 	if cursor_valid:
-		_gizmo.global_position = (Vector3(cursor_voxel) + Vector3(0.5, 0.5, 0.5)) / GRID - Vector3(0.5, 0.5, 0.5)
+		var local := (Vector3(cursor_voxel) + Vector3(0.5, 0.5, 0.5)) / GRID - Vector3(0.5, 0.5, 0.5)
+		_gizmo.global_position = _sim.global_transform * local
 	if _painting and cursor_valid:
 		var mode: int = _sim.BrushMode.ERASE if erase else _sim.BrushMode.REPLACE
 		_sim.paint(cursor_voxel, radius, element, mode)
@@ -83,8 +84,10 @@ func _process(_delta: float) -> void:
 
 func _update_cursor() -> void:
 	var mouse := get_viewport().get_mouse_position()
-	var origin := _camera.project_ray_origin(mouse)
-	var dir := _camera.project_ray_normal(mouse)
+	# Cast in the sim volume's local space, where the box is the unit cube.
+	var inv := _sim.global_transform.affine_inverse()
+	var origin := inv * _camera.project_ray_origin(mouse)
+	var dir := (inv.basis * _camera.project_ray_normal(mouse)).normalized()
 	var hit := ray_box(origin, dir)
 	cursor_valid = hit.x >= 0.0
 	if not cursor_valid:
@@ -94,8 +97,8 @@ func _update_cursor() -> void:
 	cursor_voxel = Vector3i(p.floor()).clamp(Vector3i.ZERO, Vector3i(GRID - 1, GRID - 1, GRID - 1))
 
 
-## Intersect a ray with the unit box centred at the origin (world == model
-## space for the sim volume). Returns (t_enter, t_exit) or (-1, -1) on a miss.
+## Intersect a ray with the unit box centred at the origin (the sim volume's
+## local space). Returns (t_enter, t_exit) or (-1, -1) on a miss.
 static func ray_box(origin: Vector3, dir: Vector3) -> Vector2:
 	var t0 := -INF
 	var t1 := INF
@@ -117,7 +120,7 @@ static func ray_box(origin: Vector3, dir: Vector3) -> Vector2:
 
 
 func _update_gizmo_size() -> void:
-	var d := float(2 * radius + 1) / GRID
+	var d: float = float(2 * radius + 1) / GRID * _sim.world_size()
 	_gizmo.scale = Vector3(d, d, d)
 
 

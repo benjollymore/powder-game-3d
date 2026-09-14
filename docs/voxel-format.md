@@ -15,9 +15,10 @@ Why RGBA8 and not R32_UINT: the renderer samples the same texture through
 `Texture3DRD`, which only accepts RenderingDevice formats that map to an
 `Image` format. No integer formats do; RGBA8 does.
 
-Coordinates: x fastest, then y, then z (`VoxelCodec.index`). The unit cube mesh
-at the origin maps model space `[-0.5, 0.5]³` to voxel space `[0, 128)³`, so
-voxel `(x, y, z)` is centred at `((x, y, z) + 0.5) / 128 - 0.5`. Reads outside
+Coordinates: x fastest, then y, then z (`VoxelCodec.index`). The sim volume is
+a unit cube mesh scaled to `GRID` centimetres (scene units are metres), so
+model space `[-0.5, 0.5]³` maps to voxel space `[0, GRID)³` and voxel
+`(x, y, z)` is centred at `((x, y, z) + 0.5) / GRID - 0.5` in model space. Reads outside
 the box return wall, writes outside are dropped, which gives the world a floor
 and walls for free.
 

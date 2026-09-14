@@ -15,11 +15,13 @@ func _initialize() -> void:
 	await process_frame
 	if args.size() > 2:
 		var parts := args[2].split(",")
+		# Camera and look-at are given in box widths so framings survive rescaling.
 		var rig := current_scene.get_node("CameraRig")
-		rig.frame_position = Vector3(float(parts[0]), float(parts[1]), float(parts[2]))
+		var w: float = rig.world_size
+		rig.frame_position = Vector3(float(parts[0]), float(parts[1]), float(parts[2])) * w
 		if args.size() > 3:
 			var look := args[3].split(",")
-			rig.orbit_target = Vector3(float(look[0]), float(look[1]), float(look[2]))
+			rig.orbit_target = Vector3(float(look[0]), float(look[1]), float(look[2])) * w
 		rig.frame_box(false)
 	for i in frames:
 		await process_frame

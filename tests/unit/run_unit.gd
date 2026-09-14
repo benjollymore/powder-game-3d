@@ -80,7 +80,8 @@ func _test_scenarios() -> void:
 		var bytes := Scenarios.build(name)
 		var ms := Time.get_ticks_msec() - t0
 		check(bytes.size() == n * n * n * 4, "scenario '%s' has the right size" % name)
-		check(ms < 1000, "scenario '%s' builds in under a second (%d ms)" % [name, ms])
+		var k := float(VoxelCodec.GRID) / 128.0
+		check(ms < 1000 * k * k * k, "scenario '%s' CPU build is within budget (%d ms; the game builds scenarios on the GPU)" % [name, ms])
 		var nonair := 0
 		for i in range(0, bytes.size(), 4 * 64):
 			if bytes[i] != 0:

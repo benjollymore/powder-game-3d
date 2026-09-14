@@ -7,12 +7,14 @@ extends Node3D
 
 enum Mode { FLY, ORBIT }
 
+## Speeds and framing are authored for a 1 m box and scaled by the sim's size.
 @export var fly_speed := 2.0
 @export var sprint_multiplier := 4.0
 @export var look_sensitivity := 0.0025
 @export var orbit_target := Vector3.ZERO
 @export var orbit_distance := 3.0
 @export var frame_position := Vector3(1.7, 1.3, 1.7)
+var world_size := 1.0
 
 var mode := Mode.FLY
 var _yaw := 0.0
@@ -23,6 +25,14 @@ var _tween: Tween
 
 
 func _ready() -> void:
+	var sim := get_tree().get_first_node_in_group("sim")
+	if sim == null:
+		sim = get_node_or_null("../SimVolume")
+	if sim and sim.has_method("world_size"):
+		world_size = sim.world_size()
+	fly_speed *= world_size
+	orbit_distance *= world_size
+	frame_position *= world_size
 	frame_box(false)
 
 
@@ -135,7 +145,7 @@ func _apply_rotation() -> void:
 
 func _scroll(direction: float) -> void:
 	if mode == Mode.ORBIT:
-		orbit_distance = clampf(orbit_distance * (0.9 if direction > 0.0 else 1.1), 0.3, 20.0)
+		orbit_distance = clampf(orbit_distance * (0.9 if direction > 0.0 else 1.1), 0.3 * world_size, 20.0 * world_size)
 		camera.position = Vector3(0.0, 0.0, orbit_distance)
 	else:
-		fly_speed = clampf(fly_speed * (1.25 if direction > 0.0 else 0.8), 0.1, 50.0)
+		fly_speed = clampf(fly_speed * (1.25 if direction > 0.0 else 0.8), 0.1 * world_size, 50.0 * world_size)

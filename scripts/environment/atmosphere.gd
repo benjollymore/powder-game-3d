@@ -12,6 +12,7 @@ const BOX_CENTER := Vector3.ZERO
 		dof_enabled = v
 		_apply_dof_enabled()
 ## How far in front of and behind the box centre stays sharp (world units).
+## Depth-of-field band around the box, in box widths.
 @export var dof_sharp_band := 1.0
 @export var dof_transition := 0.9
 @export var dof_blur_amount := 0.07
@@ -30,8 +31,16 @@ var _camera: Camera3D
 var _attributes: CameraAttributesPractical
 
 
+## Box edge length in metres; the environment is tuned relative to it.
+var world_size := 1.0
+
+
 func _ready() -> void:
 	add_to_group("atmosphere")
+	var sim := get_tree().get_first_node_in_group("sim")
+	if sim and sim.has_method("world_size"):
+		world_size = sim.world_size()
+	_apply_world_scale()
 	var mesh := get_node_or_null(sim_mesh_path) as MeshInstance3D
 	if mesh:
 		_sim_material = mesh.material_override as ShaderMaterial
@@ -44,6 +53,19 @@ func _ready() -> void:
 	sun.look_at(sun.global_position + sun_direction.normalized(), Vector3.UP)
 	_build_box_frame()
 	_sync_lighting()
+
+
+## Everything authored for a 1 m box scales with the actual box.
+func _apply_world_scale() -> void:
+	var w := world_size
+	$Ground.position.y = -0.5 * w
+	$BoundsOutline.position.y = -0.498 * w
+	$BoundsOutline.scale = Vector3.ONE * w
+	var env: Environment = world_env.environment
+	env.fog_density = 0.02 / w
+	env.fog_height = -0.5 * w
+	env.ssao_radius = 0.6 * w
+	sun.directional_shadow_max_distance = 30.0 * w
 
 
 func _process(_delta: float) -> void:
@@ -83,10 +105,12 @@ func _update_dof() -> void:
 	if _attributes == null or not dof_enabled:
 		return
 	var focus := _camera.global_position.distance_to(BOX_CENTER)
-	_attributes.dof_blur_far_distance = focus + dof_sharp_band
-	_attributes.dof_blur_far_transition = dof_transition
-	_attributes.dof_blur_near_distance = maxf(focus - dof_sharp_band, 0.02)
-	_attributes.dof_blur_near_transition = dof_transition
+	var band := dof_sharp_band * world_size
+	var trans := dof_transition * world_size
+	_attributes.dof_blur_far_distance = focus + band
+	_attributes.dof_blur_far_transition = trans
+	_attributes.dof_blur_near_distance = maxf(focus - band, 0.02)
+	_attributes.dof_blur_near_transition = trans
 
 
 func _update_fx() -> void:
@@ -119,6 +143,7 @@ func _build_box_frame() -> void:
 			edges.append([Vector3(a, b, 0), Vector3(0, deg_to_rad(90), 0)])                     # along Z
 	var root := Node3D.new()
 	root.name = "BoxFrame"
+	root.scale = Vector3.ONE * world_size
 	add_child(root)
 	for e in edges:
 		var mi := MeshInstance3D.new()
