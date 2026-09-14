@@ -134,7 +134,8 @@ one node per layer under SimVolume; the CPU never touches the instances):
   it), and draw as unshaded soft discs: embers emissive so they bloom, dust
   and splash lit by sun visibility.
 
-`sprites=0` and `fx=0` on the command line disable the layers for benchmarks.
+`sprites=0` and `fx=0` on the command line disable the layers for benchmarks;
+`hide=<grains|leaves|droplets|fx>` skips drawing one layer.
 
 ### Water: refraction, froth, caustics
 
@@ -164,6 +165,12 @@ surface frothy for a long time.
 `p:name=value` on the command line sets a float shader parameter on every
 material at boot (`p:foam_strength=0`, `p:refraction=0`,
 `p:caustic_strength=0`), for isolating a feature in a screenshot or bench.
+
+Crisp surfaces (walls, `smooth` 0) take their face normal from the voxel
+plane nearest the bisected hit rather than the DDA's last step axis: the 0.5
+crossing of a crisp field sits exactly on the face, so the step that detects
+it can come from either side and the step axis is unreliable there (it
+produced moiré on tank walls).
 
 The depth prepass is disabled: an opaque material that writes depth would run
 the raymarch twice, and the voxel AO covers what SSAO provided. `debug=N`

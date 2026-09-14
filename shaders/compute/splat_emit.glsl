@@ -105,6 +105,9 @@ void write_instance(uint layer, uint idx, vec3 right, vec3 up, vec3 fwd, vec3 or
 
 // Uniform-scale instance (camera-facing sprites read only size and origin).
 void emit_sprite(uint layer, vec3 cell_pos, float size, vec4 custom) {
+	if (counters.count[layer] >= pc.cap[layer]) {
+		return; // full: skip the contended atomic (a plain read is enough here)
+	}
 	uint idx = atomicAdd(counters.count[layer], 1u);
 	if (idx >= pc.cap[layer]) {
 		return;
@@ -114,6 +117,9 @@ void emit_sprite(uint layer, vec3 cell_pos, float size, vec4 custom) {
 }
 
 void emit_spawn(vec3 cell_pos, float kind, vec3 vel, uint seed) {
+	if (counters.count[SPAWNS] >= pc.cap[SPAWNS]) {
+		return;
+	}
 	uint idx = atomicAdd(counters.count[SPAWNS], 1u);
 	if (idx >= pc.cap[SPAWNS]) {
 		return;
@@ -175,6 +181,9 @@ void plant(ivec3 p, uvec4 v, uint h) {
 	if (above >= T && below >= T) {
 		return; // bark
 	}
+	if (counters.count[LEAVES] >= pc.cap[LEAVES]) {
+		return;
+	}
 	uint idx = atomicAdd(counters.count[LEAVES], 1u);
 	if (idx >= pc.cap[LEAVES]) {
 		return;
@@ -220,8 +229,8 @@ void liquid(ivec3 p, uvec4 v, uint h) {
 	} else if (landed == 3u && open(id_at(p + ivec3(0, 1, 0)))) {
 		// Just came to rest with air above: throw a ring of splash droplets.
 		uint hf = hash(uvec3(p), pc.misc.x * 7919u + v.y);
-		if (unit(hf, 0) < 0.5) {
-			for (int k = 0; k < 3; k++) {
+		if (unit(hf, 0) < 0.35) {
+			for (int k = 0; k < 2; k++) {
 				uint hk = hash(uvec3(p), hf + uint(k) * 31u);
 				float a = unit(hk, 0) * 6.2831853;
 				float sp = 18.0 + 22.0 * unit(hk, 1);
