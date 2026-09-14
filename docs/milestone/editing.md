@@ -63,3 +63,5 @@ godot --headless --path . -s res://tests/milestone/paint_tools.gd
 godot --path . --resolution 1280x800 --always-on-top --disable-vsync -s res://tests/milestone/live_paint_input_gpu.gd -- grid=128
 godot --path . --resolution 1280x800 --always-on-top --disable-vsync -s res://tests/discovery/interaction_gpu.gd -- grid=128 output_dir=/tmp/editor-ui-regression
 ```
+
+Construction tools also expose **Show workplane grid**. Hiding this visual guide leaves the exact plane/depth targeting, brush preview, region bounds and simulation matter unchanged. The preference remains effective while painting or selecting regions because the frame update honors it; the default remains visible.

@@ -32,6 +32,7 @@ var radius := 3
 var element := Elements.Id.WATER
 var erase := false
 var section := true
+var show_workplane_grid := true
 var target := Vector3i(-1, -1, -1)
 var painting := false
 var previous := Vector3i(-1, -1, -1)
@@ -323,6 +324,11 @@ func _build_ui() -> void:
 	fill.text = "Fill selected region into air"
 	fill.pressed.connect(fill_selection)
 	advanced_tools.add_child(fill)
+	var grid_toggle := CheckButton.new()
+	grid_toggle.text = "Show workplane grid"
+	grid_toggle.button_pressed = show_workplane_grid
+	grid_toggle.toggled.connect(func(enabled): show_workplane_grid = enabled)
+	advanced_tools.add_child(grid_toggle)
 	var cut := CheckButton.new()
 	cut.text = "Section view (positive side hidden)"
 	cut.button_pressed = section
@@ -963,7 +969,7 @@ func _process(delta: float) -> void:
 		target = pick_cache.target if pick_cache.get("valid", false) else Vector3i(-1, -1, -1)
 	else:
 		target = _target_at(get_viewport().get_mouse_position())
-	guide.visible = targeting_mode == TargetMode.PLANE or selecting
+	guide.visible = show_workplane_grid and (targeting_mode == TargetMode.PLANE or selecting)
 	marker.visible = target.x >= 0 and not over_ui and not orbiting
 	if marker.visible:
 		marker.position = ((Vector3(target) + Vector3.ONE * 0.5) / VoxelCodec.GRID - Vector3.ONE * 0.5) * sim.world_size()
