@@ -1,0 +1,54 @@
+{
+  "grid": 256,
+  "cycles": 99,
+  "elapsed_s": 120.799822,
+  "checks": 802,
+  "failures": 0,
+  "archive_roundtrips": 9,
+  "active_frames": 7170,
+  "active_seconds": 59.939002999999985,
+  "active_frame_mean_ms": 8.359693584379356,
+  "per_cycle_p95_median_ms": 8.53,
+  "per_cycle_p95_range_ms": [
+    8.466,
+    8.898
+  ],
+  "requested_ticks": 7179,
+  "active_requested_ticks_per_s": 119.77176196941417,
+  "baseline_memory": {
+    "godot_static_bytes": 217201063,
+    "history_bytes": 0,
+    "redo_entries": 0,
+    "renderer_video_bytes": 401063936,
+    "rss_kib": 654320,
+    "undo_entries": 0
+  },
+  "cycle10_memory": {
+    "godot_static_bytes": 352449735,
+    "history_bytes": 0,
+    "redo_entries": 0,
+    "renderer_video_bytes": 401063936,
+    "rss_kib": 855344,
+    "undo_entries": 0
+  },
+  "last_memory": {
+    "godot_static_bytes": 419767787,
+    "history_bytes": 32768,
+    "redo_entries": 1,
+    "renderer_video_bytes": 401063936,
+    "rss_kib": 855712,
+    "undo_entries": 0
+  },
+  "post_cycle10_rss_kib_range": [
+    789840,
+    855712
+  ],
+  "video_bytes_unique": [
+    401063936
+  ],
+  "viewport": "(1600, 900)",
+  "render_scale": 1.0,
+  "render_mode": 0,
+  "aa": 1,
+  "vsync": 1
+}
