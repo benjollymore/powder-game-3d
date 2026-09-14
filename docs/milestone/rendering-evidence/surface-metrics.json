@@ -1,0 +1,114 @@
+[
+	{
+		"case": "floor-oblique",
+		"max_normal_error": 1.41014921665192,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "baseline",
+		"wrong_normals": 61
+	},
+	{
+		"case": "floor-oblique",
+		"max_normal_error": 0.00816418137401342,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "fixed",
+		"wrong_normals": 0
+	},
+	{
+		"case": "floor-reverse",
+		"max_normal_error": 1.41014921665192,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "baseline",
+		"wrong_normals": 56
+	},
+	{
+		"case": "floor-reverse",
+		"max_normal_error": 0.00816418137401342,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "fixed",
+		"wrong_normals": 0
+	},
+	{
+		"case": "floor-grazing",
+		"max_normal_error": 1.41014921665192,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "baseline",
+		"wrong_normals": 194
+	},
+	{
+		"case": "floor-grazing",
+		"max_normal_error": 0.00816418137401342,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "fixed",
+		"wrong_normals": 0
+	},
+	{
+		"case": "single-cell-sheet",
+		"max_normal_error": 1.41014921665192,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "baseline",
+		"wrong_normals": 72
+	},
+	{
+		"case": "single-cell-sheet",
+		"max_normal_error": 0.00816418137401342,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "fixed",
+		"wrong_normals": 0
+	},
+	{
+		"case": "section-x",
+		"max_normal_error": 0.884232699871063,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "baseline",
+		"wrong_normals": 9216
+	},
+	{
+		"case": "section-x",
+		"max_normal_error": 0.00816418137401342,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "fixed",
+		"wrong_normals": 0
+	},
+	{
+		"case": "section-y",
+		"max_normal_error": 0.875694811344147,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "baseline",
+		"wrong_normals": 9216
+	},
+	{
+		"case": "section-y",
+		"max_normal_error": 0.00816418137401342,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "fixed",
+		"wrong_normals": 0
+	},
+	{
+		"case": "section-z",
+		"max_normal_error": 0.884232699871063,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "baseline",
+		"wrong_normals": 9216
+	},
+	{
+		"case": "section-z",
+		"max_normal_error": 0.00816418137401342,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "fixed",
+		"wrong_normals": 0
+	}
+]

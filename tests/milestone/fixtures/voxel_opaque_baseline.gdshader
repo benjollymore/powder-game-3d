@@ -5,7 +5,7 @@
 shader_type spatial;
 render_mode cull_front, depth_draw_opaque;
 
-#include "res://shaders/spatial/voxel_dda.gdshaderinc"
+#include "res://tests/milestone/fixtures/voxel_dda_baseline.gdshaderinc"
 
 uniform sampler2DArray albedo_maps : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2DArray normal_maps : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
@@ -109,20 +109,16 @@ void fragment() {
 	}
 	uint id = is_opaque(hv.x) ? hv.x : 1u;
 	float seed = float(hv.y) / 255.0;
-	// A bisected density hit is approximate: selecting the nearest integer
-	// plane can choose a tangential cell boundary and produce dark speckles
-	// across a perfectly flat wall. The local density gradient identifies the
-	// physical surface orientation independently of the hit-position error.
-	vec3 grad_abs = abs(grad);
-	int hit_axis = (grad_abs.x > grad_abs.y && grad_abs.x > grad_abs.z) ? 0 : ((grad_abs.y > grad_abs.z) ? 1 : 2);
+	// Face normal from the voxel plane nearest the bisected hit: the DDA's last
+	// step axis is unreliable here because a crisp 0.5 crossing sits exactly on
+	// the face and may register from either side of it.
+	vec3 fr = abs(fract(ps) - 0.5);
+	int hit_axis = (fr.x > fr.y && fr.x > fr.z) ? 0 : ((fr.y > fr.z) ? 1 : 2);
 	vec3 face_model = vec3(0.0);
-	face_model[hit_axis] = -sign(grad[hit_axis]);
+	face_model[hit_axis] = -float(r.step_dir[hit_axis]);
 	if (t_hit == 0.0) {
-		// Entering a clipped volume creates an axis-aligned cap. Ray-facing
-		// normals made that flat cross-section shade like a curved surface.
-		face_model = vec3(0.0);
-		face_model[r.axis] = -float(r.step_dir[r.axis]);
-		n_model = face_model;
+		face_model = -r.dir;
+		n_model = -r.dir;
 	}
 
 	mat3 model_basis = mat3(MODEL_MATRIX);
