@@ -1,5 +1,7 @@
 # FP32 stationary thermal feasibility
 
+This report records the original 11-case baseline run. The expanded cohort and lower-storage A/B results are documented in [the fused experiment](thermal-fused.md).
+
 The isolated binary64 thermal reference survives this FP32 GPU implementation within the numerical targets declared before execution. This is a stationary, insulated, full-cell conduction experiment with latent enthalpy. It does not add temperature, melting, combustion energy, or heat transport to the production voxel simulation.
 
 ## Representation and algorithm

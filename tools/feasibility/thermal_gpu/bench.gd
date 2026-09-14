@@ -6,6 +6,8 @@ var _label: Label
 var _n := 128
 var _frames := 240
 var _failures := 0
+var _variant := "two-pass"
+var _capture_prefix := "bench"
 const WARMUP := 30
 const DT := 1.0 / 60.0
 
@@ -54,7 +56,7 @@ func _run() -> void:
 	quit(1 if _failures else 0)
 
 func _case(steps: int, repeat_index: int) -> void:
-	_label.text = "Isolated stationary thermal GPU benchmark\n%d³ cells · %d steps/frame · repeat%d\nFP32 energy + latent phase · insulated boundary\nNo production simulation or fluid coupling" % [_n, steps, repeat_index]
+	_label.text = "Isolated stationary thermal GPU benchmark (%s)\n%d³ cells · %d steps/frame · repeat%d\nFP32 energy + latent phase · insulated boundary\nNo production simulation or fluid coupling" % [_variant, _n, steps, repeat_index]
 	RenderingServer.call_on_render_thread(_rt_reset)
 	await done
 	var samples: Array[float] = []
@@ -83,9 +85,9 @@ func _case(steps: int, repeat_index: int) -> void:
 		_failures += 1
 		push_error("Idle case changed energy")
 	samples.sort()
-	print("CASE n=%d steps_per_frame=%d repeat=%d drained_mean_ms=%.6f frame_p95_ms=%.6f ticks=%d interface_energy_J=%s" % [_n, steps, repeat_index, drained_mean, samples[int(samples.size()*.95)], _gpu.ticks, values])
+	print("CASE variant=%s n=%d steps_per_frame=%d repeat=%d drained_mean_ms=%.6f frame_p95_ms=%.6f ticks=%d interface_energy_J=%s" % [_variant, _n, steps, repeat_index, drained_mean, samples[int(samples.size()*.95)], _gpu.ticks, values])
 	if repeat_index == 0 and steps == 1:
-		root.get_texture().get_image().save_png("res://docs/milestone/evidence-thermal-gpu/bench-%d.png" % _n)
+		root.get_texture().get_image().save_png("res://docs/milestone/evidence-thermal-gpu/%s-%d.png" % [_capture_prefix, _n])
 
 func _rt_initialize(case: Dictionary) -> void:
 	_gpu.initialize(case)

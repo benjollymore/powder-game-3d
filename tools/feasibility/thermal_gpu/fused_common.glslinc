@@ -1,0 +1,26 @@
+// Common immutable inputs and precise arithmetic for fused update/diagnostics.
+struct Material { vec4 transport; vec4 phase; };
+layout(std430,set=0,binding=0) readonly buffer Energy { float value[]; } energy;
+layout(std430,set=0,binding=1) readonly buffer Materials { Material value[]; } materials;
+layout(std430,set=0,binding=2) readonly buffer Ids { uint value[]; } ids;
+layout(push_constant,std430) uniform Params { uvec4 shape; vec4 time; } pc;
+uint index_of(uvec3 p) { return p.x + pc.shape.x*(p.y + pc.shape.y*p.z); }
+vec2 state_of(uint i) {
+    Material m=materials.value[ids.value[i]];
+    precise float mass=m.transport.x*pc.time.x*pc.time.x*pc.time.x;
+    precise float relative=energy.value[i]/mass-m.phase.z;
+    precise vec2 state;
+    if (relative<0.0) { state=vec2(m.phase.x+relative/m.transport.z,0.0); }
+    else if (m.phase.y>0.0 && relative<=m.phase.y) { state=vec2(m.phase.x,relative/m.phase.y); }
+    else { state=vec2(m.phase.x+(relative-m.phase.y)/m.transport.w,1.0); }
+    return state;
+}
+// Call with lower grid index first for BOTH neighbors. precise is local to
+// each function, so state_of also constrains its own arithmetic explicitly.
+float canonical_transfer(uint low, uint high) {
+    precise float ki=materials.value[ids.value[low]].transport.y;
+    precise float kj=materials.value[ids.value[high]].transport.y;
+    precise float conductance=(ki+kj==0.0) ? 0.0 : (2.0*ki*kj/(ki+kj))*pc.time.x;
+    precise float q=pc.time.y*conductance*(state_of(high).x-state_of(low).x);
+    return q;
+}

@@ -67,6 +67,12 @@ def build():
                           steps, dt=duration/steps, analytic=exact))
     cases.append(case("batch_phase", [4, 2, 2], .01, [PCM], [0]*16,
                       [290+(i%4)*20 for i in range(16)], 80, safety=.8))
+    ids = [i % 3 for i in range(105)]
+    temperatures = [300 if i%7 == 0 else 250+(i*37)%160 for i in range(105)]
+    fractions = [(i%5)/4 if t == 300 else 0 for i,t in enumerate(temperatures)]
+    cases.append(case("varied_materials_3d", [7, 5, 3], .01, [A, B, PCM], ids,
+                      temperatures, 1000, safety=.8, fractions=fractions,
+                      checkpoints=[1, 10, 100, 1000]))
     return {"schema": 1, "units": "SI; full stationary insulated cubic cells", "cases": cases}
 
 

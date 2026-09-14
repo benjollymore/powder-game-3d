@@ -1,0 +1,24 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: hotspot_3d SPIR-V retains NoContraction decorations (26)
+ok: hotspot_3d audit includes nonzero heat flow
+ok: hotspot_3d tick0 canonical face pairs: 54 comparisons, 0 bit mismatches
+ok: hotspot_3d tick1000 canonical face pairs: 54 comparisons, 0 bit mismatches
+FACE_METRIC name=hotspot_3d stages=[{ "tick": 0, "faces": 54, "mismatches": 0, "nonzero": 6 }, { "tick": 1000, "faces": 54, "mismatches": 0, "nonzero": 0 }]
+ok: interface_3d SPIR-V retains NoContraction decorations (26)
+ok: interface_3d audit includes nonzero heat flow
+ok: interface_3d tick0 canonical face pairs: 304 comparisons, 0 bit mismatches
+ok: interface_3d tick1000 canonical face pairs: 304 comparisons, 0 bit mismatches
+FACE_METRIC name=interface_3d stages=[{ "tick": 0, "faces": 304, "mismatches": 0, "nonzero": 16 }, { "tick": 1000, "faces": 304, "mismatches": 0, "nonzero": 0 }]
+ok: batch_phase SPIR-V retains NoContraction decorations (26)
+ok: batch_phase audit includes nonzero heat flow
+ok: batch_phase tick0 canonical face pairs: 28 comparisons, 0 bit mismatches
+ok: batch_phase tick1000 canonical face pairs: 28 comparisons, 0 bit mismatches
+FACE_METRIC name=batch_phase stages=[{ "tick": 0, "faces": 28, "mismatches": 0, "nonzero": 12 }, { "tick": 1000, "faces": 28, "mismatches": 0, "nonzero": 12 }]
+ok: varied_materials_3d SPIR-V retains NoContraction decorations (26)
+ok: varied_materials_3d audit includes nonzero heat flow
+ok: varied_materials_3d tick0 canonical face pairs: 244 comparisons, 0 bit mismatches
+ok: varied_materials_3d tick1000 canonical face pairs: 244 comparisons, 0 bit mismatches
+FACE_METRIC name=varied_materials_3d stages=[{ "tick": 0, "faces": 244, "mismatches": 0, "nonzero": 237 }, { "tick": 1000, "faces": 244, "mismatches": 0, "nonzero": 151 }]
+FACE_PAIRS checks=16 failures=0

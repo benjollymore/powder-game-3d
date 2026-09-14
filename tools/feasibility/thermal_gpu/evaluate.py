@@ -5,6 +5,7 @@ Acceptance targets declared before running the GPU: 0.005 K state error,
 cosine refinement retains the CPU reference's >3x reduction per doubling.
 These are experiment criteria, not production material accuracy guarantees.
 """
+import argparse
 import json
 import math
 from pathlib import Path
@@ -14,9 +15,10 @@ FIXTURES = ROOT / "tests/feasibility/thermal_gpu/cases.json"
 RESULTS = ROOT / "docs/milestone/evidence-thermal-gpu/results.json"
 
 
-def evaluate():
+def evaluate(prefix=""):
+    results_path = RESULTS.parent / (prefix + "results.json")
     fixtures = {c["name"]: c for c in json.loads(FIXTURES.read_text())["cases"]}
-    actual = json.loads(RESULTS.read_text())
+    actual = json.loads(results_path.read_text())
     failures, metrics, diffusion = [], [], []
     names = [c["name"] for c in actual["cases"]]
     if set(names) != set(fixtures) or len(names) != len(fixtures):
@@ -33,6 +35,8 @@ def evaluate():
         max_t, max_f, max_drift, max_energy_error = 0., 0., 0., 0.
         plateau_samples = 0
         for expected, state in zip(case["snapshots"], measured["snapshots"]):
+            if state["ticks"] != expected["tick"]:
+                failures.append(f"{case['name']}: checkpoint tick mismatch")
             energy, packed = state["energy"], state["state"]
             if len(energy) != len(initial) or len(packed) != len(initial)*2 or not all(map(math.isfinite, energy+packed)):
                 failures.append(f"{case['name']}: nonfinite or malformed state")
@@ -70,7 +74,7 @@ def evaluate():
     if not any(m["plateau_samples"] for m in metrics if m["name"] == "conducting_phase"):
         failures.append("No phase plateau was observed during conduction")
     report = dict(metrics=metrics, diffusion_refinement_ratios=ratios, failures=failures)
-    (RESULTS.parent / "metrics.json").write_text(json.dumps(report, indent=2)+"\n")
+    (RESULTS.parent / (prefix + "metrics.json")).write_text(json.dumps(report, indent=2)+"\n")
     for m in metrics:
         print(f"METRIC {m['name']} steps={m['steps']} temperature_error_K={m['max_temperature_error_K']:.9g} fraction_error={m['max_fraction_error']:.9g} energy_drift_relative={m['energy_relative_drift']:.9g} drift_J={m['final_energy_drift_J']:.9g} plateau_samples={m['plateau_samples']}")
     print(f"DIFFUSION rms_K={diffusion} refinement_ratios={ratios}")
@@ -81,4 +85,7 @@ def evaluate():
 
 
 if __name__ == "__main__":
-    raise SystemExit(bool(evaluate()))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--variant", choices=["baseline", "fused"])
+    args = parser.parse_args()
+    raise SystemExit(bool(evaluate(args.variant + "-" if args.variant else "")))

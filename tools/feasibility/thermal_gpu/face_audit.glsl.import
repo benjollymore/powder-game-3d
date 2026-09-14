@@ -1,0 +1,13 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://dftf5rfchp0u"
+path="res://.godot/imported/face_audit.glsl-b3c4937af96a71e444c10db1b4484982.res"
+
+[deps]
+
+source_file="res://tools/feasibility/thermal_gpu/face_audit.glsl"
+dest_files=["res://.godot/imported/face_audit.glsl-b3c4937af96a71e444c10db1b4484982.res"]
+
+[params]

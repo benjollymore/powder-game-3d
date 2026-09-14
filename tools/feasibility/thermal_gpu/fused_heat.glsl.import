@@ -1,0 +1,13 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://ciux61aseev22"
+path="res://.godot/imported/fused_heat.glsl-87d32f8eb776db6e40194fedb442bc08.res"
+
+[deps]
+
+source_file="res://tools/feasibility/thermal_gpu/fused_heat.glsl"
+dest_files=["res://.godot/imported/fused_heat.glsl-87d32f8eb776db6e40194fedb442bc08.res"]
+
+[params]
