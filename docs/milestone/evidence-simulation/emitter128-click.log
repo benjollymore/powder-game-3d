@@ -1,0 +1,44 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: source injected real material
+ok: source emitted repeatedly between physics ticks
+SOURCE material=Sand schedule=[1] ticks=96 mass=1161 stamps=25 voxel_sha256=653549558da0021a5269e3e0f6f845cc770862f95091bdaf31c51597a6cc9c1c air_sha256=cde0991fc95c81a8941d92e5b74ec13c6085a2ed6bcf06d2f7412ab09cf7be5e
+ok: source injected real material
+ok: source emitted repeatedly between physics ticks
+SOURCE material=Sand schedule=[3] ticks=96 mass=1161 stamps=25 voxel_sha256=653549558da0021a5269e3e0f6f845cc770862f95091bdaf31c51597a6cc9c1c air_sha256=cde0991fc95c81a8941d92e5b74ec13c6085a2ed6bcf06d2f7412ab09cf7be5e
+ok: Sand injected voxel bytes equal for [3]
+ok: all air textures equal for [3]
+ok: actual accepted material mass equal for [3] (1161)
+ok: scheduled source stamp count equal for [3] (25)
+ok: source injected real material
+ok: source emitted repeatedly between physics ticks
+SOURCE material=Sand schedule=[7, 2, 5, 1, 9] ticks=96 mass=1161 stamps=25 voxel_sha256=653549558da0021a5269e3e0f6f845cc770862f95091bdaf31c51597a6cc9c1c air_sha256=cde0991fc95c81a8941d92e5b74ec13c6085a2ed6bcf06d2f7412ab09cf7be5e
+ok: Sand injected voxel bytes equal for [7, 2, 5, 1, 9]
+ok: all air textures equal for [7, 2, 5, 1, 9]
+ok: actual accepted material mass equal for [7, 2, 5, 1, 9] (1161)
+ok: scheduled source stamp count equal for [7, 2, 5, 1, 9] (25)
+ok: source injected real material
+ok: source emitted repeatedly between physics ticks
+SOURCE material=Water schedule=[1] ticks=96 mass=366600 stamps=25 voxel_sha256=81fea4b25afb9d20c9e546bfbb2fc40dd3427ee37be1e2004820330d06b9105f air_sha256=7608b0659da162fec6de8f7d1a2982543c1cae445b80a97bc47cced0449ca7e9
+ok: source injected real material
+ok: source emitted repeatedly between physics ticks
+SOURCE material=Water schedule=[3] ticks=96 mass=366600 stamps=25 voxel_sha256=81fea4b25afb9d20c9e546bfbb2fc40dd3427ee37be1e2004820330d06b9105f air_sha256=7608b0659da162fec6de8f7d1a2982543c1cae445b80a97bc47cced0449ca7e9
+ok: Water injected voxel bytes equal for [3]
+ok: all air textures equal for [3]
+ok: actual accepted material mass equal for [3] (366600)
+ok: scheduled source stamp count equal for [3] (25)
+ok: source injected real material
+ok: source emitted repeatedly between physics ticks
+SOURCE material=Water schedule=[7, 2, 5, 1, 9] ticks=96 mass=366600 stamps=25 voxel_sha256=81fea4b25afb9d20c9e546bfbb2fc40dd3427ee37be1e2004820330d06b9105f air_sha256=7608b0659da162fec6de8f7d1a2982543c1cae445b80a97bc47cced0449ca7e9
+ok: Water injected voxel bytes equal for [7, 2, 5, 1, 9]
+ok: all air textures equal for [7, 2, 5, 1, 9]
+ok: actual accepted material mass equal for [7, 2, 5, 1, 9] (366600)
+ok: scheduled source stamp count equal for [7, 2, 5, 1, 9] (25)
+ok: enabling a paused source cannot emit without a tick
+ok: first source enable emits before the next tick
+ok: repeated metadata updates cannot restart emission phase
+ok: releasing the source stops future injection
+ok: extreme rate is bounded to one source stamp per tick
+ok: whole-world replacement disables live source
+LIVE_EMITTER grid=128 checks=34 failures=0

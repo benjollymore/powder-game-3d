@@ -131,6 +131,10 @@ var _rt_live_emitter_phase := 0.0
 var _rt_live_emitter_initial := false
 ## Scheduled source stamps, not a count of cells accepted by ONLY_AIR.
 var _rt_live_emitter_stamps := 0
+const MAX_PENDING_LIVE_CLICKS := 32
+const MAX_LIVE_CLICKS_PER_TICK := 4
+var _rt_pending_live_clicks: Array[Dictionary] = []
+var _rt_live_click_stamps := 0
 var _param_overrides := {}
 
 var _rd: RenderingDevice
@@ -352,6 +356,14 @@ func set_live_emitter(center: Vector3i, radius: int, element: int,
 func clear_live_emitter() -> void:
 	if _rt_ready:
 		RenderingServer.call_on_render_thread(_rt_clear_live_emitter)
+
+
+## Intentional release: preserve a quick click if its first source tick has
+## not happened yet. Each press/release is one immutable, tick-owned command.
+## Cancel/navigation should use clear_live_emitter() instead.
+func finish_live_emitter() -> void:
+	if _rt_ready:
+		RenderingServer.call_on_render_thread(_rt_finish_live_emitter)
 
 
 ## Paint a sphere of `element` (voxel units). Runs this frame, before any ticks
@@ -1128,10 +1140,29 @@ func _rt_clear_live_emitter() -> void:
 	_rt_live_emitter_initial = false
 
 
-## Record at most one source stamp into the open tick list. Sampling occurs
+func _rt_finish_live_emitter() -> void:
+	if not _rt_live_emitter.is_empty() and _rt_live_emitter_initial:
+		if _rt_pending_live_clicks.size() < MAX_PENDING_LIVE_CLICKS:
+			_rt_pending_live_clicks.append(_rt_live_emitter.duplicate(true))
+		else:
+			# Explicit overflow policy: preserve the first 32 intended clicks,
+			# reject the newest; never replay an unbounded stalled-input backlog.
+			push_warning("Live click queue full (32); newest click rejected until simulation advances")
+	_rt_clear_live_emitter()
+
+
+## Record at most four queued clicks plus one held-source stamp in a tick.
+## Sampling occurs
 ## before air and voxel transport, so ONLY_AIR sees the same preceding tick
 ## state regardless of how a renderer groups ticks into submissions.
 func _rt_live_emitter_step(cl: int) -> void:
+	for i in mini(MAX_LIVE_CLICKS_PER_TICK, _rt_pending_live_clicks.size()):
+		var click: Dictionary = _rt_pending_live_clicks.pop_front()
+		if _rt_emit_source(cl, click, 0):
+			_rt_live_click_stamps += 1
+	# Older released clicks retain priority over a newer held source.
+	if not _rt_pending_live_clicks.is_empty():
+		return
 	if _rt_live_emitter.is_empty():
 		return
 	if _rt_live_emitter_initial:
@@ -1143,12 +1174,16 @@ func _rt_live_emitter_step(cl: int) -> void:
 		if _rt_live_emitter_phase < 1.0 - 1e-9:
 			return
 		_rt_live_emitter_phase = maxf(0.0, _rt_live_emitter_phase - 1.0)
-	var command := _rt_live_emitter
-	var seed := (int(command["seed"]) + _rt_live_emitter_stamps * 7919) & 0x7FFFFFFF
+	if _rt_emit_source(cl, _rt_live_emitter, _rt_live_emitter_stamps):
+		_rt_live_emitter_stamps += 1
+
+
+func _rt_emit_source(cl: int, command: Dictionary, ordinal: int) -> bool:
+	var seed := (int(command["seed"]) + ordinal * 7919) & 0x7FFFFFFF
 	var surface: Dictionary = command["surface"]
 	if not surface.is_empty():
 		if not has_method("_rt_surface_emitter_stamp"):
-			return
+			return false
 		# Editing owns the GPU pick+stamp implementation. It must add barriers
 		# after the pick and mutation; air/sim rebind their pipelines afterward.
 		call("_rt_surface_emitter_stamp", cl, surface, command["radius"], command["element"], command["mode"], seed)
@@ -1156,7 +1191,7 @@ func _rt_live_emitter_step(cl: int) -> void:
 		_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
 		_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
 		_rt_brush_sphere(cl, command["center"], command["radius"], command["element"], command["mode"], seed, Elements.default_amount(command["element"]))
-	_rt_live_emitter_stamps += 1
+	return true
 
 
 ## One air-solver step covering `dt` ticks, recorded into an open compute list.
@@ -1196,6 +1231,8 @@ func _rt_air_clear() -> void:
 func _rt_reset_world_history() -> void:
 	_rt_clear_live_emitter()
 	_rt_live_emitter_stamps = 0
+	_rt_pending_live_clicks.clear()
+	_rt_live_click_stamps = 0
 	_rt_air_clear()
 	_frame = 0
 	_rt_presentation_seconds = 0.0

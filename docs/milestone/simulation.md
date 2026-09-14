@@ -58,3 +58,13 @@ godot --path . --always-on-top --disable-vsync --resolution 320x240 -s res://tes
 The source test covers cell/workplane targets. The editor's atomic surface hook requires its separate integration regression; this simulator-only branch does not claim to validate the missing backend. New cadence/reset/source GPU harnesses have a 120-second watchdog so an unexpected script error cannot leave a test window running indefinitely.
 
 After source integration, **30 cadence checks** and **31 presentation/reset checks** passed again: [cadence128-step3.log](evidence-simulation/cadence128-step3.log), [presentation128-step3.log](evidence-simulation/presentation128-step3.log).
+
+### Quick clicks remain tick-owned
+
+`finish_live_emitter()` distinguishes an intentional release from cancellation. If the source has not had its first tick, release captures one immutable click command with its center/ray, radius, material, write policy, and seed, then stops the continuous source. Multiple quick clicks remain distinct FIFO commands. If the source already attempted its first tick, release adds no duplicate. `clear_live_emitter()` cancels an unstarted continuous source without creating a click.
+
+There are at most **32 pending clicks**, drained at most **four per tick**, before a newer held source. Overflow explicitly preserves the first 32 and rejects the newest with a warning. Whole-world upload, Clear, and preset reset cancel the pending queue, so a released click cannot leak into a replacement authored world. No click forces extra simulation ticks or mutates the world directly on release.
+
+`live_click.gd` passed **19 GPU checks at 128³**: distinct sand/water clicks retain their metadata, no pre-tick mutation, no duplicate on an already-emitting release, navigation cancellation, all reset paths, explicit queue/work bounds, and matching voxel bytes across one/three/irregular tick batches. [click128.log](evidence-simulation/click128.log) contains the expected overflow warning from the deliberate 33-click limit test.
+
+The original held-source regression also passed all **34 checks** after sharing its tick injection path with quick clicks: [emitter128-click.log](evidence-simulation/emitter128-click.log).
