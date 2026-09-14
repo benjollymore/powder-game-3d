@@ -1,0 +1,23 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: production GPU volume readback
+ok: camera ray picks exact plane cell on axis 0
+ok: camera ray picks exact plane cell on axis 1
+ok: camera ray picks exact plane cell on axis 2
+ok: single-cell fast diagonal stroke leaves no gaps across tank walls
+ok: ONLY_AIR stroke preserves every original wall cell
+ok: two-corner UI region operation reaches inclusive corner
+ok: region fill preserves every original wall cell
+ok: undo region restores packed voxel bytes exactly
+ok: pending gesture retains original material across palette change
+ok: pending gesture retains original single-cell radius
+ok: undo brush gesture restores packed voxel bytes exactly
+ok: section toggle leaves all simulation voxel bytes unchanged
+ok: Run actually advances material simulation
+ok: paint gestures remain available during the live experiment
+ok: Return to build restores authored voxel bytes exactly
+ok: Return to build freezes simulation
+ok: front section screenshot saved
+ok: angled section screenshot saved
+Interaction GPU: 19 checks, 0 failures

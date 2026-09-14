@@ -31,3 +31,5 @@ godot --headless --path . -s res://tests/discovery/interaction_unit.gd
 ```
 
 The new harness has a 45-second watchdog. Its injected wheel events include both press and release, matching the native backend; omitting release creates artificial GUI capture and invalidates subsequent primary-click tests. The original interaction harness rewrites its historical PNG captures; retain those historical files when rerunning only an input regression. No simulation or renderer behavior was changed for this task.
+
+Coordinator verification: integrated as `2ab79b2` on `discovery/review`, imported successfully, and independently reran all **27 trackpad checks** at 1280×800 with zero failures. Reviewed gesture routing, toolbar isolation, camera limits and release/focus behavior. Evidence: [independent trackpad run](trackpad-evidence/coordinator-gpu.log), [worker trackpad run](trackpad-evidence/worker-gpu.log), [existing editor regression](trackpad-evidence/worker-editor.log), [geometry/time checks](trackpad-evidence/worker-unit.log).
