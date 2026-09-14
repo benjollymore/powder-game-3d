@@ -1,0 +1,12 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: changing to an extended material commits pending stroke with frozen radius and material
+ok: extended material becomes active and selected
+ok: region shortcut exposes its optional controls
+ok: collapsing construction tools leaves painting active, without hidden selection mode
+ok: choosing another material exits erase without a phantom edit
+ok: live pointer samples never dispatch authored or immediate geometry
+ok: live source retains frozen stroke metadata
+ok: viewport primary release finishes a tick-owned source
+ok: focus loss cancels instead of adding a pending click
+Paint tools: 9 checks, 0 failures

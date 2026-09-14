@@ -1,0 +1,11 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: parsed paint creates unsaved authored work with working Undo
+ok: LOSS REPRO: Reset plus Undo cannot recover unsaved authored dot
+ok: LOSS REPRO: Empty plus Undo cannot recover unsaved authored dot
+ok: LOSS REPRO: valid Open plus Undo cannot recover newer unsaved authored dot
+ok: MISLEADING STATE REPRO: successful earlier capture says Saved build while current build has newer unsaved paint
+CLOSE_POLICY auto_accept_quit=true editor_notification_close_handler=false (source review)
+ok: CLOSE POLICY: SceneTree default accepts window close without editor interception
+Authored protection audit: 6 reproduced conditions, 0 unexpected results

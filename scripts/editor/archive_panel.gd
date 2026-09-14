@@ -2,6 +2,11 @@ extends Node
 ## File operations for the authored construction, independent of live physics.
 const Job := preload("res://scripts/editor/archive_job.gd")
 var editor: Node3D
+signal save_finished(ok: bool, token: int, generation: int)
+signal save_canceled
+var document_status: Label
+var source_document := -1
+var source_generation := -1
 var message: Label
 var save_button: Button
 var open_button: Button
@@ -37,6 +42,11 @@ func bind_editor(target: Node3D, column: VBoxContainer) -> void:
 	message.visible = false
 	column.add_child(message)
 	column.move_child(message, mini(6, column.get_child_count() - 1))
+	document_status = Label.new()
+	document_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	document_status.custom_minimum_size.x = 300
+	column.add_child(document_status)
+	column.move_child(document_status, mini(6, column.get_child_count() - 1))
 	save_dialog = _dialog(FileDialog.FILE_MODE_SAVE_FILE)
 	save_dialog.title = "Save authored construction"
 	save_dialog.current_file = "construction.p3d"
@@ -51,7 +61,10 @@ func _dialog(mode: FileDialog.FileMode) -> FileDialog:
 	dialog.access = FileDialog.ACCESS_FILESYSTEM
 	dialog.filters = PackedStringArray(["*.p3d ; Powder 3D construction"])
 	dialog.use_native_dialog = true
-	dialog.canceled.connect(_end_modal)
+	dialog.canceled.connect(func():
+		_end_modal()
+		if mode == FileDialog.FILE_MODE_SAVE_FILE:
+			save_canceled.emit())
 	add_child(dialog)
 	return dialog
 
@@ -85,9 +98,12 @@ func save_to_path(path: String) -> void:
 	_end_modal()
 	if operation != "" or editor.capturing or editor.painting:
 		message.text = "Finish the current edit before saving."
+		save_finished.emit(false, -1, -1)
 		return
 	selected_path = path
 	source_epoch = editor.sim.edit_epoch
+	source_document = editor.document.current
+	source_generation = editor.document.generation
 	operation = "capture"
 	message.text = "Saving build…"
 	if editor.testing:
@@ -101,6 +117,7 @@ func save_to_path(path: String) -> void:
 			if editor.sim.edit_epoch != source_epoch:
 				operation = ""
 				message.text = "The world changed before saving; save the current build again."
+				save_finished.emit(false, source_document, source_generation)
 				return
 			_start_save(bytes))
 
@@ -111,6 +128,7 @@ func _start_save(bytes: PackedByteArray) -> void:
 		operation = ""
 		job = null
 		message.text = "Could not start saving: " + error_string(err)
+		save_finished.emit(false, source_document, source_generation)
 	else:
 		operation = "save"
 
@@ -135,6 +153,8 @@ func open_path(path: String) -> void:
 func _process(_delta: float) -> void:
 	if editor == null:
 		return
+	document_status.text = editor.document.label()
+	document_status.tooltip_text = editor.document.path
 	message.visible = not message.text.is_empty()
 	var busy := operation != "" or queued_dialog != ""
 	save_button.disabled = busy
@@ -153,14 +173,33 @@ func _process(_delta: float) -> void:
 	operation = ""
 	if not result.ok:
 		message.text = result.error
+		if completed_operation == "save":
+			save_finished.emit(false, source_document, source_generation)
 		return
 	if completed_operation == "save":
-		message.text = "Saved build: " + selected_path.get_file()
+		var same_document: bool = editor.document.saved_capture(source_document, source_generation, selected_path)
+		message.text = ("Saved build: " if same_document else "Saved previous build: ") + selected_path.get_file()
+		if same_document and (editor.document.is_dirty() or editor.capturing or editor.painting):
+			message.text += " · newer edits are unsaved"
+		save_finished.emit(true, source_document, source_generation)
 		return
 	if source_epoch != editor.sim.edit_epoch or source_revision != editor.sim.edit_revision or source_testing != editor.testing or editor.capturing or editor.painting:
 		message.text = "The build changed while opening; open the file again to replace it."
 		return
-	if editor.replace_authored(result.bytes):
-		message.text = "Opened build: " + selected_path.get_file()
+	var apply := _apply_open.bind(result.bytes, selected_path, source_epoch, source_revision, source_testing)
+	if is_instance_valid(editor.document_guard):
+		# Saving may overwrite the very file selected for Open. Re-read it after
+		# Save instead of applying cached old bytes and falsely marking them saved.
+		editor.document_guard.request("open", apply, open_path.bind(selected_path))
+	else:
+		apply.call()
+
+func _apply_open(bytes: PackedByteArray, path: String, epoch: int, revision: int, testing: bool) -> void:
+	if epoch != editor.sim.edit_epoch or revision != editor.sim.edit_revision or testing != editor.testing or editor.capturing or editor.painting:
+		message.text = "The build changed while opening; open the file again to replace it."
+		return
+	if editor.replace_authored(bytes):
+		editor.document.saved_capture(editor.document.current, editor.document.generation, path)
+		message.text = "Opened build: " + path.get_file()
 	else:
 		message.text = "Finish the current edit before replacing the build."

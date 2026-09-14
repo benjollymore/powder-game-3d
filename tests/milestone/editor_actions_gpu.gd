@@ -64,6 +64,9 @@ func run() -> void:
 	editor.reset_container()
 	check(editor._queued_editor_action == "reset", "latest explicit replacement supersedes an older queued action")
 	await settled()
+	check(editor.document_guard.state == "prompt", "queued dirty Reset waits for an explicit discard choice")
+	editor.document_guard._discard()
+	await settled()
 	check(await read() == original and not editor.testing, "queued Reset produces the fresh container without replaying Empty afterward")
 	editor.selection_toggle.button_pressed = true
 	editor.new_empty_build()

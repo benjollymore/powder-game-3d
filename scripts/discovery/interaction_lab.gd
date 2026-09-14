@@ -4,6 +4,8 @@ const Geometry := preload("res://scripts/discovery/edit_geometry.gd")
 const SimScene := preload("res://scenes/sim_volume.tscn")
 const Emission := preload("res://scripts/discovery/brush_emission.gd")
 const HistoryBudget := preload("res://scripts/editor/history_budget.gd")
+var document := preload("res://scripts/editor/authored_document.gd").new()
+var document_guard: Node
 const PendingGesture := preload("res://scripts/editor/pending_gesture.gd")
 var pending_authored: RefCounted
 var _capture_accepts_pending := false
@@ -150,6 +152,9 @@ func _ready() -> void:
 	archive_panel.name = "AuthoredFiles"
 	add_child(archive_panel)
 	archive_panel.bind_editor(self, tools_column)
+	document_guard = preload("res://scripts/editor/document_guard.gd").new()
+	add_child(document_guard)
+	document_guard.bind_editor(self)
 	_face_plane()
 	_update_plane()
 	# Upload queues behind GPU initialization; no CPU state mirror is retained.
@@ -188,6 +193,7 @@ func replace_authored(bytes: PackedByteArray) -> bool:
 	selection_status.text = "Region: no corners selected"
 	play_button.text = "Run experiment · Space"
 	sim.upload(bytes)
+	document.reset()
 	return true
 
 
@@ -382,11 +388,11 @@ func _build_ui() -> void:
 	grid_toggle.toggled.connect(func(enabled): show_workplane_grid = enabled)
 	advanced_tools.add_child(grid_toggle)
 	var reset := Button.new()
-	reset.text = "Reset container (discards edits)"
+	reset.text = "Reset container…"
 	reset.pressed.connect(reset_container)
 	advanced_tools.add_child(reset)
 	var empty := Button.new()
-	empty.text = "Empty build (discards edits)"
+	empty.text = "Empty build…"
 	empty.pressed.connect(func(): call("new_empty_build"))
 	advanced_tools.add_child(empty)
 	var controls := Label.new()
@@ -491,6 +497,13 @@ func _set_advanced(enabled: bool) -> void:
 func reset_container() -> void:
 	if _wait_for_edit("reset"):
 		return
+	if _ready_to_edit and is_instance_valid(document_guard):
+		document_guard.request("reset", _reset_container_now)
+	else:
+		_reset_container_now()
+
+
+func _reset_container_now() -> void:
 	var n := VoxelCodec.GRID
 	var data := WorldBuilder.empty()
 	WorldBuilder.fill_bowl(data, Vector3i(n / 4, n / 6, n / 4), Vector3i(n * 3 / 4, n * 2 / 3, n * 3 / 4), maxi(2, n / 64))
@@ -500,7 +513,10 @@ func reset_container() -> void:
 
 func new_empty_build() -> void:
 	if not _wait_for_edit("empty"):
-		replace_authored(WorldBuilder.empty().to_byte_array())
+		if is_instance_valid(document_guard):
+			document_guard.request("empty", func(): replace_authored(WorldBuilder.empty().to_byte_array()))
+		else:
+			replace_authored(WorldBuilder.empty().to_byte_array())
 
 
 ## Preserve the latest explicit action while the finished stroke's regional
@@ -1019,9 +1035,9 @@ func _begin_authored_edit(warning: String = "") -> void:
 			return
 		if not warning.is_empty():
 			result.error = warning if result.error.is_empty() else result.error + "\n" + warning
-		if result.valid and not result.regions.is_empty() and not redo_history.is_empty():
-			# Only a changed construction branches history. A miss or an ONLY_AIR
-			# brush over occupied matter must not discard the remaining future.
+		if result.valid and not result.regions.is_empty() and (not redo_history.is_empty() or not document.is_dirty()):
+			# Only a changed construction branches history or marks a clean build
+			# unsaved. This remains a bounded regional comparison, never world polling.
 			if sim.inspect_edit_transaction(result, func(inspected: Dictionary):
 				if inspected.epoch != sim.edit_epoch:
 					capturing = false
@@ -1029,10 +1045,10 @@ func _begin_authored_edit(warning: String = "") -> void:
 					cancel_pending_paint()
 					return
 				if not inspected.valid:
-					result.error = "Could not verify the new edit; Redo was cleared. Its Undo remains available."
+					result.error = "Could not verify the new edit; marked unsaved and Redo cleared. Undo remains available."
 				_complete_authored_edit(result, inspected.changed if inspected.valid else true)):
 				return
-			result.error = "Could not verify the new edit; Redo was cleared. Its Undo remains available."
+			result.error = "Could not verify the new edit; marked unsaved and Redo cleared. Undo remains available."
 		_complete_authored_edit(result, true))
 
 
@@ -1044,7 +1060,9 @@ func _complete_authored_edit(result: Dictionary, changed: bool) -> void:
 	if not result.valid:
 		cancel_pending_paint()
 		_clear_history()
+		document.changed(result) # A failed capture may still have authored mutations.
 	if result.valid and changed and not result.regions.is_empty():
+		document.changed(result)
 		redo_history.clear()
 		redo_bytes = 0
 		undo_history.append(result)
@@ -1095,6 +1113,7 @@ func _history_action(redo: bool) -> void:
 			edit_completed.emit(inverse)
 			return
 		source.pop_back()
+		document.reversed(original, inverse, redo)
 		if redo:
 			redo_bytes -= original.bytes
 			undo_history.append(inverse)

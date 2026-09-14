@@ -10,6 +10,8 @@ class FakeSim extends Node3D:
 		callback.call_deferred(bytes)
 
 class FakeEditor extends Node3D:
+	var document := preload("res://scripts/editor/authored_document.gd").new()
+	var document_guard: Node
 	var sim := FakeSim.new()
 	var capturing := false
 	var painting := false
@@ -35,6 +37,7 @@ class FakeEditor extends Node3D:
 		sim.edit_epoch += 1
 		testing = false
 		replacements += 1
+		document.reset()
 		return true
 
 var panel: Node

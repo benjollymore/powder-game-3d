@@ -1,0 +1,24 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: fresh template starts clean without falsely claiming a saved file
+ok: accepted authored edit creates an unsaved checkpoint
+ok: only successful exact capture marks the checkpoint saved
+ok: Undo away from saved state is dirty
+ok: Redo back to saved state is clean
+ok: Undo a newer edit returns to saved identity without hashing a world
+ok: late save cannot rename or mark a replaced document saved
+ok: document guard owns normal window-close policy
+ok: clean replacement proceeds without a confirmation
+ok: dirty replacement waits for an explicit choice with modal input ownership
+ok: Cancel preserves authored work and releases modal ownership
+ok: untitled Save choice opens a file selection before replacing
+ok: canceling Save cancels the destructive continuation
+ok: failed Save cannot authorize the pending reset
+ok: successful earlier Save cannot discard a newer authored checkpoint
+ok: an unfinished newer stroke blocks discard even before it assigns its checkpoint
+ok: successful unchanged Save authorizes exactly one continuation
+ok: discard approval is invalidated when its displayed checkpoint changes
+ok: explicit Discard applies only the approved current document
+ok: Open after Save uses fresh-file continuation rather than stale validated bytes
+ok: guard teardown restores the previous window-close policy
+Authored document CPU: 21 checks, 0 failures

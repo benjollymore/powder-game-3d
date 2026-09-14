@@ -1,0 +1,70 @@
+extends "res://tests/milestone/editor_workflow_gpu.gd"
+var baseline: PackedByteArray
+var sample_cell: Vector3i
+func paint_dot() -> PackedByteArray:
+	move_to(point(sample_cell))
+	await frames(1)
+	mouse(true)
+	mouse(false)
+	await settled()
+	return await read()
+func wait_file() -> void:
+	while editor.archive_panel.operation != "":
+		await process_frame
+func run() -> void:
+	original_cursor = DisplayServer.mouse_get_position()
+	original_accumulation = Input.use_accumulated_input
+	input_configured = true
+	Input.use_accumulated_input = false
+	root.size = Vector2i(1280, 800)
+	editor = load("res://scenes/discovery/interaction.tscn").instantiate()
+	root.add_child(editor)
+	current_scene = editor
+	sim = editor.sim
+	clock = root.get_node("TimeController")
+	await frames(12)
+	editor.radius_input.value = 0
+	baseline = await read()
+	var n := VoxelCodec.GRID
+	sample_cell = Vector3i(n * 7 / 8, n * 7 / 8, n / 2)
+	var authored := await paint_dot()
+	check(authored != baseline and editor.undo_history.size() == 1, "parsed paint creates unsaved authored work with working Undo")
+	editor._set_advanced(true)
+	await frames(2)
+	await click(find_button("Reset container"))
+	await settled()
+	editor.undo_edit()
+	await settled()
+	check(await read() == baseline and editor.undo_history.is_empty() and editor.redo_history.is_empty(), "LOSS REPRO: Reset plus Undo cannot recover unsaved authored dot")
+	authored = await paint_dot()
+	await click(find_button("Empty build"))
+	await settled()
+	editor.undo_edit()
+	await settled()
+	var empty := PackedByteArray()
+	empty.resize(baseline.size())
+	check(await read() == empty and editor.undo_history.is_empty() and editor.redo_history.is_empty(), "LOSS REPRO: Empty plus Undo cannot recover unsaved authored dot")
+	editor.replace_authored(baseline)
+	var path := "/tmp/authored-protection-baseline.p3d"
+	editor.archive_panel.save_to_path(path)
+	await wait_file()
+	authored = await paint_dot()
+	editor.archive_panel.open_path(path)
+	await wait_file()
+	editor.undo_edit()
+	await settled()
+	check(await read() == baseline and editor.undo_history.is_empty() and editor.redo_history.is_empty(), "LOSS REPRO: valid Open plus Undo cannot recover newer unsaved authored dot")
+	editor.archive_panel.save_to_path(path)
+	move_to(point(sample_cell))
+	mouse(true)
+	mouse(false)
+	await settled()
+	await wait_file()
+	var saved := WorldArchive.load_authored(path, n)
+	check(saved.ok and saved.bytes == baseline and await read() != baseline and editor.archive_panel.message.text.begins_with("Saved build:"), "MISLEADING STATE REPRO: successful earlier capture says Saved build while current build has newer unsaved paint")
+	print("CLOSE_POLICY auto_accept_quit=", auto_accept_quit, " editor_notification_close_handler=false (source review)")
+	check(auto_accept_quit, "CLOSE POLICY: SceneTree default accepts window close without editor interception")
+	DirAccess.remove_absolute(path)
+	_restore_input()
+	print("Authored protection audit: %d reproduced conditions, %d unexpected results" % [checks, failures])
+	quit(1 if failures else 0)
