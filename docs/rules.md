@@ -166,6 +166,34 @@ surface frothy for a long time.
 material at boot (`p:foam_strength=0`, `p:refraction=0`,
 `p:caustic_strength=0`), for isolating a feature in a screenshot or bench.
 
+### Anti-aliasing, exposure, motion blur
+
+The viewport renders at 0.75 scale through MetalFX spatial upscaling with
+FXAA. MetalFX temporal (and any TAA) was measured and rejected: the sprite
+layers are MultiMesh instances whose transforms are written on the GPU, so
+Godot has no motion vectors for them, and grains, droplets and embers ghost
+into soft blobs; SMAA costs about 2 ms more than FXAA for a small edge gain.
+`aa=fxaa|smaa|temporal|spatial|off` on the tools switches modes for
+comparison (`tools/screenshot.gd`, `tools/bench.gd`), and `spin=deg` orbits
+the camera per frame so temporal artifacts show in a still.
+
+Auto exposure was tried and left off by default: with the pale sky and white
+plane the metering brightens the open scene toward its target grey and blows
+out the ground, and the fire close-up gains little. `exposure=1` enables it
+(sensitivity window 90–180) for comparison.
+
+Camera motion blur is a post-transparent CompositorEffect
+(`scripts/environment/motion_blur.gd`, `shaders/post/motion_blur.glsl`) that
+needs no motion vectors: each pixel's depth is unprojected to a world point
+and reprojected with the previous frame's view-projection, giving exact
+velocities for the static voxel world (the raymarch writes its own depth, so
+Godot's vectors would be the bounding cube's) and the camera's blur for
+sprites. Eight taps along the velocity, clamped to 16 internal pixels,
+weighted down where the tap's depth differs from the pixel's. Two dispatches
+(blur into a scratch buffer, copy back) because the colour buffer cannot be
+copied or read while written. `mblur=0` disables it, `mblur=2` shows the
+velocity field.
+
 Crisp surfaces (walls, `smooth` 0) take their face normal from the voxel
 plane nearest the bisected hit rather than the DDA's last step axis: the 0.5
 crossing of a crisp field sits exactly on the face, so the step that detects

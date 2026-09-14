@@ -21,6 +21,17 @@ const BOX_CENTER := Vector3.ZERO
 @export var sun_direction := Vector3(-0.55, -0.8, 0.45)
 @export var frame_color := Color(0.18, 0.2, 0.24, 0.55)
 @export var frame_thickness := 0.004
+## Camera motion blur (compositor effect; `mblur=0` disables, `mblur=2` shows velocity).
+@export var motion_blur_enabled := true:
+	set(v):
+		motion_blur_enabled = v
+		if _motion_blur:
+			_motion_blur.enabled = v
+## Auto exposure, off by default: the metering brightens the pale open scene
+## rather than dimming fire close-ups (`exposure=1` enables it for a look).
+@export var auto_exposure_enabled := false
+@export var exposure_min_sensitivity := 90.0
+@export var exposure_max_sensitivity := 180.0
 
 @onready var sun: DirectionalLight3D = $Sun
 @onready var world_env: WorldEnvironment = $WorldEnvironment
@@ -30,6 +41,7 @@ var _sim: Node3D
 var _ground_material: ShaderMaterial
 var _camera: Camera3D
 var _attributes: CameraAttributesPractical
+var _motion_blur: MotionBlurEffect
 
 
 ## Box edge length in metres; the environment is tuned relative to it.
@@ -48,12 +60,32 @@ func _ready() -> void:
 		_ground_material.set_shader_parameter("sunvis", _sim.sunvis_texture())
 		_ground_material.set_shader_parameter("box_center", Vector3.ZERO)
 		_ground_material.set_shader_parameter("box_half", 0.5 * world_size)
+	var blur_debug := false
+	for arg in OS.get_cmdline_user_args():
+		if arg == "mblur=0":
+			motion_blur_enabled = false
+		elif arg == "mblur=2":
+			blur_debug = true
+		elif arg == "exposure=0":
+			auto_exposure_enabled = false
+		elif arg == "exposure=1":
+			auto_exposure_enabled = true
 	_camera = get_node_or_null(camera_path) as Camera3D
 	if _camera:
 		_attributes = CameraAttributesPractical.new()
 		_attributes.dof_blur_amount = dof_blur_amount
+		_attributes.auto_exposure_enabled = auto_exposure_enabled
+		_attributes.auto_exposure_min_sensitivity = exposure_min_sensitivity
+		_attributes.auto_exposure_max_sensitivity = exposure_max_sensitivity
+		_attributes.auto_exposure_speed = 1.5
 		_camera.attributes = _attributes
 		_apply_dof_enabled()
+	_motion_blur = MotionBlurEffect.new()
+	_motion_blur.enabled = motion_blur_enabled
+	_motion_blur.debug = blur_debug
+	var compositor := Compositor.new()
+	compositor.compositor_effects = [_motion_blur]
+	world_env.compositor = compositor
 	sun.look_at(sun.global_position + sun_direction.normalized(), Vector3.UP)
 	_build_box_frame()
 	_sync_lighting()

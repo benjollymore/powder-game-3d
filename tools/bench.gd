@@ -1,7 +1,7 @@
 extends SceneTree
 ## GPU cost of the simulation: runs the demo world at the maximum ticks per
 ## frame and prints the average measured GPU frame time.
-## Usage: godot --path . -s res://tools/bench.gd -- [frames] [hydro=0] [air=0] [ticks=N] [grid=N] [sunvis=0] [cam=x,y,z] [look=x,y,z]
+## Usage: godot --path . -s res://tools/bench.gd -- [frames] [hydro=0] [air=0] [ticks=N] [grid=N] [sunvis=0] [cam=x,y,z] [look=x,y,z] [aa=fxaa|smaa|temporal|spatial|off]
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
@@ -12,6 +12,7 @@ func _initialize() -> void:
 	var cam := ""
 	var look := ""
 	var profile := false
+	var aa := ""
 	for a in args:
 		if a == "hydro=0":
 			hydro = false
@@ -25,9 +26,13 @@ func _initialize() -> void:
 			look = a.substr(5)
 		elif a == "profile=1":
 			profile = true
+		elif a.begins_with("aa="):
+			aa = a.substr(3)
 	change_scene_to_file("res://scenes/main.tscn")
 	await process_frame
 	await process_frame
+	if aa != "":
+		load("res://tools/screenshot.gd").apply_aa(root.get_viewport(), aa)
 	var sim := current_scene.get_node("SimVolume")
 	sim.hydro_enabled = hydro
 	sim.air_enabled = air
