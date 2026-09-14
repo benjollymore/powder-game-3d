@@ -4,7 +4,7 @@ extends RefCounted
 ##   bits 0-7   element id
 ##   bits 8-15  per-voxel random seed (colour variation, rule randomness)
 ##   bits 16-23 liquid amount (0 for anything that is not a liquid)
-##   bits 24-31 reserved (temperature / life, later phases)
+##   bits 24-31 movement flags (liquid falling-run marker and powder moved age)
 
 ## World size per axis. Resolved once from the project setting
 ## `powder/sim/grid_size`, overridden by a `grid=N` command-line user arg

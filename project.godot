@@ -7,7 +7,7 @@ config_version=5
 [application]
 
 config/name="Powder Game 3D"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/editor.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 
 [autoload]
