@@ -8,13 +8,16 @@
 //       powders weighted by each element's `smooth`, so sand renders as a
 //       smooth heap while walls (smooth 0) keep crisp faces. Flat surfaces keep
 //       their 0.5 crossing exactly on the voxel boundary for any smoothing;
-//   B = 1 for gas cells; A reserved (foam).
+//   B = 1 for gas cells;
+//   A = foam: 1 where liquid is falling or just landed, averaged over the
+//       same-layer neighbours and decaying over the following updates, so
+//       pours and impacts whiten and the froth fades after the water calms.
 // The 8^3 workgroup stages a 10^3 neighbourhood in shared memory.
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
 layout(rgba8, set = 0, binding = 0) uniform restrict readonly image3D grid;
-layout(rgba8, set = 0, binding = 1) uniform restrict writeonly image3D fields;
+layout(rgba8, set = 0, binding = 1) uniform restrict image3D fields;
 
 struct Elem {
 	uint flags;
@@ -37,8 +40,8 @@ const uint FLAG_GAS = 1u << 3;
 const float FULL = 200.0;
 const int TILE = 10;
 
-// Per staged cell: bit 0 opaque, bit 1 liquid, bits 8-15 smooth * 255,
-// bits 16-23 liquid density * 255.
+// Per staged cell: bit 0 opaque, bit 1 liquid, bit 2 foam source (falling or
+// just landed liquid), bits 8-15 smooth * 255, bits 16-23 liquid density * 255.
 shared uint tile[TILE * TILE * TILE];
 
 float liquid_density(uint amount) {
@@ -74,7 +77,8 @@ uint stage(ivec3 p) {
 				return 0u;
 			}
 		}
-		return 2u | (uint(liquid_density(v.z) * 255.0 + 0.5) << 16);
+		uint foam = ((v.w & 7u) != 0u) ? 4u : 0u;
+		return 2u | foam | (uint(liquid_density(v.z) * 255.0 + 0.5) << 16);
 	}
 	if ((flags & (FLAG_IMMOVABLE | FLAG_POWDER)) == 0u) {
 		return 0u;
@@ -122,22 +126,30 @@ void main() {
 
 	float r = 0.0;
 	float b = 0.0;
+	float a = 0.0;
 	if ((me & 2u) != 0u) {
 		// Liquid: average the density over same-layer liquid neighbours so thin
 		// films with per-cell fill jitter render as one smooth sheet.
 		float own = float(me >> 16) / 255.0;
 		float sum = 0.5 * own;
 		float wsum = 0.5;
+		float foam = 0.5 * float((me >> 2) & 1u);
 		for (int dz = -1; dz <= 1; dz++) {
 			for (int dx = -1; dx <= 1; dx++) {
 				if (dx == 0 && dz == 0) { continue; }
 				uint e = tile[tidx(l + ivec3(dx, 0, dz))];
 				float w = (abs(dx) + abs(dz) == 1) ? 0.1 : 0.025;
-				sum += w * (((e & 2u) != 0u) ? float(e >> 16) / 255.0 : own);
+				bool liq = (e & 2u) != 0u;
+				sum += w * (liq ? float(e >> 16) / 255.0 : own);
+				foam += w * float((e >> 2) & 1u);
 				wsum += w;
 			}
 		}
 		r = sum / wsum;
+		// Froth persists across updates and fades once the water calms.
+		float prev = imageLoad(fields, p).a;
+		a = max(foam / wsum, prev * 0.93);
+		if (a < 0.02) { a = 0.0; }
 	} else if ((me & 1u) != 0u) {
 		r = 1.0; // solids bound the liquid surface too
 	} else {
@@ -146,5 +158,5 @@ void main() {
 			b = 1.0;
 		}
 	}
-	imageStore(fields, p, vec4(r, g, b, 0.0));
+	imageStore(fields, p, vec4(r, g, b, a));
 }

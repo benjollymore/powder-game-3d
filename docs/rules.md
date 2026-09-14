@@ -136,6 +136,35 @@ one node per layer under SimVolume; the CPU never touches the instances):
 
 `sprites=0` and `fx=0` on the command line disable the layers for benchmarks.
 
+### Water: refraction, froth, caustics
+
+`fields.glsl` keeps a froth channel (A): 1 where liquid is falling or just
+landed (byte A bits 0-2), averaged over same-layer neighbours and decaying
+by 7% per update so it lingers briefly after the water calms. The volume
+pass whitens the liquid surface and interior by it (matte, mostly opaque), so
+pours and impacts read as aerated water. Rays that cross a liquid surface
+compose the backdrop themselves: they sample the screen texture shifted along
+the entry normal (scaled by the path length through liquid, and falling back
+to the unshifted pixel when the shifted one holds nearer geometry) instead of
+relying on alpha blending, so sand and walls behind water refract. The opaque
+pass detects a liquid cell just outside the hit surface and modulates direct
+sunlight with two drifting octaves of noise projected along the sun (a
+caustic pattern animated by simulation time) and tints the albedo blue-green.
+
+Two details keep this calm: a liquid surface whose cell has no liquid under
+it is a thin film (rain on a wall, a wet floor), and its reflection, highlight
+and refraction are scaled by the cell's fill so grazing views of lumpy
+one-cell sheets do not turn into bright contour bands; and a ray passing from
+one liquid into another (oil floating on water) closes the first segment in
+its own colour and starts a new one, so a thin oil film no longer tints the
+whole pool beneath it. Scenario pools are authored to rest on their bowl
+floors: a one-cell air gap under a pool becomes bubbles that keep the whole
+surface frothy for a long time.
+
+`p:name=value` on the command line sets a float shader parameter on every
+material at boot (`p:foam_strength=0`, `p:refraction=0`,
+`p:caustic_strength=0`), for isolating a feature in a screenshot or bench.
+
 The depth prepass is disabled: an opaque material that writes depth would run
 the raymarch twice, and the voxel AO covers what SSAO provided. `debug=N`
 shows flat colour (1), AO (2), normals (3), texture (4) or sun visibility

@@ -28,6 +28,9 @@ func _ready() -> void:
 	# Debug: `splatdebug=1` places one CPU-set instance at the top of the box to
 	# prove the draw path independently of the GPU emit pass.
 	for arg in OS.get_cmdline_user_args():
+		# `hide=<role>` skips drawing a layer (its GPU fill still runs): benchmarks.
+		if arg == "hide=" + ["grains", "leaves", "droplets", "fx"][role]:
+			visible = false
 		if arg == "splatdebug=1":
 			mm.set_instance_transform(0, Transform3D(Basis().scaled(Vector3.ONE * 0.08), Vector3(0.0, 0.35, 0.0)))
 			mm.set_instance_custom_data(0, Color(2.0, 0.5, 3.0, 0.0))

@@ -17,6 +17,9 @@ uniform float mat_rough[16];
 uniform float texture_tile = 16.0;
 uniform float texture_size = 256.0;
 uniform float ao_strength = 1.0;
+// Simulation seconds; animates the underwater caustic pattern.
+uniform float sim_time = 0.0;
+uniform float caustic_strength = 1.0;
 // 0 normal, 1 flat colour, 2 AO only, 3 smoothed normal, 4 texture only, 5 sun visibility
 uniform int debug_mode = 0;
 
@@ -104,8 +107,13 @@ void fragment() {
 	}
 	uint id = is_opaque(hv.x) ? hv.x : 1u;
 	float seed = float(hv.y) / 255.0;
+	// Face normal from the voxel plane nearest the bisected hit: the DDA's last
+	// step axis is unreliable here because a crisp 0.5 crossing sits exactly on
+	// the face and may register from either side of it.
+	vec3 fr = abs(fract(ps) - 0.5);
+	int hit_axis = (fr.x > fr.y && fr.x > fr.z) ? 0 : ((fr.y > fr.z) ? 1 : 2);
 	vec3 face_model = vec3(0.0);
-	face_model[r.axis] = -float(r.step_dir[r.axis]);
+	face_model[hit_axis] = -float(r.step_dir[hit_axis]);
 	if (t_hit == 0.0) {
 		face_model = -r.dir;
 		n_model = -r.dir;
@@ -114,6 +122,7 @@ void fragment() {
 	mat3 model_basis = mat3(MODEL_MATRIX);
 	float sm = mat_smooth[int(id)];
 	vec3 n = normalize(mix(face_model, n_model, sm));
+	vec3 n_geo = n; // before texture and grain perturbation: AO and shadow taps
 	int layer = mat_layer[int(id)];
 	vec3 hit_model = r.cam + r.dir * (r.t_start + t_hit / G);
 	vec4 hit_view = VIEW_MATRIX * MODEL_MATRIX * vec4(hit_model, 1.0);
@@ -138,15 +147,26 @@ void fragment() {
 	base *= 1.0 - clamp(lap * 0.5, -0.12, 0.12) * sm;
 
 	float ao = 1.0;
-	ao -= 0.35 * field_g(ps + n * 1.5, 0.0);
-	ao -= 0.25 * field_g(ps + n * 3.0, 1.0);
-	ao -= 0.2 * field_g(ps + n * 6.0, 2.0);
-	ao -= 0.1 * field_g(ps + n * 12.0, 3.0);
+	ao -= 0.35 * field_g(ps + n_geo * 1.5, 0.0);
+	ao -= 0.25 * field_g(ps + n_geo * 3.0, 1.0);
+	ao -= 0.2 * field_g(ps + n_geo * 6.0, 2.0);
+	ao -= 0.1 * field_g(ps + n_geo * 12.0, 3.0);
 	ao -= 0.15 * field_g(ps + vec3(0.0, 8.0, 0.0), 2.0);
 	ao = mix(1.0, clamp(ao, 0.15, 1.0), ao_strength);
 
 	vec3 to_sun_model = normalize(light_dir); // uniform scale: world and model directions agree
-	v_sunvis = sun_vis(ps + n * 0.75 + to_sun_model * 1.25);
+	v_sunvis = sun_vis(ps + n_geo * 0.75 + to_sun_model * 1.25);
+	// Under liquid: sunlight arrives through a moving surface, so modulate it
+	// with two drifting octaves of noise projected along the sun and tint it.
+	ivec3 above = ivec3(floor(ps + n_geo * 1.0));
+	if (!outside(above) && is_liquid(voxel_at(above).x)) {
+		vec3 q = ps - to_sun_model * (ps.y / max(abs(to_sun_model.y), 0.3));
+		float c1 = texture(grain_noise, vec3(q.xz / 9.0, sim_time * 0.35)).r;
+		float c2 = texture(grain_noise, vec3(q.xz / 6.5 + 3.7, 5.0 - sim_time * 0.27)).g;
+		float c = smoothstep(0.4, 0.65, c1) * smoothstep(0.4, 0.65, c2);
+		v_sunvis *= mix(1.0, 0.6 + 2.6 * c, caustic_strength);
+		base *= mix(vec3(1.0), vec3(0.8, 0.92, 1.0), 0.6 * caustic_strength);
+	}
 
 	vec3 n_world = normalize(model_basis * n);
 	NORMAL = normalize((VIEW_MATRIX * vec4(n_world, 0.0)).xyz);
@@ -164,6 +184,9 @@ void fragment() {
 	if (debug_mode == 3) { ALBEDO = vec3(0.0); EMISSION = n * 0.5 + 0.5; }
 	if (debug_mode == 4) { ALBEDO = vec3(0.0); EMISSION = tex; }
 	if (debug_mode == 5) { ALBEDO = vec3(0.0); EMISSION = vec3(v_sunvis); }
+	if (debug_mode == 6) { ALBEDO = vec3(0.0); EMISSION = vec3(field_g(ps + n_geo * 1.5, 0.0), field_g(ps + n_geo * 3.0, 1.0), field_g(ps + n_geo * 6.0, 2.0)); }
+	if (debug_mode == 7) { ALBEDO = vec3(0.0); EMISSION = fract(ps); }
+	if (debug_mode == 8) { ALBEDO = vec3(0.0); EMISSION = n_geo * 0.5 + 0.5; }
 }
 
 void light() {

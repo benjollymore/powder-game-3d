@@ -126,7 +126,7 @@ static func _forest_fire(data: PackedInt32Array) -> void:
 static func _oil_spill(data: PackedInt32Array) -> void:
 	_floor(data)
 	_bowl(data, Vector3i(14, 0, 14), Vector3i(114, 40, 114), 3)
-	_box(data, Vector3i(17, 4, 17), Vector3i(111, 26, 111), WATER)
+	_box(data, Vector3i(17, 3, 17), Vector3i(111, 26, 111), WATER)   # rests on the bowl floor: no trapped air
 	_sphere(data, Vector3(64, 70, 64), 16.0, OIL)
 	_box(data, Vector3i(100, 26, 100), Vector3i(106, 30, 106), FIRE)
 
@@ -135,7 +135,7 @@ static func _oil_spill(data: PackedInt32Array) -> void:
 static func _steam_vent(data: PackedInt32Array) -> void:
 	_floor(data)
 	_bowl(data, Vector3i(30, 0, 30), Vector3i(98, 50, 98), 3)
-	_box(data, Vector3i(33, 4, 33), Vector3i(95, 12, 95), FIRE)
+	_box(data, Vector3i(33, 3, 33), Vector3i(95, 12, 95), FIRE)
 	_box(data, Vector3i(33, 12, 33), Vector3i(95, 36, 95), WATER)
 
 

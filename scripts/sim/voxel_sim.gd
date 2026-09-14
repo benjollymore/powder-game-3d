@@ -107,6 +107,7 @@ var volume_debug := 0
 
 var tick := 0
 var _frame := 0
+var _param_overrides := {}
 
 var _rd: RenderingDevice
 var _grid_rid := RID()
@@ -193,6 +194,10 @@ func _ready() -> void:
 			sprites_enabled = false
 		elif arg == "fx=0":
 			fx_enabled = false
+		elif arg.begins_with("p:") and arg.contains("="):
+			# p:name=value sets a float shader parameter on every material (tuning).
+			var kv := arg.substr(2).split("=")
+			_param_overrides[kv[0]] = float(kv[1])
 	var mesh: MeshInstance3D = get_node(mesh_path)
 	_material = mesh.material_override
 	_volume_material = get_node(volume_mesh_path).material_override
@@ -229,6 +234,8 @@ func _ready() -> void:
 	# binding does not survive scene reloads.
 	set_param("voxels", _texture)
 	set_param("occupancy", _occ_texture)
+	for k in _param_overrides:
+		set_param(k, _param_overrides[k])
 	set_param("brick_size", GRID / OCCUPANCY_GRID)
 	RenderingServer.call_on_render_thread(_rt_init)
 	# The first world is built on the GPU right after the textures exist.
@@ -469,8 +476,11 @@ func _rt_init() -> void:
 		RenderingDevice.TEXTURE_USAGE_STORAGE_BIT
 		| RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
 		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT
 	)
 	_density_rid = _rd.texture_create(den_fmt, RDTextureView.new())
+	# The froth channel (A) carries over between updates, so start it clean.
+	_rd.texture_clear(_density_rid, Color(0, 0, 0, 0), 0, FIELDS_MIPS, 0, 1)
 	_fields_views = []
 	for m in FIELDS_MIPS:
 		_fields_views.append(_rd.texture_create_shared_from_slice(

@@ -88,13 +88,19 @@ func _column_height(bytes: PackedByteArray, x: int, z: int, id: int) -> float:
 
 
 func _run_and_read(ticks: int) -> PackedByteArray:
-	# Chunk the work across frames so no single submission trips the GPU fence timeout.
+	# Chunk the work across frames so no single submission trips the GPU fence
+	# timeout (first runs after a shader reimport also pay Metal pipeline compiles).
 	var remaining := ticks
 	while remaining > 0:
-		var batch := mini(remaining, 200)
+		var batch := mini(remaining, 100)
 		_sim.request_ticks(batch)
 		remaining -= batch
 		await process_frame
+		# A tiny synchronous readback per batch keeps the GPU queue to one batch;
+		# otherwise batches pile up faster than they run and the big readback's
+		# fence wait (1 s) times out, returning zeros.
+		_sim.request_layer_counts()
+		await _sim.layer_counts_ready
 	await process_frame
 	# Lambdas capture by value in GDScript, so wait on the signal instead of a flag.
 	_sim.request_readback(func(_bytes): pass)
@@ -613,6 +619,23 @@ func _test_sprites() -> void:
 		if seen_landed:
 			break
 	check(seen_landed, "liquid that comes to rest carries the landed bits")
+	# Foam: a falling block of water fills fields.A; calm water has none.
+	data = _empty_world()
+	WorldBuilder.floor(data)
+	WorldBuilder.fill_box(data, Vector3i(40, 40, 40), Vector3i(48, 52, 48), Elements.Id.WATER)
+	WorldBuilder.fill_bowl(data, Vector3i(70, 4, 70), Vector3i(100, 30, 100), 2)
+	WorldBuilder.fill_box(data, Vector3i(72, 6, 72), Vector3i(98, 20, 98), Elements.Id.WATER)
+	_sim.upload(data.to_byte_array())
+	for i in 30:
+		await _run_and_read(1)
+	_sim.request_density_readback()
+	var fields: PackedByteArray = await _sim.density_ready
+	var foam_falling := 0
+	for y in range(4, 53):
+		foam_falling = maxi(foam_falling, fields[VoxelCodec.index(44, y, 44) * 4 + 3])
+	var foam_calm := fields[VoxelCodec.index(85, 12, 85) * 4 + 3]
+	check(foam_falling > 150, "falling water is frothy in fields.A (%d)" % foam_falling)
+	check(foam_calm < 30, "calm water carries no froth (%d)" % foam_calm)
 
 	data = _empty_world()
 	WorldBuilder.floor(data)

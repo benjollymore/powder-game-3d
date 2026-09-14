@@ -42,6 +42,9 @@ to start in a preset.
 ## Tests
 
 ```sh
+# After editing a compute shader (.glsl) or adding a class_name script, reimport
+# first: command-line runs use the imported SPIR-V and do not rebuild it.
+godot --headless --path . --import
 # CPU-only unit tests (headless)
 godot --headless --path . -s res://tests/unit/run_unit.gd -- grid=128
 # GPU simulation tests (need a window: headless has no RenderingDevice)
