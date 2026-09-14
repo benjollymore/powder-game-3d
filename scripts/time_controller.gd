@@ -39,11 +39,11 @@ var time_scale := 1.0:
 
 ## The smoothed scale actually applied this frame.
 var effective_scale := 1.0
-## Total ticks run since the world was last cleared.
+## Total ticks requested since the world was last cleared; not GPU completion.
 var tick := 0
-## Ticks run during the most recent frame.
+## Ticks requested during the most recent frame.
 var ticks_this_frame := 0
-## Measured ticks per second, refreshed twice a second.
+## Requested ticks per wall-clock second, refreshed twice a second.
 var ticks_per_second := 0.0
 
 var _accumulator := 0.0

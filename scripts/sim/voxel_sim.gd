@@ -90,7 +90,7 @@ const BRUSH_PUSH_INTS := 12
 @export var rule_flags := 0
 ## Run the line-based liquid pressure solver after each tick.
 @export var hydro_enabled := true
-## Run the coarse air (velocity/pressure) solver once per tick batch.
+## Run the coarse air (velocity/pressure) solver once per simulation tick.
 @export var air_enabled := true
 ## Rebuild the sun-visibility field whenever the world changes.
 @export var sunvis_enabled := true
@@ -300,7 +300,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # --- public API (main thread) --------------------------------------------------
 
-## Run `count` ticks this frame (each is one compute dispatch).
+## Queue `count` fixed simulation ticks. Submission grouping does not change
+## solver cadence. `tick` counts requested work, not completed GPU work.
 func request_ticks(count: int) -> void:
 	if count <= 0 or not _rt_ready:
 		return
@@ -801,16 +802,19 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		return
 	_stamp("frame_begin")
 	var cl := _rd.compute_list_begin()
-	if air_enabled:
-		_rt_air_step(cl, count, first_tick)
-	_rd.compute_list_end()
-	_stamp("air")
-	cl = _rd.compute_list_begin()
 	var push := PackedInt32Array()
 	push.resize(PUSH_CONSTANT_INTS)
 	var hydro_groups := GRID / 8  # 8x8 threads per group, one line per thread
 	for i in count:
 		var t := first_tick + i
+		# Air samples and projects at a fixed simulation cadence. Advancing it
+		# once with dt=count before a batch changes both the source sampling and
+		# numerical integration when render frames group ticks differently.
+		if air_enabled:
+			_rt_air_step(cl, 1, t)
+			_rd.compute_list_end()
+			_stamp("air_tick")
+			cl = _rd.compute_list_begin()
 		var offset := partition_offset(t)
 		push[0] = t
 		push[1] = world_seed

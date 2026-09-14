@@ -1,0 +1,160 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project initialization (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Scanning file structure...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | Loading global class names...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | Verifying GDExtensions...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | Creating autoload scripts...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | Initializing plugins...[39m[0m
+[  83% ] [90m[1mfirst_scan_filesystem[22m | Starting file scan...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | Started Registering global classes... (30 steps)[39m[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[   3% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[   6% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[   9% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  12% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  16% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  19% ] [90m[1mupdate_scripts_classes[22m | MotionBlurEffect[39m[0m
+[  22% ] [90m[1mupdate_scripts_classes[22m | InstanceLayer[39m[0m
+[  25% ] [90m[1mupdate_scripts_classes[22m | MaterialLibrary[39m[0m
+[  29% ] [90m[1mupdate_scripts_classes[22m | Scenarios[39m[0m
+[  32% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  35% ] [90m[1mupdate_scripts_classes[22m | Elements[39m[0m
+[  38% ] [90m[1mupdate_scripts_classes[22m | VoxelCodec[39m[0m
+[  41% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  45% ] [90m[1mupdate_scripts_classes[22m | WorldBuilder[39m[0m
+[  48% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  51% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  54% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  58% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  61% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  64% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  67% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  70% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  74% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  77% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  80% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  83% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  87% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  90% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  93% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[92m[ DONE ][39m [1mupdate_scripts_classes[22m
+[0m
+[   0% ] [90m[1m_update_scan_actions[22m | Started Scanning actions... (33 steps)[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | dam_break.png[39m[0m
+[   2% ] [90m[1m_update_scan_actions[22m | demo.png[39m[0m
+[   5% ] [90m[1m_update_scan_actions[22m | demo_close_running.png[39m[0m
+[   8% ] [90m[1m_update_scan_actions[22m | forest_fire.png[39m[0m
+[  11% ] [90m[1m_update_scan_actions[22m | oil_spill.png[39m[0m
+[  14% ] [90m[1m_update_scan_actions[22m | u-bend.png[39m[0m
+[  17% ] [90m[1m_update_scan_actions[22m | dam-break-baseline.png[39m[0m
+[  20% ] [90m[1m_update_scan_actions[22m | dam-break-clean.png[39m[0m
+[  23% ] [90m[1m_update_scan_actions[22m | material-lab-baseline.png[39m[0m
+[  26% ] [90m[1m_update_scan_actions[22m | material-lab-clean.png[39m[0m
+[  29% ] [90m[1m_update_scan_actions[22m | interaction-angle.png[39m[0m
+[  32% ] [90m[1m_update_scan_actions[22m | interaction-front.png[39m[0m
+[  35% ] [90m[1m_update_scan_actions[22m | dam-break-baseline.png[39m[0m
+[  38% ] [90m[1m_update_scan_actions[22m | dam-break-clean.png[39m[0m
+[  41% ] [90m[1m_update_scan_actions[22m | material-lab-baseline.png[39m[0m
+[  44% ] [90m[1m_update_scan_actions[22m | material-lab-clean.png[39m[0m
+[  47% ] [90m[1m_update_scan_actions[22m | interaction-angle.png[39m[0m
+[  50% ] [90m[1m_update_scan_actions[22m | interaction-front.png[39m[0m
+[  52% ] [90m[1m_update_scan_actions[22m | air_advect.glsl[39m[0m
+[  55% ] [90m[1m_update_scan_actions[22m | air_divergence.glsl[39m[0m
+[  58% ] [90m[1m_update_scan_actions[22m | air_downsample.glsl[39m[0m
+[  61% ] [90m[1m_update_scan_actions[22m | air_jacobi.glsl[39m[0m
+[  64% ] [90m[1m_update_scan_actions[22m | air_project.glsl[39m[0m
+[  67% ] [90m[1m_update_scan_actions[22m | brush.glsl[39m[0m
+[  70% ] [90m[1m_update_scan_actions[22m | fields.glsl[39m[0m
+[  73% ] [90m[1m_update_scan_actions[22m | fields_mip.glsl[39m[0m
+[  76% ] [90m[1m_update_scan_actions[22m | fx.glsl[39m[0m
+[  79% ] [90m[1m_update_scan_actions[22m | hydro.glsl[39m[0m
+[  82% ] [90m[1m_update_scan_actions[22m | occupancy.glsl[39m[0m
+[  85% ] [90m[1m_update_scan_actions[22m | sim.glsl[39m[0m
+[  88% ] [90m[1m_update_scan_actions[22m | splat_emit.glsl[39m[0m
+[  91% ] [90m[1m_update_scan_actions[22m | sunvis.glsl[39m[0m
+[  94% ] [90m[1m_update_scan_actions[22m | motion_blur.glsl[39m[0m
+[92m[ DONE ][39m [1m_update_scan_actions[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (33 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   2% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   5% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   8% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  11% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  14% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  17% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  20% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  23% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  26% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  29% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  32% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  35% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  38% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  41% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  44% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  47% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  50% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  52% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  55% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  58% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  61% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  64% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  67% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  70% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  73% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  76% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  79% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  82% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  85% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  88% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  91% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  94% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   0% ] [90m[1mreimport[22m | Executing pre-reimport operations...[39m[0m
+[   0% ] [90m[1mreimport[22m | motion_blur.glsl[39m[0m
+[   2% ] [90m[1mreimport[22m | sunvis.glsl[39m[0m
+[   5% ] [90m[1mreimport[22m | splat_emit.glsl[39m[0m
+[   8% ] [90m[1mreimport[22m | sim.glsl[39m[0m
+[  11% ] [90m[1mreimport[22m | occupancy.glsl[39m[0m
+[  14% ] [90m[1mreimport[22m | hydro.glsl[39m[0m
+[  17% ] [90m[1mreimport[22m | fx.glsl[39m[0m
+[  20% ] [90m[1mreimport[22m | fields_mip.glsl[39m[0m
+[  23% ] [90m[1mreimport[22m | fields.glsl[39m[0m
+[  26% ] [90m[1mreimport[22m | brush.glsl[39m[0m
+[  29% ] [90m[1mreimport[22m | air_project.glsl[39m[0m
+[  32% ] [90m[1mreimport[22m | air_jacobi.glsl[39m[0m
+[  35% ] [90m[1mreimport[22m | air_downsample.glsl[39m[0m
+[  38% ] [90m[1mreimport[22m | air_divergence.glsl[39m[0m
+[  41% ] [90m[1mreimport[22m | air_advect.glsl[39m[0m
+[  44% ] [90m[1mreimport[22m | motion_blur.glsl[39m[0m
+[  47% ] [90m[1mreimport[22m | sunvis.glsl[39m[0m
+[  50% ] [90m[1mreimport[22m | splat_emit.glsl[39m[0m
+[  52% ] [90m[1mreimport[22m | sim.glsl[39m[0m
+[  55% ] [90m[1mreimport[22m | occupancy.glsl[39m[0m
+[  58% ] [90m[1mreimport[22m | hydro.glsl[39m[0m
+[  61% ] [90m[1mreimport[22m | fx.glsl[39m[0m
+[  64% ] [90m[1mreimport[22m | fields_mip.glsl[39m[0m
+[  67% ] [90m[1mreimport[22m | fields.glsl[39m[0m
+[  70% ] [90m[1mreimport[22m | brush.glsl[39m[0m
+[  73% ] [90m[1mreimport[22m | air_project.glsl[39m[0m
+[  76% ] [90m[1mreimport[22m | air_jacobi.glsl[39m[0m
+[  79% ] [90m[1mreimport[22m | air_downsample.glsl[39m[0m
+[  82% ] [90m[1mreimport[22m | air_divergence.glsl[39m[0m
+[  85% ] [90m[1mreimport[22m | air_advect.glsl[39m[0m
+[  88% ] [90m[1mreimport[22m | interaction-front.png[39m[0m
+[  91% ] [90m[1mreimport[22m | dam_break.png[39m[0m
+[  94% ] [90m[1mreimport[22m | demo.png[39m[0m
+[  97% ] [90m[1mreimport[22m | Finalizing Asset Import...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (33 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Executing post-reimport operations...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started Loading editor (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Loading editor layout...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | Loading docks...[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
