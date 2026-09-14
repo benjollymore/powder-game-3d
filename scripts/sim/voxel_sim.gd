@@ -83,7 +83,7 @@ enum BrushMode { REPLACE, ONLY_AIR, ERASE, BOX, BOX_ONLY_AIR }
 ## 2x2x2 blocks with a partition offset straddle the edge: GRID/2 + 1 blocks
 ## per axis, 4x4x4 threads per workgroup.
 var DISPATCH_GROUPS: int = ceili((GRID / 2 + 1) / 4.0)
-## Push constants: uvec4 a (tick, seed, substep, flags) + uvec4 b (offset xyz, 0).
+## Push constants: uvec4 a (tick, seed, reserved, flags) + uvec4 b (offset xyz, 0).
 const PUSH_CONSTANT_INTS := 8
 ## Brush push constants: ivec4 center/lo + radius, uvec4 element/mode/seed/amount, ivec4 box hi.
 const BRUSH_PUSH_INTS := 12
@@ -120,7 +120,10 @@ var volume_debug := 0
 @export var seconds_per_tick := 1.0 / 120.0
 
 var tick := 0
+## Absolute simulated tick used by presentation seeds, never rebuild count.
 var _frame := 0
+## Nonzero only while preparing presentation for elapsed simulation time.
+var _rt_presentation_seconds := 0.0
 var _param_overrides := {}
 
 var _rd: RenderingDevice
@@ -926,7 +929,7 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		var offset := partition_offset(t)
 		push[0] = t
 		push[1] = world_seed
-		push[2] = i
+		push[2] = 0 # reserved: never expose submission-local indices to physics
 		push[3] = rule_flags | (0 if air_enabled else RULE_NO_AIR)
 		push[4] = offset.x
 		push[5] = offset.y
@@ -955,8 +958,11 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		_stamp("hydro_tick")
 		cl = _rd.compute_list_begin()
 	_rd.compute_list_end()
+	_frame = first_tick + count
+	_rt_presentation_seconds = count * seconds_per_tick
 	_rt_occupancy_update()
 	_rt_fx_step(count)
+	_rt_presentation_seconds = 0.0
 	_stamp("frame_end")
 
 
@@ -986,9 +992,27 @@ func _rt_velocity_readback() -> void:
 
 
 func _rt_air_clear() -> void:
-	for rid in [_air_vel[0], _air_vel[1], _air_pres[0], _air_pres[1]]:
+	for rid in [_air_vel[0], _air_vel[1], _air_pres[0], _air_pres[1], _air_div, _air_occ, _air_src]:
 		if rid.is_valid():
 			_rd.texture_clear(rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
+
+
+## Clear solver and presentation history when replacing an authored world.
+## Regional edits/undo deliberately do not call this: this is a fresh test
+## state, not a full-runtime snapshot restore.
+func _rt_reset_world_history() -> void:
+	_rt_air_clear()
+	_frame = 0
+	_rt_presentation_seconds = 0.0
+	_rd.texture_clear(_density_rid, Color(0, 0, 0, 0), 0, FIELDS_MIPS, 0, 1)
+	_rd.texture_clear(_sunvis_rid, Color(1, 1, 1, 1), 0, 1, 0, 1)
+	_rd.buffer_clear(_splat_counter, 0, COUNTER_BYTES)
+	_rd.buffer_clear(_fx_spawns, 0, FX_SPAWN_CAPACITY * 32)
+	if _fx_pool.is_valid():
+		_rd.buffer_clear(_fx_pool, 0, _layer_capacity[Layer.FX] * 48)
+	for layer in LAYER_COUNT:
+		if _layer_buffer[layer].is_valid():
+			_rd.buffer_clear(_layer_buffer[layer], 0, _layer_capacity[layer] * 64)
 
 
 ## Which of the 8 Margolus partitions to use on a given tick. Hashed rather
@@ -1060,7 +1084,7 @@ func _rt_run_ops(ops: Array) -> void:
 	if not _brush_pipeline.is_valid():
 		return
 	_rd.texture_clear(_grid_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
-	_rt_air_clear()
+	_rt_reset_world_history()
 	var cl := _rd.compute_list_begin()
 	_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
 	_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
@@ -1078,18 +1102,19 @@ func _rt_run_ops(ops: Array) -> void:
 
 func _rt_upload(bytes: PackedByteArray) -> void:
 	_rd.texture_update(_grid_rid, 0, bytes)
-	_rt_air_clear()
+	_rt_reset_world_history()
 	_rt_occupancy_update()
 
 
 func _rt_clear() -> void:
 	_rd.texture_clear(_grid_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
-	_rt_air_clear()
+	_rt_reset_world_history()
 	_rt_occupancy_update()
 
 
 ## Recompute everything derived from the voxel texture: the coarse occupancy
-## grid and the liquid density field the renderer samples.
+## grid and the liquid density field the renderer samples. Geometry-only
+## refreshes use zero elapsed time and must not age foam or emit new FX.
 func _rt_occupancy_update() -> void:
 	if not _occ_pipeline.is_valid():
 		return
@@ -1107,6 +1132,8 @@ func _rt_occupancy_update() -> void:
 		var dg := GRID / 8
 		_rd.compute_list_bind_compute_pipeline(cl, _density_pipeline)
 		_rd.compute_list_bind_uniform_set(cl, _density_set, 0)
+		var field_time := PackedFloat32Array([_rt_presentation_seconds, 0.0, 0.0, 0.0]).to_byte_array()
+		_rd.compute_list_set_push_constant(cl, field_time, field_time.size())
 		_rd.compute_list_dispatch(cl, dg, dg, dg)
 		_rd.compute_list_add_barrier(cl)
 		_rd.compute_list_bind_compute_pipeline(cl, _mip_pipeline)
@@ -1162,15 +1189,17 @@ func _rt_sunvis_sweep(cl: int) -> void:
 func _rt_splat_emit() -> void:
 	if not _splat_pipeline.is_valid() or not sprites_enabled:
 		return
-	_frame += 1
-	_rd.buffer_clear(_splat_counter, 0, COUNTER_BYTES)
+	# Preserve the live-FX tally during paused edits; only FX integration
+	# recomputes it. All geometric counters and spawn requests are refreshed.
+	_rd.buffer_clear(_splat_counter, 0, 5 * 4)
+	_rd.buffer_clear(_splat_counter, 6 * 4, COUNTER_BYTES - 6 * 4)
 	for i in [Layer.GRAINS, Layer.LEAVES, Layer.DROPLETS]:
 		_rd.buffer_clear(_layer_buffer[i], 0, _layer_capacity[i] * 64)
 	var cl := _rd.compute_list_begin()
 	_rd.compute_list_bind_compute_pipeline(cl, _splat_pipeline)
 	_rd.compute_list_bind_uniform_set(cl, _splat_set, 0)
 	var push := PackedInt32Array([_layer_capacity[Layer.GRAINS], _layer_capacity[Layer.LEAVES],
-		_layer_capacity[Layer.DROPLETS], FX_SPAWN_CAPACITY, _frame, Elements.Id.STEAM, 0, 0]).to_byte_array()
+		_layer_capacity[Layer.DROPLETS], FX_SPAWN_CAPACITY if _rt_presentation_seconds > 0.0 else 0, _frame, Elements.Id.STEAM, 0, 0]).to_byte_array()
 	_rd.compute_list_set_push_constant(cl, push, push.size())
 	var g := GRID / 8
 	_rd.compute_list_dispatch(cl, g, g, g)
@@ -1184,6 +1213,7 @@ func _rt_fx_step(ticks: int) -> void:
 	if not _fx_pipeline.is_valid() or ticks <= 0 or not fx_enabled:
 		return
 	var pool: int = _layer_capacity[Layer.FX]
+	_rd.buffer_clear(_splat_counter, 5 * 4, 4)
 	var cl := _rd.compute_list_begin()
 	_rd.compute_list_bind_compute_pipeline(cl, _fx_pipeline)
 	_rd.compute_list_bind_uniform_set(cl, _fx_set, 0)

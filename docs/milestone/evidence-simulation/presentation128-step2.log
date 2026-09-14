@@ -1,0 +1,35 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: fixture starts with half-intensity persistent foam
+ok: eight zero-time refreshes preserve exact density/foam/mip bytes
+ok: render refresh leaves all physical state unchanged
+ok: zero-time refresh does not change presentation seed clock
+ok: foam decays by half after 0.16 simulated seconds
+ok: foam aging does not mutate physical state
+ok: paused refresh cannot continue aging foam
+ok: zero-time refresh emits the required airborne grain
+ok: zero-time refresh emits required plant leaves
+ok: zero-time refresh emits the required thin-liquid droplet
+ok: physical sprites do not require cosmetic FX advancement
+ok: physical representation is complete while paused
+ok: fixture has live FX particles
+ok: fixture has a populated FX pool
+ok: paused render refresh neither integrates nor reseeds FX
+ok: paused refresh preserves live-FX count
+ok: geometry-only refresh creates no FX spawn requests
+ok: presentation seeds use absolute simulation tick
+ok: paused FX refresh preserves authoritative world
+ok: Return/upload restores exact authored packed bytes
+ok: authored restore discards old foam and reconstructs all field mips
+ok: authored restore clears all seven air solver textures
+ok: authored restore clears FX pool and displayed instances
+ok: authored restore clears old spawn records
+ok: authored restore resets requested and presentation tick clocks
+ok: Clear resets voxels and all presentation field mips
+ok: Clear resets solver and FX history
+ok: Clear resets clocks
+ok: preset reload returns identical authored geometry/fields
+ok: preset reload resets solver and FX history
+ok: preset reload resets clocks
+PRESENTATION_RESET grid=128 checks=31 failures=0

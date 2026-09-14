@@ -10,7 +10,7 @@
 //       their 0.5 crossing exactly on the voxel boundary for any smoothing;
 //   B = 1 for gas cells;
 //   A = foam: 1 where liquid is falling or just landed, averaged over the
-//       same-layer neighbours and decaying over the following updates, so
+//       same-layer neighbours and decaying with elapsed simulated seconds, so
 //       pours and impacts whiten and the froth fades after the water calms.
 // The 8^3 workgroup stages a 10^3 neighbourhood in shared memory.
 
@@ -32,6 +32,11 @@ struct Elem {
 layout(std430, set = 0, binding = 2) restrict readonly buffer Elems { Elem elems[]; };
 
 layout(constant_id = 0) const int GRID = 128;
+
+layout(push_constant, std430) uniform PresentationTime {
+	vec4 elapsed; // x: simulated seconds; zero for edits/inspection rebuilds
+} pc;
+const float FOAM_HALF_LIFE_SECONDS = 0.16;
 
 const uint FLAG_IMMOVABLE = 1u << 0;
 const uint FLAG_POWDER = 1u << 1;
@@ -146,9 +151,13 @@ void main() {
 			}
 		}
 		r = sum / wsum;
-		// Froth persists across updates and fades once the water calms.
+		// Rebuilding geometry while paused neither ages foam nor injects a
+		// new temporal source. Fade follows simulated seconds, not frame or
+		// brush callback frequency. Source sampling remains a visual batch approximation.
 		float prev = imageLoad(fields, p).a;
-		a = max(foam / wsum, prev * 0.93);
+		float seconds = max(pc.elapsed.x, 0.0);
+		float decay = exp2(-seconds / FOAM_HALF_LIFE_SECONDS);
+		a = max(seconds > 0.0 ? foam / wsum : 0.0, prev * decay);
 		if (a < 0.02) { a = 0.0; }
 	} else if ((me & 1u) != 0u) {
 		r = 1.0; // solids bound the liquid surface too

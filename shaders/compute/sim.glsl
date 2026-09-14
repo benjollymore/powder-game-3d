@@ -38,7 +38,7 @@ layout(std430, set = 0, binding = 2) restrict readonly buffer Reacts { uvec4 rea
 layout(set = 0, binding = 3) uniform sampler3D air_vel;
 
 layout(push_constant, std430) uniform Params {
-	uvec4 a; // tick, seed, substep, rule flags
+	uvec4 a; // tick, seed, reserved (zero), rule flags
 	uvec4 b; // partition offset x, y, z, reaction count
 } pc;
 

@@ -26,3 +26,17 @@ A fresh worktree needs import before parser/test commands can resolve global scr
 The correctness change increases air passes for batches larger than one. Performance measurements must therefore be repeated; earlier discovery timings used the old batch-dependent algorithm. An optimization may reduce work using a fixed cadence tied to absolute ticks, but must not reintroduce a different air algorithm for each frame rate.
 
 Evidence: [cadence128-step1.log](evidence-simulation/cadence128-step1.log), [gpu128-step1.log](evidence-simulation/gpu128-step1.log), [gpu256-step1.log](evidence-simulation/gpu256-step1.log), [unit-step1.log](evidence-simulation/unit-step1.log).
+
+## Authored reset and presentation time
+
+Whole-world upload, Clear, and preset loading now share `_rt_reset_world_history()`. It clears all seven air textures, density/foam at every mip, sun history, FX pool, drawn FX instances, stale spawn records, sprite counters/buffers, and presentation clock before reconstructing the authored geometry. Regional edits do not invoke this reset. Returning to Build therefore starts from the authored world without residual heat, pressure, foam, or airborne decorative particles; it is not a full-runtime rewind.
+
+Geometry-only `_rt_occupancy_update()` keeps its no-argument interface for editor transactions. A separate elapsed-simulation-time value is nonzero only during tick presentation. Foam decay now uses a **0.16 simulated-second half-life**, replacing `0.93` per arbitrary rebuild. A paused refresh neither decays foam nor injects a new foam source. Cosmetic spawn requests are disabled for zero-time refresh, while required airborne-grain, leaf, and droplet layers still regenerate. FX pool integration already consumes elapsed ticks; its seed clock now uses the absolute simulated tick, and paused refresh preserves live FX instances and their count.
+
+These are intentional visual-time changes. Foam source sampling and cosmetic FX integration remain a per-submission presentation approximation, so different tick batches are not promised pixel-identical effects. GPU sprite/FX allocation also uses parallel atomics. The authoritative voxel/air invariance contract remains exact. RGB field reconstruction and physical sprite exclusions are unchanged.
+
+The new `presentation_reset.gd` checks eight repeated zero-time field refreshes for exact bytes, the foam half-life, unchanged authoritative state, required physical sprites while paused, existing FX preservation without new cosmetic spawn requests, and complete history reset through all three whole-world replacement paths. All **31 checks passed at 128³**; [presentation128-step2.log](evidence-simulation/presentation128-step2.log). These include real populated foam/FX fixtures, rather than only comparing empty buffers.
+
+The previously unused voxel push-constant slot is now explicitly reserved/zero instead of carrying the batch-local loop index, preventing a future rule from accidentally depending on submission grouping.
+
+After presentation/reset changes, all **74 existing GPU128 checks** and **30 cadence checks** passed again: [gpu128-step2.log](evidence-simulation/gpu128-step2.log), [cadence128-step2.log](evidence-simulation/cadence128-step2.log).
