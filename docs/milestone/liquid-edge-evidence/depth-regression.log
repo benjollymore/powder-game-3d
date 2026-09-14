@@ -1,0 +1,97 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+{"axis":0,"in_front":false,"red_probe_pixels":0,"section":false,"variant":"baseline","view":"axis-0"}
+ok: capture axis-0-ordinary-behind-baseline
+{"axis":0,"in_front":false,"red_probe_pixels":0,"section":false,"variant":"fixed","view":"axis-0"}
+ok: capture axis-0-ordinary-behind-fixed
+ok: axis-0-ordinary-behind-fixed has correct front/behind depth occlusion
+ok: axis-0-ordinary-behind-fixed ordinary rendering is pixel-identical
+{"axis":0,"in_front":true,"red_probe_pixels":121,"section":false,"variant":"baseline","view":"axis-0"}
+ok: capture axis-0-ordinary-front-baseline
+{"axis":0,"in_front":true,"red_probe_pixels":121,"section":false,"variant":"fixed","view":"axis-0"}
+ok: capture axis-0-ordinary-front-fixed
+ok: axis-0-ordinary-front-fixed has correct front/behind depth occlusion
+ok: axis-0-ordinary-front-fixed ordinary rendering is pixel-identical
+{"axis":0,"in_front":false,"red_probe_pixels":121,"section":true,"variant":"baseline","view":"axis-0"}
+ok: capture axis-0-section-behind-baseline
+ok: axis-0-section-behind-baseline reproduces behind-cap depth leak
+{"axis":0,"in_front":false,"red_probe_pixels":0,"section":true,"variant":"fixed","view":"axis-0"}
+ok: capture axis-0-section-behind-fixed
+ok: axis-0-section-behind-fixed has correct front/behind depth occlusion
+{"axis":0,"in_front":true,"red_probe_pixels":121,"section":true,"variant":"baseline","view":"axis-0"}
+ok: capture axis-0-section-front-baseline
+{"axis":0,"in_front":true,"red_probe_pixels":121,"section":true,"variant":"fixed","view":"axis-0"}
+ok: capture axis-0-section-front-fixed
+ok: axis-0-section-front-fixed has correct front/behind depth occlusion
+{"axis":1,"in_front":false,"red_probe_pixels":0,"section":false,"variant":"baseline","view":"axis-1"}
+ok: capture axis-1-ordinary-behind-baseline
+{"axis":1,"in_front":false,"red_probe_pixels":0,"section":false,"variant":"fixed","view":"axis-1"}
+ok: capture axis-1-ordinary-behind-fixed
+ok: axis-1-ordinary-behind-fixed has correct front/behind depth occlusion
+ok: axis-1-ordinary-behind-fixed ordinary rendering is pixel-identical
+{"axis":1,"in_front":true,"red_probe_pixels":121,"section":false,"variant":"baseline","view":"axis-1"}
+ok: capture axis-1-ordinary-front-baseline
+{"axis":1,"in_front":true,"red_probe_pixels":121,"section":false,"variant":"fixed","view":"axis-1"}
+ok: capture axis-1-ordinary-front-fixed
+ok: axis-1-ordinary-front-fixed has correct front/behind depth occlusion
+ok: axis-1-ordinary-front-fixed ordinary rendering is pixel-identical
+{"axis":1,"in_front":false,"red_probe_pixels":121,"section":true,"variant":"baseline","view":"axis-1"}
+ok: capture axis-1-section-behind-baseline
+ok: axis-1-section-behind-baseline reproduces behind-cap depth leak
+{"axis":1,"in_front":false,"red_probe_pixels":0,"section":true,"variant":"fixed","view":"axis-1"}
+ok: capture axis-1-section-behind-fixed
+ok: axis-1-section-behind-fixed has correct front/behind depth occlusion
+{"axis":1,"in_front":true,"red_probe_pixels":121,"section":true,"variant":"baseline","view":"axis-1"}
+ok: capture axis-1-section-front-baseline
+{"axis":1,"in_front":true,"red_probe_pixels":121,"section":true,"variant":"fixed","view":"axis-1"}
+ok: capture axis-1-section-front-fixed
+ok: axis-1-section-front-fixed has correct front/behind depth occlusion
+{"axis":2,"in_front":false,"red_probe_pixels":0,"section":false,"variant":"baseline","view":"axis-2"}
+ok: capture axis-2-ordinary-behind-baseline
+{"axis":2,"in_front":false,"red_probe_pixels":0,"section":false,"variant":"fixed","view":"axis-2"}
+ok: capture axis-2-ordinary-behind-fixed
+ok: axis-2-ordinary-behind-fixed has correct front/behind depth occlusion
+ok: axis-2-ordinary-behind-fixed ordinary rendering is pixel-identical
+{"axis":2,"in_front":true,"red_probe_pixels":121,"section":false,"variant":"baseline","view":"axis-2"}
+ok: capture axis-2-ordinary-front-baseline
+{"axis":2,"in_front":true,"red_probe_pixels":121,"section":false,"variant":"fixed","view":"axis-2"}
+ok: capture axis-2-ordinary-front-fixed
+ok: axis-2-ordinary-front-fixed has correct front/behind depth occlusion
+ok: axis-2-ordinary-front-fixed ordinary rendering is pixel-identical
+{"axis":2,"in_front":false,"red_probe_pixels":121,"section":true,"variant":"baseline","view":"axis-2"}
+ok: capture axis-2-section-behind-baseline
+ok: axis-2-section-behind-baseline reproduces behind-cap depth leak
+{"axis":2,"in_front":false,"red_probe_pixels":0,"section":true,"variant":"fixed","view":"axis-2"}
+ok: capture axis-2-section-behind-fixed
+ok: axis-2-section-behind-fixed has correct front/behind depth occlusion
+{"axis":2,"in_front":true,"red_probe_pixels":121,"section":true,"variant":"baseline","view":"axis-2"}
+ok: capture axis-2-section-front-baseline
+{"axis":2,"in_front":true,"red_probe_pixels":121,"section":true,"variant":"fixed","view":"axis-2"}
+ok: capture axis-2-section-front-fixed
+ok: axis-2-section-front-fixed has correct front/behind depth occlusion
+{"axis":2,"in_front":false,"red_probe_pixels":0,"section":false,"variant":"baseline","view":"axis-2-oblique"}
+ok: capture axis-2-oblique-ordinary-behind-baseline
+{"axis":2,"in_front":false,"red_probe_pixels":0,"section":false,"variant":"fixed","view":"axis-2-oblique"}
+ok: capture axis-2-oblique-ordinary-behind-fixed
+ok: axis-2-oblique-ordinary-behind-fixed has correct front/behind depth occlusion
+ok: axis-2-oblique-ordinary-behind-fixed ordinary rendering is pixel-identical
+{"axis":2,"in_front":true,"red_probe_pixels":121,"section":false,"variant":"baseline","view":"axis-2-oblique"}
+ok: capture axis-2-oblique-ordinary-front-baseline
+{"axis":2,"in_front":true,"red_probe_pixels":121,"section":false,"variant":"fixed","view":"axis-2-oblique"}
+ok: capture axis-2-oblique-ordinary-front-fixed
+ok: axis-2-oblique-ordinary-front-fixed has correct front/behind depth occlusion
+ok: axis-2-oblique-ordinary-front-fixed ordinary rendering is pixel-identical
+{"axis":2,"in_front":false,"red_probe_pixels":121,"section":true,"variant":"baseline","view":"axis-2-oblique"}
+ok: capture axis-2-oblique-section-behind-baseline
+ok: axis-2-oblique-section-behind-baseline reproduces behind-cap depth leak
+{"axis":2,"in_front":false,"red_probe_pixels":0,"section":true,"variant":"fixed","view":"axis-2-oblique"}
+ok: capture axis-2-oblique-section-behind-fixed
+ok: axis-2-oblique-section-behind-fixed has correct front/behind depth occlusion
+{"axis":2,"in_front":true,"red_probe_pixels":121,"section":true,"variant":"baseline","view":"axis-2-oblique"}
+ok: capture axis-2-oblique-section-front-baseline
+{"axis":2,"in_front":true,"red_probe_pixels":121,"section":true,"variant":"fixed","view":"axis-2-oblique"}
+ok: capture axis-2-oblique-section-front-fixed
+ok: axis-2-oblique-section-front-fixed has correct front/behind depth occlusion
+ok: all liquid physical bytes unchanged
+LIQUID_SECTION_CHECKS 61 FAILURES 0

@@ -141,10 +141,7 @@ void fragment() {
 			liquid_id = id;
 			liquid_col = palette[int(id)].rgb;
 		}
-		// Sampling can reach the density exit after the first non-liquid cell,
-		// especially at grazing boundaries. Keep checking any open segment;
-		// otherwise it can absorb/scatter all the way to the volume box exit.
-		if (in_liquid || liquid || prev_liquid) {
+		if (liquid || prev_liquid) {
 			if (!in_liquid && f >= 0.5) {
 				float ts = bisect(r.p0, r.dir, t_prev, t_next, 0, true);
 				vec3 ps = r.p0 + r.dir * ts;

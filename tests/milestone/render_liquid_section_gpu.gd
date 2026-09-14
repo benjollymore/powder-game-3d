@@ -3,7 +3,7 @@ extends SceneTree
 ## godot --path . --always-on-top --disable-vsync -s res://tests/milestone/render_liquid_section_gpu.gd -- grid=128
 const BASELINE := preload("res://tests/milestone/fixtures/voxel_volume_baseline.gdshader")
 const FIXED := preload("res://shaders/spatial/voxel_volume.gdshader")
-var OUT := "res://docs/milestone/liquid-section-evidence"
+var out_dir := "res://docs/milestone/liquid-section-evidence"
 var sim: Node3D
 var camera: Camera3D
 var probe: MeshInstance3D
@@ -14,10 +14,17 @@ var rows: Array[Dictionary] = []
 func _initialize() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("output_dir="):
-			OUT = argument.trim_prefix("output_dir=")
+			out_dir = argument.trim_prefix("output_dir=")
 	call_deferred("_run")
 
 func _run() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("out="):
+			out_dir = arg.trim_prefix("out=")
+	# Isolate section-entry depth: both variants share the separately validated
+	# liquid exit guard. Keep the historical pre-depth shader fixture intact.
+	var shared_exit_baseline := Shader.new()
+	shared_exit_baseline.code = BASELINE.code.replace("if (liquid || prev_liquid) {", "if (in_liquid || liquid || prev_liquid) {")
 	root.get_node("TimeController").paused = true
 	root.size = Vector2i(600,600)
 	root.scaling_3d_scale = 1.0
@@ -58,7 +65,7 @@ func _run() -> void:
 	WorldBuilder.fill_box(d,Vector3i.ONE*VoxelCodec.GRID/8,Vector3i.ONE*VoxelCodec.GRID*7/8,Elements.Id.WATER)
 	var before := d.to_byte_array()
 	sim.upload(before)
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
 	for view in [{"axis":0,"name":"axis-0","offset":Vector3.ZERO},{"axis":1,"name":"axis-1","offset":Vector3.ZERO},{"axis":2,"name":"axis-2","offset":Vector3.ZERO},{"axis":2,"name":"axis-2-oblique","offset":Vector3(0.3,0.2,0)}]:
 		var axis: int = view.axis
 		for section in [false,true]:
@@ -77,7 +84,7 @@ func _run() -> void:
 				var baseline_img: Image
 				for baseline in [true,false]:
 					var material: ShaderMaterial = sim.get_node("VolumeMesh").material_override
-					material.shader = BASELINE if baseline else FIXED
+					material.shader = shared_exit_baseline if baseline else FIXED
 					for i in 12:
 						await process_frame
 					await RenderingServer.frame_post_draw
@@ -87,7 +94,7 @@ func _run() -> void:
 					rows.append(row)
 					print(JSON.stringify(row))
 					var name: String = "%s-%s-%s-%s" % [view.name,"section" if section else "ordinary","front" if in_front else "behind",row.variant]
-					_check(img.save_png(OUT + "/" + name + ".png")==OK,"capture " + name)
+					_check(img.save_png(out_dir + "/" + name + ".png")==OK,"capture " + name)
 					if baseline:
 						baseline_img = img
 						if section and not in_front:
@@ -102,7 +109,7 @@ func _run() -> void:
 	while result.is_empty() and Time.get_ticks_msec()<deadline:
 		await process_frame
 	_check(not result.is_empty() and result[0]==before,"all liquid physical bytes unchanged")
-	var file := FileAccess.open(OUT+"/metrics.json",FileAccess.WRITE)
+	var file := FileAccess.open(out_dir+"/metrics.json",FileAccess.WRITE)
 	file.store_string(JSON.stringify(rows,"\t"))
 	file.close()
 	print("LIQUID_SECTION_CHECKS %d FAILURES %d" % [checks,failures])

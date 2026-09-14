@@ -1,0 +1,26 @@
+[
+	{
+		"debug_mode": 3,
+		"interior_cap_pixels": 148996,
+		"marked_pixels": 0,
+		"view": "front"
+	},
+	{
+		"debug_mode": 4,
+		"interior_cap_pixels": 148996,
+		"marked_pixels": 2597,
+		"view": "front"
+	},
+	{
+		"debug_mode": 3,
+		"interior_cap_pixels": 132233,
+		"marked_pixels": 0,
+		"view": "oblique"
+	},
+	{
+		"debug_mode": 4,
+		"interior_cap_pixels": 132233,
+		"marked_pixels": 343,
+		"view": "oblique"
+	}
+]
