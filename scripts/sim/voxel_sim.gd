@@ -29,6 +29,13 @@ signal splat_count_ready(count: int)
 signal layer_counts_ready(counts: PackedInt32Array)
 ## Same 32 ints, fetched without stalling (see request_activity).
 signal activity_ready(counts: PackedInt32Array)
+signal edit_transaction_ready(result: Dictionary)
+const EditGPU := preload("res://scripts/sim/voxel_edit_gpu.gd")
+var edit_epoch := 0 # reset boundary; ticks do not invalidate authored history
+var edit_revision := 0 # ordered voxel edit submissions, distinct from tick
+var _edit_sequence := 0
+var _edit_epochs := {}
+var _editor_gpu: RefCounted
 
 var GRID: int = VoxelCodec.GRID
 ## Scene units are metres; every voxel is one centimetre, so the box is
@@ -314,6 +321,7 @@ func request_ticks(count: int) -> void:
 func paint(center: Vector3i, radius: int, element: int, mode: BrushMode = BrushMode.REPLACE) -> void:
 	if not _rt_ready:
 		return
+	edit_revision += 1
 	var seed := randi() & 0x7FFFFFFF
 	RenderingServer.call_on_render_thread(_rt_paint.bind(center, radius, element, mode, seed))
 
@@ -322,24 +330,121 @@ func paint(center: Vector3i, radius: int, element: int, mode: BrushMode = BrushM
 func paint_stroke(centers: Array[Vector3i], radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR) -> void:
 	if not _rt_ready or centers.is_empty():
 		return
+	edit_revision += 1
 	RenderingServer.call_on_render_thread(_rt_paint_stroke.bind(centers.duplicate(), radius, element, mode, randi() & 0x7FFFFFFF))
 
 
 ## Half-open region bounds; construction fill preserves all occupied cells.
 func paint_region(lo: Vector3i, hi: Vector3i, element: int) -> void:
 	if _rt_ready:
+		edit_revision += 1
 		RenderingServer.call_on_render_thread(_rt_paint_region.bind(lo, hi, element))
+
+
+## Capture only first-touched regions for this authored transaction. Mutations
+## need not wait for the CPU readback; their GPU before-images are ordered first.
+func begin_edit_transaction(callback: Callable) -> int:
+	_edit_sequence += 1
+	var id := _edit_sequence
+	_edit_epochs[id] = edit_epoch
+	RenderingServer.call_on_render_thread(_rt_begin_edit.bind(id, edit_epoch, callback))
+	return id
+
+
+func record_stroke(id: int, centers: Array[Vector3i], radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR, seed: int = 1) -> void:
+	if _edit_epochs.get(id, -1) != edit_epoch:
+		return
+	if centers.is_empty() or element < 0 or element >= Elements.count() or radius < 0 or radius > 12:
+		return
+	var valid: Array[Vector3i] = []
+	for center in centers:
+		if VoxelCodec.in_bounds(center):
+			valid.append(center)
+	if valid.is_empty():
+		return
+	edit_revision += 1
+	RenderingServer.call_on_render_thread(_rt_record_stroke.bind(id, valid, radius, element, mode, seed))
+
+
+func record_region(id: int, lo: Vector3i, hi: Vector3i, element: int) -> void:
+	if _edit_epochs.get(id, -1) != edit_epoch:
+		return
+	lo = lo.clamp(Vector3i.ZERO, Vector3i.ONE * GRID)
+	hi = hi.clamp(Vector3i.ZERO, Vector3i.ONE * GRID)
+	if lo.x >= hi.x or lo.y >= hi.y or lo.z >= hi.z or element < 0 or element >= Elements.count():
+		return
+	edit_revision += 1
+	RenderingServer.call_on_render_thread(_rt_record_region.bind(id, lo, hi, element))
+
+
+func finish_edit_transaction(id: int) -> void:
+	RenderingServer.call_on_render_thread(_rt_finish_edit.bind(id))
+
+
+func restore_edit_transaction(result: Dictionary) -> bool:
+	if not result.get("valid", false) or result.get("epoch", -1) != edit_epoch or not result.has("regions"):
+		return false
+	for region in result.regions:
+		var lo: Vector3i = region.lo
+		var hi: Vector3i = region.hi
+		var extent := hi - lo
+		if not VoxelCodec.in_bounds(lo) or hi != hi.clamp(Vector3i.ZERO, Vector3i.ONE * GRID) or extent.x <= 0 or extent.y <= 0 or extent.z <= 0:
+			return false
+		if region.bytes.size() != extent.x * extent.y * extent.z * 4:
+			return false
+	edit_revision += 1
+	RenderingServer.call_on_render_thread(_rt_restore_edit.bind(result.regions))
+	return true
+
+
+func _rt_edit_gpu() -> RefCounted:
+	if _editor_gpu == null:
+		_editor_gpu = EditGPU.new(_rd, _grid_rid, GRID, _rt_compile)
+	return _editor_gpu
+
+
+func _rt_begin_edit(id: int, epoch: int, callback: Callable) -> void:
+	_rt_edit_gpu().begin(id, epoch, _on_edit_transaction.bind(callback))
+
+
+func _on_edit_transaction(result: Dictionary, callback: Callable) -> void:
+	_edit_epochs.erase(result.id)
+	callback.call(result)
+	edit_transaction_ready.emit(result)
+
+
+func _rt_record_stroke(id: int, centers: Array[Vector3i], radius: int, element: int, mode: int, seed: int) -> void:
+	if _rt_edit_gpu().capture_stroke(id, centers, radius):
+		_rt_paint_stroke(centers, radius, element, mode, seed)
+
+
+func _rt_record_region(id: int, lo: Vector3i, hi: Vector3i, element: int) -> void:
+	if _rt_edit_gpu().capture_region(id, lo, hi):
+		_rt_paint_region(lo, hi, element)
+
+
+func _rt_finish_edit(id: int) -> void:
+	_rt_edit_gpu().finish(id)
+
+
+func _rt_restore_edit(regions: Array) -> void:
+	_rt_edit_gpu().restore(regions)
+	_rt_occupancy_update()
 
 
 ## Replace the whole world. `bytes` is GRID^3 * 4 bytes, x fastest.
 func upload(bytes: PackedByteArray) -> void:
 	assert(bytes.size() == GRID * GRID * GRID * 4)
+	edit_epoch += 1
+	edit_revision += 1
 	RenderingServer.call_on_render_thread(_rt_upload.bind(bytes))
 	tick = 0
 	TimeController.reset_tick_counter()
 
 
 func clear() -> void:
+	edit_epoch += 1
+	edit_revision += 1
 	RenderingServer.call_on_render_thread(_rt_clear)
 	tick = 0
 	TimeController.reset_tick_counter()
@@ -764,6 +869,9 @@ func _rt_free_pipelines() -> void:
 
 
 func _rt_free() -> void:
+	if _editor_gpu != null:
+		_editor_gpu.free_resources()
+		_editor_gpu = null
 	_rt_free_pipelines()
 	for v in _fields_views:
 		if v.is_valid():
@@ -1145,6 +1253,8 @@ func build_test_pattern() -> PackedByteArray:
 
 ## Build a preset world on the GPU (box and sphere fills), no CPU voxel loops.
 func load_scenario(name: String) -> void:
+	edit_epoch += 1
+	edit_revision += 1
 	current_scenario = name
 	RenderingServer.call_on_render_thread(_rt_run_ops.bind(Scenarios.ops(name)))
 	tick = 0

@@ -2,6 +2,8 @@ extends Node3D
 ## Runnable experiment using the production GPU state, brush kernel and renderer.
 const Geometry := preload("res://scripts/discovery/edit_geometry.gd")
 const SimScene := preload("res://scenes/sim_volume.tscn")
+const Emission := preload("res://scripts/discovery/brush_emission.gd")
+var emitter := Emission.new()
 
 var sim: Node3D
 var camera: Camera3D
@@ -33,7 +35,12 @@ var selection_toggle: CheckButton
 var capturing := false
 var testing := false
 var build_snapshot := PackedByteArray()
-var undo_history: Array[PackedByteArray] = []
+var undo_history: Array[Dictionary] = []
+var undo_bytes := 0
+var active_transaction := -1
+var last_edit_bytes := 0
+var edit_message := ""
+signal edit_completed(result: Dictionary)
 var play_button: Button
 var stroke_radius := 3
 var stroke_element := Elements.Id.WATER
@@ -236,6 +243,8 @@ func _build_ui() -> void:
 	controls.text = "Drag: paint · two fingers: orbit · pinch: zoom\nShift + two fingers: pan · Option + drag: orbit\nOption + Shift + drag: pan · RMB/wheel work too\nPlane: −/+ above · Shift-wheel · [ ] brush size\n1 wall · 2 sand · 3 water · X erase · F angle"
 	column.add_child(controls)
 	status = Label.new()
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status.custom_minimum_size.x = 300
 	column.add_child(status)
 
 
@@ -245,6 +254,7 @@ func reset_container() -> void:
 	_end_stroke()
 	testing = false
 	undo_history.clear()
+	undo_bytes = 0
 	build_snapshot.clear()
 	if play_button:
 		play_button.text = "Run experiment · Space"
@@ -430,8 +440,9 @@ func _unhandled_input(event: InputEvent) -> void:
 					stroke_element = element
 					stroke_erase = erase
 					if not testing:
-						_capture_edit()
+						_begin_authored_edit()
 					painting = true
+					emitter.reset()
 					_sample(event.position)
 			MOUSE_BUTTON_RIGHT:
 				_end_stroke()
@@ -513,21 +524,30 @@ func fill_selection() -> void:
 		var lo := corner_a.min(corner_b)
 		var hi := corner_a.max(corner_b) + Vector3i.ONE
 		var id := element
-		_capture_edit(func(): sim.paint_region(lo, hi, id))
+		_begin_authored_edit()
+		sim.record_region(active_transaction, lo, hi, id)
+		_end_stroke()
 
 
-func _capture_edit(after: Callable = Callable()) -> void:
+func _begin_authored_edit() -> void:
 	capturing = true
-	sim.request_readback(func(bytes: PackedByteArray):
-		undo_history.append(bytes)
-		# Discovery fallback: cap whole-volume undo to 128 MiB, at least one edit.
-		var limit := maxi(1, 134217728 / bytes.size())
-		while undo_history.size() > limit:
-			undo_history.pop_front()
+	edit_message = ""
+	active_transaction = sim.begin_edit_transaction(func(result: Dictionary):
 		capturing = false
-		if after.is_valid():
-			after.call()
-		_flush())
+		if result.epoch != sim.edit_epoch:
+			return
+		last_edit_bytes = result.bytes
+		edit_message = result.error
+		if not result.valid:
+			undo_history.clear()
+			undo_bytes = 0
+		if not result.regions.is_empty():
+			undo_history.append(result)
+			undo_bytes += result.bytes
+		while undo_bytes > 128 * 1024 * 1024 and not undo_history.is_empty():
+			var discarded: Dictionary = undo_history.pop_front()
+			undo_bytes -= discarded.bytes
+		edit_completed.emit(result))
 
 
 func undo_edit() -> void:
@@ -535,7 +555,10 @@ func undo_edit() -> void:
 		return
 	_end_stroke()
 	if not undo_history.is_empty():
-		sim.upload(undo_history.pop_back())
+		var result: Dictionary = undo_history.pop_back()
+		undo_bytes -= result.bytes
+		if not sim.restore_edit_transaction(result):
+			edit_message = "This edit belongs to a different world; undo was skipped."
 
 
 func run_or_restore() -> void:
@@ -545,6 +568,10 @@ func run_or_restore() -> void:
 	if testing:
 		TimeController.paused = true
 		sim.upload(build_snapshot)
+		# This reset restores the exact authored revision, so its existing build
+		# history remains applicable even though the runtime epoch advances.
+		for transaction in undo_history:
+			transaction.epoch = sim.edit_epoch
 		testing = false
 		play_button.text = "Run experiment · Space"
 	else:
@@ -579,17 +606,25 @@ func _sample(mouse: Vector2) -> void:
 
 func _end_stroke() -> void:
 	_flush()
+	if active_transaction >= 0:
+		sim.finish_edit_transaction(active_transaction)
+		active_transaction = -1
 	painting = false
+	emitter.reset()
 	previous = Vector3i(-1, -1, -1)
 
 
 func _flush() -> void:
-	if not pending.is_empty() and sim != null and not capturing:
-		sim.paint_stroke(pending, stroke_radius, stroke_element, sim.BrushMode.ERASE if stroke_erase else sim.BrushMode.ONLY_AIR)
+	if not pending.is_empty() and sim != null:
+		var mode: int = sim.BrushMode.ERASE if stroke_erase else sim.BrushMode.ONLY_AIR
+		if active_transaction >= 0:
+			sim.record_stroke(active_transaction, pending, stroke_radius, stroke_element, mode, active_transaction)
+		else:
+			sim.paint_stroke(pending, stroke_radius, stroke_element, mode)
 		pending.clear()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not _ready_to_edit:
 		return
 	if painting and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
@@ -605,5 +640,12 @@ func _process(_delta: float) -> void:
 	if marker.visible:
 		marker.position = ((Vector3(target) + Vector3.ONE * 0.5) / VoxelCodec.GRID - Vector3.ONE * 0.5) * sim.world_size()
 		marker.scale = Vector3.ONE * (2 * radius + 1) * sim.world_size() / VoxelCodec.GRID
+	if painting and testing and marker.visible:
+		for stamp in emitter.advance(delta):
+			pending.append(target)
+	elif not marker.visible:
+		emitter.reset()
 	_flush()
 	status.text = "%s · %s · r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % ["ERASE" if erase else "Add into empty space", Elements.TABLE[element].name, radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else ("PLAYING" if testing else "BUILD"), "Live edits reset on return; no live undo" if testing else "%d build edits can be undone" % undo_history.size()]
+	if edit_message != "":
+		status.text += "\n" + edit_message
