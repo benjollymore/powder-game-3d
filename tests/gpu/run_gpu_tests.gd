@@ -18,6 +18,11 @@ func _initialize() -> void:
 	_sim = load("res://scenes/sim_volume.tscn").instantiate()
 	_sim.listen_to_time_controller = false
 	root.add_child(_sim)
+	# The shadow proxy polls occupancy readbacks; its stale replies would race
+	# the occupancy test's own request.
+	var proxy := _sim.get_node_or_null("ShadowProxy")
+	if proxy:
+		proxy.set_process(false)
 	_run()
 
 
@@ -61,18 +66,11 @@ func check(cond: bool, msg: String) -> void:
 
 
 func _empty_world() -> PackedInt32Array:
-	var data := PackedInt32Array()
-	data.resize(GRID * GRID * GRID)
-	return data
+	return WorldBuilder.empty()
 
 
 func _fill_box(data: PackedInt32Array, lo: Vector3i, hi: Vector3i, id: int, amount: int = -1) -> void:
-	if amount < 0:
-		amount = Elements.default_amount(id)
-	for z in range(lo.z, hi.z):
-		for y in range(lo.y, hi.y):
-			for x in range(lo.x, hi.x):
-				data[VoxelCodec.index(x, y, z)] = VoxelCodec.encode(id, (x * 7 + y * 13 + z * 31) & 0xFF, amount)
+	WorldBuilder.fill_box(data, lo, hi, id, amount)
 
 
 ## Amount-weighted water height of column (x, z), in cells.

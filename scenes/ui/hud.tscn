@@ -1,102 +1,149 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+[ext_resource type="Theme" path="res://scenes/ui/theme.tres" id="2_theme"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
-[node name="Stats" type="Label" parent="."]
-offset_left = 12.0
-offset_top = 12.0
-offset_right = 460.0
-offset_bottom = 100.0
-text = "FPS"
-
-[node name="FrozenBadge" type="Label" parent="."]
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -80.0
-offset_top = 12.0
-offset_right = 80.0
-offset_bottom = 44.0
-grow_horizontal = 2
-theme_override_colors/font_color = Color(0.55, 0.85, 1, 1)
-theme_override_font_sizes/font_size = 22
-text = "FROZEN"
-horizontal_alignment = 1
-
-[node name="TimeBar" type="PanelContainer" parent="."]
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -280.0
-offset_top = -60.0
-offset_right = 280.0
-offset_bottom = -16.0
 grow_horizontal = 2
-grow_vertical = 0
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_theme")
 
-[node name="H" type="HBoxContainer" parent="TimeBar"]
+[node name="TopBar" type="PanelContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 52.0
+grow_horizontal = 2
+
+[node name="H" type="HBoxContainer" parent="Root/TopBar"]
 layout_mode = 2
+theme_override_constants/separation = 8
 
-[node name="PauseButton" type="Button" parent="TimeBar/H"]
-custom_minimum_size = Vector2(90, 0)
+[node name="PlayButton" type="Button" parent="Root/TopBar/H"]
+custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 text = "Pause"
 
-[node name="StepButton" type="Button" parent="TimeBar/H"]
+[node name="StepButton" type="Button" parent="Root/TopBar/H"]
 layout_mode = 2
 text = "Step"
 
-[node name="ScaleSlider" type="HSlider" parent="TimeBar/H"]
+[node name="ScaleSlider" type="HSlider" parent="Root/TopBar/H"]
+custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
-size_flags_horizontal = 3
 size_flags_vertical = 4
 min_value = -5.0
 max_value = 2.0
 step = 0.25
 value = 0.0
 
-[node name="ScaleLabel" type="Label" parent="TimeBar/H"]
-custom_minimum_size = Vector2(70, 0)
+[node name="ScaleLabel" type="Label" parent="Root/TopBar/H"]
+custom_minimum_size = Vector2(56, 0)
 layout_mode = 2
-text = "x1"
+text = "100%"
 
-[node name="Tools" type="PanelContainer" parent="."]
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
+[node name="Sep1" type="VSeparator" parent="Root/TopBar/H"]
+layout_mode = 2
+
+[node name="ScenarioTitle" type="Label" parent="Root/TopBar/H"]
+layout_mode = 2
+text = "Scenario"
+
+[node name="ScenarioOption" type="OptionButton" parent="Root/TopBar/H"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+
+[node name="ReloadButton" type="Button" parent="Root/TopBar/H"]
+layout_mode = 2
+text = "Reload"
+
+[node name="ClearButton" type="Button" parent="Root/TopBar/H"]
+layout_mode = 2
+text = "Clear"
+
+[node name="Spacer" type="Control" parent="Root/TopBar/H"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FrozenLabel" type="Label" parent="Root/TopBar/H"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.35, 0.45, 1)
+text = "FROZEN"
+
+[node name="DofButton" type="Button" parent="Root/TopBar/H"]
+layout_mode = 2
+toggle_mode = true
+text = "Tilt-shift"
+
+[node name="Stats" type="Label" parent="Root"]
+layout_mode = 1
 offset_left = 12.0
-offset_top = -120.0
-offset_right = 420.0
-offset_bottom = -76.0
+offset_top = 60.0
+offset_right = 460.0
+offset_bottom = 150.0
+theme_override_colors/font_color = Color(0.35, 0.38, 0.42, 1)
+text = "FPS"
+
+[node name="BottomBar" type="PanelContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -76.0
+offset_right = 400.0
+offset_bottom = -12.0
+grow_horizontal = 2
 grow_vertical = 0
 
-[node name="V" type="VBoxContainer" parent="Tools"]
+[node name="H" type="HBoxContainer" parent="Root/BottomBar"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Palette" type="HBoxContainer" parent="Root/BottomBar/H"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Sep2" type="VSeparator" parent="Root/BottomBar/H"]
 layout_mode = 2
 
-[node name="Palette" type="HBoxContainer" parent="Tools/V"]
+[node name="V" type="VBoxContainer" parent="Root/BottomBar/H"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="ElementLabel" type="Label" parent="Root/BottomBar/H/V"]
+layout_mode = 2
+text = "Sand"
+
+[node name="RadiusRow" type="HBoxContainer" parent="Root/BottomBar/H/V"]
 layout_mode = 2
 
-[node name="RadiusRow" type="HBoxContainer" parent="Tools/V"]
+[node name="RadiusTitle" type="Label" parent="Root/BottomBar/H/V/RadiusRow"]
 layout_mode = 2
+text = "Radius"
 
-[node name="RadiusTitle" type="Label" parent="Tools/V/RadiusRow"]
-layout_mode = 2
-text = "Brush"
-
-[node name="RadiusSlider" type="HSlider" parent="Tools/V/RadiusRow"]
-custom_minimum_size = Vector2(160, 0)
+[node name="RadiusSlider" type="HSlider" parent="Root/BottomBar/H/V/RadiusRow"]
+custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
 size_flags_vertical = 4
 min_value = 1.0
 max_value = 12.0
 value = 4.0
 
-[node name="RadiusLabel" type="Label" parent="Tools/V/RadiusRow"]
-custom_minimum_size = Vector2(40, 0)
+[node name="RadiusLabel" type="Label" parent="Root/BottomBar/H/V/RadiusRow"]
+custom_minimum_size = Vector2(28, 0)
 layout_mode = 2
 text = "4"

@@ -6,7 +6,8 @@ freeze time, step it, slow it down, paint elements in, and let it go.
 
 Requires **Godot 4.6.3** (4.7.x hangs at startup on Apple M4/M5 + macOS 26,
 see godotengine/godot#123479). Open `project.godot` in the editor and press
-Play, or run `godot --path .` from the repo root.
+Play, or run `godot --path .` from the repo root. Add `-- scenario="Dam break"`
+to start in a preset.
 
 ## Controls
 
@@ -29,7 +30,8 @@ Play, or run `godot --path .` from the repo root.
 | , / . | Halve / double time scale |
 | 0 / 1 | Freeze / real time |
 | C | Clear the world |
-| R | Reload the test world |
+| R | Reload the current scenario (pick one in the top bar) |
+| F3 | Toggle the stats overlay |
 | F5 | Hot-reload the simulation compute shader from disk |
 | F9 | Print a per-element voxel count to the console |
 

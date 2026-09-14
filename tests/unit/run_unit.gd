@@ -11,6 +11,7 @@ var _checks := 0
 func _initialize() -> void:
 	_test_time_controller()
 	_test_liquid_constants()
+	_test_scenarios()
 	print("%d checks, %d failures" % [_checks, _failures])
 	quit(1 if _failures > 0 else 0)
 
@@ -70,3 +71,18 @@ func _test_liquid_constants() -> void:
 	check(VoxelCodec.amount_of(VoxelCodec.encode(3, 77, 200)) == 200, "amount round-trips through encode")
 	check(VoxelCodec.element_id(VoxelCodec.encode(3, 77, 200)) == 3, "id survives amount packing")
 	check(VoxelCodec.seed_of(VoxelCodec.encode(3, 77, 200)) == 77, "seed survives amount packing")
+
+
+func _test_scenarios() -> void:
+	var n := VoxelCodec.GRID
+	for name in Scenarios.names():
+		var t0 := Time.get_ticks_msec()
+		var bytes := Scenarios.build(name)
+		var ms := Time.get_ticks_msec() - t0
+		check(bytes.size() == n * n * n * 4, "scenario '%s' has the right size" % name)
+		check(ms < 1000, "scenario '%s' builds in under a second (%d ms)" % [name, ms])
+		var nonair := 0
+		for i in range(0, bytes.size(), 4 * 64):
+			if bytes[i] != 0:
+				nonair += 1
+		check(nonair > 0, "scenario '%s' is not empty" % name)

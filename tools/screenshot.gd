@@ -3,7 +3,11 @@ extends SceneTree
 ## Usage: godot --path . -s res://tools/screenshot.gd -- /abs/out.png [frames] [cam_x,cam_y,cam_z] [look_x,look_y,look_z]
 
 func _initialize() -> void:
-	var args := OS.get_cmdline_user_args()
+	# Positional args only; key=value args (e.g. scenario=Name) belong to the game.
+	var args := PackedStringArray()
+	for a in OS.get_cmdline_user_args():
+		if not a.contains("="):
+			args.append(a)
 	var out_path := args[0] if args.size() > 0 else "user://screenshot.png"
 	var frames := int(args[1]) if args.size() > 1 else 60
 	change_scene_to_file("res://scenes/main.tscn")

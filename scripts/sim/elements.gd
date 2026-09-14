@@ -42,7 +42,7 @@ const REACTIONS := [
 	[Id.FIRE, Id.PLANT, Id.FIRE, Id.FIRE, 0.3],   # plant catches fire
 	[Id.FIRE, Id.OIL, Id.FIRE, Id.FIRE, 0.5],     # oil ignites
 	[Id.FIRE, Id.WATER, Id.AIR, Id.STEAM, 1.0],   # water puts fire out and boils
-	[Id.PLANT, Id.WATER, Id.PLANT, Id.PLANT, 0.02], # plant drinks water and grows
+	[Id.PLANT, Id.WATER, Id.PLANT, Id.PLANT, 0.0015], # plant drinks water and grows (slowly)
 ]
 
 

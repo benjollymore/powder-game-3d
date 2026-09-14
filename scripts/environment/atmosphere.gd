@@ -31,6 +31,7 @@ var _attributes: CameraAttributesPractical
 
 
 func _ready() -> void:
+	add_to_group("atmosphere")
 	var mesh := get_node_or_null(sim_mesh_path) as MeshInstance3D
 	if mesh:
 		_sim_material = mesh.material_override as ShaderMaterial

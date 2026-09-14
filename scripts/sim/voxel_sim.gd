@@ -14,6 +14,7 @@ extends Node3D
 signal readback_ready(bytes: PackedByteArray)
 signal occupancy_ready(bytes: PackedByteArray)
 signal density_ready(bytes: PackedByteArray)
+signal scenario_changed(name: String)
 
 const GRID := VoxelCodec.GRID
 const SIM_SHADER_PATH := "res://shaders/compute/sim.glsl"
@@ -42,6 +43,9 @@ const PUSH_CONSTANT_INTS := 8
 @export var rule_flags := 0
 ## Run the line-based liquid pressure solver after each tick.
 @export var hydro_enabled := true
+## Preset world loaded at start and by R / Reload. `scenario=Name` on the
+## command line (after `--`) overrides it.
+@export var current_scenario := Scenarios.DEFAULT
 
 var tick := 0
 
@@ -75,6 +79,10 @@ var _reactions_buffer := RID()
 
 
 func _ready() -> void:
+	add_to_group("sim")
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("scenario="):
+			current_scenario = arg.substr(9)
 	var mesh: MeshInstance3D = get_node(mesh_path)
 	_material = mesh.material_override
 	_material.set_shader_parameter("grid_size", GRID)
@@ -122,7 +130,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_C:
 			clear()
 		KEY_R:
-			upload(build_test_pattern())
+			load_scenario(current_scenario)
 		_:
 			return
 	get_viewport().set_input_as_handled()
@@ -503,39 +511,12 @@ func _print_histogram(bytes: PackedByteArray) -> void:
 	print("tick %d  %s" % [tick, "  ".join(parts)])
 
 
-## Demo world: wall floor, sand sphere, a wall bowl with a water cube dropping
-## into it, a steam block that rises, and a plant checker.
+## The world bytes for the current scenario (see Scenarios).
 func build_test_pattern() -> PackedByteArray:
-	var data := PackedInt32Array()
-	data.resize(GRID * GRID * GRID)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = world_seed
-	var c := Vector3(GRID * 0.5, GRID * 0.55, GRID * 0.5)
-	var r2 := (GRID * 0.2) * (GRID * 0.2)
-	for z in GRID:
-		for y in GRID:
-			for x in GRID:
-				var id := Elements.Id.AIR
-				if y < 4:
-					id = Elements.Id.WALL
-				elif Vector3(x, y, z).distance_squared_to(c) < r2:
-					id = Elements.Id.SAND
-				elif x >= 4 and x < 44 and z >= 4 and z < 44 and y < 30 \
-						and not (x >= 6 and x < 42 and z >= 6 and z < 42 and y >= 6):
-					id = Elements.Id.WALL
-				elif x >= 10 and x < 34 and z >= 10 and z < 34 and y >= 60 and y < 84:
-					id = Elements.Id.WATER
-				elif x >= 84 and x < 104 and z >= 8 and z < 28 and y >= 8 and y < 28:
-					id = Elements.Id.STEAM
-				elif x >= 100 and x < 112 and z >= 100 and z < 112 and y >= 4 and y < 40:
-					id = Elements.Id.PLANT  # trunk
-				elif x >= 88 and x < 124 and z >= 88 and z < 124 and y >= 40 and y < 52 \
-						and ((x / 4 + z / 4) % 2 == 0 or y < 44):
-					id = Elements.Id.PLANT  # canopy
-				elif x >= 96 and x < 100 and z >= 100 and z < 112 and y >= 4 and y < 8:
-					id = Elements.Id.FIRE   # seed fire at the trunk base
-				elif x >= 50 and x < 62 and z >= 100 and z < 124 and y >= 4 and y < 16:
-					id = Elements.Id.OIL
-				if id != Elements.Id.AIR:
-					data[VoxelCodec.index(x, y, z)] = VoxelCodec.encode(id, rng.randi_range(0, 255), Elements.default_amount(id))
-	return data.to_byte_array()
+	return Scenarios.build(current_scenario)
+
+
+func load_scenario(name: String) -> void:
+	current_scenario = name
+	upload(Scenarios.build(name))
+	scenario_changed.emit(name)
