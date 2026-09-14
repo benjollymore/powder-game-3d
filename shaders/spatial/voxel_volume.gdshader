@@ -29,17 +29,30 @@ bool thin_spray(ivec3 cell, uvec4 value) {
 	return wet <= 2;
 }
 
+// Full physical liquid cells share an interior face even when an isolated
+// ordinary cell's density peak is missed by the legacy surface marcher.
+bool touching_full_liquid(ivec3 cell, vec3 entry_normal, float fill, float full) {
+	if (fill < 1.0) { return false; }
+	ivec3 neighbor = cell + ivec3(entry_normal);
+	if (any(lessThan(neighbor, ivec3(0))) || any(greaterThanEqual(neighbor, ivec3(grid_size)))) { return false; }
+	uvec4 value = voxel_at(neighbor);
+	return is_liquid(value.x) && float(value.z) >= full;
+}
+
 // Coarse overflow proxy: a centered cube with volume min(amount/FULL, 1)
 // voxel^3. Above FULL its optical density scales by amount/FULL. Thus the
 // integrated density over the box equals amount/FULL even for compressed cells.
 // The caller clips this interval to the current DDA cell and visible section.
-vec2 droplet_proxy_interval(Ray r, ivec3 cell, float fill) {
+vec2 droplet_proxy_interval(Ray r, ivec3 cell, float fill, out vec3 entry_normal) {
 	float half_side = 0.5 * pow(clamp(fill, 0.0, 1.0), 1.0 / 3.0);
 	vec3 center = vec3(cell) + 0.5;
 	vec3 lo = (center - half_side - r.p0) * r.inv;
 	vec3 hi = (center + half_side - r.p0) * r.inv;
 	vec3 near3 = min(lo, hi);
 	vec3 far3 = max(lo, hi);
+	int axis = (near3.x > near3.y && near3.x > near3.z) ? 0 : ((near3.y > near3.z) ? 1 : 2);
+	entry_normal = vec3(0.0);
+	entry_normal[axis] = -float(r.step_dir[axis]);
 	return vec2(max(near3.x, max(near3.y, near3.z)), min(far3.x, min(far3.y, far3.z)));
 }
 // Screen-space refraction offset (UV units) through the first liquid surface.
@@ -51,6 +64,8 @@ uniform vec3 absorb = vec3(0.10, 0.045, 0.02);
 uniform float scatter = 0.05;
 uniform float liquid_specular = 0.7;
 uniform float liquid_f0 = 0.04;
+// Diagnostic A/B control; only affects the coarse overflow droplet interface.
+uniform bool proxy_surface_reflection = true;
 uniform float ambient = 0.38;
 // 0 normal, 1 ignore the opaque depth, 2 show t_stop / t_box as grey,
 // 3 diagnostics: R liquid entry seen, G liquid cell visited, B leaps / 16
@@ -102,6 +117,7 @@ void fragment() {
 	bool entered = false;      // crossed a liquid surface: refract the backdrop
 	vec3 entry_n_view = vec3(0.0);
 	float liquid_len = 0.0;
+	float previous_liquid_exit = -1.0;
 	uint liquid_id = 0u;       // liquid the current segment is travelling through
 	float f_prev = field(r.p0).r;
 	float t_prev = 0.0;
@@ -160,6 +176,7 @@ void fragment() {
 			}
 		}
 
+		float preceding_liquid_end = in_liquid ? t : previous_liquid_exit;
 		if (in_liquid && (proxy || (liquid && id != liquid_id))) {
 			// Crossing between two liquids (oil on water): close the segment in
 			// the old colour and start a new one, with no surface in between.
@@ -226,16 +243,34 @@ void fragment() {
 				emitted += trans * foam_shade * (1.0 - exp(-0.35 * foam * len));
 				trans *= exp(-(absorb + vec3(0.35 * foam)) * len);
 				liquid_len += len;
+				previous_liquid_exit = ts;
 				in_liquid = false;
 			}
 		}
 		if (proxy) {
 			float fill = float(value.z) / liquid_full;
-			vec2 interval = droplet_proxy_interval(r, r.cell, fill);
+			vec3 proxy_normal;
+			vec2 interval = droplet_proxy_interval(r, r.cell, fill, proxy_normal);
 			float start = max(t, interval.x);
 			float end = min(t_next, interval.y);
 			float len = max(end - start, 0.0) * max(fill, 1.0);
 			if (len > 0.0) {
+				// Reflect only an actual air/water entry. A camera already inside,
+				// an artificial section cap, and touching liquid proxies do not
+				// gain a new reflective interface. Bulk optical length is unchanged.
+				bool cut_entry = section_enabled && start < 0.002 && r.t_enter >= 0.0 && r.axis == section_axis && r.step_dir[section_axis] < 0;
+				bool air_entry = (interval.x >= 0.0 || r.t_enter >= 0.0) && start > preceding_liquid_end + 0.002;
+				if (proxy_surface_reflection && air_entry && !cut_entry && !touching_full_liquid(r.cell, proxy_normal, fill, liquid_full)) {
+					float cos_i = max(dot(-r.dir, proxy_normal), 0.0);
+					float fresnel = liquid_f0 + (1.0 - liquid_f0) * pow(1.0 - cos_i, 5.0);
+					vec3 reflected = normalize(mat3(MODEL_MATRIX) * reflect(r.dir, proxy_normal));
+					vec3 point = r.p0 + r.dir * start;
+					float vis = sun_vis(point + proxy_normal * 0.75 + sun * 1.25);
+					float spec = pow(max(dot(reflected, sun), 0.0), 96.0) * liquid_specular * vis;
+					emitted += trans * (fresnel * hemi_light(reflected) * 1.05 + spec * sun_color);
+					trans *= 1.0 - fresnel;
+				}
+				previous_liquid_exit = end;
 				emitted += trans * palette[int(id)].rgb * liquid_shade * (1.0 - exp(-scatter * len));
 				trans *= exp(-absorb * len);
 				liquid_len += len;

@@ -1,5 +1,7 @@
 # Physical material capacity is a visibility contract
 
+This report describes correctness checkpoint `b8e9b4c`. The subsequent [water-interface followup](material-interface.md) improves the faint overflow water shown here; the original captures and findings remain preserved.
+
 The old renderer could omit authoritative physical cells when a sprite layer filled. This is a correctness defect, separate from decorative FX budgets. The fix switches an entire overflowing physical layer to deterministic coarse geometry. Cells, seeds, amounts, flags, and air state remain authoritative and unchanged.
 
 ## Reproduction

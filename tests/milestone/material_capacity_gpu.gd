@@ -2,12 +2,15 @@ extends SceneTree
 ## Exact eligibility, whole-layer fallback, recovery, and legacy under-capacity regression.
 signal snapshot_ready(state: Dictionary)
 const OUT := "res://docs/milestone/material-capacity-evidence/fixed"
+var out_dir := OUT
 var sim: Node3D
 var camera: Camera3D
 var checks := 0
 var failures := 0
 
 func _initialize() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("output_dir="): out_dir = arg.trim_prefix("output_dir=")
 	root.get_node("TimeController").paused = true
 	create_timer(120).timeout.connect(func(): push_error("Capacity probe timeout"); quit(2))
 	call_deferred("_run")
@@ -35,7 +38,7 @@ func _run() -> void:
 	sun.rotation_degrees = Vector3(-50,-25,0)
 	sun.light_energy = 1.5
 	stage.add_child(sun)
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
 	var rows: Array[Dictionary] = []
 	var cases := [
 		{"name":"small-grains","layer":0,"element":Elements.Id.SAND,"amount":0,"flags":6,"count":100,"capacity":16},
@@ -58,6 +61,7 @@ func _run() -> void:
 			sim.fx_enabled = false
 			sim.get_node(["Splats","Leaves","Droplets"][c.layer]).capacity = capacity
 			stage.add_child(sim)
+			sim.set_param("proxy_surface_reflection",not OS.get_cmdline_user_args().has("no_proxy_reflection=1"))
 			camera.position = (Vector3(0.23,0.38,0.42) if c.count==100 else Vector3(0.35,0.8,0.8))*sim.world_size()
 			camera.look_at(Vector3.ZERO)
 			for i in 20:
@@ -97,7 +101,7 @@ func _run() -> void:
 			await RenderingServer.frame_post_draw
 			var image := root.get_texture().get_image()
 			var name: String = c.name + ("-capped" if capacity<c.count else "-enough-capacity")
-			_check(image.save_png(OUT+"/"+name+".png")==OK,"capture "+name)
+			_check(image.save_png(out_dir+"/"+name+".png")==OK,"capture "+name)
 			if capacity<c.count:
 				capped_image = image
 			elif capped_image!=null:
@@ -124,7 +128,7 @@ func _run() -> void:
 			sim.queue_free()
 			for i in 10:
 				await process_frame
-	var file := FileAccess.open(OUT+("/visual.json" if OS.get_cmdline_user_args().has("visual_only=1") else "/regression.json"),FileAccess.WRITE)
+	var file := FileAccess.open(out_dir+("/visual.json" if OS.get_cmdline_user_args().has("visual_only=1") else "/regression.json"),FileAccess.WRITE)
 	file.store_string(JSON.stringify(rows,"\t"))
 	file.close()
 	print("CAPACITY_FALLBACK_CHECKS %d FAILURES %d"%[checks,failures])

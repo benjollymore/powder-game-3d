@@ -2,6 +2,7 @@ extends SceneTree
 ## GPU ray intervals measured in cell units against independent CPU boxes.
 ## This is fallback geometry/optical accounting, not a fluid model.
 signal snapshot_ready(state: Dictionary)
+var out_dir := OUT
 var sim: Node3D
 var camera: Camera3D
 var checks := 0
@@ -11,6 +12,8 @@ const OUT := "res://docs/milestone/material-capacity-evidence/geometry"
 const TARGET := Vector3i(64,64,64)
 
 func _initialize() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("output_dir="): out_dir = arg.trim_prefix("output_dir=")
 	root.get_node("TimeController").paused = true
 	create_timer(120).timeout.connect(func(): push_error("Proxy geometry timeout"); quit(2))
 	call_deferred("_run")
@@ -49,7 +52,7 @@ func _run() -> void:
 	sim.set_param("volume_debug",4)
 	var cell_size: float = sim.world_size()/VoxelCodec.GRID
 	var center := (Vector3(TARGET)+Vector3.ONE*0.5-Vector3.ONE*VoxelCodec.GRID*0.5)*cell_size
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
 	for amount in [1,50,100,200,255]:
 		var data := WorldBuilder.empty()
 		for p in [TARGET,Vector3i(8,8,8)]:
@@ -104,13 +107,13 @@ func _run() -> void:
 			var row := {"amount":amount,"view":view,"samples":tested,"wrong":wrong,"max_error_cells":max_error,"tolerance_cells":0.035}
 			rows.append(row)
 			print(JSON.stringify(row))
-			_check(image.save_png(OUT+"/amount%d-%s.png"%[amount,view])==OK,"save analytic capture")
+			_check(image.save_png(out_dir+"/amount%d-%s.png"%[amount,view])==OK,"save analytic capture")
 		RenderingServer.call_on_render_thread(_rt_snapshot)
 		var state: Dictionary = await snapshot_ready
 		_check(state.voxels==bytes,"all physical bytes unchanged by proxy rendering")
 		_check(state.overflow[2]==255,"actual droplet overflow active")
 	await _opaque_geometry(center,cell_size)
-	var file := FileAccess.open(OUT+"/regression.json",FileAccess.WRITE)
+	var file := FileAccess.open(out_dir+"/regression.json",FileAccess.WRITE)
 	file.store_string(JSON.stringify(rows,"\t"))
 	file.close()
 	print("PROXY_GEOMETRY_CHECKS %d FAILURES %d"%[checks,failures])
@@ -163,7 +166,7 @@ func _opaque_geometry(center: Vector3, cell_size: float) -> void:
 					tested += 1
 			_check(wrong==0,"element%d %s exact opaque fallback coverage"%[element,view])
 			rows.append({"element":element,"view":view,"samples":tested,"wrong_coverage":wrong})
-			_check(image.save_png(OUT+"/element%d-%s.png"%[element,view])==OK,"save opaque capture")
+			_check(image.save_png(out_dir+"/element%d-%s.png"%[element,view])==OK,"save opaque capture")
 		RenderingServer.call_on_render_thread(_rt_snapshot)
 		var state: Dictionary = await snapshot_ready
 		_check(state.voxels==bytes,"opaque fallback preserves physical bytes")
