@@ -1,0 +1,43 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+INDIRECT_CONFIG grid=256 warmup=30 frames=120 resolution=(1600, 900)
+CASE indirect=false workload=empty_paused repeat=0 drained_mean_ms=2.609 frame_p95_ms=8.445 counts=[0, 0, 0] voxel=3b6a07d0d404fab4e23b6d34bc6696a6a312dd92821332385e5af7c01c421351 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+CASE indirect=false workload=physical_paused repeat=0 drained_mean_ms=2.378 frame_p95_ms=7.109 counts=[4096, 6670, 4096] voxel=a09eb3e73e5c1005ef1d334762966755514081763c8249d7b284c0afc4421ae0 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+CASE indirect=false workload=physical_refresh repeat=0 drained_mean_ms=5.209 frame_p95_ms=8.119 counts=[4096, 6670, 4096] voxel=a09eb3e73e5c1005ef1d334762966755514081763c8249d7b284c0afc4421ae0 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+CASE indirect=false workload=dense_paused repeat=0 drained_mean_ms=3.094 frame_p95_ms=8.358 counts=[0, 131072, 0] voxel=2d75faf422c25aaa4da6d0ff38739cf0efca2b0f723fb2f21331b40b4a01c651 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+CASE indirect=false workload=dense_refresh repeat=0 drained_mean_ms=5.678 frame_p95_ms=8.197 counts=[0, 131072, 0] voxel=2d75faf422c25aaa4da6d0ff38739cf0efca2b0f723fb2f21331b40b4a01c651 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+CASE indirect=false workload=active_source repeat=0 drained_mean_ms=15.033 frame_p95_ms=16.560 counts=[99348, 43, 4910] voxel=b58bcaef7150c0853c5f8d18899b424684a44ed3ce1f638a168e1f918fb76deb air=45ba7a84bb59ecd8d733c4fac7e3c1c9d0aef64468c9e76b38b65961d7abeaed
+CASE indirect=true workload=empty_paused repeat=0 drained_mean_ms=2.506 frame_p95_ms=7.125 counts=[0, 0, 0] voxel=3b6a07d0d404fab4e23b6d34bc6696a6a312dd92821332385e5af7c01c421351 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+EQUIVALENCE workload=empty_paused repeat=0 voxel_all_air=true
+CASE indirect=true workload=physical_paused repeat=0 drained_mean_ms=2.556 frame_p95_ms=8.281 counts=[4096, 6670, 4096] voxel=a09eb3e73e5c1005ef1d334762966755514081763c8249d7b284c0afc4421ae0 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+EQUIVALENCE workload=physical_paused repeat=0 voxel_all_air=true
+CASE indirect=true workload=physical_refresh repeat=0 drained_mean_ms=5.000 frame_p95_ms=8.588 counts=[4096, 6670, 4096] voxel=a09eb3e73e5c1005ef1d334762966755514081763c8249d7b284c0afc4421ae0 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+EQUIVALENCE workload=physical_refresh repeat=0 voxel_all_air=true
+CASE indirect=true workload=dense_paused repeat=0 drained_mean_ms=5.109 frame_p95_ms=8.499 counts=[0, 131072, 0] voxel=2d75faf422c25aaa4da6d0ff38739cf0efca2b0f723fb2f21331b40b4a01c651 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+EQUIVALENCE workload=dense_paused repeat=0 voxel_all_air=true
+CASE indirect=true workload=dense_refresh repeat=0 drained_mean_ms=7.584 frame_p95_ms=7.675 counts=[0, 131072, 0] voxel=2d75faf422c25aaa4da6d0ff38739cf0efca2b0f723fb2f21331b40b4a01c651 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+EQUIVALENCE workload=dense_refresh repeat=0 voxel_all_air=true
+CASE indirect=true workload=active_source repeat=0 drained_mean_ms=14.620 frame_p95_ms=16.046 counts=[99348, 43, 4910] voxel=b58bcaef7150c0853c5f8d18899b424684a44ed3ce1f638a168e1f918fb76deb air=45ba7a84bb59ecd8d733c4fac7e3c1c9d0aef64468c9e76b38b65961d7abeaed
+EQUIVALENCE workload=active_source repeat=0 voxel_all_air=true
+CASE indirect=true workload=empty_paused repeat=1 drained_mean_ms=2.558 frame_p95_ms=6.564 counts=[0, 0, 0] voxel=3b6a07d0d404fab4e23b6d34bc6696a6a312dd92821332385e5af7c01c421351 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+CASE indirect=true workload=physical_paused repeat=1 drained_mean_ms=2.672 frame_p95_ms=8.108 counts=[4096, 6670, 4096] voxel=a09eb3e73e5c1005ef1d334762966755514081763c8249d7b284c0afc4421ae0 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+CASE indirect=true workload=physical_refresh repeat=1 drained_mean_ms=4.781 frame_p95_ms=8.358 counts=[4096, 6670, 4096] voxel=a09eb3e73e5c1005ef1d334762966755514081763c8249d7b284c0afc4421ae0 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+CASE indirect=true workload=dense_paused repeat=1 drained_mean_ms=2.947 frame_p95_ms=8.476 counts=[0, 131072, 0] voxel=2d75faf422c25aaa4da6d0ff38739cf0efca2b0f723fb2f21331b40b4a01c651 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+CASE indirect=true workload=dense_refresh repeat=1 drained_mean_ms=5.313 frame_p95_ms=8.736 counts=[0, 131072, 0] voxel=2d75faf422c25aaa4da6d0ff38739cf0efca2b0f723fb2f21331b40b4a01c651 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+CASE indirect=true workload=active_source repeat=1 drained_mean_ms=14.626 frame_p95_ms=16.062 counts=[99348, 43, 4910] voxel=b58bcaef7150c0853c5f8d18899b424684a44ed3ce1f638a168e1f918fb76deb air=45ba7a84bb59ecd8d733c4fac7e3c1c9d0aef64468c9e76b38b65961d7abeaed
+CASE indirect=false workload=empty_paused repeat=1 drained_mean_ms=2.602 frame_p95_ms=7.586 counts=[0, 0, 0] voxel=3b6a07d0d404fab4e23b6d34bc6696a6a312dd92821332385e5af7c01c421351 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+EQUIVALENCE workload=empty_paused repeat=1 voxel_all_air=true
+CASE indirect=false workload=physical_paused repeat=1 drained_mean_ms=3.052 frame_p95_ms=8.396 counts=[4096, 6670, 4096] voxel=a09eb3e73e5c1005ef1d334762966755514081763c8249d7b284c0afc4421ae0 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+EQUIVALENCE workload=physical_paused repeat=1 voxel_all_air=true
+CASE indirect=false workload=physical_refresh repeat=1 drained_mean_ms=5.284 frame_p95_ms=8.102 counts=[4096, 6670, 4096] voxel=a09eb3e73e5c1005ef1d334762966755514081763c8249d7b284c0afc4421ae0 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+EQUIVALENCE workload=physical_refresh repeat=1 voxel_all_air=true
+CASE indirect=false workload=dense_paused repeat=1 drained_mean_ms=5.385 frame_p95_ms=8.552 counts=[0, 131072, 0] voxel=2d75faf422c25aaa4da6d0ff38739cf0efca2b0f723fb2f21331b40b4a01c651 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+EQUIVALENCE workload=dense_paused repeat=1 voxel_all_air=true
+CASE indirect=false workload=dense_refresh repeat=1 drained_mean_ms=8.002 frame_p95_ms=8.142 counts=[0, 131072, 0] voxel=2d75faf422c25aaa4da6d0ff38739cf0efca2b0f723fb2f21331b40b4a01c651 air=32a8660ecca9c3dc4b2e5745379648de9c8bd95a31cf87534b6e0fceef174d26
+EQUIVALENCE workload=dense_refresh repeat=1 voxel_all_air=true
+CASE indirect=false workload=active_source repeat=1 drained_mean_ms=15.017 frame_p95_ms=16.444 counts=[99348, 43, 4910] voxel=b58bcaef7150c0853c5f8d18899b424684a44ed3ce1f638a168e1f918fb76deb air=45ba7a84bb59ecd8d733c4fac7e3c1c9d0aef64468c9e76b38b65961d7abeaed
+EQUIVALENCE workload=active_source repeat=1 voxel_all_air=true
+INDIRECT_BENCH failures=0
+WARNING: 6 RIDs of type "StorageBuffer" were leaked.
+   at: _free_rids (servers/rendering/rendering_device.cpp:7295)

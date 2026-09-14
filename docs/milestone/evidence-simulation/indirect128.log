@@ -1,0 +1,31 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: mode=false layer=0 has physical sprites
+ok: mode=false layer=1 has physical sprites
+ok: mode=false layer=2 has physical sprites
+ok: mode=false erased world has zero live physical sprites
+ok: mode=false full reset clears displayed history
+ok: mode=true layer=0 has physical sprites
+ok: layer=0 command preserves quad indices and exact live count
+ok: mode=true layer=1 has physical sprites
+ok: layer=1 command preserves quad indices and exact live count
+ok: mode=true layer=2 has physical sprites
+ok: layer=2 command preserves quad indices and exact live count
+ok: mode=true erased world has zero live physical sprites
+ok: layer=0 regional erase publishes zero indirect instances
+ok: layer=1 regional erase publishes zero indirect instances
+ok: layer=2 regional erase publishes zero indirect instances
+ok: indirect unused tail remains populated but is excluded by draw count
+ok: mode=true full reset clears displayed history
+ok: indirect presentation preserves exact voxel and all seven air textures after fire plus live-source ticks
+ok: direct and indirect emission produce identical sorted instance records for every physical layer
+ok: layer=0 overflow draw count is clamped to capacity
+ok: layer=0 every drawable limited-capacity record is populated
+ok: layer=1 overflow draw count is clamped to capacity
+ok: layer=1 every drawable limited-capacity record is populated
+ok: layer=2 overflow draw count is clamped to capacity
+ok: layer=2 every drawable limited-capacity record is populated
+INDIRECT_SPRITES grid=128 checks=25 failures=0
+WARNING: 6 RIDs of type "StorageBuffer" were leaked.
+   at: _free_rids (servers/rendering/rendering_device.cpp:7295)

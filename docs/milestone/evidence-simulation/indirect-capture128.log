@@ -1,0 +1,11 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: mode=false physical sprite layers visibly draw (2568 changed pixels)
+ok: mode=false erased tail is invisible (0 residual pixels)
+ok: mode=true physical sprite layers visibly draw (2568 changed pixels)
+ok: mode=true erased tail is invisible (0 residual pixels)
+ok: direct and indirect captures have exact image bytes (0 changed pixels)
+INDIRECT_CAPTURE grid=128 checks=5 failures=0
+WARNING: 3 RIDs of type "StorageBuffer" were leaked.
+   at: _free_rids (servers/rendering/rendering_device.cpp:7295)

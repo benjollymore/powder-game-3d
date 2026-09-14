@@ -1,0 +1,43 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+INDIRECT_CONFIG grid=128 warmup=30 frames=120 resolution=(1600, 900)
+CASE indirect=false workload=empty_paused repeat=0 drained_mean_ms=2.940 frame_p95_ms=8.294 counts=[0, 0, 0] voxel=2daeb1f36095b44b318410b3f4e8b5d989dcc7bb023d1426c492dab0a3053e74 air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+CASE indirect=false workload=physical_paused repeat=0 drained_mean_ms=2.453 frame_p95_ms=7.106 counts=[1024, 1618, 1024] voxel=d3d2569b5055b6187bf4ba1c4c179524599eb4c136ee528ac976d29cb10de1b5 air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+CASE indirect=false workload=physical_refresh repeat=0 drained_mean_ms=2.673 frame_p95_ms=8.402 counts=[1024, 1618, 1024] voxel=d3d2569b5055b6187bf4ba1c4c179524599eb4c136ee528ac976d29cb10de1b5 air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+CASE indirect=false workload=dense_paused repeat=0 drained_mean_ms=2.704 frame_p95_ms=8.322 counts=[0, 131072, 0] voxel=92ac6f25afb141855c4eb7780d39f38a9c040cb4bb31017e1d7650f243bcefab air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+CASE indirect=false workload=dense_refresh repeat=0 drained_mean_ms=3.089 frame_p95_ms=7.721 counts=[0, 131072, 0] voxel=92ac6f25afb141855c4eb7780d39f38a9c040cb4bb31017e1d7650f243bcefab air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+CASE indirect=false workload=active_source repeat=0 drained_mean_ms=4.862 frame_p95_ms=8.431 counts=[2117, 6, 618] voxel=40fd6dd7f4f36cbc5ab9e3fd4de1bb4578e8e18aa75e77a459c1090c7936371d air=93f7fd8bb6a00a1161821017481929e6afc24fb5821fa98166dcfe006491dde0
+CASE indirect=true workload=empty_paused repeat=0 drained_mean_ms=2.146 frame_p95_ms=5.650 counts=[0, 0, 0] voxel=2daeb1f36095b44b318410b3f4e8b5d989dcc7bb023d1426c492dab0a3053e74 air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+EQUIVALENCE workload=empty_paused repeat=0 voxel_all_air=true
+CASE indirect=true workload=physical_paused repeat=0 drained_mean_ms=2.761 frame_p95_ms=8.326 counts=[1024, 1618, 1024] voxel=d3d2569b5055b6187bf4ba1c4c179524599eb4c136ee528ac976d29cb10de1b5 air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+EQUIVALENCE workload=physical_paused repeat=0 voxel_all_air=true
+CASE indirect=true workload=physical_refresh repeat=0 drained_mean_ms=2.496 frame_p95_ms=6.890 counts=[1024, 1618, 1024] voxel=d3d2569b5055b6187bf4ba1c4c179524599eb4c136ee528ac976d29cb10de1b5 air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+EQUIVALENCE workload=physical_refresh repeat=0 voxel_all_air=true
+CASE indirect=true workload=dense_paused repeat=0 drained_mean_ms=3.975 frame_p95_ms=8.484 counts=[0, 131072, 0] voxel=92ac6f25afb141855c4eb7780d39f38a9c040cb4bb31017e1d7650f243bcefab air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+EQUIVALENCE workload=dense_paused repeat=0 voxel_all_air=true
+CASE indirect=true workload=dense_refresh repeat=0 drained_mean_ms=4.339 frame_p95_ms=8.592 counts=[0, 131072, 0] voxel=92ac6f25afb141855c4eb7780d39f38a9c040cb4bb31017e1d7650f243bcefab air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+EQUIVALENCE workload=dense_refresh repeat=0 voxel_all_air=true
+CASE indirect=true workload=active_source repeat=0 drained_mean_ms=4.358 frame_p95_ms=8.529 counts=[2117, 6, 618] voxel=40fd6dd7f4f36cbc5ab9e3fd4de1bb4578e8e18aa75e77a459c1090c7936371d air=93f7fd8bb6a00a1161821017481929e6afc24fb5821fa98166dcfe006491dde0
+EQUIVALENCE workload=active_source repeat=0 voxel_all_air=true
+CASE indirect=true workload=empty_paused repeat=1 drained_mean_ms=2.508 frame_p95_ms=8.412 counts=[0, 0, 0] voxel=2daeb1f36095b44b318410b3f4e8b5d989dcc7bb023d1426c492dab0a3053e74 air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+CASE indirect=true workload=physical_paused repeat=1 drained_mean_ms=2.647 frame_p95_ms=8.043 counts=[1024, 1618, 1024] voxel=d3d2569b5055b6187bf4ba1c4c179524599eb4c136ee528ac976d29cb10de1b5 air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+CASE indirect=true workload=physical_refresh repeat=1 drained_mean_ms=2.572 frame_p95_ms=7.321 counts=[1024, 1618, 1024] voxel=d3d2569b5055b6187bf4ba1c4c179524599eb4c136ee528ac976d29cb10de1b5 air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+CASE indirect=true workload=dense_paused repeat=1 drained_mean_ms=2.650 frame_p95_ms=5.840 counts=[0, 131072, 0] voxel=92ac6f25afb141855c4eb7780d39f38a9c040cb4bb31017e1d7650f243bcefab air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+CASE indirect=true workload=dense_refresh repeat=1 drained_mean_ms=2.708 frame_p95_ms=8.184 counts=[0, 131072, 0] voxel=92ac6f25afb141855c4eb7780d39f38a9c040cb4bb31017e1d7650f243bcefab air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+CASE indirect=true workload=active_source repeat=1 drained_mean_ms=4.499 frame_p95_ms=9.640 counts=[2117, 6, 618] voxel=40fd6dd7f4f36cbc5ab9e3fd4de1bb4578e8e18aa75e77a459c1090c7936371d air=93f7fd8bb6a00a1161821017481929e6afc24fb5821fa98166dcfe006491dde0
+CASE indirect=false workload=empty_paused repeat=1 drained_mean_ms=2.275 frame_p95_ms=4.525 counts=[0, 0, 0] voxel=2daeb1f36095b44b318410b3f4e8b5d989dcc7bb023d1426c492dab0a3053e74 air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+EQUIVALENCE workload=empty_paused repeat=1 voxel_all_air=true
+CASE indirect=false workload=physical_paused repeat=1 drained_mean_ms=2.740 frame_p95_ms=7.651 counts=[1024, 1618, 1024] voxel=d3d2569b5055b6187bf4ba1c4c179524599eb4c136ee528ac976d29cb10de1b5 air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+EQUIVALENCE workload=physical_paused repeat=1 voxel_all_air=true
+CASE indirect=false workload=physical_refresh repeat=1 drained_mean_ms=2.696 frame_p95_ms=8.312 counts=[1024, 1618, 1024] voxel=d3d2569b5055b6187bf4ba1c4c179524599eb4c136ee528ac976d29cb10de1b5 air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+EQUIVALENCE workload=physical_refresh repeat=1 voxel_all_air=true
+CASE indirect=false workload=dense_paused repeat=1 drained_mean_ms=4.389 frame_p95_ms=8.522 counts=[0, 131072, 0] voxel=92ac6f25afb141855c4eb7780d39f38a9c040cb4bb31017e1d7650f243bcefab air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+EQUIVALENCE workload=dense_paused repeat=1 voxel_all_air=true
+CASE indirect=false workload=dense_refresh repeat=1 drained_mean_ms=4.700 frame_p95_ms=8.369 counts=[0, 131072, 0] voxel=92ac6f25afb141855c4eb7780d39f38a9c040cb4bb31017e1d7650f243bcefab air=a16009432ec1c64eaf538167a07a31b8cbbdcbee4458ad1b8110915d839f3156
+EQUIVALENCE workload=dense_refresh repeat=1 voxel_all_air=true
+CASE indirect=false workload=active_source repeat=1 drained_mean_ms=4.751 frame_p95_ms=8.130 counts=[2117, 6, 618] voxel=40fd6dd7f4f36cbc5ab9e3fd4de1bb4578e8e18aa75e77a459c1090c7936371d air=93f7fd8bb6a00a1161821017481929e6afc24fb5821fa98166dcfe006491dde0
+EQUIVALENCE workload=active_source repeat=1 voxel_all_air=true
+INDIRECT_BENCH failures=0
+WARNING: 6 RIDs of type "StorageBuffer" were leaked.
+   at: _free_rids (servers/rendering/rendering_device.cpp:7295)
