@@ -14,6 +14,10 @@ uniform int grid_size = 128;
 uniform int brick_size = 8;
 uniform int liquid_mask = 0;
 uniform int gas_mask = 0;
+// Non-destructive discovery section: remove the positive side visually only.
+uniform bool section_enabled = false;
+uniform int section_axis = 2;
+uniform int section_cell = 127;
 uniform vec3 light_dir = vec3(0.4, 1.0, 0.3); // toward the sun, world space
 uniform vec3 sun_color : source_color = vec3(1.0, 0.96, 0.9);
 uniform vec3 sky_color : source_color = vec3(0.74, 0.79, 0.84);
@@ -33,7 +37,7 @@ bool brick_empty(ivec3 cell, int channel) {
 }
 
 bool outside(ivec3 cell) {
-	return any(lessThan(cell, ivec3(0))) || any(greaterThanEqual(cell, ivec3(grid_size)));
+	return any(lessThan(cell, ivec3(0))) || any(greaterThanEqual(cell, ivec3(grid_size))) || (section_enabled && cell[section_axis] > section_cell);
 }
 
 bool is_liquid(uint id) { return (liquid_mask & (1 << int(id))) != 0; }
@@ -106,7 +110,11 @@ bool setup_ray(vec3 model_pos, vec3 cam_model, out Ray r) {
 	r.dir = dir;
 	r.inv = 1.0 / dir;
 	vec3 t_lo = (vec3(-0.5) - cam_model) * r.inv;
-	vec3 t_hi = (vec3(0.5) - cam_model) * r.inv;
+	vec3 hi = vec3(0.5);
+	if (section_enabled) {
+		hi[section_axis] = float(section_cell + 1) / G - 0.5;
+	}
+	vec3 t_hi = (hi - cam_model) * r.inv;
 	vec3 t_near3 = min(t_lo, t_hi);
 	vec3 t_far3 = max(t_lo, t_hi);
 	r.t_enter = max(max(t_near3.x, t_near3.y), t_near3.z);

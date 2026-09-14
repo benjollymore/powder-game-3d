@@ -19,6 +19,11 @@ uniform float sway = 0.12;
 varying vec2 v_local;
 varying flat vec4 v_custom;
 varying float v_vis;
+varying flat float v_section_cell;
+uniform bool section_enabled = false;
+uniform int section_axis = 2;
+uniform int section_cell = 127;
+uniform int grid_size = 128;
 
 void vertex() {
 	v_custom = INSTANCE_CUSTOM;
@@ -30,11 +35,13 @@ void vertex() {
 	float w = sin(sim_time * 2.1 + phase) * 0.6 + sin(sim_time * 3.7 + phase * 1.7) * 0.4;
 	VERTEX = vec3(local.x + w * sway * tip, local.y - abs(w) * sway * 0.4 * tip, w * sway * 0.5 * tip);
 	vec3 world_origin = MODEL_MATRIX[3].xyz;
+	v_section_cell = (world_origin[section_axis] - box_center[section_axis] + box_half) / (2.0 * box_half) * float(grid_size);
 	vec3 uvw = (world_origin - (box_center - vec3(box_half))) / (2.0 * box_half) + normalize(light_dir) * 0.02;
 	v_vis = texture(sunvis, clamp(uvw, vec3(0.002), vec3(0.998))).r;
 }
 
 void fragment() {
+	if (section_enabled && v_section_cell >= float(section_cell + 1)) { discard; }
 	float y = clamp(v_local.y, 0.0, 1.0);
 	// Leaf outline: widest a third of the way up, pointed at the tip.
 	float half_w = 0.5 * pow(sin(3.14159 * pow(y, 0.75)), 0.8);

@@ -16,9 +16,15 @@ uniform float sim_time = 0.0;
 varying vec2 v_uv;
 varying flat vec4 v_custom;
 varying float v_vis;
+varying flat float v_section_cell;
+uniform bool section_enabled = false;
+uniform int section_axis = 2;
+uniform int section_cell = 127;
+uniform int grid_size = 128;
 
 void vertex() {
 	vec3 origin = MODEL_MATRIX[3].xyz;
+	v_section_cell = (origin[section_axis] - box_center[section_axis] + box_half) / (2.0 * box_half) * float(grid_size);
 	float size = length(MODEL_MATRIX[0].xyz);
 	v_uv = UV - 0.5;
 	v_custom = INSTANCE_CUSTOM;
@@ -30,6 +36,7 @@ void vertex() {
 }
 
 void fragment() {
+	if (section_enabled && v_section_cell >= float(section_cell + 1)) { discard; }
 	vec2 d = v_uv * 2.0;
 	float r2 = dot(d, d);
 	if (r2 > 1.0) {

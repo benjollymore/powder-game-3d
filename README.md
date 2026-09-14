@@ -32,7 +32,7 @@ to start in a preset.
 | Space | Pause / resume time |
 | N | Advance one tick while paused |
 | , / . | Halve / double time scale |
-| 0 / 1 | Freeze / real time |
+| 0 / Backslash | Freeze / real time |
 | C | Clear the world |
 | R | Reload the current scenario (pick one in the top bar) |
 | F3 | Toggle the stats overlay |

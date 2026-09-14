@@ -72,7 +72,7 @@ const SUNVIS_GAS_EXTINCTION := 0.12
 const BRICK := 8
 var OCCUPANCY_GRID: int = GRID / BRICK
 
-enum BrushMode { REPLACE, ONLY_AIR, ERASE, BOX }
+enum BrushMode { REPLACE, ONLY_AIR, ERASE, BOX, BOX_ONLY_AIR }
 ## 2x2x2 blocks with a partition offset straddle the edge: GRID/2 + 1 blocks
 ## per axis, 4x4x4 threads per workgroup.
 var DISPATCH_GROUPS: int = ceili((GRID / 2 + 1) / 4.0)
@@ -315,6 +315,19 @@ func paint(center: Vector3i, radius: int, element: int, mode: BrushMode = BrushM
 		return
 	var seed := randi() & 0x7FFFFFFF
 	RenderingServer.call_on_render_thread(_rt_paint.bind(center, radius, element, mode, seed))
+
+
+## Discovery editor: preserve stamp order, rebuild derived fields once per batch.
+func paint_stroke(centers: Array[Vector3i], radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR) -> void:
+	if not _rt_ready or centers.is_empty():
+		return
+	RenderingServer.call_on_render_thread(_rt_paint_stroke.bind(centers.duplicate(), radius, element, mode, randi() & 0x7FFFFFFF))
+
+
+## Half-open region bounds; construction fill preserves all occupied cells.
+func paint_region(lo: Vector3i, hi: Vector3i, element: int) -> void:
+	if _rt_ready:
+		RenderingServer.call_on_render_thread(_rt_paint_region.bind(lo, hi, element))
 
 
 ## Replace the whole world. `bytes` is GRID^3 * 4 bytes, x fastest.
@@ -887,6 +900,18 @@ func _rt_paint(center: Vector3i, radius: int, element: int, mode: int, seed: int
 	_rt_occupancy_update()
 
 
+func _rt_paint_stroke(centers: Array[Vector3i], radius: int, element: int, mode: int, seed: int) -> void:
+	if not _brush_pipeline.is_valid():
+		return
+	var cl := _rd.compute_list_begin()
+	_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
+	_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
+	for center in centers:
+		_rt_brush_sphere(cl, center, radius, element, mode, seed, Elements.default_amount(element))
+	_rd.compute_list_end()
+	_rt_occupancy_update()
+
+
 func _rt_brush_sphere(cl: int, center: Vector3i, radius: int, element: int, mode: int, seed: int, amount: int) -> void:
 	var groups := ceili(float(2 * radius + 1) / BRUSH_LOCAL_SIZE)
 	var push := PackedInt32Array([center.x, center.y, center.z, radius, element, mode, seed, amount, 0, 0, 0, 0])
@@ -896,15 +921,26 @@ func _rt_brush_sphere(cl: int, center: Vector3i, radius: int, element: int, mode
 	_rd.compute_list_add_barrier(cl)
 
 
-func _rt_brush_box(cl: int, lo: Vector3i, hi: Vector3i, element: int, seed: int, amount: int) -> void:
+func _rt_brush_box(cl: int, lo: Vector3i, hi: Vector3i, element: int, seed: int, amount: int, mode: int = BrushMode.BOX) -> void:
 	var size := (hi - lo).max(Vector3i.ZERO)
 	if size.x == 0 or size.y == 0 or size.z == 0:
 		return
-	var push := PackedInt32Array([lo.x, lo.y, lo.z, 0, element, BrushMode.BOX, seed, amount, hi.x, hi.y, hi.z, 0])
+	var push := PackedInt32Array([lo.x, lo.y, lo.z, 0, element, mode, seed, amount, hi.x, hi.y, hi.z, 0])
 	var bytes := push.to_byte_array()
 	_rd.compute_list_set_push_constant(cl, bytes, bytes.size())
 	_rd.compute_list_dispatch(cl, ceili(size.x / float(BRUSH_LOCAL_SIZE)), ceili(size.y / float(BRUSH_LOCAL_SIZE)), ceili(size.z / float(BRUSH_LOCAL_SIZE)))
 	_rd.compute_list_add_barrier(cl)
+
+
+func _rt_paint_region(lo: Vector3i, hi: Vector3i, element: int) -> void:
+	if not _brush_pipeline.is_valid():
+		return
+	var cl := _rd.compute_list_begin()
+	_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
+	_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
+	_rt_brush_box(cl, lo, hi, element, 7919, Elements.default_amount(element), BrushMode.BOX_ONLY_AIR)
+	_rd.compute_list_end()
+	_rt_occupancy_update()
 
 
 ## Clear the world and replay scenario ops (see Scenarios.ops) on the GPU.

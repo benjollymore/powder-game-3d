@@ -28,12 +28,12 @@ uint hash(uint x) {
 
 void main() {
 	uint mode = pc.element_mode_seed.y;
-	ivec3 lo = (mode == 3u) ? pc.center_radius.xyz : pc.center_radius.xyz - ivec3(pc.center_radius.w);
+	ivec3 lo = (mode >= 3u) ? pc.center_radius.xyz : pc.center_radius.xyz - ivec3(pc.center_radius.w);
 	ivec3 p = lo + ivec3(gl_GlobalInvocationID);
 	if (any(lessThan(p, ivec3(0))) || any(greaterThanEqual(p, ivec3(GRID)))) {
 		return;
 	}
-	if (mode == 3u) {
+	if (mode >= 3u) {
 		if (any(greaterThanEqual(p, pc.box_hi.xyz))) {
 			return;
 		}
@@ -47,7 +47,7 @@ void main() {
 	uint id = pc.element_mode_seed.x;
 	if (mode == 2u) {
 		id = 0u;
-	} else if (mode == 1u) {
+	} else if (mode == 1u || mode == 4u) {
 		uvec4 cur = uvec4(imageLoad(grid, p) * 255.0 + 0.5);
 		if (cur.x != 0u) {
 			return;

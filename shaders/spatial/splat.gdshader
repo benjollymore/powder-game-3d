@@ -15,11 +15,17 @@ uniform vec3 light_dir = vec3(0.4, 1.0, 0.3); // toward the sun, world space
 varying vec2 v_uv;
 varying flat vec4 v_custom;
 varying float v_vis;
+varying flat float v_section_cell;
+uniform bool section_enabled = false;
+uniform int section_axis = 2;
+uniform int section_cell = 127;
+uniform int grid_size = 128;
 
 void vertex() {
 	// With world_vertex_coords VERTEX arrives in world space, so the quad's
 	// local corner comes from UV instead.
 	vec3 origin = MODEL_MATRIX[3].xyz;
+	v_section_cell = (origin[section_axis] - box_center[section_axis] + box_half) / (2.0 * box_half) * float(grid_size);
 	float size = length(MODEL_MATRIX[0].xyz);
 	v_uv = UV - 0.5;
 	v_custom = INSTANCE_CUSTOM;
@@ -32,6 +38,7 @@ void vertex() {
 }
 
 void fragment() {
+	if (section_enabled && v_section_cell >= float(section_cell + 1)) { discard; }
 	vec2 d = v_uv * 2.0;
 	float r2 = dot(d, d);
 	ALPHA = (r2 < 1.0) ? 1.0 : 0.0;

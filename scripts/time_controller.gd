@@ -104,7 +104,11 @@ static func compute_ticks(delta: float, is_paused: bool, scale: float,
 
 
 func toggle_pause() -> void:
-	paused = not paused
+	if time_scale < MIN_SCALE:
+		time_scale = 1.0
+		paused = false
+	else:
+		paused = not paused
 
 
 ## Queue exactly one tick for the next frame (works whether or not paused;
@@ -138,7 +142,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			time_scale = minf(maxf(time_scale, MIN_SCALE) * 2.0, MAX_SCALE)
 		KEY_0:
 			time_scale = 0.0
-		KEY_1:
+		KEY_BACKSLASH:
 			time_scale = 1.0
 			paused = false
 		_:
