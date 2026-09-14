@@ -24,3 +24,12 @@ and walls for free.
 Single source of truth for element ids, colours, densities and flags:
 `scripts/sim/elements.gd`. Both compute shaders and the raymarcher derive
 everything from it (property buffer, reaction buffer, palette, UI).
+
+## Occupancy grid
+
+A 16³ R8 texture, one texel per 8³ brick, holds 1 where the brick contains
+anything that is not air or gas. It is rebuilt by `shaders/compute/occupancy.glsl`
+after every tick batch, brush stroke, upload and clear. The raymarcher leaps
+across empty bricks, and `scripts/sim/shadow_proxy.gd` reads it back
+asynchronously to place shadow-only cubes so the voxel mass casts a shadow on
+the ground without re-running the raymarch in the shadow pass.

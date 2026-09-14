@@ -15,6 +15,9 @@ const BOX_CENTER := Vector3.ZERO
 @export var dof_sharp_band := 1.0
 @export var dof_transition := 0.9
 @export var dof_blur_amount := 0.07
+## Direction the sunlight travels (world space). Chosen so the box's shadow
+## falls toward the default camera side.
+@export var sun_direction := Vector3(-0.55, -0.8, 0.45)
 @export var frame_color := Color(0.18, 0.2, 0.24, 0.55)
 @export var frame_thickness := 0.004
 
@@ -37,6 +40,7 @@ func _ready() -> void:
 		_attributes.dof_blur_amount = dof_blur_amount
 		_camera.attributes = _attributes
 		_apply_dof_enabled()
+	sun.look_at(sun.global_position + sun_direction.normalized(), Vector3.UP)
 	_build_box_frame()
 	_sync_lighting()
 

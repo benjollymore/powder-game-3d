@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/sim/voxel_sim.gd" id="1_sim"]
 [ext_resource type="Shader" path="res://shaders/spatial/voxel_raymarch.gdshader" id="2_shader"]
+[ext_resource type="Script" path="res://scripts/sim/shadow_proxy.gd" id="3_shadow"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_unit"]
 
@@ -15,3 +16,6 @@ script = ExtResource("1_sim")
 cast_shadow = 0
 material_override = SubResource("ShaderMaterial_voxels")
 mesh = SubResource("BoxMesh_unit")
+
+[node name="ShadowProxy" type="MultiMeshInstance3D" parent="."]
+script = ExtResource("3_shadow")

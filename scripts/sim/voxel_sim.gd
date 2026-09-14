@@ -12,11 +12,15 @@ extends Node3D
 ## RenderingServer.call_on_render_thread; the main thread only queues work.
 
 signal readback_ready(bytes: PackedByteArray)
+signal occupancy_ready(bytes: PackedByteArray)
 
 const GRID := VoxelCodec.GRID
 const SIM_SHADER_PATH := "res://shaders/compute/sim.glsl"
 const BRUSH_SHADER_PATH := "res://shaders/compute/brush.glsl"
 const BRUSH_LOCAL_SIZE := 8
+const OCCUPANCY_SHADER_PATH := "res://shaders/compute/occupancy.glsl"
+## One occupancy cell per 8^3 brick: 16^3 cells for a 128^3 world.
+const OCCUPANCY_GRID := 16
 
 enum BrushMode { REPLACE, ONLY_AIR, ERASE }
 ## 2x2x2 blocks with a partition offset straddle the edge: 65 blocks per axis,
@@ -46,6 +50,11 @@ var _sim_set := RID()
 var _brush_shader := RID()
 var _brush_pipeline := RID()
 var _brush_set := RID()
+var _occ_rid := RID()
+var _occ_texture := Texture3DRD.new()
+var _occ_shader := RID()
+var _occ_pipeline := RID()
+var _occ_set := RID()
 var _elements_buffer := RID()
 var _reactions_buffer := RID()
 
@@ -59,6 +68,8 @@ func _ready() -> void:
 	# created it (see _process). Re-bound every run because the RD texture
 	# binding does not survive scene reloads.
 	_material.set_shader_parameter("voxels", _texture)
+	_material.set_shader_parameter("occupancy", _occ_texture)
+	_material.set_shader_parameter("brick_size", GRID / OCCUPANCY_GRID)
 	RenderingServer.call_on_render_thread(_rt_init.bind(build_test_pattern()))
 	if listen_to_time_controller:
 		TimeController.ticks_requested.connect(request_ticks)
@@ -68,12 +79,14 @@ func _exit_tree() -> void:
 	# Detach the material's view first, otherwise the renderer rebuilds its
 	# uniform set against a freed texture at shutdown.
 	_texture.texture_rd_rid = RID()
+	_occ_texture.texture_rd_rid = RID()
 	RenderingServer.call_on_render_thread(_rt_free)
 
 
 func _process(_delta: float) -> void:
 	if _rt_ready and _texture.texture_rd_rid != _grid_rid:
 		_texture.texture_rd_rid = _grid_rid
+		_occ_texture.texture_rd_rid = _occ_rid
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -132,6 +145,13 @@ func request_readback(callback: Callable) -> void:
 	RenderingServer.call_on_render_thread(_rt_readback.bind(callback))
 
 
+## Fetch the 16^3 occupancy grid (one byte per brick, x fastest) without
+## stalling; `occupancy_ready` fires on the main thread when it arrives.
+func request_occupancy_readback() -> void:
+	if _rt_ready:
+		RenderingServer.call_on_render_thread(_rt_occupancy_readback)
+
+
 ## Count voxels per element id from a readback.
 static func histogram(bytes: PackedByteArray) -> PackedInt64Array:
 	var counts := PackedInt64Array()
@@ -169,7 +189,22 @@ func _rt_init(initial: PackedByteArray) -> void:
 	var reacts := Elements.reaction_bytes()
 	_reactions_buffer = _rd.storage_buffer_create(reacts.size(), reacts)
 
+	var occ_fmt := RDTextureFormat.new()
+	occ_fmt.format = RenderingDevice.DATA_FORMAT_R8_UNORM
+	occ_fmt.texture_type = RenderingDevice.TEXTURE_TYPE_3D
+	occ_fmt.width = OCCUPANCY_GRID
+	occ_fmt.height = OCCUPANCY_GRID
+	occ_fmt.depth = OCCUPANCY_GRID
+	occ_fmt.mipmaps = 1
+	occ_fmt.usage_bits = (
+		RenderingDevice.TEXTURE_USAGE_STORAGE_BIT
+		| RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
+	)
+	_occ_rid = _rd.texture_create(occ_fmt, RDTextureView.new())
+
 	_rt_build_pipelines(false)
+	_rt_occupancy_update()
 	_rt_ready = true
 
 
@@ -191,11 +226,19 @@ func _rt_compile(path: String, from_source: bool) -> RDShaderSPIRV:
 	return spirv
 
 
-func _image_uniform(binding: int) -> RDUniform:
+func _image_uniform(binding: int, rid: RID = _grid_rid) -> RDUniform:
 	var u := RDUniform.new()
 	u.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
 	u.binding = binding
-	u.add_id(_grid_rid)
+	u.add_id(rid)
+	return u
+
+
+func _buffer_uniform(binding: int, rid: RID) -> RDUniform:
+	var u := RDUniform.new()
+	u.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	u.binding = binding
+	u.add_id(rid)
 	return u
 
 
@@ -205,7 +248,8 @@ func _image_uniform(binding: int) -> RDUniform:
 func _rt_build_pipelines(from_source: bool) -> void:
 	var sim_spirv := _rt_compile(SIM_SHADER_PATH, from_source)
 	var brush_spirv := _rt_compile(BRUSH_SHADER_PATH, from_source)
-	if sim_spirv == null or brush_spirv == null:
+	var occ_spirv := _rt_compile(OCCUPANCY_SHADER_PATH, from_source)
+	if sim_spirv == null or brush_spirv == null or occ_spirv == null:
 		return
 	_rt_free_pipelines()
 
@@ -224,12 +268,18 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	_brush_shader = _rd.shader_create_from_spirv(brush_spirv)
 	_brush_pipeline = _rd.compute_pipeline_create(_brush_shader)
 	_brush_set = _rd.uniform_set_create([_image_uniform(0)], _brush_shader, 0)
+
+	_occ_shader = _rd.shader_create_from_spirv(occ_spirv)
+	_occ_pipeline = _rd.compute_pipeline_create(_occ_shader)
+	_occ_set = _rd.uniform_set_create(
+		[_image_uniform(0), _image_uniform(1, _occ_rid), _buffer_uniform(2, _elements_buffer)], _occ_shader, 0)
 	if from_source:
 		print("compute shaders reloaded")
 
 
 func _rt_free_pipelines() -> void:
-	for rid in [_sim_set, _sim_pipeline, _sim_shader, _brush_set, _brush_pipeline, _brush_shader]:
+	for rid in [_sim_set, _sim_pipeline, _sim_shader, _brush_set, _brush_pipeline, _brush_shader,
+			_occ_set, _occ_pipeline, _occ_shader]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
 	_sim_set = RID()
@@ -238,16 +288,20 @@ func _rt_free_pipelines() -> void:
 	_brush_set = RID()
 	_brush_pipeline = RID()
 	_brush_shader = RID()
+	_occ_set = RID()
+	_occ_pipeline = RID()
+	_occ_shader = RID()
 
 
 func _rt_free() -> void:
 	_rt_free_pipelines()
-	for rid in [_elements_buffer, _reactions_buffer, _grid_rid]:
+	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
 	_elements_buffer = RID()
 	_reactions_buffer = RID()
 	_grid_rid = RID()
+	_occ_rid = RID()
 	_rt_ready = false
 
 
@@ -275,6 +329,7 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		_rd.compute_list_dispatch(cl, DISPATCH_GROUPS, DISPATCH_GROUPS, DISPATCH_GROUPS)
 		_rd.compute_list_add_barrier(cl)
 	_rd.compute_list_end()
+	_rt_occupancy_update()
 
 
 ## Which of the 8 Margolus partitions to use on a given tick. Hashed rather
@@ -299,14 +354,37 @@ func _rt_paint(center: Vector3i, radius: int, element: int, mode: int, seed: int
 	_rd.compute_list_set_push_constant(cl, bytes, bytes.size())
 	_rd.compute_list_dispatch(cl, groups, groups, groups)
 	_rd.compute_list_end()
+	_rt_occupancy_update()
 
 
 func _rt_upload(bytes: PackedByteArray) -> void:
 	_rd.texture_update(_grid_rid, 0, bytes)
+	_rt_occupancy_update()
 
 
 func _rt_clear() -> void:
 	_rd.texture_clear(_grid_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
+	_rt_occupancy_update()
+
+
+## Recompute the coarse occupancy grid from the voxel texture.
+func _rt_occupancy_update() -> void:
+	if not _occ_pipeline.is_valid():
+		return
+	var groups := OCCUPANCY_GRID / 4
+	var cl := _rd.compute_list_begin()
+	_rd.compute_list_bind_compute_pipeline(cl, _occ_pipeline)
+	_rd.compute_list_bind_uniform_set(cl, _occ_set, 0)
+	_rd.compute_list_dispatch(cl, groups, groups, groups)
+	_rd.compute_list_end()
+
+
+func _rt_occupancy_readback() -> void:
+	_rd.texture_get_data_async(_occ_rid, 0, _on_occupancy_bytes)
+
+
+func _on_occupancy_bytes(bytes: PackedByteArray) -> void:
+	occupancy_ready.emit.call_deferred(bytes)
 
 
 func _rt_readback(callback: Callable) -> void:

@@ -30,6 +30,7 @@ func _run() -> void:
 	await _test_water_levels()
 	await _test_steam_rises()
 	await _test_brush_paints()
+	await _test_occupancy()
 	_sim.rule_flags = 0
 	await _test_fire_burns_plant()
 	await _test_water_boils_on_fire()
@@ -252,3 +253,27 @@ func _test_oil_floats() -> void:
 	check(oil_under_water <= before[Elements.Id.OIL] / 100,
 		"oil floats on water: %d water voxels above oil" % oil_under_water)
 	_sim.rule_flags = 0
+
+
+func _test_occupancy() -> void:
+	_sim.upload(_empty_world().to_byte_array())
+	await process_frame
+	_sim.paint(Vector3i(64, 64, 64), 5, Elements.Id.WALL)
+	await process_frame
+	_sim.request_occupancy_readback()
+	var occ: PackedByteArray = await _sim.occupancy_ready
+	var n: int = _sim.OCCUPANCY_GRID
+	check(occ.size() == n * n * n, "occupancy readback is %d bytes" % occ.size())
+	# Voxels 59..69 span bricks 7 and 8 on every axis: exactly 8 bricks set.
+	var set_count := 0
+	var wrong := 0
+	for i in occ.size():
+		var x := i % n
+		var y := (i / n) % n
+		var z := i / (n * n)
+		var expected := (x == 7 or x == 8) and (y == 7 or y == 8) and (z == 7 or z == 8)
+		if occ[i] != 0:
+			set_count += 1
+		if (occ[i] != 0) != expected:
+			wrong += 1
+	check(set_count == 8 and wrong == 0, "occupancy marks exactly the 8 bricks around the sphere (%d set, %d wrong)" % [set_count, wrong])

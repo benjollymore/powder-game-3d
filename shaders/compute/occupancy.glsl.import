@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://cl5jbofulg2tv"
+path="res://.godot/imported/occupancy.glsl-d8ae05e0b59573e48470a4c875e702a5.res"
+
+[deps]
+
+source_file="res://shaders/compute/occupancy.glsl"
+dest_files=["res://.godot/imported/occupancy.glsl-d8ae05e0b59573e48470a4c875e702a5.res"]
+
+[params]
+
