@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://yanjddalp3pn"
+path="res://.godot/imported/sim.glsl-2057905642d154e6d42b1f15bbfc9418.res"
+
+[deps]
+
+source_file="res://shaders/compute/sim.glsl"
+dest_files=["res://.godot/imported/sim.glsl-2057905642d154e6d42b1f15bbfc9418.res"]
+
+[params]
+
