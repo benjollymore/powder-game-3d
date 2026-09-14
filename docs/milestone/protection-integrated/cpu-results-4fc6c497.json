@@ -1,0 +1,87 @@
+[
+  {
+    "name": "editor-keyboard",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.26,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/editor_keyboard.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/protection-integrated/editor-keyboard"
+    ]
+  },
+  {
+    "name": "history-guards",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.27,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/history_guards.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/protection-integrated/history-guards"
+    ]
+  },
+  {
+    "name": "pending-gesture",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.17,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/pending_gesture.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/protection-integrated/pending-gesture"
+    ]
+  },
+  {
+    "name": "archive-panel",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.48,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/archive_panel.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/protection-integrated/archive-panel"
+    ]
+  },
+  {
+    "name": "authored-document",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.18,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--headless",
+      "-s",
+      "res://tests/milestone/authored_document.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/protection-integrated/authored-document"
+    ]
+  }
+]

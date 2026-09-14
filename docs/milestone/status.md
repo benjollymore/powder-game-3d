@@ -1,6 +1,6 @@
 # Autonomous milestone status
 
-Updated 2026-09-14 22:45 UTC. Work continues until the user checks in; four hours is an estimate, not a deadline. Integration checkout: `powder-game-3d-discovery/fundamentals`, branch `milestone/fundamentals`. The original main checkout is preserved.
+Updated 2026-09-14 22:59 UTC. Work continues until the user checks in; four hours is an estimate, not a deadline. Integration checkout: `powder-game-3d-discovery/fundamentals`, branch `milestone/fundamentals`. The original main checkout is preserved.
 
 ## Current result
 
@@ -16,6 +16,10 @@ Subsequent active-input testing fixed Space also activating a focused GUI button
 
 ## Validation and performance
 
+- [Unsaved-build protection](document-protection.md) is integrated for Reset, Empty, Open and normal close, including exact saved checkpoints, stale-save rejection and same-path Save/Open handling. Coordinator reruns pass 32 GPU checks at each grid size plus archive/action/workflow/pending/Redo regressions. [Evidence](protection-integrated/).
+- A [two-minute repeated 256³ session](editor-sessions.md) passed 99 cycles and nine Save/Open round trips, with exact Undo/Redo and Return. Active frames averaged 8.360 ms; renderer video memory was flat. This small-scene run precedes unsaved-document protection and includes substantial test snapshot memory.
+- [Moving FP32 PIC/APIC](momentum-motion.md) is integrated as an isolated experiment. Review removed an unsynchronized commit flag read/write and stale grid after invalid reset; 84 worker GPU checks and eight numerical fixtures pass, with independent CPU/evaluator checks. It has no forces, pressure or production coupling.
+
 - [Rapid authored paint](pending-paint.md) now retains one bounded gesture during asynchronous history capture. Coordinator GPU reruns pass 28 checks at each grid size; focused CPU checks cover seven pending-gesture, 19 history and seven archive cases. [Evidence](pending-integrated/).
 - [Physical capacity fallback](material-capacity.md) and [water interfaces](material-interface.md) are integrated. Coordinator reruns pass 74 simulation, 112 capacity, 145 proxy geometry, 66 interface, 61 section-depth and 102 liquid-exit checks. Coverage survives overflow, with a conspicuous coarse representation at the threshold; this is not final visual fidelity. [Evidence](capacity-integrated/).
 
@@ -29,13 +33,15 @@ Subsequent active-input testing fixed Space also activating a focused GUI button
 
 ## Active follow-through
 
-1. Protect unsaved authored builds when Reset, Empty, Open or normal window close would replace them. Exact saved checkpoints must survive Undo/Redo and reject stale asynchronous Save completion as permission to discard newer edits.
-2. Fix a separate ordinary-liquid omission: paused isolated water/oil cells can be pickable but invisible even without overflow. A pinned negative control reproduces this with actual radius-zero painting; a bounded thin-feature representation is being evaluated.
-3. Review finite-motion GPU PIC/APIC against the binary64 reference. The [enthalpy transport reference](enthalpy-transport.md) now demonstrates two conservative routes for the same production amount update; production still needs an explicit accepted-transfer contract. The [stationary thermal comparison](thermal-cached.md) remains an isolated 256 MiB, 13.2 ms/four-step candidate at 256³, not production thermal physics.
-4. Continue integrated repeated-session checks through ordinary input, periodic asynchronous Save/Open, retained history, memory trends and exact authored Return. Initial 128³ smoke passed five complete cycles; longer measurements are underway with explicit viewport settings.
+1. Implement conventional Save/Open shortcuts and stop modified keys from leaking into plain sandbox actions. Parsed input reproduced Cmd/Ctrl+P/N pausing/stepping and X/B changing tools; file commands will reuse the validated archive/protection state machine.
+2. Finish the separate ordinary-liquid omission fix: paused isolated water/oil cells can be pickable but invisible even without overflow. A bounded thin-feature representation passes coverage gates. Its first version slowed unchanged bulk scenes; an optimized nominal-full interval fast path is under final regression review.
+3. Implement the declared [gravity and plane-constraint experiment](mechanics-experiment-plan.md) with impulse, torque, work, transfer-loss and rejected-step accounting. The [enthalpy transport reference](enthalpy-transport.md) already demonstrates why production needs an explicit accepted-transfer contract; the [stationary thermal comparison](thermal-cached.md) remains an isolated candidate.
+4. Extend integrated repeated-session checks to the protection and rendering changes, including explicit dialog input, normal scheduling, retained history and memory trends. Preserve each earlier run's revision and viewport scope.
 
 ## Architectural position
 
 Keep the GPU material sandbox and editor as a useful product foundation. The existing cellular model alone is not a sufficient long-term architecture for all requested ambitions. General momentum, conservative heat/phase change, stress and moving rigid assemblies require explicit state and coupling contracts. The [architecture assessment](architecture-feasibility.md), [thermal reference](thermal-feasibility.md), and [momentum reference](momentum-feasibility.md) distinguish verified narrow properties from missing solver features.
+
+[Current architectural implications](architecture-progress.md) connect the completed experiments to the direction: retain editor contracts and a usable cellular baseline while evaluating richer authoritative state behind them.
 
 GPU tests run serially in visible windows with watchdogs. Actual rendered frames are required for timing/captures. The user confirmed native trackpad behavior before this milestone; synthesized events do not establish physical macOS gesture reliability. Programmatic archive tests do not exercise the native file chooser. No broad long-session or dense-world performance claim is made yet.

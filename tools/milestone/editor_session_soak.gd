@@ -38,6 +38,35 @@ func write_result() -> void:
 		"aa": root.screen_space_aa, "checks": checks, "failures": failures, "cycles": cycles}, "  "))
 	file.close()
 
+func discard_temporary_edit() -> void:
+	var guard: Node = editor.document_guard
+	await frames(2)
+	check(guard.state == "prompt", "dirty periodic Open requests explicit discard")
+	if guard.state != "prompt":
+		return
+	var position: Vector2 = guard.discard_button.get_global_rect().get_center()
+	if guard.dialog.is_embedded():
+		position += Vector2(guard.dialog.position)
+		move_to(position)
+		await frames(1)
+		mouse(true)
+		await frames(1)
+		mouse(false)
+	else:
+		var motion := InputEventMouseMotion.new()
+		motion.window_id = guard.dialog.get_window_id()
+		motion.position = position
+		Input.parse_input_event(motion)
+		for down in [true, false]:
+			var event := InputEventMouseButton.new()
+			event.window_id = motion.window_id
+			event.position = position
+			event.button_index = MOUSE_BUTTON_LEFT
+			event.pressed = down
+			Input.parse_input_event(event)
+			await frames(1)
+	await frames(2)
+
 func run() -> void:
 	DirAccess.make_dir_recursive_absolute(output_dir)
 	original_cursor = DisplayServer.mouse_get_position()
@@ -112,6 +141,7 @@ func run() -> void:
 			panel.open_path(path)
 			while panel.operation != "":
 				await process_frame
+			await discard_temporary_edit()
 			await settled()
 			archive_roundtrip = await read() == initial and editor.undo_history.is_empty() and editor.redo_history.is_empty()
 			check(archive_roundtrip, "periodic asynchronous Save/Open restores baseline and clears old history")
