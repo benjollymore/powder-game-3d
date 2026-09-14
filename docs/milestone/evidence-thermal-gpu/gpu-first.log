@@ -1,0 +1,84 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: hotspot_3d accepts stable step at tick1
+ok: hotspot_3d invalid dt is rejected without mutation
+ok: hotspot_3d invalid dt is rejected without mutation
+ok: hotspot_3d invalid dt is rejected without mutation
+ok: hotspot_3d invalid dt is rejected without mutation
+ok: hotspot_3d invalid dt is rejected without mutation
+ok: interface_3d accepts stable step at tick1
+ok: interface_3d accepts stable step at tick10
+ok: interface_3d accepts stable step at tick100
+ok: interface_3d accepts stable step at tick1000
+ok: interface_3d invalid dt is rejected without mutation
+ok: interface_3d invalid dt is rejected without mutation
+ok: interface_3d invalid dt is rejected without mutation
+ok: interface_3d invalid dt is rejected without mutation
+ok: interface_3d invalid dt is rejected without mutation
+ok: below_reference accepts stable step at tick500
+ok: below_reference invalid dt is rejected without mutation
+ok: below_reference invalid dt is rejected without mutation
+ok: below_reference invalid dt is rejected without mutation
+ok: below_reference invalid dt is rejected without mutation
+ok: below_reference invalid dt is rejected without mutation
+ok: equilibrium_3d accepts stable step at tick1000
+ok: equilibrium_3d invalid dt is rejected without mutation
+ok: equilibrium_3d invalid dt is rejected without mutation
+ok: equilibrium_3d invalid dt is rejected without mutation
+ok: equilibrium_3d invalid dt is rejected without mutation
+ok: equilibrium_3d invalid dt is rejected without mutation
+ok: conducting_phase accepts stable step at tick1
+ok: conducting_phase accepts stable step at tick2
+ok: conducting_phase accepts stable step at tick4
+ok: conducting_phase accepts stable step at tick8
+ok: conducting_phase accepts stable step at tick16
+ok: conducting_phase accepts stable step at tick32
+ok: conducting_phase accepts stable step at tick64
+ok: conducting_phase accepts stable step at tick128
+ok: conducting_phase accepts stable step at tick300
+ok: conducting_phase invalid dt is rejected without mutation
+ok: conducting_phase invalid dt is rejected without mutation
+ok: conducting_phase invalid dt is rejected without mutation
+ok: conducting_phase invalid dt is rejected without mutation
+ok: conducting_phase invalid dt is rejected without mutation
+ok: latent_plateau accepts stable step at tick20
+ok: latent_plateau invalid dt is rejected without mutation
+ok: latent_plateau invalid dt is rejected without mutation
+ok: latent_plateau invalid dt is rejected without mutation
+ok: latent_plateau invalid dt is rejected without mutation
+ok: latent_plateau invalid dt is rejected without mutation
+ok: insulated_interface accepts stable step at tick1000
+ok: insulated_interface invalid dt is rejected without mutation
+ok: insulated_interface invalid dt is rejected without mutation
+ok: insulated_interface invalid dt is rejected without mutation
+ok: insulated_interface invalid dt is rejected without mutation
+ok: insulated_interface invalid dt is rejected without mutation
+ok: diffusion_16 accepts stable step at tick11
+ok: diffusion_16 invalid dt is rejected without mutation
+ok: diffusion_16 invalid dt is rejected without mutation
+ok: diffusion_16 invalid dt is rejected without mutation
+ok: diffusion_16 invalid dt is rejected without mutation
+ok: diffusion_16 invalid dt is rejected without mutation
+ok: diffusion_32 accepts stable step at tick41
+ok: diffusion_32 invalid dt is rejected without mutation
+ok: diffusion_32 invalid dt is rejected without mutation
+ok: diffusion_32 invalid dt is rejected without mutation
+ok: diffusion_32 invalid dt is rejected without mutation
+ok: diffusion_32 invalid dt is rejected without mutation
+ok: diffusion_64 accepts stable step at tick164
+ok: diffusion_64 invalid dt is rejected without mutation
+ok: diffusion_64 invalid dt is rejected without mutation
+ok: diffusion_64 invalid dt is rejected without mutation
+ok: diffusion_64 invalid dt is rejected without mutation
+ok: diffusion_64 invalid dt is rejected without mutation
+ok: batch_phase accepts stable step at tick80
+ok: batch_phase invalid dt is rejected without mutation
+ok: batch_phase invalid dt is rejected without mutation
+ok: batch_phase invalid dt is rejected without mutation
+ok: batch_phase invalid dt is rejected without mutation
+ok: batch_phase invalid dt is rejected without mutation
+ok: thermal batches[1] preserve exact energy and state bytes
+ok: thermal batches[3] preserve exact energy and state bytes
+ok: thermal batches[7, 2, 5, 1, 9] preserve exact energy and state bytes
+THERMAL_GPU checks=80 failures=0

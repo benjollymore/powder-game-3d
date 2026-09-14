@@ -1,0 +1,13 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://xpw16yld3wu8"
+path="res://.godot/imported/face_flux.glsl-de38de9ded171174b592e018b89da581.res"
+
+[deps]
+
+source_file="res://tools/feasibility/thermal_gpu/face_flux.glsl"
+dest_files=["res://.godot/imported/face_flux.glsl-de38de9ded171174b592e018b89da581.res"]
+
+[params]

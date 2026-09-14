@@ -1,0 +1,13 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://bqrptega2xngr"
+path="res://.godot/imported/gather_energy.glsl-2cd6e547b1143f32a61c2e0edd6621ae.res"
+
+[deps]
+
+source_file="res://tools/feasibility/thermal_gpu/gather_energy.glsl"
+dest_files=["res://.godot/imported/gather_energy.glsl-2cd6e547b1143f32a61c2e0edd6621ae.res"]
+
+[params]

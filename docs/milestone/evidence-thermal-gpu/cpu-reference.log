@@ -1,0 +1,8 @@
+............
+----------------------------------------------------------------------
+Ran 12 tests in 0.029s
+
+OK
+METRIC diffusion_rms_K_16_32_64=[0.0016103779070520824, 0.0005064797721068627, 0.00012659918135519703] refinement_ratios=[3.179550291521429, 4.000655981225042]
+METRIC conducting_phase_change plateau_samples=8 energy_drift=2.16e-16
+METRIC insulated_128_cells steps=8 dt_s=1.25 energy_drift=1.21e-16 temperature_range_K=[300,400]

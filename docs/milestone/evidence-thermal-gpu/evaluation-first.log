@@ -1,0 +1,13 @@
+METRIC hotspot_3d steps=1 temperature_error_K=5.08626304e-05 fraction_error=0 energy_drift_relative=1.38724672e-08 drift_J=1.14440919e-05 plateau_samples=0
+METRIC interface_3d steps=1000 temperature_error_K=9.05757955e-05 fraction_error=0 energy_drift_relative=2.01523495e-06 drift_J=0.0302124023 plateau_samples=0
+METRIC below_reference steps=500 temperature_error_K=3.0517578e-05 fraction_error=0 energy_drift_relative=1.81306913e-08 drift_J=3.81469741e-06 plateau_samples=0
+METRIC equilibrium_3d steps=1000 temperature_error_K=3.0517578e-05 fraction_error=0 energy_drift_relative=0 drift_J=0 plateau_samples=0
+METRIC conducting_phase steps=300 temperature_error_K=6.97374355e-06 fraction_error=1.07288361e-07 energy_drift_relative=3.61651251e-08 drift_J=-9.53674271e-06 plateau_samples=4
+METRIC latent_plateau steps=20 temperature_error_K=0 fraction_error=1.1920929e-07 energy_drift_relative=0 drift_J=0 plateau_samples=9
+METRIC insulated_interface steps=1000 temperature_error_K=3.0517578e-05 fraction_error=0 energy_drift_relative=0 drift_J=0 plateau_samples=0
+METRIC diffusion_16 steps=11 temperature_error_K=7.00125604e-05 fraction_error=0 energy_drift_relative=1.58842308e-08 drift_J=-4.76837158e-06 plateau_samples=0
+METRIC diffusion_32 steps=41 temperature_error_K=8.27240609e-05 fraction_error=0 energy_drift_relative=2.70031922e-08 drift_J=2.02655794e-06 plateau_samples=0
+METRIC diffusion_64 steps=164 temperature_error_K=7.36037794e-05 fraction_error=0 energy_drift_relative=2.38263459e-09 drift_J=4.47034836e-08 plateau_samples=0
+METRIC batch_phase steps=80 temperature_error_K=1.71302345e-05 fraction_error=0 energy_drift_relative=3.63367399e-08 drift_J=8.39233371e-05 plateau_samples=0
+DIFFUSION rms_K=[0.0016182502855459282, 0.0005059846183084814, 0.00012869775665467519] refinement_ratios=[3.1982203153838498, 3.9315729462647204]
+THERMAL_NUMERICS failures=0
