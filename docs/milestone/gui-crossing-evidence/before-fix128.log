@@ -1,0 +1,19 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: production editor and time loops remain active during high-rate GUI crossings
+PLANE_CHANGED_CELLS [(112, 80, 64), (112, 81, 64), (112, 82, 64), (112, 83, 64), (112, 84, 64), (112, 85, 64), (112, 86, 64), (112, 87, 64), (112, 88, 64), (112, 89, 64), (112, 90, 64), (112, 91, 64), (112, 92, 64), (112, 93, 64), (112, 94, 64), (112, 95, 64), (112, 96, 64)]
+FAIL: same-frame workplane→toolbar→workplane paints only the two endpoints, never an invented connector
+ok: reentry remains the same authored gesture with the selected material
+ok: Undo restores every packed byte before the interrupted workplane stroke
+ok: Redo restores exactly the two workplane deposits
+SURFACE_CHANGED_CELLS [(64, 48, 65), (64, 49, 65), (64, 50, 65), (64, 51, 65), (64, 52, 65), (64, 53, 65), (64, 54, 65), (64, 55, 65), (64, 56, 65), (64, 57, 65), (64, 58, 65), (64, 59, 65), (64, 60, 65), (64, 61, 65), (64, 62, 65), (64, 63, 65), (64, 64, 65), (64, 65, 65), (64, 66, 65), (64, 67, 65), (64, 68, 65), (64, 69, 65), (64, 70, 65), (64, 71, 65), (64, 72, 65), (64, 73, 65), (64, 74, 65), (64, 75, 65), (64, 76, 65), (64, 77, 65), (64, 78, 65), (64, 79, 65), (64, 80, 65)]
+FAIL: same-frame surface→toolbar→surface cannot bridge the skipped pointer path
+ok: surface segment break preserves every original wall and one authored transaction
+ok: Undo restores exact pre-surface bytes
+ok: Redo restores only the two surface deposits
+ok: paused Test press registers a live source
+FAIL: toolbar motion cancels the source immediately, before a process frame
+FAIL: next tick adds no stale material while the held pointer has entered the toolbar
+ok: Return retains the exact authored surface fixture
+Editor GUI crossing GPU: 13 checks, 4 failures

@@ -765,6 +765,13 @@ func _input(event: InputEvent) -> void:
 			_end_stroke(true)
 		if event.button_index == navigation_button:
 			_stop_navigation()
+	if event is InputEventMouseMotion and _over_tools(event.position):
+		# A fast pointer can enter and leave the toolbar between two frames.
+		# Break at event time, before GUI consumes this motion, so reentry never
+		# invents a straight paint segment across the skipped part of the path.
+		previous = Vector3i(-1, -1, -1)
+		surface_connect = false
+		_stop_live_emitter()
 	if event is InputEventMouseMotion and navigation_button != MOUSE_BUTTON_NONE:
 		if not _over_tools(event.position):
 			_navigate(event.relative, navigation_pan)
