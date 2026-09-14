@@ -1,0 +1,32 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: production process loops remain enabled through deferred authored gestures
+ok: rapid released second stroke retains all curve samples while first history capture is pending
+ok: deferred L-shaped stroke paints the exact curve, with no diagonal shortcut or enlarged radius
+ok: waiting stroke retains Sand/radius-zero metadata despite later tool changes, and gets its own Undo
+ok: Undo removes only the deferred stroke and restores the first edit's exact packed bytes
+ok: Redo restores the exact deferred curve, seeds and amounts
+ok: press and motion during asynchronous Undo create one open pending gesture
+ok: continued physical Input hold resumes painting after Undo instead of being silently dropped
+ok: gesture after Undo continues its full curve and branches only the obsolete Redo history
+ok: resumed held gesture still undoes independently and exactly
+ok: short click during Redo is retained even when released before inverse capture completes
+ok: Redo restores its stroke before the new queued click becomes a separate authored edit
+ok: pending gesture preserves an event-time toolbar gap without inventing a connector
+ok: one pending gesture is a hard queue bound with immediate feedback for extra presses
+ok: queue overflow preserves the accepted gesture and leaves a persistent skipped-stroke explanation
+ok: Undo cancels the newest waiting stroke without also undoing the earlier applied edit
+ok: a second Undo reaches the earlier applied edit normally
+ok: surface gesture waits as frozen rays while the earlier surface edit captures history
+ok: deferred surface curve resolves exact outside cells without erasing or shortcutting through the wall
+ok: deferred surface curve undoes to exact prior packed material
+ok: deferred surface curve redo restores exact seeds and amounts
+ok: navigation boundary cancels pending authored placement before it can mutate a new context
+ok: modal boundary cancels pending authored placement before it can mutate a new context
+ok: world boundary cancels pending authored placement before it can mutate a new context
+ok: paint during queued Run preparation is not replayed later into Test
+ok: Run captures the completed earlier edit without replaying canceled pending Build paint into Test
+ok: saved fixture is available for asynchronous Open completion
+ok: Open completion cannot overwrite a newer Undo plus queued authored gesture
+Pending paint GPU: 28 checks, 0 failures

@@ -81,9 +81,12 @@ func run() -> void:
 	editor.undo_bytes = original.bytes
 	editor.undo_edit()
 	check(editor.capturing and editor.undo_history.size() == 1, "source Undo remains retained while inverse capture is pending")
+	editor.pending_authored = load("res://scripts/editor/pending_gesture.gd").new({"epoch": 0})
+	editor.pending_authored.add_cell(Vector3i.ONE)
 	await process_frame
 	check(not editor.capturing and editor.undo_history.size() == 1 and editor.undo_history[0] == original and editor.redo_history.is_empty(),
 		"failed inverse capture leaves the only recoverable Undo entry and its exact bytes intact")
+	check(editor.pending_authored == null, "failed inverse capture cancels waiting paint instead of replaying it after a failed action")
 	editor.queue_free()
 	await process_frame
 	print("History guards: %d checks, %d failures" % [checks, failures])

@@ -20,6 +20,8 @@ class FakeEditor extends Node3D:
 		pass
 	func _unhandled_input(_event: InputEvent) -> void:
 		pass
+	func cancel_pending_paint() -> void:
+		pass
 	func _end_stroke() -> void:
 		painting = false
 	func _reset_gesture() -> void:

@@ -1,0 +1,10 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: Build save uses the capture callback's authored bytes
+ok: Save during Test preserves construction rather than live destruction
+ok: late load cannot overwrite a newer edit
+ok: valid load applies the authored replacement
+ok: failed file load leaves world intact
+ok: file dialog owns input ahead of scene gestures
+ok: closing dialog restores prior input settings
+Archive panel: 7 checks, 0 failures

@@ -58,11 +58,14 @@ func _dialog(mode: FileDialog.FileMode) -> FileDialog:
 func _queue_dialog(which: String) -> void:
 	if operation != "" or _modal:
 		return
+	editor.cancel_pending_paint()
 	editor._end_stroke()
 	queued_dialog = which
 	message.text = "Finishing edit…" if editor.capturing else ""
 
 func _begin_modal() -> void:
+	editor.cancel_pending_paint()
+	editor._end_stroke()
 	_modal = true
 	_input_was_enabled = editor.is_processing_input()
 	_unhandled_was_enabled = editor.is_processing_unhandled_input()

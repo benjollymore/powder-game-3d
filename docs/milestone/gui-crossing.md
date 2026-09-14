@@ -22,3 +22,5 @@ godot --path . --resolution 1280x800 --always-on-top --disable-vsync -s res://te
 ```
 
 The same source review separately reproduced a dropped primary press during an asynchronous history capture: Input remains held after the capture completes, but no new paint gesture starts. That requires a bounded pending authored gesture retaining its metadata, curve and release; it is a separate change so its phase/world/modal/navigation cancellation policy can be tested independently.
+
+The separate dropped-press issue is now handled by [bounded pending authored paint](pending-paint.md), with independent asynchronous history and lifecycle regressions.

@@ -4,6 +4,9 @@ const Geometry := preload("res://scripts/discovery/edit_geometry.gd")
 const SimScene := preload("res://scenes/sim_volume.tscn")
 const Emission := preload("res://scripts/discovery/brush_emission.gd")
 const HistoryBudget := preload("res://scripts/editor/history_budget.gd")
+const PendingGesture := preload("res://scripts/editor/pending_gesture.gd")
+var pending_authored: RefCounted
+var _capture_accepts_pending := false
 enum TargetMode { PLANE, SURFACE }
 var targeting_mode := TargetMode.PLANE
 var target_choice: OptionButton
@@ -155,6 +158,7 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	cancel_pending_paint()
 	if _owns_time_input and is_instance_valid(TimeController):
 		TimeController.set_process_unhandled_input(_previous_time_input)
 	_owns_time_input = false
@@ -357,6 +361,7 @@ func _build_ui() -> void:
 	selection_toggle = CheckButton.new()
 	selection_toggle.text = "Select region · B (two corners)"
 	selection_toggle.toggled.connect(func(enabled):
+		cancel_pending_paint()
 		_end_stroke()
 		selecting = enabled
 		if enabled:
@@ -501,6 +506,7 @@ func new_empty_build() -> void:
 ## Preserve the latest explicit action while the finished stroke's regional
 ## history is arriving. This is a single intent, never an unbounded click queue.
 func _wait_for_edit(action: String) -> bool:
+	cancel_pending_paint()
 	_end_stroke()
 	if not capturing:
 		_queued_editor_action = ""
@@ -541,6 +547,7 @@ func _resume_editor_action() -> void:
 
 
 func _set_target_mode(value: int) -> void:
+	cancel_pending_paint()
 	_end_stroke()
 	targeting_mode = value
 	target_choice.select(value)
@@ -607,6 +614,7 @@ func _face_plane() -> void:
 
 
 func _update_camera() -> void:
+	cancel_pending_paint()
 	_invalidate_picks()
 	var direction := Vector3(sin(yaw) * cos(pitch), -sin(pitch), cos(yaw) * cos(pitch))
 	camera.position = (camera_target + direction * distance) * sim.world_size()
@@ -650,6 +658,7 @@ func _reset_gesture() -> void:
 
 
 func _route_gesture(event: InputEventGesture) -> void:
+	cancel_pending_paint()
 	# Godot's native gesture events carry no begin/end phase. Keep the initial
 	# owner across a stream, releasing after an idle gap or explicit input/focus
 	# boundary. Route scene gestures before GUI dispatch can swallow an update.
@@ -692,6 +701,7 @@ func _wheel_depth(amount: float) -> void:
 
 
 func _update_plane() -> void:
+	cancel_pending_paint()
 	_invalidate_picks()
 	sim.set_param("section_enabled", section)
 	sim.set_param("section_axis", axis)
@@ -772,6 +782,8 @@ func _input(event: InputEvent) -> void:
 		# invents a straight paint segment across the skipped part of the path.
 		previous = Vector3i(-1, -1, -1)
 		surface_connect = false
+		if pending_authored:
+			pending_authored.break_segment()
 		_stop_live_emitter()
 	if event is InputEventMouseMotion and navigation_button != MOUSE_BUTTON_NONE:
 		if not _over_tools(event.position):
@@ -781,6 +793,7 @@ func _input(event: InputEvent) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		cancel_pending_paint()
 		_space_owned = false
 		_reset_gesture()
 		_end_stroke()
@@ -797,6 +810,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		match event.button_index:
 			MOUSE_BUTTON_LEFT:
 				if event.alt_pressed:
+					cancel_pending_paint()
 					_end_stroke()
 					navigation_button = MOUSE_BUTTON_LEFT
 					navigation_pan = event.shift_pressed
@@ -805,6 +819,8 @@ func _unhandled_input(event: InputEvent) -> void:
 					return
 				elif selecting:
 					_select_corner(_target_at(event.position))
+				elif capturing and not painting:
+					_queue_pending_press(event.position)
 				elif not capturing and (targeting_mode == TargetMode.SURFACE or _target_at(event.position).x >= 0):
 					_invalidate_picks()
 					stroke_target_mode = targeting_mode
@@ -818,11 +834,13 @@ func _unhandled_input(event: InputEvent) -> void:
 					painting = true
 					_sample(event.position)
 			MOUSE_BUTTON_RIGHT:
+				cancel_pending_paint()
 				_end_stroke()
 				navigation_button = MOUSE_BUTTON_RIGHT
 				navigation_pan = event.shift_pressed
 				orbiting = true
 			MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN:
+				cancel_pending_paint()
 				_end_stroke()
 				var sign_value := 1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1
 				# Godot reports zero when this device has no precise wheel factor.
@@ -832,6 +850,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				else:
 					depth_scroll_fraction = 0.0
 					_zoom(pow(1.0 / 0.9, clampf(sign_value * amount, -100.0, 100.0)))
+		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseMotion and pending_authored:
+		_sample_pending(event.position)
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion and painting:
 		_sample(event.position)
@@ -920,19 +941,92 @@ func _trim_history() -> void:
 	redo_bytes = sizes.y
 
 
-func _begin_authored_edit() -> void:
+func cancel_pending_paint() -> void:
+	pending_authored = null
+
+
+func _queue_pending_press(mouse: Vector2) -> void:
+	if testing or not _capture_accepts_pending or not _queued_editor_action.is_empty():
+		edit_message = "Changing editor state; paint when it is ready."
+		return
+	if is_instance_valid(archive_panel) and (archive_panel._modal or not archive_panel.queued_dialog.is_empty()):
+		return
+	if pending_authored:
+		pending_authored.warning = "An additional stroke was skipped while the previous edit was finishing."
+		edit_message = "One stroke is already waiting; release and paint again when ready."
+		return
+	if targeting_mode == TargetMode.PLANE and _target_at(mouse).x < 0:
+		return
+	pending_authored = PendingGesture.new({"epoch": sim.edit_epoch, "mode": targeting_mode,
+		"element": element, "radius": radius, "erase": erase,
+		"view": {"section": section, "axis": axis, "depth": depth}})
+	_sample_pending(mouse)
+	edit_message = "Stroke queued while the previous edit finishes."
+
+
+func _sample_pending(mouse: Vector2) -> void:
+	if not pending_authored or pending_authored.closed:
+		return
+	if _over_tools(mouse):
+		pending_authored.break_segment()
+		return
+	if pending_authored.metadata.mode == TargetMode.SURFACE:
+		pending_authored.add_ray(_ray_at(mouse, pending_authored.metadata.view))
+	else:
+		pending_authored.add_cell(_target_at(mouse))
+	if pending_authored.limited:
+		edit_message = "Pending stroke limit reached; only the recorded part will be painted."
+
+
+func _resume_pending_paint() -> void:
+	if not pending_authored or capturing:
+		return
+	var gesture: RefCounted = pending_authored
+	pending_authored = null
+	if testing or gesture.metadata.epoch != sim.edit_epoch or orbiting or navigation_button != MOUSE_BUTTON_NONE or not _queued_editor_action.is_empty():
+		return
+	if is_instance_valid(archive_panel) and (archive_panel._modal or not archive_panel.queued_dialog.is_empty()):
+		return
+	if gesture.samples.is_empty():
+		return
+	stroke_target_mode = gesture.metadata.mode
+	stroke_element = gesture.metadata.element
+	stroke_radius = gesture.metadata.radius
+	stroke_erase = gesture.metadata.erase
+	stroke_view = gesture.metadata.view
+	_begin_authored_edit(gesture.warning)
+	var mode: int = sim.BrushMode.ERASE if stroke_erase else sim.BrushMode.ONLY_AIR
+	if stroke_target_mode == TargetMode.SURFACE:
+		sim.record_surface_stroke(active_transaction, gesture.samples, stroke_radius, stroke_element, mode, active_transaction)
+		surface_connect = gesture.connect_next
+	else:
+		sim.record_stroke(active_transaction, gesture.centers(), stroke_radius, stroke_element, mode, active_transaction)
+		previous = gesture.last_cell()
+	painting = not gesture.closed and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	if not painting:
+		_end_stroke()
+
+
+func _begin_authored_edit(warning: String = "") -> void:
 	capturing = true
+	_capture_accepts_pending = true
 	edit_message = ""
 	active_transaction = sim.begin_edit_transaction(func(result: Dictionary):
 		if result.epoch != sim.edit_epoch:
 			capturing = false
+			_capture_accepts_pending = false
+			cancel_pending_paint()
 			return
+		if not warning.is_empty():
+			result.error = warning if result.error.is_empty() else result.error + "\n" + warning
 		if result.valid and not result.regions.is_empty() and not redo_history.is_empty():
 			# Only a changed construction branches history. A miss or an ONLY_AIR
 			# brush over occupied matter must not discard the remaining future.
 			if sim.inspect_edit_transaction(result, func(inspected: Dictionary):
 				if inspected.epoch != sim.edit_epoch:
 					capturing = false
+					_capture_accepts_pending = false
+					cancel_pending_paint()
 					return
 				if not inspected.valid:
 					result.error = "Could not verify the new edit; Redo was cleared. Its Undo remains available."
@@ -944,9 +1038,11 @@ func _begin_authored_edit() -> void:
 
 func _complete_authored_edit(result: Dictionary, changed: bool) -> void:
 	capturing = false
+	_capture_accepts_pending = false
 	last_edit_bytes = result.bytes
 	edit_message = result.error
 	if not result.valid:
+		cancel_pending_paint()
 		_clear_history()
 	if result.valid and changed and not result.regions.is_empty():
 		redo_history.clear()
@@ -955,6 +1051,7 @@ func _complete_authored_edit(result: Dictionary, changed: bool) -> void:
 		undo_bytes += result.bytes
 		_trim_history()
 	result["changed"] = result.valid and changed and not result.regions.is_empty()
+	_resume_pending_paint()
 	edit_completed.emit(result)
 
 
@@ -967,6 +1064,12 @@ func redo_edit() -> void:
 
 
 func _history_action(redo: bool) -> void:
+	if not redo and pending_authored:
+		# The waiting stroke is the newest accepted authored intent. Undo consumes
+		# that intent once; it must not also remove the earlier applied edit.
+		cancel_pending_paint()
+		edit_message = "Canceled the waiting stroke."
+		return
 	if testing or _wait_for_edit("redo" if redo else "undo"):
 		return
 	var source: Array[Dictionary] = redo_history if redo else undo_history
@@ -974,14 +1077,18 @@ func _history_action(redo: bool) -> void:
 		return
 	var original: Dictionary = source.back()
 	capturing = true
+	_capture_accepts_pending = true
 	edit_message = "Preparing Redo…" if redo else "Preparing Undo…"
 	if not sim.reverse_edit_transaction(original, func(inverse: Dictionary):
 		capturing = false
+		_capture_accepts_pending = false
 		if inverse.epoch != sim.edit_epoch:
+			cancel_pending_paint()
 			_clear_history()
 			edit_message = "The world changed; history was cleared."
 			return
 		if not inverse.applied:
+			cancel_pending_paint()
 			# The original is still on its stack; failed inverse capture did not
 			# mutate the world or consume the only recoverable history entry.
 			edit_message = inverse.error
@@ -999,8 +1106,10 @@ func _history_action(redo: bool) -> void:
 		_trim_history()
 		last_edit_bytes = inverse.bytes
 		edit_message = ""
+		_resume_pending_paint()
 		edit_completed.emit(inverse)):
 		capturing = false
+		_capture_accepts_pending = false
 		edit_message = "This history is unavailable or belongs to another world; no action was applied."
 
 
@@ -1026,6 +1135,7 @@ func _set_testing(desired: bool) -> void:
 		play_button.text = "Run experiment · Space"
 	else:
 		capturing = true
+		_capture_accepts_pending = false
 		var epoch: int = sim.edit_epoch
 		var revision: int = sim.edit_revision
 		sim.request_readback(func(bytes: PackedByteArray):
@@ -1111,6 +1221,8 @@ func _sample(mouse: Vector2) -> void:
 
 
 func _end_stroke(completed: bool = false) -> void:
+	if pending_authored:
+		pending_authored.closed = true
 	if completed and live_emitter_signature != 0 and sim.has_method("finish_live_emitter"):
 		sim.finish_live_emitter()
 		live_emitter_signature = 0
