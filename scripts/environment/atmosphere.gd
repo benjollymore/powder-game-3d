@@ -26,7 +26,8 @@ const BOX_CENTER := Vector3.ZERO
 @onready var world_env: WorldEnvironment = $WorldEnvironment
 @onready var fx_rect: ColorRect = $PostFX/TimeScaleFX
 
-var _sim_material: ShaderMaterial
+var _sim: Node3D
+var _ground_material: ShaderMaterial
 var _camera: Camera3D
 var _attributes: CameraAttributesPractical
 
@@ -41,9 +42,12 @@ func _ready() -> void:
 	if sim and sim.has_method("world_size"):
 		world_size = sim.world_size()
 	_apply_world_scale()
-	var mesh := get_node_or_null(sim_mesh_path) as MeshInstance3D
-	if mesh:
-		_sim_material = mesh.material_override as ShaderMaterial
+	_sim = get_tree().get_first_node_in_group("sim")
+	_ground_material = $Ground.get_surface_override_material(0) as ShaderMaterial
+	if _ground_material and _sim:
+		_ground_material.set_shader_parameter("sunvis", _sim.sunvis_texture())
+		_ground_material.set_shader_parameter("box_center", Vector3.ZERO)
+		_ground_material.set_shader_parameter("box_half", 0.5 * world_size)
 	_camera = get_node_or_null(camera_path) as Camera3D
 	if _camera:
 		_attributes = CameraAttributesPractical.new()
@@ -80,17 +84,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-## Push sun direction/colour and sky/ground tints into the raymarch material.
+## Push sun direction/colour and sky/ground tints into the raymarch materials
+## and the ground shadow shader.
 func _sync_lighting() -> void:
-	if _sim_material == null:
+	if _sim == null:
 		return
-	var to_sun := -sun.global_transform.basis.z
-	_sim_material.set_shader_parameter("light_dir", to_sun)
-	_sim_material.set_shader_parameter("sun_color", sun.light_color * sun.light_energy)
+	# A DirectionalLight3D shines along its -Z, so +Z points back toward the sun.
+	var to_sun: Vector3 = sun.global_transform.basis.z.normalized()
+	_sim.sun_to = to_sun
+	_sim.set_param("light_dir", to_sun)
+	_sim.set_param("sun_color", sun.light_color * sun.light_energy)
 	var sky_mat := world_env.environment.sky.sky_material as ProceduralSkyMaterial
 	if sky_mat:
-		_sim_material.set_shader_parameter("sky_color", sky_mat.sky_horizon_color.lerp(sky_mat.sky_top_color, 0.5))
-		_sim_material.set_shader_parameter("ground_color", sky_mat.ground_bottom_color)
+		_sim.set_param("sky_color", sky_mat.sky_horizon_color.lerp(sky_mat.sky_top_color, 0.5))
+		_sim.set_param("ground_color", sky_mat.ground_bottom_color)
+	if _ground_material:
+		_ground_material.set_shader_parameter("to_sun", to_sun)
 
 
 func _apply_dof_enabled() -> void:

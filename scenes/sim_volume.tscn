@@ -1,22 +1,27 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/sim/voxel_sim.gd" id="1_sim"]
-[ext_resource type="Shader" path="res://shaders/spatial/voxel_raymarch.gdshader" id="2_shader"]
-[ext_resource type="Script" path="res://scripts/sim/shadow_proxy.gd" id="3_shadow"]
+[ext_resource type="Shader" path="res://shaders/spatial/voxel_opaque.gdshader" id="2_opaque"]
+[ext_resource type="Shader" path="res://shaders/spatial/voxel_volume.gdshader" id="3_volume"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_unit"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_voxels"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_opaque"]
+shader = ExtResource("2_opaque")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_volume"]
 render_priority = -1
-shader = ExtResource("2_shader")
+shader = ExtResource("3_volume")
 
 [node name="SimVolume" type="Node3D"]
 script = ExtResource("1_sim")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 cast_shadow = 0
-material_override = SubResource("ShaderMaterial_voxels")
+material_override = SubResource("ShaderMaterial_opaque")
 mesh = SubResource("BoxMesh_unit")
 
-[node name="ShadowProxy" type="MultiMeshInstance3D" parent="."]
-script = ExtResource("3_shadow")
+[node name="VolumeMesh" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+material_override = SubResource("ShaderMaterial_volume")
+mesh = SubResource("BoxMesh_unit")

@@ -295,20 +295,31 @@ func _test_occupancy() -> void:
 	_sim.request_occupancy_readback()
 	var occ: PackedByteArray = await _sim.occupancy_ready
 	var n: int = _sim.OCCUPANCY_GRID
-	check(occ.size() == n * n * n, "occupancy readback is %d bytes" % occ.size())
+	check(occ.size() == n * n * n * 4, "occupancy readback is %d bytes (RGBA)" % occ.size())
 	# The sphere straddles the two bricks either side of the centre on every axis.
 	var b := half / 8
 	var set_count := 0
 	var wrong := 0
-	for i in occ.size():
+	var fluid_set := 0
+	for i in occ.size() / 4:
 		var x := i % n
 		var y := (i / n) % n
 		var z := i / (n * n)
 		var expected := (x == b - 1 or x == b) and (y == b - 1 or y == b) and (z == b - 1 or z == b)
-		if occ[i] != 0:
+		if occ[i * 4] != 0:
 			set_count += 1
-		if (occ[i] != 0) != expected:
+		if (occ[i * 4] != 0) != expected:
 			wrong += 1
+		if occ[i * 4 + 1] != 0:
+			fluid_set += 1
+	check(fluid_set == 0, "no fluid bricks flagged for a wall sphere (%d)" % fluid_set)
+	# A water sphere elsewhere marks the fluid channel, not the solid one.
+	_sim.paint(Vector3i(16, 16, 16), 5, Elements.Id.WATER)
+	await process_frame
+	_sim.request_occupancy_readback()
+	occ = await _sim.occupancy_ready
+	var water_brick := (2 + n * (2 + n * 2)) * 4
+	check(occ[water_brick + 1] != 0 and occ[water_brick] == 0, "water sphere flags the fluid channel only (%d, %d)" % [occ[water_brick], occ[water_brick + 1]])
 	check(set_count == 8 and wrong == 0, "occupancy marks exactly the 8 bricks around the sphere (%d set, %d wrong)" % [set_count, wrong])
 
 

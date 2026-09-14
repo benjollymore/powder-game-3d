@@ -45,6 +45,12 @@ var AIR_GRID: int = GRID / AIR_SUB
 var AIR_GROUPS: int = AIR_GRID / 4
 const RULE_NO_AIR := 4
 const OCCUPANCY_SHADER_PATH := "res://shaders/compute/occupancy.glsl"
+const SUNVIS_SHADER_PATH := "res://shaders/compute/sunvis.glsl"
+const SUNVIS_SLABS_PER_DISPATCH := 8
+## The sun-visibility field is swept at half resolution (2 cm cells at 256^3).
+const SUNVIS_DIV := 2
+## Per-voxel light loss through gas for the sun-visibility sweep.
+const SUNVIS_GAS_EXTINCTION := 0.12
 ## One occupancy cell per 8^3 brick.
 const BRICK := 8
 var OCCUPANCY_GRID: int = GRID / BRICK
@@ -59,6 +65,7 @@ const PUSH_CONSTANT_INTS := 8
 const BRUSH_PUSH_INTS := 12
 
 @export var mesh_path: NodePath = ^"Mesh"
+@export var volume_mesh_path: NodePath = ^"VolumeMesh"
 @export var world_seed := 12345
 ## Set by TimeController normally; tests drive ticks directly.
 @export var listen_to_time_controller := true
@@ -68,6 +75,11 @@ const BRUSH_PUSH_INTS := 12
 @export var hydro_enabled := true
 ## Run the coarse air (velocity/pressure) solver once per tick batch.
 @export var air_enabled := true
+## Rebuild the sun-visibility field whenever the world changes.
+@export var sunvis_enabled := true
+## Capture GPU timestamps around each pass (read with profile_report()).
+@export var profile := false
+var volume_debug := 0
 @export var jacobi_iterations := 20
 @export var air_buoyancy := 0.03
 @export var air_drag := 0.01
@@ -82,6 +94,10 @@ var _rd: RenderingDevice
 var _grid_rid := RID()
 var _texture := Texture3DRD.new()
 var _material: ShaderMaterial
+var _volume_material: ShaderMaterial
+var _materials: Array = []
+## Direction toward the sun, world space; set by the atmosphere each frame.
+var sun_to := Vector3(0.4, 1.0, 0.3)
 var _rt_ready := false
 
 var _sim_shader := RID()
@@ -113,6 +129,11 @@ var _mip_pipeline := RID()
 var _mip_sets: Array = []
 var _occ_rid := RID()
 var _occ_texture := Texture3DRD.new()
+var _sunvis_rid := RID()
+var _sunvis_texture := Texture3DRD.new()
+var _sunvis_shader := RID()
+var _sunvis_pipeline := RID()
+var _sunvis_set := RID()
 var _occ_shader := RID()
 var _occ_pipeline := RID()
 var _occ_set := RID()
@@ -134,28 +155,47 @@ func _ready() -> void:
 			current_scenario = arg.substr(9)
 		elif arg.begins_with("debug="):
 			debug_mode = int(arg.substr(6))
+		elif arg.begins_with("vdebug="):
+			volume_debug = int(arg.substr(7))
+		elif arg == "sunvis=0":
+			sunvis_enabled = false
 	var mesh: MeshInstance3D = get_node(mesh_path)
 	_material = mesh.material_override
+	_volume_material = get_node(volume_mesh_path).material_override
+	_materials = [_material, _volume_material]
 	_material.set_shader_parameter("debug_mode", debug_mode)
-	_material.set_shader_parameter("grid_size", GRID)
-	_material.set_shader_parameter("palette", Elements.palette())
-	_material.set_shader_parameter("liquid_mask", Elements.liquid_mask())
-	_material.set_shader_parameter("gas_mask", Elements.gas_mask())
-	_material.set_shader_parameter("extinction", Elements.extinction())
-	_material.set_shader_parameter("liquid_full", float(Elements.LIQUID_FULL))
-	_material.set_shader_parameter("fields", _density_texture)
+	_volume_material.set_shader_parameter("volume_debug", volume_debug)
+	set_param("grid_size", GRID)
+	set_param("palette", Elements.palette())
+	set_param("liquid_mask", Elements.liquid_mask())
+	set_param("gas_mask", Elements.gas_mask())
+	_volume_material.set_shader_parameter("extinction", Elements.extinction())
+	_volume_material.set_shader_parameter("liquid_full", float(Elements.LIQUID_FULL))
+	set_param("fields", _density_texture)
+	set_param("sunvis", _sunvis_texture)
 	MaterialLibrary.apply(_material)
 	# Bound now, but only points at a real texture once the render thread has
 	# created it (see _process). Re-bound every run because the RD texture
 	# binding does not survive scene reloads.
-	_material.set_shader_parameter("voxels", _texture)
-	_material.set_shader_parameter("occupancy", _occ_texture)
-	_material.set_shader_parameter("brick_size", GRID / OCCUPANCY_GRID)
+	set_param("voxels", _texture)
+	set_param("occupancy", _occ_texture)
+	set_param("brick_size", GRID / OCCUPANCY_GRID)
 	RenderingServer.call_on_render_thread(_rt_init)
 	# The first world is built on the GPU right after the textures exist.
 	RenderingServer.call_on_render_thread(_rt_run_ops.bind(Scenarios.ops(current_scenario)))
 	if listen_to_time_controller:
 		TimeController.ticks_requested.connect(request_ticks)
+
+
+## Set a shader parameter on both raymarch materials.
+func set_param(name: String, value: Variant) -> void:
+	for m in _materials:
+		m.set_shader_parameter(name, value)
+
+
+## The sun-visibility texture, for other materials (ground shadow).
+func sunvis_texture() -> Texture3DRD:
+	return _sunvis_texture
 
 
 func _exit_tree() -> void:
@@ -164,6 +204,7 @@ func _exit_tree() -> void:
 	_texture.texture_rd_rid = RID()
 	_occ_texture.texture_rd_rid = RID()
 	_density_texture.texture_rd_rid = RID()
+	_sunvis_texture.texture_rd_rid = RID()
 	RenderingServer.call_on_render_thread(_rt_free)
 
 
@@ -172,6 +213,7 @@ func _process(_delta: float) -> void:
 		_texture.texture_rd_rid = _grid_rid
 		_occ_texture.texture_rd_rid = _occ_rid
 		_density_texture.texture_rd_rid = _density_rid
+		_sunvis_texture.texture_rd_rid = _sunvis_rid
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -307,7 +349,7 @@ func _rt_init() -> void:
 	_reactions_buffer = _rd.storage_buffer_create(reacts.size(), reacts)
 
 	var occ_fmt := RDTextureFormat.new()
-	occ_fmt.format = RenderingDevice.DATA_FORMAT_R8_UNORM
+	occ_fmt.format = RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM  # R solid, G fluid
 	occ_fmt.texture_type = RenderingDevice.TEXTURE_TYPE_3D
 	occ_fmt.width = OCCUPANCY_GRID
 	occ_fmt.height = OCCUPANCY_GRID
@@ -319,6 +361,23 @@ func _rt_init() -> void:
 		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
 	)
 	_occ_rid = _rd.texture_create(occ_fmt, RDTextureView.new())
+
+	var sv_fmt := RDTextureFormat.new()
+	sv_fmt.format = RenderingDevice.DATA_FORMAT_R8_UNORM
+	sv_fmt.texture_type = RenderingDevice.TEXTURE_TYPE_3D
+	sv_fmt.width = GRID / SUNVIS_DIV
+	sv_fmt.height = GRID / SUNVIS_DIV
+	sv_fmt.depth = GRID / SUNVIS_DIV
+	sv_fmt.mipmaps = 1
+	sv_fmt.usage_bits = (
+		RenderingDevice.TEXTURE_USAGE_STORAGE_BIT
+		| RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_UPDATE_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT
+	)
+	_sunvis_rid = _rd.texture_create(sv_fmt, RDTextureView.new())
+	_rd.texture_clear(_sunvis_rid, Color(1, 1, 1, 1), 0, 1, 0, 1)
 
 	var den_fmt := RDTextureFormat.new()
 	den_fmt.format = RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM
@@ -441,8 +500,9 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	var hydro_spirv := _rt_compile(HYDRO_SHADER_PATH, from_source)
 	var density_spirv := _rt_compile(FIELDS_SHADER_PATH, from_source)
 	var mip_spirv := _rt_compile(FIELDS_MIP_SHADER_PATH, from_source)
+	var sunvis_spirv := _rt_compile(SUNVIS_SHADER_PATH, from_source)
 	if sim_spirv == null or brush_spirv == null or occ_spirv == null or hydro_spirv == null \
-			or density_spirv == null or mip_spirv == null:
+			or density_spirv == null or mip_spirv == null or sunvis_spirv == null:
 		return
 	var air_spirv := {}
 	for k in AIR_KERNELS:
@@ -506,6 +566,11 @@ func _rt_build_pipelines(from_source: bool) -> void:
 		_mip_sets.append(_rd.uniform_set_create(
 			[_image_uniform(0, _fields_views[m - 1]), _image_uniform(1, _fields_views[m])], _mip_shader, 0))
 
+	_sunvis_shader = _rd.shader_create_from_spirv(sunvis_spirv)
+	_sunvis_pipeline = _rd.compute_pipeline_create(_sunvis_shader, _spec([GRID / SUNVIS_DIV]))
+	_sunvis_set = _rd.uniform_set_create(
+		[_image_uniform(0, _sunvis_rid), _sampler_uniform(1, _density_rid)], _sunvis_shader, 0)
+
 	_occ_shader = _rd.shader_create_from_spirv(occ_spirv)
 	_occ_pipeline = _rd.compute_pipeline_create(_occ_shader)
 	_occ_set = _rd.uniform_set_create(
@@ -521,7 +586,8 @@ func _rt_free_pipelines() -> void:
 	_mip_sets = []
 	for rid in [_sim_set, _sim_pipeline, _sim_shader, _brush_set, _brush_pipeline, _brush_shader,
 			_occ_set, _occ_pipeline, _occ_shader, _hydro_set, _hydro_pipeline, _hydro_shader,
-			_density_set, _density_pipeline, _density_shader, _mip_pipeline, _mip_shader]:
+			_density_set, _density_pipeline, _density_shader, _mip_pipeline, _mip_shader,
+			_sunvis_set, _sunvis_pipeline, _sunvis_shader]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
 	_sim_set = RID()
@@ -541,6 +607,9 @@ func _rt_free_pipelines() -> void:
 	_density_shader = RID()
 	_mip_pipeline = RID()
 	_mip_shader = RID()
+	_sunvis_set = RID()
+	_sunvis_pipeline = RID()
+	_sunvis_shader = RID()
 	for d in [_air_sets, _air_pipelines, _air_shaders]:
 		for k in d:
 			if d[k].is_valid():
@@ -554,7 +623,7 @@ func _rt_free() -> void:
 		if v.is_valid():
 			_rd.free_rid(v)
 	_fields_views = []
-	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid, _density_rid,
+	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid, _density_rid, _sunvis_rid,
 			_air_vel[0], _air_vel[1], _air_pres[0], _air_pres[1], _air_div, _air_occ, _air_src, _air_sampler]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
@@ -566,12 +635,31 @@ func _rt_free() -> void:
 	_rt_ready = false
 
 
+func _stamp(name: String) -> void:
+	if profile:
+		_rd.capture_timestamp(name)
+
+
+## GPU milliseconds between consecutive timestamps of the last captured frame.
+func profile_report() -> Dictionary:
+	var out := {}
+	var n := _rd.get_captured_timestamps_count()
+	for i in range(1, n):
+		var dt := (_rd.get_captured_timestamp_gpu_time(i) - _rd.get_captured_timestamp_gpu_time(i - 1)) / 1e6
+		out[_rd.get_captured_timestamp_name(i)] = dt
+	return out
+
+
 func _rt_tick(first_tick: int, count: int) -> void:
 	if not _sim_pipeline.is_valid():
 		return
+	_stamp("frame_begin")
 	var cl := _rd.compute_list_begin()
 	if air_enabled:
 		_rt_air_step(cl, count, first_tick)
+	_rd.compute_list_end()
+	_stamp("air")
+	cl = _rd.compute_list_begin()
 	var push := PackedInt32Array()
 	push.resize(PUSH_CONSTANT_INTS)
 	var hydro_groups := GRID / 8  # 8x8 threads per group, one line per thread
@@ -594,6 +682,9 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		_rd.compute_list_add_barrier(cl)
 		if not hydro_enabled:
 			continue
+		_rd.compute_list_end()
+		_stamp("sim_tick")
+		cl = _rd.compute_list_begin()
 		# Liquid pressure: exact columns, then relax rows along x or z alternately.
 		_rd.compute_list_bind_compute_pipeline(cl, _hydro_pipeline)
 		_rd.compute_list_bind_uniform_set(cl, _hydro_set, 0)
@@ -602,8 +693,12 @@ func _rt_tick(first_tick: int, count: int) -> void:
 			_rd.compute_list_set_push_constant(cl, hp, hp.size())
 			_rd.compute_list_dispatch(cl, hydro_groups, hydro_groups, 1)
 			_rd.compute_list_add_barrier(cl)
+		_rd.compute_list_end()
+		_stamp("hydro_tick")
+		cl = _rd.compute_list_begin()
 	_rd.compute_list_end()
 	_rt_occupancy_update()
+	_stamp("frame_end")
 
 
 ## One air-solver step covering `dt` ticks, recorded into an open compute list.
@@ -722,6 +817,9 @@ func _rt_occupancy_update() -> void:
 	_rd.compute_list_bind_uniform_set(cl, _occ_set, 0)
 	_rd.compute_list_dispatch(cl, groups, groups, groups)
 	_rd.compute_list_add_barrier(cl)
+	_rd.compute_list_end()
+	_stamp("occupancy")
+	cl = _rd.compute_list_begin()
 	if _density_pipeline.is_valid():
 		var dg := GRID / 8
 		_rd.compute_list_bind_compute_pipeline(cl, _density_pipeline)
@@ -738,6 +836,42 @@ func _rt_occupancy_update() -> void:
 			_rd.compute_list_dispatch(cl, mg, mg, mg)
 			_rd.compute_list_add_barrier(cl)
 	_rd.compute_list_end()
+	_stamp("fields_mips")
+	cl = _rd.compute_list_begin()
+	_rt_sunvis_sweep(cl)
+	_rd.compute_list_end()
+	_stamp("sunvis")
+
+
+## Sweep the sun-visibility field along the sun's dominant axis, one dispatch
+## per block of slabs (see sunvis.glsl).
+func _rt_sunvis_sweep(cl: int) -> void:
+	if not _sunvis_pipeline.is_valid() or not sunvis_enabled:
+		return
+	var d := sun_to.normalized()
+	var axis := 0
+	if absf(d.y) >= absf(d.x) and absf(d.y) >= absf(d.z):
+		axis = 1
+	elif absf(d.z) >= absf(d.x):
+		axis = 2
+	var sign_a := 1 if d[axis] >= 0.0 else -1
+	var u_axis := 1 if axis == 0 else 0
+	var v_axis := 2 if axis != 2 else 1
+	var inv := 1.0 / maxf(absf(d[axis]), 1e-4)
+	var step_u := d[u_axis] * inv
+	var step_v := d[v_axis] * inv
+	_rd.compute_list_bind_compute_pipeline(cl, _sunvis_pipeline)
+	_rd.compute_list_bind_uniform_set(cl, _sunvis_set, 0)
+	var n := GRID / SUNVIS_DIV
+	var groups := n / 16
+	var k := 0
+	while k < n:
+		var push := PackedInt32Array([axis, sign_a, k, SUNVIS_SLABS_PER_DISPATCH]).to_byte_array()
+		push.append_array(PackedFloat32Array([step_u, step_v, SUNVIS_GAS_EXTINCTION, 0.0]).to_byte_array())
+		_rd.compute_list_set_push_constant(cl, push, push.size())
+		_rd.compute_list_dispatch(cl, groups, groups, 1)
+		_rd.compute_list_add_barrier(cl)
+		k += SUNVIS_SLABS_PER_DISPATCH
 
 
 func _rt_density_readback() -> void:

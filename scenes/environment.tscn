@@ -1,8 +1,9 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/environment/atmosphere.gd" id="1_atmo"]
 [ext_resource type="Shader" path="res://shaders/spatial/bounds_outline.gdshader" id="2_outline"]
 [ext_resource type="Shader" path="res://shaders/post/timescale_fx.gdshader" id="3_fx"]
+[ext_resource type="Shader" path="res://shaders/spatial/ground.gdshader" id="4_ground"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
 sky_top_color = Color(0.62, 0.7, 0.78, 1)
@@ -50,9 +51,8 @@ fog_height_density = 0.04
 [sub_resource type="PlaneMesh" id="GroundMesh"]
 size = Vector2(400, 400)
 
-[sub_resource type="StandardMaterial3D" id="GroundMat"]
-albedo_color = Color(0.88, 0.89, 0.91, 1)
-roughness = 1.0
+[sub_resource type="ShaderMaterial" id="GroundMat"]
+shader = ExtResource("4_ground")
 
 [sub_resource type="PlaneMesh" id="OutlineMesh"]
 size = Vector2(1.12, 1.12)

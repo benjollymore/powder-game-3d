@@ -78,23 +78,38 @@ deterministic from a given upload.
 
 ## Rendering
 
-`shaders/spatial/voxel_raymarch.gdshader` walks the voxel texture per pixel
-together with the renderer fields written by `shaders/compute/fields.glsl`
-(R liquid density, G smoothed opaque density, B gas, plus a mip chain from
-`fields_mip.glsl`). Solids and powders are the 0.5 isosurface of the smoothed
-field: each element's `smooth` sets how much a 3³ kernel blurs it, so walls
-(0) keep crisp cube faces while sand (1) renders as a heap. The hit is shaded
-with triplanar textures from `scripts/render/material_library.gd` (procedural
-placeholders per `mat` layer), a grain normal from a seamless 3D noise, cone
-traced ambient occlusion from the field mips, and curvature darkening, with
-the normal taken from a coarser mip so one-voxel stairs on slopes vanish.
-Liquids are the 0.5 isosurface of the liquid field (smoothed sideways across
-same-liquid neighbours) with Fresnel reflection, a sun highlight,
-in-scattering and Beer-Lambert absorption. Gases are participating media.
-The material is transparent with premultiplied alpha and writes depth at the
-first surface. Texture LOD is analytic and grows at grazing angles because
-explicit LOD gets no anisotropic filtering. `debug=N` on the command line
-shows flat colour (1), AO (2), normals (3), texture (4) or face normals (5).
+Two raymarch passes share `shaders/spatial/voxel_dda.gdshaderinc` and read the
+voxel texture plus the renderer fields written by `shaders/compute/fields.glsl`
+(R liquid density smoothed across same-liquid neighbours, G opaque density
+blurred by a 3³ kernel weighted by each element's `smooth`, B gas, with a mip
+chain from `fields_mip.glsl`) and a two-channel occupancy grid (solids /
+fluids per 8³ brick) for empty-space leaps.
+
+`voxel_opaque.gdshader` is a lit, opaque material: it finds the 0.5 isosurface
+of the smoothed field (walls stay crisp cubes at smooth 0, sand becomes a heap
+at 1), shades it with triplanar textures from `scripts/render/material_library.gd`,
+a grain normal, cone-traced ambient occlusion from the field mips and curvature
+darkening, and hands Godot a normal, roughness, AO and the hit position, so sky
+ambient, specular, fog, depth of field and glow come from the engine. Its
+`light()` multiplies direct sunlight by the sun-visibility field.
+
+`voxel_volume.gdshader` draws liquids (0.5 isosurface of the liquid field with
+Fresnel, sun highlight, in-scattering and Beer-Lambert absorption) and gases
+(participating media lit through the sun-visibility field) with premultiplied
+alpha, stopping at the opaque pass's depth so it never re-marches solids.
+
+`shaders/compute/sunvis.glsl` sweeps a half-resolution sun-visibility field
+slab by slab from the sun-facing face (16×16 tiles walking 8 slabs with a
+haloed shared-memory copy of the previous slab), rebuilt whenever the world
+changes. It shadows sand under smoke, pits, and the ground plane: the ground
+shader intersects each point's ray toward the sun with the box and samples
+the field where it enters, giving a voxel-accurate shadow with no shadow map.
+
+The depth prepass is disabled: an opaque material that writes depth would run
+the raymarch twice, and the voxel AO covers what SSAO provided. `debug=N`
+shows flat colour (1), AO (2), normals (3), texture (4) or sun visibility
+(5); `vdebug=N` on the volume pass ignores depth (1), shows the depth stop
+(2) or liquid diagnostics (3).
 
 ## Scenarios
 

@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://787pqbpp25hk"
+path="res://.godot/imported/sunvis.glsl-84f21587d85f5e96abad92d7e78382aa.res"
+
+[deps]
+
+source_file="res://shaders/compute/sunvis.glsl"
+dest_files=["res://.godot/imported/sunvis.glsl-84f21587d85f5e96abad92d7e78382aa.res"]
+
+[params]
+
