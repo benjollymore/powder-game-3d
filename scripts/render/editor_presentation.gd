@@ -34,10 +34,19 @@ static func apply(sim: Node3D, world: WorldEnvironment, parent: Node3D) -> Direc
 	sim.set_param("sun_color", sun.light_color * sun.light_energy)
 	sim.set_param("sky_color", Color(0.62, 0.70, 0.80))
 	sim.set_param("ground_color", Color(0.30, 0.35, 0.41))
+	# Palette alpha is self-illumination in the shaders, so every override
+	# must keep alpha 0 (a Color literal defaults to alpha 1 and would make
+	# walls, sand and water glow).
 	var palette := Elements.palette()
-	palette[Elements.Id.WALL] = Color(0.34, 0.40, 0.46)
-	palette[Elements.Id.SAND] = Color(0.87, 0.65, 0.31)
-	palette[Elements.Id.WATER] = Color(0.08, 0.37, 0.62)
+	palette[Elements.Id.WALL] = Color(0.34, 0.40, 0.46, 0.0)
+	palette[Elements.Id.SAND] = Color(0.87, 0.65, 0.31, 0.0)
+	palette[Elements.Id.WATER] = Color(0.08, 0.37, 0.62, 0.0)
+	if Elements.Id.has("ICE"):
+		# LIGHT_COLOR carries a factor of pi, so a sun-facing face is lit about
+		# 2.8x its albedo: the table's pale ice blows out to white under the
+		# editor sun. A deep blue albedo keeps it readable next to steam and the
+		# pale wall while still reading as ice.
+		palette[Elements.Id.ICE] = Color(0.26, 0.44, 0.60, 0.0)
 	sim.set_param("palette", palette)
 	sim.set_param("detail_strength", 0.18)
 	sim.set_param("ao_strength", 0.55)

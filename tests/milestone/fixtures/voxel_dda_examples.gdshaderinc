@@ -180,16 +180,15 @@ bool step_voxel(inout Ray r, inout float t) {
 	return !outside(r.cell);
 }
 
-// Incandescence for a cell by temperature. Dull red from 800 K to a saturated
-// orange at 1500 K (lava's temperature), so a lava lake stays orange-red;
-// yellow-white is reserved for 1900 K and above, and a crust that has cooled
-// toward stone falls back to dark red. Zero unless thermal_glow is on.
+// Incandescence for a cell by temperature: dull red from ~800 K, orange near
+// 1150 K, yellow-white by 1500 K. Zero unless thermal_glow is on.
 vec3 thermal_emission(ivec3 cell) {
 	if (!thermal_glow) { return vec3(0.0); }
 	float kelvin = texelFetch(thermal, cell, 0).r;
 	float t = smoothstep(800.0, 1500.0, kelvin);
-	float u = smoothstep(1500.0, 1900.0, kelvin);
 	if (t <= 0.0) { return vec3(0.0); }
-	vec3 tint = mix(mix(vec3(0.55, 0.04, 0.0), vec3(1.0, 0.32, 0.04), t), vec3(1.0, 0.90, 0.70), u);
-	return tint * (0.05 + 0.4 * t * t + 1.4 * u);
+	vec3 tint = t < 0.5
+		? mix(vec3(0.55, 0.04, 0.0), vec3(1.0, 0.42, 0.08), t * 2.0)
+		: mix(vec3(1.0, 0.42, 0.08), vec3(1.0, 0.90, 0.70), (t - 0.5) * 2.0);
+	return tint * (0.15 + 2.6 * t * t);
 }

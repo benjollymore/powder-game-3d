@@ -88,6 +88,7 @@ GPU = [
     ("ripple128", "tests/milestone/render_powder_ripple_gpu.gd", 128),
     ("palette128", "tests/milestone/palette_capture_gpu.gd", 128),
     ("liquid-base128", "tests/milestone/render_liquid_base_gpu.gd", 128),
+    ("examples-look128", "tests/milestone/render_examples_gpu.gd", 128),
 ]
 
 

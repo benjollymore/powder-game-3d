@@ -7,7 +7,7 @@
 shader_type spatial;
 render_mode cull_front, unshaded, blend_premul_alpha, depth_draw_always;
 
-#include "res://shaders/spatial/voxel_dda.gdshaderinc"
+#include "res://tests/milestone/fixtures/voxel_dda_examples.gdshaderinc"
 
 uniform sampler2D depth_tex : hint_depth_texture, filter_nearest;
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
@@ -269,14 +269,10 @@ void fragment() {
 				float thick = is_liquid(under_id) ? 1.0 : clamp(float(lv.z) / liquid_full, 0.0, 1.0);
 				thick = smoothstep(0.0, 0.8, thick);
 				fresnel *= mix(0.15, 1.0, thick) * float(air_interface);
-				// A dense liquid (lava) mirrors the sky far less than water: its
-				// surface is dominated by its own glow. Water's factor is exactly 1.
-				float gloss = 1.0 / max(liquid_opacity[int(liquid_id)], 1.0);
-				fresnel *= gloss;
 				vec3 refl_world = normalize(mat3(MODEL_MATRIX) * reflect(r.dir, n));
 				vec3 refl_col = hemi_light(refl_world) * 1.05;
 				float vis = sun_vis(ps + n * 0.75 + sun * 1.25);
-				float spec = pow(max(dot(refl_world, sun), 0.0), 96.0) * liquid_specular * vis * mix(0.2, 1.0, thick) * float(air_interface) * gloss;
+				float spec = pow(max(dot(refl_world, sun), 0.0), 96.0) * liquid_specular * vis * mix(0.2, 1.0, thick) * float(air_interface);
 				liquid_id = liquid ? id : voxel_at(ivec3(floor(ps))).x;
 				liquid_col = palette[int(liquid_id)].rgb;
 				liquid_glow = liquid_col * palette[int(liquid_id)].a + thermal_emission(ivec3(floor(ps)));
@@ -326,11 +322,11 @@ void fragment() {
 				bool air_entry = (interval.x >= 0.0 || r.t_enter >= 0.0) && start > preceding_liquid_end + 0.002;
 				if (proxy_surface_reflection && air_entry && !cut_entry && !touching_full_liquid(r.cell, proxy_normal, fill, liquid_full)) {
 					float cos_i = max(dot(-r.dir, proxy_normal), 0.0);
-					float fresnel = (liquid_f0 + (1.0 - liquid_f0) * pow(1.0 - cos_i, 5.0)) / max(liquid_opacity[int(id)], 1.0);
+					float fresnel = liquid_f0 + (1.0 - liquid_f0) * pow(1.0 - cos_i, 5.0);
 					vec3 reflected = normalize(mat3(MODEL_MATRIX) * reflect(r.dir, proxy_normal));
 					vec3 point = r.p0 + r.dir * start;
 					float vis = sun_vis(point + proxy_normal * 0.75 + sun * 1.25);
-					float spec = pow(max(dot(reflected, sun), 0.0), 96.0) * liquid_specular * vis / max(liquid_opacity[int(id)], 1.0);
+					float spec = pow(max(dot(reflected, sun), 0.0), 96.0) * liquid_specular * vis;
 					emitted += trans * (fresnel * hemi_light(reflected) * 1.05 + spec * sun_color);
 					trans *= 1.0 - fresnel;
 				}
