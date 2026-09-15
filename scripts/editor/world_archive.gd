@@ -48,13 +48,17 @@ static func _thermal_finite(thermal: PackedByteArray) -> bool:
 	return true
 
 
-## `thermal` is the RG32F layer (8 bytes per cell). It is required: an authored
-## world is its material and its temperatures. Callers without a thermal
-## readback use `default_thermal`.
-static func save_authored(path: String, bytes: PackedByteArray, grid: int, thermal: PackedByteArray = PackedByteArray()) -> Dictionary:
+## `thermal` is the RG32F layer (8 bytes per cell). An authored world is its
+## material and its temperatures; a caller with no thermal readback (a test
+## fixture, a tool, an older path) may omit the layer and gets element
+## defaults at `ambient`, exactly as a version-1 file loads. A layer of the
+## wrong size is an error, never silently replaced.
+static func save_authored(path: String, bytes: PackedByteArray, grid: int, thermal: PackedByteArray = PackedByteArray(), ambient: float = 293.15) -> Dictionary:
 	var cells := grid * grid * grid
 	if not _valid_grid(grid) or bytes.size() != cells * VOXEL_BYTES:
 		return _error("The authored world has an unsupported size.")
+	if thermal.is_empty():
+		thermal = default_thermal(bytes, ambient)
 	if thermal.size() != cells * THERMAL_BYTES:
 		return _error("The authored world's temperature layer has an unsupported size.")
 	if _unsupported_material(bytes) >= 0:

@@ -13,9 +13,8 @@ func save_authored(path: String, bytes: PackedByteArray, grid: int, thermal: Pac
 	return _thread.start(_save_with_defaults.bind(path, bytes, grid, thermal, ambient))
 
 static func _save_with_defaults(path: String, bytes: PackedByteArray, grid: int, thermal: PackedByteArray, ambient: float) -> Dictionary:
-	if thermal.is_empty():
-		thermal = Archive.default_thermal(bytes, ambient)
-	return Archive.save_authored(path, bytes, grid, thermal)
+	# Defaults, when needed, are built here on the worker thread.
+	return Archive.save_authored(path, bytes, grid, thermal, ambient)
 
 func load_authored(path: String, grid: int) -> Error:
 	if _thread.is_started():

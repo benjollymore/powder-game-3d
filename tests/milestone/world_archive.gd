@@ -58,7 +58,10 @@ func _initialize() -> void:
 		"archive declares authored state, the two-layer schema and per-layer checksums")
 	check(not Archive.load_authored(path, 128).ok, "world from another session size is rejected before upload")
 	check(not Archive.save_authored(path, bytes, 128, thermal).ok, "invalid snapshot size is rejected")
-	check(not Archive.save_authored(path, bytes, 16).ok and not Archive.save_authored(path, bytes, 16, thermal.slice(0, 64)).ok, "a missing or short temperature layer cannot be saved")
+	check(not Archive.save_authored(path, bytes, 16, thermal.slice(0, 64)).ok, "a short temperature layer cannot be saved")
+	var omitted_path := folder.path_join("omitted.p3d")
+	check(Archive.save_authored(omitted_path, bytes, 16).ok and Archive.load_authored(omitted_path, 16).thermal == Archive.default_thermal(bytes),
+		"an omitted temperature layer is saved as element defaults, like a version-1 world loads")
 	var nan_thermal := thermal.duplicate()
 	nan_thermal.encode_float(8, NAN)
 	check(not Archive.save_authored(path, bytes, 16, nan_thermal).ok and Archive.load_authored(path, 16).bytes == bytes, "non-finite temperatures are rejected and the previous file survives")
