@@ -21,6 +21,13 @@ var probe_text := ""
 var ambient_input: SpinBox
 var palette: RefCounted
 var thermal_tool := "" # "", "heat" or "cool": the brush changes temperature, not material
+const BrushScript := preload("res://scripts/sim/brush.gd")
+## Brush shape (docs/milestone/placement-brief.md contract 5). Solids default to
+## a cube and flowing materials to a sphere when the material changes, unless
+## the user has picked a shape this session (Shape button or C).
+var shape: int = BrushScript.Shape.SPHERE
+var shape_overridden := false
+var shape_button: Button
 var stroke_thermal := ""
 var speed_slider: HSlider
 var speed_label: Label
@@ -106,6 +113,7 @@ var step_button: Button
 var stroke_radius := 3
 var stroke_element := Elements.Id.WATER
 var stroke_erase := false
+var stroke_shape: int = BrushScript.Shape.SPHERE
 var radius_input: SpinBox
 var tools_panel: PanelContainer
 var camera_target := Vector3.ZERO # box widths, independent of simulation size
@@ -308,6 +316,11 @@ func _build_ui() -> void:
 		thermal_tool = ""
 		erase = not erase)
 	brush_row.add_child(erase_button)
+	shape_button = Button.new()
+	shape_button.tooltip_text = "Brush shape: sphere, cube or disc (C). Solids default to cube, flowing materials to sphere."
+	shape_button.pressed.connect(_cycle_shape)
+	brush_row.add_child(shape_button)
+	_refresh_shape_button()
 	play_button = Button.new()
 	play_button.text = "Run experiment · Space"
 	play_button.pressed.connect(run_or_restore)
@@ -538,7 +551,33 @@ func _choose_material(id: int) -> void:
 	element = id
 	erase = false
 	thermal_tool = ""
+	_apply_default_shape()
 	_refresh_palette()
+
+
+## Solids place as cubes, flowing materials as spheres, unless the user chose
+## a shape this session.
+func _apply_default_shape() -> void:
+	if not shape_overridden:
+		shape = BrushScript.default_shape(element)
+	_refresh_shape_button()
+
+
+func _cycle_shape() -> void:
+	_end_stroke()
+	shape = (shape + 1) % BrushScript.Shape.size()
+	shape_overridden = true
+	_refresh_shape_button()
+	_refresh_palette()
+
+
+static func shape_name(value: int) -> String:
+	return ["Sphere", "Cube", "Disc"][clampi(value, 0, 2)]
+
+
+func _refresh_shape_button() -> void:
+	if shape_button:
+		shape_button.text = "Shape: %s · C" % shape_name(shape)
 
 
 func _choose_thermal(tool: String) -> void:
@@ -554,6 +593,11 @@ func _choose_thermal(tool: String) -> void:
 ## it: they go through record_thermal_stroke / paint_thermal_stroke.
 func _brush_mode(erase_flag: bool) -> int:
 	return sim.BrushMode.ERASE if erase_flag else sim.BrushMode.ONLY_AIR
+
+
+## Plane axis of the frozen stroke view: a disc lies flat on that workplane.
+func _stroke_axis() -> int:
+	return int(stroke_view.get("axis", axis)) if stroke_view is Dictionary else axis
 
 
 func _thermal_kelvin(tool: String) -> float:
@@ -1138,6 +1182,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					stroke_radius = radius
 					stroke_element = element
 					stroke_erase = erase
+					stroke_shape = shape
 					stroke_thermal = thermal_tool
 					if not testing:
 						_begin_authored_edit()
@@ -1181,7 +1226,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if event.ctrl_pressed or event.meta_pressed or event.alt_pressed or event.shift_pressed:
 			return
-		if event.keycode not in [KEY_P, KEY_N, KEY_R, KEY_0, KEY_COMMA, KEY_PERIOD, KEY_BACKSLASH, KEY_B, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_X, KEY_BRACKETLEFT, KEY_BRACKETRIGHT, KEY_V, KEY_F]:
+		if event.keycode not in [KEY_P, KEY_N, KEY_R, KEY_0, KEY_COMMA, KEY_PERIOD, KEY_BACKSLASH, KEY_B, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_X, KEY_BRACKETLEFT, KEY_BRACKETRIGHT, KEY_V, KEY_F, KEY_C]:
 			return
 		_end_stroke()
 		match event.keycode:
@@ -1200,7 +1245,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				if id > 0:
 					element = id
 					thermal_tool = ""
+					_apply_default_shape()
 				erase = false
+			KEY_C:
+				_cycle_shape()
 			KEY_X:
 				erase = not erase
 			KEY_BRACKETLEFT:
@@ -1280,7 +1328,7 @@ func _queue_pending_press(mouse: Vector2) -> void:
 	if targeting_mode == TargetMode.PLANE and _target_at(mouse).x < 0:
 		return
 	pending_authored = PendingGesture.new({"epoch": sim.edit_epoch, "mode": targeting_mode,
-		"element": element, "radius": radius, "erase": erase, "thermal": thermal_tool,
+		"element": element, "radius": radius, "erase": erase, "thermal": thermal_tool, "shape": shape,
 		"view": {"section": section, "axis": axis, "depth": depth}})
 	_sample_pending(mouse)
 	edit_message = "Stroke queued while the previous edit finishes."
@@ -1315,15 +1363,16 @@ func _resume_pending_paint() -> void:
 	stroke_element = gesture.metadata.element
 	stroke_radius = gesture.metadata.radius
 	stroke_erase = gesture.metadata.erase
+	stroke_shape = gesture.metadata.get("shape", BrushScript.Shape.SPHERE)
 	stroke_thermal = gesture.metadata.get("thermal", "")
 	stroke_view = gesture.metadata.view
 	_begin_authored_edit(gesture.warning)
 	var mode: int = _brush_mode(stroke_erase)
 	if stroke_target_mode == TargetMode.SURFACE:
-		sim.record_surface_stroke(active_transaction, gesture.samples, stroke_radius, stroke_element, mode, active_transaction)
+		sim.record_surface_stroke(active_transaction, gesture.samples, stroke_radius, stroke_element, mode, active_transaction, stroke_shape)
 		surface_connect = gesture.connect_next
 	else:
-		sim.record_stroke(active_transaction, gesture.centers(), stroke_radius, stroke_element, mode, active_transaction)
+		sim.record_stroke(active_transaction, gesture.centers(), stroke_radius, stroke_element, mode, active_transaction, stroke_shape, _stroke_axis())
 		previous = gesture.last_cell()
 	painting = not gesture.closed and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	if not painting:
@@ -1629,10 +1678,10 @@ func _set_live_source(mouse: Vector2) -> void:
 			sim.paint_thermal_stroke(picked.centers, stroke_radius, _thermal_kelvin(stroke_thermal))
 		return
 	var mode: int = _brush_mode(stroke_erase)
-	var signature := hash([center, stroke_radius, stroke_element, mode, surface])
+	var signature := hash([center, stroke_radius, stroke_element, mode, surface, stroke_shape])
 	if signature != live_emitter_signature:
 		live_emitter_signature = signature
-		sim.set_live_emitter(center, stroke_radius, stroke_element, mode, Emission.RATE, 1, surface)
+		sim.set_live_emitter(center, stroke_radius, stroke_element, mode, Emission.RATE, 1, surface, stroke_shape, _stroke_axis())
 
 
 func _flush() -> void:
@@ -1649,7 +1698,7 @@ func _flush() -> void:
 			return
 		var mode: int = _brush_mode(stroke_erase)
 		if active_transaction >= 0:
-			sim.record_surface_stroke(active_transaction, pending_surface, stroke_radius, stroke_element, mode, active_transaction)
+			sim.record_surface_stroke(active_transaction, pending_surface, stroke_radius, stroke_element, mode, active_transaction, stroke_shape)
 		pending_surface.clear()
 	if not pending.is_empty() and sim != null:
 		if stroke_thermal != "":
@@ -1662,7 +1711,7 @@ func _flush() -> void:
 			return
 		var mode: int = _brush_mode(stroke_erase)
 		if active_transaction >= 0:
-			sim.record_stroke(active_transaction, pending, stroke_radius, stroke_element, mode, active_transaction)
+			sim.record_stroke(active_transaction, pending, stroke_radius, stroke_element, mode, active_transaction, stroke_shape, _stroke_axis())
 		pending.clear()
 
 
@@ -1692,7 +1741,7 @@ func _process(delta: float) -> void:
 	_update_live_emitter(over_ui)
 	_update_probe(over_ui or orbiting or painting or selecting)
 	_flush()
-	status.text = "%s · %s · r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % [("HEAT" if thermal_tool == "heat" else "COOL") if thermal_tool != "" else ("ERASE" if erase else "Add into empty space"), Elements.TABLE[element].name, radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else _test_phase(), "Live edits reset on return; no live undo" if testing else "%d undo · %d redo" % [undo_history.size(), redo_history.size()]]
+	status.text = "%s · %s · %s r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % [("HEAT" if thermal_tool == "heat" else "COOL") if thermal_tool != "" else ("ERASE" if erase else "Add into empty space"), Elements.TABLE[element].name, shape_name(shape).to_lower(), radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else _test_phase(), "Live edits reset on return; no live undo" if testing else "%d undo · %d redo" % [undo_history.size(), redo_history.size()]]
 	if edit_message != "":
 		status.text += "\n" + edit_message
 	if targeting_mode == TargetMode.SURFACE and not section_action.visible:

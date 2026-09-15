@@ -107,12 +107,13 @@ func _dispatch_pick(cl: int, ray: Dictionary, radius: int, erase: bool, uniforms
 	rd.compute_list_dispatch(cl, 1, 1, 1)
 	rd.compute_list_add_barrier(cl)
 
-func stamp_surface(cl: int, ray: Dictionary, radius: int, element: int, mode: int, seed: int, amount: int) -> void:
+func stamp_surface(cl: int, ray: Dictionary, radius: int, element: int, mode: int, seed: int, amount: int, shape: int = 0) -> void:
 	ensure_surface()
 	_dispatch_pick(cl, ray, radius, mode == 2, surface_pick_set)
 	rd.compute_list_bind_compute_pipeline(cl, stamp_pipeline)
 	rd.compute_list_bind_uniform_set(cl, surface_stamp_set, 0)
-	var push := PackedInt32Array([size, radius, element, mode, seed, amount, 0, 0]).to_byte_array()
+	# material.z carries the brush shape (0 sphere, 1 cube, 2 disc on the picked face).
+	var push := PackedInt32Array([size, radius, element, mode, seed, amount, shape, 0]).to_byte_array()
 	rd.compute_list_set_push_constant(cl, push, push.size())
 	var groups := ceili(float(2 * radius + 1) / 8.0)
 	rd.compute_list_dispatch(cl, groups, groups, groups)

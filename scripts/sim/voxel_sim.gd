@@ -101,6 +101,10 @@ var OCCUPANCY_GRID: int = GRID / BRICK
 ## HEAT and COOL change only the thermal layer (strength in kelvin, radial
 ## falloff); see scripts/sim/brush.gd Mode, which mirrors this enum.
 enum BrushMode { REPLACE, ONLY_AIR, ERASE, BOX, BOX_ONLY_AIR, HEAT, COOL }
+## Brush shapes (docs/milestone/placement-brief.md contract 5); see
+## scripts/sim/brush.gd Shape, which mirrors this enum. The disc's plane axis
+## is the workplane axis for cell strokes and the picked face for surface stamps.
+enum BrushShape { SPHERE, CUBE, DISC }
 ## 2x2x2 blocks with a partition offset straddle the edge: GRID/2 + 1 blocks
 ## per axis, 4x4x4 threads per workgroup.
 var DISPATCH_GROUPS: int = ceili((GRID / 2 + 1) / 4.0)
@@ -108,7 +112,8 @@ var DISPATCH_GROUPS: int = ceili((GRID / 2 + 1) / 4.0)
 ## reaction count) + uvec4 c (thermal dt, ambient, ignition chance as float bits, 0).
 const PUSH_CONSTANT_INTS := 12
 const RULE_NO_THERMAL := 16 # bit 8 is RULE_NO_SPECIALS
-## Brush push constants: ivec4 center/lo + radius, uvec4 element/mode/seed/amount, ivec4 box hi.
+## Brush push constants: ivec4 center/lo + radius, uvec4 element/mode/seed/amount,
+## ivec4 box hi (brush modes: x = shape, y = disc axis; heat/cool: w = strength bits).
 const BRUSH_PUSH_INTS := 12
 
 @export var mesh_path: NodePath = ^"Mesh"
@@ -462,7 +467,7 @@ func flush_render_preparation() -> void:
 ## a potentially stale center. No time advancement means no source emission.
 func set_live_emitter(center: Vector3i, radius: int, element: int,
 		mode: BrushMode = BrushMode.ONLY_AIR, rate: float = 24.0, seed: int = 1,
-		surface: Dictionary = {}) -> void:
+		surface: Dictionary = {}, shape: BrushShape = BrushShape.SPHERE, axis: int = 1) -> void:
 	if not _rt_ready:
 		return
 	if element < 0 or element >= Elements.count() or not is_finite(rate) or rate <= 0.0:
@@ -475,7 +480,7 @@ func set_live_emitter(center: Vector3i, radius: int, element: int,
 		"center": center.clamp(Vector3i.ZERO, Vector3i.ONE * (GRID - 1)),
 		"radius": clampi(radius, 0, GRID), "element": element,
 		"mode": mode, "rate": rate, "seed": seed & 0x7FFFFFFF,
-		"surface": surface.duplicate(true),
+		"surface": surface.duplicate(true), "shape": shape, "axis": clampi(axis, 0, 2),
 	}
 	RenderingServer.call_on_render_thread(_rt_set_live_emitter.bind(command))
 
@@ -495,20 +500,22 @@ func finish_live_emitter() -> void:
 
 ## Paint a sphere of `element` (voxel units). Runs this frame, before any ticks
 ## queued after it, so painting works while time is frozen.
-func paint(center: Vector3i, radius: int, element: int, mode: BrushMode = BrushMode.REPLACE) -> void:
+func paint(center: Vector3i, radius: int, element: int, mode: BrushMode = BrushMode.REPLACE,
+		shape: BrushShape = BrushShape.SPHERE, axis: int = 1) -> void:
 	if not _rt_ready:
 		return
 	edit_revision += 1
 	var seed := randi() & 0x7FFFFFFF
-	RenderingServer.call_on_render_thread(_rt_paint.bind(center, radius, element, mode, seed))
+	RenderingServer.call_on_render_thread(_rt_paint.bind(center, radius, element, mode, seed, shape, clampi(axis, 0, 2)))
 
 
 ## Discovery editor: preserve stamp order, rebuild derived fields once per batch.
-func paint_stroke(centers: Array[Vector3i], radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR) -> void:
+func paint_stroke(centers: Array[Vector3i], radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR,
+		shape: BrushShape = BrushShape.SPHERE, axis: int = 1) -> void:
 	if not _rt_ready or centers.is_empty():
 		return
 	edit_revision += 1
-	RenderingServer.call_on_render_thread(_rt_paint_stroke.bind(centers.duplicate(), radius, element, mode, randi() & 0x7FFFFFFF))
+	RenderingServer.call_on_render_thread(_rt_paint_stroke.bind(centers.duplicate(), radius, element, mode, randi() & 0x7FFFFFFF, shape, clampi(axis, 0, 2)))
 
 
 ## Half-open region bounds; construction fill preserves all occupied cells.
@@ -528,7 +535,8 @@ func begin_edit_transaction(callback: Callable) -> int:
 	return id
 
 
-func record_stroke(id: int, centers: Array[Vector3i], radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR, seed: int = 1) -> void:
+func record_stroke(id: int, centers: Array[Vector3i], radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR, seed: int = 1,
+		shape: BrushShape = BrushShape.SPHERE, axis: int = 1) -> void:
 	if _edit_epochs.get(id, -1) != edit_epoch:
 		return
 	if centers.is_empty() or element < 0 or element >= Elements.count() or radius < 0 or radius > 12:
@@ -540,7 +548,7 @@ func record_stroke(id: int, centers: Array[Vector3i], radius: int, element: int,
 	if valid.is_empty():
 		return
 	edit_revision += 1
-	RenderingServer.call_on_render_thread(_rt_record_stroke.bind(id, valid, radius, element, mode, seed))
+	RenderingServer.call_on_render_thread(_rt_record_stroke.bind(id, valid, radius, element, mode, seed, shape, clampi(axis, 0, 2)))
 
 
 func record_region(id: int, lo: Vector3i, hi: Vector3i, element: int) -> void:
@@ -578,22 +586,24 @@ func request_surface_pick(ray: Dictionary, radius: int, erase: bool, callback: C
 	RenderingServer.call_on_render_thread(_rt_request_surface_pick.bind(checked, radius, erase, metadata, callback))
 
 
-func record_surface_stroke(id: int, rays: Array, radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR, seed: int = 1) -> void:
+func record_surface_stroke(id: int, rays: Array, radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR, seed: int = 1,
+		shape: BrushShape = BrushShape.SPHERE) -> void:
 	if _edit_epochs.get(id, -1) != edit_epoch or radius < 0 or radius > 12 or element < 0 or element >= Elements.count() or mode not in [BrushMode.ONLY_AIR, BrushMode.ERASE]:
 		return
 	var checked := _checked_rays(rays)
 	if not checked.is_empty():
 		edit_revision += 1
-		RenderingServer.call_on_render_thread(_rt_record_surface_stroke.bind(id, checked, radius, element, mode, seed))
+		RenderingServer.call_on_render_thread(_rt_record_surface_stroke.bind(id, checked, radius, element, mode, seed, shape))
 
 
-func paint_surface_stroke(rays: Array, radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR, seed: int = 1) -> void:
+func paint_surface_stroke(rays: Array, radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR, seed: int = 1,
+		shape: BrushShape = BrushShape.SPHERE) -> void:
 	if radius < 0 or radius > 12 or element < 0 or element >= Elements.count() or mode not in [BrushMode.ONLY_AIR, BrushMode.ERASE]:
 		return
 	var checked := _checked_rays(rays)
 	if not checked.is_empty():
 		edit_revision += 1
-		RenderingServer.call_on_render_thread(_rt_paint_surface_stroke.bind(checked, radius, element, mode, seed))
+		RenderingServer.call_on_render_thread(_rt_paint_surface_stroke.bind(checked, radius, element, mode, seed, shape))
 
 
 func _checked_surface(ray: Dictionary) -> Dictionary:
@@ -620,7 +630,7 @@ func _rt_request_surface_pick(ray: Dictionary, radius: int, erase: bool, metadat
 	_rt_edit_gpu().request_pick(ray, radius, erase, metadata, callback)
 
 
-func _rt_record_surface_stroke(id: int, rays: Array, radius: int, element: int, mode: int, seed: int) -> void:
+func _rt_record_surface_stroke(id: int, rays: Array, radius: int, element: int, mode: int, seed: int, shape: int = BrushShape.SPHERE) -> void:
 	var editor := _rt_edit_gpu()
 	if not editor.transactions.has(id):
 		return
@@ -634,10 +644,10 @@ func _rt_record_surface_stroke(id: int, rays: Array, radius: int, element: int, 
 			tx.erase("surface_previous")
 			continue
 		var centers: Array[Vector3i] = [picked.target]
+		var normal: Vector3i = picked.normal
+		var axis := normal.abs().max_axis_index()
 		if tx.has("surface_previous"):
 			var previous: Dictionary = tx.surface_previous
-			var normal: Vector3i = picked.normal
-			var axis := normal.abs().max_axis_index()
 			if normal != Vector3i.ZERO and previous.normal == normal and previous.target[axis] == picked.target[axis]:
 				centers = EditGeometry.stroke(previous.target, picked.target)
 		if not editor.capture_stroke(id, centers, radius):
@@ -646,7 +656,8 @@ func _rt_record_surface_stroke(id: int, rays: Array, radius: int, element: int, 
 		_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
 		_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
 		for center in centers:
-			_rt_brush_sphere(cl, center, radius, element, mode, seed, Elements.default_amount(element))
+			# A disc lies on the picked face plane, one cell thick along its normal.
+			_rt_brush_sphere(cl, center, radius, element, mode, seed, Elements.default_amount(element), 0, shape, axis)
 		_rd.compute_list_end()
 		tx.surface_previous = picked
 		mutated = true
@@ -654,11 +665,11 @@ func _rt_record_surface_stroke(id: int, rays: Array, radius: int, element: int, 
 		_rt_occupancy_update()
 
 
-func _rt_paint_surface_stroke(rays: Array, radius: int, element: int, mode: int, seed: int) -> void:
+func _rt_paint_surface_stroke(rays: Array, radius: int, element: int, mode: int, seed: int, shape: int = BrushShape.SPHERE) -> void:
 	_rt_prepare_surface_emitter()
 	var cl := _rd.compute_list_begin()
 	for ray in rays:
-		_rt_surface_emitter_stamp(cl, ray, radius, element, mode, seed)
+		_rt_surface_emitter_stamp(cl, ray, radius, element, mode, seed, shape)
 	_rd.compute_list_end()
 	_rt_occupancy_update()
 
@@ -668,10 +679,10 @@ func _rt_prepare_surface_emitter() -> void:
 
 
 ## Called inside the simulator's authoritative tick list. No CPU pick is used.
-func _rt_surface_emitter_stamp(cl: int, surface: Dictionary, radius: int, element: int, mode: int, seed: int) -> void:
+func _rt_surface_emitter_stamp(cl: int, surface: Dictionary, radius: int, element: int, mode: int, seed: int, shape: int = BrushShape.SPHERE) -> void:
 	var ray := _checked_surface(surface)
 	if not ray.is_empty():
-		_rt_edit_gpu().stamp_surface(cl, ray, radius, element, mode, seed, Elements.default_amount(element))
+		_rt_edit_gpu().stamp_surface(cl, ray, radius, element, mode, seed, Elements.default_amount(element), shape)
 
 
 ## Capture and validate the inverse before changing GPU material. Failure
@@ -792,9 +803,9 @@ func _on_edit_transaction(result: Dictionary, callback: Callable) -> void:
 	edit_transaction_ready.emit(result)
 
 
-func _rt_record_stroke(id: int, centers: Array[Vector3i], radius: int, element: int, mode: int, seed: int) -> void:
+func _rt_record_stroke(id: int, centers: Array[Vector3i], radius: int, element: int, mode: int, seed: int, shape: int = BrushShape.SPHERE, axis: int = 1) -> void:
 	if _rt_edit_gpu().capture_stroke(id, centers, radius):
-		_rt_paint_stroke(centers, radius, element, mode, seed)
+		_rt_paint_stroke(centers, radius, element, mode, seed, shape, axis)
 
 
 func _rt_record_region(id: int, lo: Vector3i, hi: Vector3i, element: int) -> void:
@@ -1678,11 +1689,12 @@ func _rt_emit_source(cl: int, command: Dictionary, ordinal: int) -> bool:
 			return false
 		# Editing owns the GPU pick+stamp implementation. It must add barriers
 		# after the pick and mutation; air/sim rebind their pipelines afterward.
-		call("_rt_surface_emitter_stamp", cl, surface, command["radius"], command["element"], command["mode"], seed)
+		call("_rt_surface_emitter_stamp", cl, surface, command["radius"], command["element"], command["mode"], seed, command.get("shape", BrushShape.SPHERE))
 	else:
 		_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
 		_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
-		_rt_brush_sphere(cl, command["center"], command["radius"], command["element"], command["mode"], seed, Elements.default_amount(command["element"]))
+		_rt_brush_sphere(cl, command["center"], command["radius"], command["element"], command["mode"], seed, Elements.default_amount(command["element"]),
+			0, command.get("shape", BrushShape.SPHERE), command.get("axis", 1))
 	return true
 
 
@@ -1754,32 +1766,36 @@ static func partition_offset(t: int) -> Vector3i:
 	return Vector3i(h & 1, (h >> 1) & 1, (h >> 2) & 1)
 
 
-func _rt_paint(center: Vector3i, radius: int, element: int, mode: int, seed: int) -> void:
+func _rt_paint(center: Vector3i, radius: int, element: int, mode: int, seed: int, shape: int = BrushShape.SPHERE, axis: int = 1) -> void:
 	if not _brush_pipeline.is_valid():
 		return
 	var cl := _rd.compute_list_begin()
 	_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
 	_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
-	_rt_brush_sphere(cl, center, radius, element, mode, seed, Elements.default_amount(element))
+	_rt_brush_sphere(cl, center, radius, element, mode, seed, Elements.default_amount(element), 0, shape, axis)
 	_rd.compute_list_end()
 	_rt_occupancy_update()
 
 
-func _rt_paint_stroke(centers: Array[Vector3i], radius: int, element: int, mode: int, seed: int) -> void:
+func _rt_paint_stroke(centers: Array[Vector3i], radius: int, element: int, mode: int, seed: int, shape: int = BrushShape.SPHERE, axis: int = 1) -> void:
 	if not _brush_pipeline.is_valid():
 		return
 	var cl := _rd.compute_list_begin()
 	_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
 	_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
 	for center in centers:
-		_rt_brush_sphere(cl, center, radius, element, mode, seed, Elements.default_amount(element))
+		_rt_brush_sphere(cl, center, radius, element, mode, seed, Elements.default_amount(element), 0, shape, axis)
 	_rd.compute_list_end()
 	_rt_occupancy_update()
 
 
-func _rt_brush_sphere(cl: int, center: Vector3i, radius: int, element: int, mode: int, seed: int, amount: int, strength_bits: int = 0) -> void:
+## One brush stamp: a sphere, cube or disc (BrushShape) of the given radius.
+## The shape and disc axis ride in the box corner words the brush modes do
+## not use; heat and cool always use the sphere with its falloff.
+func _rt_brush_sphere(cl: int, center: Vector3i, radius: int, element: int, mode: int, seed: int, amount: int, strength_bits: int = 0,
+		shape: int = BrushShape.SPHERE, axis: int = 1) -> void:
 	var groups := ceili(float(2 * radius + 1) / BRUSH_LOCAL_SIZE)
-	var push := PackedInt32Array([center.x, center.y, center.z, radius, element, mode, seed, amount, 0, 0, 0, strength_bits])
+	var push := PackedInt32Array([center.x, center.y, center.z, radius, element, mode, seed, amount, shape, axis, 0, strength_bits])
 	var bytes := push.to_byte_array()
 	_rd.compute_list_set_push_constant(cl, bytes, bytes.size())
 	_rd.compute_list_dispatch(cl, groups, groups, groups)

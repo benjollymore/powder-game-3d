@@ -14,6 +14,25 @@ signal changed
 ## kelvin with radial falloff; voxel bytes are untouched.
 enum Mode { REPLACE, ONLY_AIR, ERASE, BOX, BOX_ONLY_AIR, HEAT, COOL }
 
+## Brush shapes, mirroring VoxelSim.BrushShape (docs/milestone/placement-brief.md
+## contract 5). SPHERE is a ball of radius r; CUBE the axis-aligned box
+## [c - r, c + r]; DISC a one-cell-thick square of half-width r on the
+## workplane (or on the picked face for surface stamps).
+enum Shape { SPHERE, CUBE, DISC }
+
+
+## Default shape for an element: solids that do not move (walls, wood, ice,
+## stone, metal, wax, clone, void, plant) are placed as cubes, everything that
+## flows or piles as spheres. Matches the brief's "solids and special = cube";
+## Wall lives in the common category but is a solid by flags.
+static func default_shape(id: int) -> Shape:
+	if id < 0 or id >= Elements.count():
+		return Shape.SPHERE
+	var flags: int = Elements.TABLE[id]["flags"]
+	if (flags & Elements.FLAG_IMMOVABLE) != 0:
+		return Shape.CUBE
+	return Shape.SPHERE
+
 var GRID: int = VoxelCodec.GRID
 const MIN_RADIUS := 1
 const MAX_RADIUS := 12

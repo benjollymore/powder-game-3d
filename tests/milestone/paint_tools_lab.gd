@@ -7,12 +7,12 @@ class SimStub extends Node3D:
 	var cancelled := 0
 	func world_size() -> float:
 		return 1.0
-	func record_stroke(id, centers, brush_radius, material, mode, seed) -> void:
-		records.append([id, centers.duplicate(), brush_radius, material, mode, seed])
+	func record_stroke(id, centers, brush_radius, material, mode, seed, shape = 0, axis = 1) -> void:
+		records.append([id, centers.duplicate(), brush_radius, material, mode, seed, shape, axis])
 	func finish_edit_transaction(_id) -> void:
 		pass
-	func set_live_emitter(center, brush_radius, material, mode, rate, seed, surface) -> void:
-		source = {"center": center, "radius": brush_radius, "material": material, "mode": mode, "rate": rate, "seed": seed, "surface": surface}
+	func set_live_emitter(center, brush_radius, material, mode, rate, seed, surface, shape = 0, axis = 1) -> void:
+		source = {"center": center, "radius": brush_radius, "material": material, "mode": mode, "rate": rate, "seed": seed, "surface": surface, "shape": shape, "axis": axis}
 	func clear_live_emitter() -> void:
 		cancelled += 1
 		source.clear()

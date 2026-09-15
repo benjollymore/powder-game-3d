@@ -1,10 +1,16 @@
 #[compute]
 #version 450
 
-// Paints a sphere (modes 0-2) or an axis-aligned box (mode 3, 4) of one
+// Paints a brush (modes 0-2) or an axis-aligned box (mode 3, 4) of one
 // element into the voxel world, or heats / cools a sphere (modes 5, 6) in the
 // thermal layer without touching voxel bytes. Dispatched over the bounding
 // box; one thread per voxel. Box mode is how scenarios are built on the GPU.
+//
+// Brush shape (docs/milestone/placement-brief.md contract 5), carried in
+// box_hi.x for the non-box modes, whose box corner words are otherwise unused:
+// 0 sphere (ball of radius r), 1 cube ([c - r, c + r] on every axis),
+// 2 disc (one-cell-thick square of half-width r on the plane whose axis is
+// box_hi.y). Heat and cool keep the sphere with its radial falloff.
 //
 // Painted material starts at its element's initial temperature with no latent
 // progress (an external source, docs/milestone/heat-brief.md contract 5);
@@ -20,13 +26,16 @@ layout(std430, set = 0, binding = 2) restrict readonly buffer Elems { Elem elems
 layout(push_constant, std430) uniform Params {
 	ivec4 center_radius;      // sphere: cx, cy, cz, radius (voxels); box: lo xyz, unused
 	uvec4 element_mode_seed;  // element id, mode (0 replace, 1 only into air, 2 erase, 3 box, 4 box only air, 5 heat, 6 cool), seed, liquid amount
-	ivec4 box_hi;             // box: exclusive upper corner; heat/cool: w = strength in kelvin (float bits)
+	ivec4 box_hi;             // box: exclusive upper corner; brush: x = shape, y = disc axis; heat/cool: w = strength in kelvin (float bits)
 } pc;
 
 layout(constant_id = 0) const int GRID = 128;
 const uint MODE_ERASE = 2u;
 const uint MODE_HEAT = 5u;
 const uint MODE_COOL = 6u;
+const int SHAPE_SPHERE = 0;
+const int SHAPE_CUBE = 1;
+const int SHAPE_DISC = 2;
 
 uint hash(uint x) {
 	x ^= x >> 16;
@@ -54,7 +63,15 @@ void main() {
 		ivec3 d = p - pc.center_radius.xyz;
 		int r = pc.center_radius.w;
 		d2 = d.x * d.x + d.y * d.y + d.z * d.z; // dot() is float-only in GLSL
-		if (d2 > r * r) {
+		int shape = (mode == MODE_HEAT || mode == MODE_COOL) ? SHAPE_SPHERE : pc.box_hi.x;
+		if (shape == SHAPE_CUBE) {
+			// The dispatch already covers exactly [c - r, c + r]^3.
+		} else if (shape == SHAPE_DISC) {
+			int axis = clamp(pc.box_hi.y, 0, 2);
+			if (d[axis] != 0) {
+				return;
+			}
+		} else if (d2 > r * r) {
 			return;
 		}
 	}

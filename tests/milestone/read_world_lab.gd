@@ -26,11 +26,11 @@ class StateStub extends Node3D:
 		callback.call_deferred(world.duplicate())
 	func request_state_readback() -> void:
 		state_ready.emit.call_deferred(world.duplicate(), thermal.duplicate())
-	func record_stroke(_id, _centers, _r, _m, _mode, _seed) -> void:
+	func record_stroke(_id, _centers, _r, _m, _mode, _seed, _shape = 0, _axis = 1) -> void:
 		pass
 	func finish_edit_transaction(_id) -> void:
 		pass
-	func set_live_emitter(_c, _r, _m, _mode, _rate, _seed, _surface) -> void:
+	func set_live_emitter(_c, _r, _m, _mode, _rate, _seed, _surface, _shape = 0, _axis = 1) -> void:
 		pass
 	func clear_live_emitter() -> void:
 		pass

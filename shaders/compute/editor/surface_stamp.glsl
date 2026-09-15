@@ -12,7 +12,7 @@ layout(rg32f, set = 0, binding = 2) uniform restrict image3D thermal;
 layout(std430, set = 0, binding = 3) restrict readonly buffer Elems { Elem elems[]; };
 layout(push_constant, std430) uniform Params {
     ivec4 brush; // grid size, radius, element, mode (ONLY_AIR/ERASE)
-    ivec4 material; // seed, initial liquid amount, unused, unused
+    ivec4 material; // seed, initial liquid amount, shape (0 sphere, 1 cube, 2 disc on the hit-face plane), unused
 } pc;
 uint hash(uint x) {
     x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15;
@@ -21,7 +21,16 @@ uint hash(uint x) {
 void main() {
     if (pick.target.w == 0) { return; }
     ivec3 delta = ivec3(gl_GlobalInvocationID) - ivec3(pc.brush.y);
-    if (dot(delta, delta) > pc.brush.y * pc.brush.y) { return; }
+    // Brush shape (docs/milestone/placement-brief.md contract 5): the cube is the
+    // whole dispatch box; the disc is one cell thick along the dominant axis of
+    // the hit-face normal, so it lies flat on the surface that was picked.
+    if (pc.material.z == 2) {
+        ivec3 an = abs(pick.normal.xyz);
+        int axis = (an.x >= an.y && an.x >= an.z) ? 0 : ((an.y >= an.z) ? 1 : 2);
+        if (delta[axis] != 0) { return; }
+    } else if (pc.material.z != 1) {
+        if (dot(delta, delta) > pc.brush.y * pc.brush.y) { return; }
+    }
     ivec3 p = pick.target.xyz + delta;
     if (any(lessThan(p, ivec3(0))) || any(greaterThanEqual(p, ivec3(pc.brush.x)))) { return; }
     uint old = uint(imageLoad(grid, p).r * 255.0 + 0.5);

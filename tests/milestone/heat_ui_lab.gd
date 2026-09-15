@@ -7,11 +7,11 @@ class SimStub extends Node3D:
 	var edit_revision := 0
 	func world_size() -> float:
 		return 1.0
-	func record_stroke(_id, _centers, _r, _m, _mode, _seed) -> void:
+	func record_stroke(_id, _centers, _r, _m, _mode, _seed, _shape = 0, _axis = 1) -> void:
 		pass
 	func finish_edit_transaction(_id) -> void:
 		pass
-	func set_live_emitter(_c, _r, _m, _mode, _rate, _seed, _surface) -> void:
+	func set_live_emitter(_c, _r, _m, _mode, _rate, _seed, _surface, _shape = 0, _axis = 1) -> void:
 		pass
 	func clear_live_emitter() -> void:
 		pass
