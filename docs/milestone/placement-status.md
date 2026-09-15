@@ -8,11 +8,12 @@ Milestone opened after Ben's report that placement is janky and solids come out 
 
 ## Integrated
 
-Nothing yet.
+- Brush shapes (`3a9c33e`, `4562e8c`): sphere, cube and disc with per-material defaults (immovables cube), Shape button and key C; cube and disc bounded to the radius box the undo capture covers. Brush-shape 16 checks; sphere byte-identical everywhere (physics 150).
+- Targeting (`692e3cf`, `8a3da07`): batch surface pick (32 rays per dispatch), preview pick every frame with monotonic ids and a target that survives motion, additive surface centre on the first air cell outside the hit face, workplane target on the visible slab face. Surface 46, preview-pick 11, interaction unit 25.
+- Strokes (`ae07042`): every pointer event sampled (thinned above 64 per frame), surface strokes joined by DDA on a face and L-paths around corners, live painting laid along the path, batch pick per frame in the recorder. Two of its GPU suites still fail (flat-face 1-vs-16 identity; live-input off by one grain and missing crossed cells) and are back with the strokes worker together with a new rule: a stroke never re-targets its own fresh paint (a wide surface brush was climbing its own cap into a tower).
 
 ## Active follow-through
 
-1. Tools unit 1: shapes and the shape push constant, sphere byte-identical.
-2. Targeting unit 1: batch pick API, preview scheduling, centring rules with the test rewrite.
-3. Strokes unit 1: per-frame sampling, live path interpolation, surface stroke joining.
-4. Ghost preview, Line and Box tools; cross-reviews; Ben's feel test.
+1. Strokes: fix the two failing GPU suites and land the no-self-retargeting rule.
+2. Tools unit 2: ghost preview of the exact cell set, Line and Box tools, sidebar fitting 1280x800 (two surface-feedback layout checks currently fail).
+3. Review of the shapes and strokes units (targeting worker); Ben's feel test; merge to main.
