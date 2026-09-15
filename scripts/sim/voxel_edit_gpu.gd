@@ -28,6 +28,10 @@ var surface_buffer := RID()
 var surface_rays := RID()
 var surface_pick_set := RID()
 var surface_stamp_set := RID()
+var preview_shader := RID()
+var preview_pipeline := RID()
+## Preview masks cover at most this brush radius (25^3 cells at radius 12).
+const MAX_PREVIEW_RADIUS := 12
 ## Batch picks resolve at most this many rays in one dispatch (one 64-byte
 ## ray record and one 64-byte result record each).
 const MAX_BATCH_RAYS := 32
@@ -55,6 +59,55 @@ func ensure_surface() -> void:
 	surface_rays = rd.storage_buffer_create(64)
 	surface_pick_set = _uniforms(surface_buffer, pick_shader, true, false, surface_rays)
 	surface_stamp_set = _uniforms(surface_buffer, stamp_shader, true, true)
+
+func ensure_preview() -> void:
+	if preview_pipeline.is_valid():
+		return
+	preview_shader = rd.shader_create_from_spirv(compile_shader.call("res://shaders/compute/editor/preview_stamp.glsl", false))
+	preview_pipeline = rd.compute_pipeline_create(preview_shader)
+
+## Ghost preview (placement-brief contract 6): the exact cells one stamp of
+## the given shape and mode would change at `center`, resolved on the GPU and
+## downloaded asynchronously as a one-uint-per-cell mask. `callback` receives
+## an Array[Vector3i] plus `metadata` fields on the main thread.
+func request_preview(center: Vector3i, radius: int, mode: int, shape: int, axis: int, metadata: Dictionary, callback: Callable) -> void:
+	ensure_preview()
+	radius = clampi(radius, 0, MAX_PREVIEW_RADIUS)
+	var side := 2 * radius + 1
+	var results := rd.storage_buffer_create(4 * side * side * side)
+	var uniforms := _uniforms(results, preview_shader, false, false)
+	pending_buffers[results] = [uniforms]
+	var cl := rd.compute_list_begin()
+	rd.compute_list_bind_compute_pipeline(cl, preview_pipeline)
+	rd.compute_list_bind_uniform_set(cl, uniforms, 0)
+	var push := PackedInt32Array([center.x, center.y, center.z, radius, mode, shape, axis, size]).to_byte_array()
+	rd.compute_list_set_push_constant(cl, push, push.size())
+	var groups := ceili(side / 8.0)
+	rd.compute_list_dispatch(cl, groups, groups, groups)
+	rd.compute_list_add_barrier(cl)
+	rd.compute_list_end()
+	var err := rd.buffer_get_data_async(results, _received_preview.bind(results, center, radius, metadata, callback))
+	if err != OK:
+		_finish_preview(rd.buffer_get_data(results), results, center, radius, metadata, callback)
+
+func _received_preview(bytes: PackedByteArray, buffer: RID, center: Vector3i, radius: int, metadata: Dictionary, callback: Callable) -> void:
+	RenderingServer.call_on_render_thread(_finish_preview.bind(bytes, buffer, center, radius, metadata, callback))
+
+func _finish_preview(bytes: PackedByteArray, buffer: RID, center: Vector3i, radius: int, metadata: Dictionary, callback: Callable) -> void:
+	if disposed:
+		return
+	_free_pending(buffer)
+	callback.call_deferred(decode_preview(bytes, center, radius), metadata)
+
+static func decode_preview(bytes: PackedByteArray, center: Vector3i, radius: int) -> Array[Vector3i]:
+	var cells: Array[Vector3i] = []
+	var side := 2 * radius + 1
+	if bytes.size() != 4 * side * side * side:
+		return cells
+	for i in side * side * side:
+		if bytes.decode_u32(i * 4) != 0:
+			cells.append(center + Vector3i(i % side, (i / side) % side, i / (side * side)) - Vector3i.ONE * radius)
+	return cells
 
 ## Single-ray preview pick: a wrapper over the batch path; `callback`
 ## receives one decoded record merged with `metadata`.
@@ -390,6 +443,6 @@ func free_resources() -> void:
 		_free_pending(buffer)
 	pending_buffers.clear()
 	transactions.clear()
-	for rid in [surface_pick_set, surface_stamp_set, surface_buffer, surface_rays, pick_pipeline, pick_shader, stamp_pipeline, stamp_shader, pipeline, shader]:
+	for rid in [surface_pick_set, surface_stamp_set, surface_buffer, surface_rays, pick_pipeline, pick_shader, stamp_pipeline, stamp_shader, preview_pipeline, preview_shader, pipeline, shader]:
 		if rid.is_valid():
 			rd.free_rid(rid)

@@ -622,6 +622,23 @@ func capture_regions(bounds: Array, callback: Callable) -> int:
 	return id
 
 
+## Ghost preview of one stamp (placement-brief contract 6): `callback`
+## receives (Array[Vector3i], metadata) with the exact cells a stamp of this
+## shape and mode would change at `center`; metadata carries epoch/revision so
+## the editor can drop results the world has moved past. Never mutates.
+func request_stamp_preview(center: Vector3i, radius: int, erase: bool, shape: BrushShape, axis: int, callback: Callable, any_cell := false) -> void:
+	var metadata := {"epoch": edit_epoch, "revision": edit_revision, "tick": tick}
+	if not _rt_ready or not VoxelCodec.in_bounds(center) or radius < 0 or radius > 12:
+		callback.call_deferred([] as Array[Vector3i], metadata)
+		return
+	var mode := 3 if any_cell else (2 if erase else 1)
+	RenderingServer.call_on_render_thread(_rt_request_stamp_preview.bind(center, radius, mode, shape, clampi(axis, 0, 2), metadata, callback))
+
+
+func _rt_request_stamp_preview(center: Vector3i, radius: int, mode: int, shape: int, axis: int, metadata: Dictionary, callback: Callable) -> void:
+	_rt_edit_gpu().request_preview(center, radius, mode, shape, axis, metadata, callback)
+
+
 ## Preview is asynchronous and tagged; painting re-picks from its frozen ray.
 func request_surface_pick(ray: Dictionary, radius: int, erase: bool, callback: Callable) -> void:
 	request_surface_picks([ray], _deliver_surface_pick.bind(callback), radius, erase)

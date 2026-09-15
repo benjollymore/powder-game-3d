@@ -28,6 +28,24 @@ const BrushScript := preload("res://scripts/sim/brush.gd")
 var shape: int = BrushScript.Shape.SPHERE
 var shape_overridden := false
 var shape_button: Button
+## Ghost preview (placement-brief contract 6): the exact cells the next stamp
+## would change at the shown target, resolved on the GPU every frame. Above
+## PREVIEW_MAX_CELLS only the bounding box is drawn (the marker).
+const PREVIEW_MAX_CELLS := 4096
+var preview_mesh: MultiMeshInstance3D
+var _preview_cells: Array[Vector3i] = []
+var preview_pending := false
+var preview_request_id := 0
+var preview_shown_id := -1
+var preview_signature := 0
+var preview_center := Vector3i(-1, -1, -1)
+## Two-click tools (contract 7): "" paint, "line" or "box". The first click
+## anchors, the second commits one authored transaction.
+var tool_mode := ""
+var tool_anchor := Vector3i(-1, -1, -1)
+var line_button: Button
+var box_button: Button
+var tool_box_mesh: MeshInstance3D
 var stroke_thermal := ""
 var speed_slider: HSlider
 var speed_label: Label
@@ -164,13 +182,24 @@ func _ready() -> void:
 	environment.environment.ambient_light_energy = 0.8
 	add_child(environment)
 	preload("res://scripts/render/editor_presentation.gd").apply(sim, environment, self)
+	# The marker is the stamp's bounding box; the preview multimesh draws the
+	# exact cells inside it. Both are translucent overlays that ignore depth.
 	marker = MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.5
-	sphere.height = 1.0
-	marker.mesh = sphere
-	marker.material_override = _overlay_material(Color(1.0, 0.78, 0.25, 0.42))
+	marker.mesh = BoxMesh.new()
+	marker.material_override = _overlay_material(Color(1.0, 0.78, 0.25, 0.10))
 	add_child(marker)
+	preview_mesh = MultiMeshInstance3D.new()
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.mesh = BoxMesh.new()
+	preview_mesh.multimesh = multimesh
+	preview_mesh.material_override = _overlay_material(Color(1.0, 0.78, 0.25, 0.38))
+	add_child(preview_mesh)
+	tool_box_mesh = MeshInstance3D.new()
+	tool_box_mesh.mesh = BoxMesh.new()
+	tool_box_mesh.material_override = _overlay_material(Color(0.5, 0.9, 1.0, 0.18))
+	tool_box_mesh.visible = false
+	add_child(tool_box_mesh)
 	guide = MeshInstance3D.new()
 	var guide_material := _overlay_material(Color(0.34, 0.75, 0.95, 0.10))
 	guide_material.no_depth_test = false
@@ -304,7 +333,8 @@ func _build_ui() -> void:
 	var brush_row := HBoxContainer.new()
 	column.add_child(brush_row)
 	var radius_label := Label.new()
-	radius_label.text = "Brush radius  "
+	radius_label.text = "r "
+	radius_label.tooltip_text = "Brush radius in cells ([ and ])"
 	brush_row.add_child(radius_label)
 	radius_input = SpinBox.new()
 	radius_input.min_value = 0
@@ -315,7 +345,7 @@ func _build_ui() -> void:
 		radius = int(value))
 	brush_row.add_child(radius_input)
 	erase_button = Button.new()
-	erase_button.text = "Erase · X"
+	erase_button.text = "Erase·X"
 	erase_button.toggle_mode = true
 	erase_button.pressed.connect(func():
 		_end_stroke()
@@ -327,6 +357,18 @@ func _build_ui() -> void:
 	shape_button.pressed.connect(_cycle_shape)
 	brush_row.add_child(shape_button)
 	_refresh_shape_button()
+	line_button = Button.new()
+	line_button.text = "Line·L"
+	line_button.toggle_mode = true
+	line_button.tooltip_text = "Click a start cell, then an end cell: the brush is stamped along a connected line between them."
+	line_button.toggled.connect(func(enabled): _set_tool("line" if enabled else ""))
+	brush_row.add_child(line_button)
+	box_button = Button.new()
+	box_button.text = "Box·K"
+	box_button.toggle_mode = true
+	box_button.tooltip_text = "Click two corners: the box between them fills with the current material where it is empty."
+	box_button.toggled.connect(func(enabled): _set_tool("box" if enabled else ""))
+	brush_row.add_child(box_button)
 	play_button = Button.new()
 	play_button.text = "Run experiment · Space"
 	play_button.tooltip_text = "Run the experiment. While it runs, a held still brush keeps pouring; drag to lay a line."
@@ -584,7 +626,122 @@ static func shape_name(value: int) -> String:
 
 func _refresh_shape_button() -> void:
 	if shape_button:
-		shape_button.text = "Shape: %s · C" % shape_name(shape)
+		shape_button.text = "%s·C" % shape_name(shape)
+
+
+## Two-click tools. Switching tools or leaving tool mode drops the anchor;
+## a queued or held paint stroke is ended first so no stroke spans the switch.
+func _set_tool(mode: String) -> void:
+	cancel_pending_paint()
+	_end_stroke()
+	tool_mode = mode
+	tool_anchor = Vector3i(-1, -1, -1)
+	if tool_box_mesh:
+		tool_box_mesh.visible = false
+	if line_button:
+		line_button.set_pressed_no_signal(mode == "line")
+	if box_button:
+		box_button.set_pressed_no_signal(mode == "box")
+	_refresh_palette()
+
+
+func _toggle_tool(mode: String) -> void:
+	_set_tool("" if tool_mode == mode else mode)
+
+
+## Second click of a two-click tool: one authored transaction from the anchor
+## to `cell`. Lines stamp the frozen brush along a face-connected path; boxes
+## fill the axis-aligned box into air with the current material.
+func _tool_click(cell: Vector3i) -> void:
+	if cell.x < 0:
+		return
+	if testing:
+		edit_message = "Line and Box build the authored construction; return to Build to use them."
+		return
+	if tool_anchor.x < 0:
+		tool_anchor = cell
+		return
+	var anchor := tool_anchor
+	tool_anchor = Vector3i(-1, -1, -1)
+	if tool_box_mesh:
+		tool_box_mesh.visible = false
+	if capturing:
+		edit_message = "Previous edit still finishing; click again."
+		tool_anchor = anchor
+		return
+	stroke_radius = radius
+	stroke_element = element
+	stroke_erase = erase
+	stroke_shape = shape
+	stroke_thermal = ""
+	stroke_view = {"section": section, "axis": axis, "depth": depth}
+	_begin_authored_edit()
+	if tool_mode == "box":
+		var lo := anchor.min(cell)
+		var hi := anchor.max(cell) + Vector3i.ONE
+		sim.record_region(active_transaction, lo, hi, element)
+	else:
+		sim.record_stroke(active_transaction, Geometry.stroke(anchor, cell), stroke_radius, stroke_element, _brush_mode(stroke_erase), active_transaction, stroke_shape, _preview_axis())
+	_end_stroke()
+
+
+## Axis a disc lies flat on for the shown target: the workplane axis, or the
+## dominant axis of the picked face normal in surface mode.
+func _preview_axis() -> int:
+	if targeting_mode == TargetMode.SURFACE and pick_cache.get("valid", false):
+		var normal: Vector3i = pick_cache.get("normal", Vector3i.ZERO)
+		if normal != Vector3i.ZERO:
+			return normal.abs().max_axis_index()
+	return axis
+
+
+## The cells the next stamp would change at the shown target, as last resolved
+## by the GPU. Empty while no target is shown or a preview is still in flight.
+func preview_cells() -> Array[Vector3i]:
+	return _preview_cells
+
+
+func _request_stamp_preview() -> void:
+	if preview_pending or not sim.has_method("request_stamp_preview"):
+		return
+	var signature := hash([target, radius, shape, erase, thermal_tool != "", _preview_axis(), sim.edit_revision, sim.edit_epoch])
+	if signature == preview_signature:
+		return
+	preview_pending = true
+	preview_request_id += 1
+	sim.request_stamp_preview(target, radius, erase, shape, _preview_axis(), _receive_stamp_preview.bind(preview_request_id, signature), thermal_tool != "")
+
+
+func _receive_stamp_preview(cells: Array[Vector3i], metadata: Dictionary, id: int, signature: int) -> void:
+	preview_pending = false
+	if id <= preview_shown_id or metadata.get("epoch", -1) != sim.edit_epoch:
+		return
+	preview_shown_id = id
+	preview_signature = signature
+	_preview_cells = cells
+	_rebuild_preview_mesh()
+
+
+func _rebuild_preview_mesh() -> void:
+	if preview_mesh == null:
+		return
+	var multimesh := preview_mesh.multimesh
+	var count := _preview_cells.size()
+	if count == 0 or count > PREVIEW_MAX_CELLS:
+		multimesh.instance_count = 0
+		return
+	var cell_size: float = sim.world_size() / VoxelCodec.GRID
+	multimesh.instance_count = count
+	for i in count:
+		var origin: Vector3 = ((Vector3(_preview_cells[i]) + Vector3.ONE * 0.5) / VoxelCodec.GRID - Vector3.ONE * 0.5) * sim.world_size()
+		multimesh.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * cell_size * 0.98), origin))
+
+
+func _clear_stamp_preview() -> void:
+	_preview_cells = []
+	preview_signature = 0
+	if preview_mesh and preview_mesh.multimesh:
+		preview_mesh.multimesh.instance_count = 0
 
 
 func _choose_thermal(tool: String) -> void:
@@ -1179,6 +1336,8 @@ func _unhandled_input(event: InputEvent) -> void:
 					return
 				elif selecting:
 					_select_corner(_target_at(event.position))
+				elif tool_mode != "":
+					_tool_click(target)
 				elif capturing and not painting:
 					_queue_pending_press(event.position)
 				elif not capturing and (targeting_mode == TargetMode.SURFACE or _target_at(event.position).x >= 0):
@@ -1233,7 +1392,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if event.ctrl_pressed or event.meta_pressed or event.alt_pressed or event.shift_pressed:
 			return
-		if event.keycode not in [KEY_P, KEY_N, KEY_R, KEY_0, KEY_COMMA, KEY_PERIOD, KEY_BACKSLASH, KEY_B, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_X, KEY_BRACKETLEFT, KEY_BRACKETRIGHT, KEY_V, KEY_F, KEY_C]:
+		if event.keycode not in [KEY_P, KEY_N, KEY_R, KEY_0, KEY_COMMA, KEY_PERIOD, KEY_BACKSLASH, KEY_B, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_X, KEY_BRACKETLEFT, KEY_BRACKETRIGHT, KEY_V, KEY_F, KEY_C, KEY_L, KEY_K]:
 			return
 		_end_stroke()
 		match event.keycode:
@@ -1256,6 +1415,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				erase = false
 			KEY_C:
 				_cycle_shape()
+			KEY_L:
+				_toggle_tool("line")
+			KEY_K:
+				_toggle_tool("box")
 			KEY_X:
 				erase = not erase
 			KEY_BRACKETLEFT:
@@ -1790,10 +1953,29 @@ func _process(delta: float) -> void:
 	if marker.visible:
 		marker.position = ((Vector3(target) + Vector3.ONE * 0.5) / VoxelCodec.GRID - Vector3.ONE * 0.5) * sim.world_size()
 		marker.scale = Vector3.ONE * (2 * radius + 1) * sim.world_size() / VoxelCodec.GRID
+		_request_stamp_preview()
+	elif not _preview_cells.is_empty():
+		_clear_stamp_preview()
+	if preview_mesh:
+		preview_mesh.visible = marker.visible
+	if tool_box_mesh == null:
+		pass # test fixtures without overlay meshes
+	elif tool_mode == "box" and tool_anchor.x >= 0 and target.x >= 0:
+		var lo := tool_anchor.min(target)
+		var hi := tool_anchor.max(target) + Vector3i.ONE
+		tool_box_mesh.position = ((Vector3(lo + hi) * 0.5) / VoxelCodec.GRID - Vector3.ONE * 0.5) * sim.world_size()
+		tool_box_mesh.scale = Vector3(hi - lo) * sim.world_size() / VoxelCodec.GRID
+		tool_box_mesh.visible = true
+	elif tool_mode == "line" and tool_anchor.x >= 0:
+		tool_box_mesh.position = ((Vector3(tool_anchor) + Vector3.ONE * 0.5) / VoxelCodec.GRID - Vector3.ONE * 0.5) * sim.world_size()
+		tool_box_mesh.scale = Vector3.ONE * (2 * radius + 1) * sim.world_size() / VoxelCodec.GRID
+		tool_box_mesh.visible = true
+	else:
+		tool_box_mesh.visible = false
 	_update_live_emitter(over_ui)
 	_update_probe(over_ui or orbiting or painting or selecting)
 	_flush()
-	status.text = "%s · %s · %s r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % [("HEAT" if thermal_tool == "heat" else "COOL") if thermal_tool != "" else ("ERASE" if erase else "Add into empty space"), Elements.TABLE[element].name, shape_name(shape).to_lower(), radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else _test_phase(), "Live edits reset on return; no live undo" if testing else "%d undo · %d redo" % [undo_history.size(), redo_history.size()]]
+	status.text = "%s · %s · r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % [("HEAT" if thermal_tool == "heat" else "COOL") if thermal_tool != "" else ("ERASE" if erase else "Add into empty space"), Elements.TABLE[element].name, radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else _test_phase(), "Live edits reset on return; no live undo" if testing else "%d undo · %d redo" % [undo_history.size(), redo_history.size()]]
 	if edit_message != "":
 		status.text += "\n" + edit_message
 	if targeting_mode == TargetMode.SURFACE and not section_action.visible:

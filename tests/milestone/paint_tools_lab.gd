@@ -9,6 +9,16 @@ class SimStub extends Node3D:
 		return 1.0
 	func record_stroke(id, centers, brush_radius, material, mode, seed, shape = 0, axis = 1) -> void:
 		records.append([id, centers.duplicate(), brush_radius, material, mode, seed, shape, axis])
+	var regions: Array = []
+	var transactions := 0
+	var edit_epoch := 0
+	## Opens a transaction without completing it; tests clear `capturing`
+	## themselves, as the paint tools suite does.
+	func begin_edit_transaction(_callback) -> int:
+		transactions += 1
+		return transactions
+	func record_region(id, lo, hi, material) -> void:
+		regions.append([id, lo, hi, material])
 	func finish_edit_transaction(_id) -> void:
 		pass
 	func set_live_emitter(center, brush_radius, material, mode, rate, seed, surface, shape = 0, axis = 1) -> void:

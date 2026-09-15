@@ -31,7 +31,7 @@ func run() -> void:
 		"powders, liquids and gases default to the sphere brush")
 	check(BrushScript.default_shape(-1) == BrushScript.Shape.SPHERE and BrushScript.default_shape(Elements.count()) == BrushScript.Shape.SPHERE, "out-of-range ids fall back to the sphere")
 	lab._choose_material(Elements.Id.WALL)
-	check(lab.shape == BrushScript.Shape.CUBE and lab.shape_button.text.begins_with("Shape: Cube"), "choosing Wall selects the cube and labels the button")
+	check(lab.shape == BrushScript.Shape.CUBE and lab.shape_button.text.begins_with("Cube"), "choosing Wall selects the cube and labels the button")
 	lab._choose_material(Elements.Id.SAND)
 	check(lab.shape == BrushScript.Shape.SPHERE, "choosing Sand returns to the sphere while no override is set")
 	key(lab, KEY_C)
