@@ -173,8 +173,8 @@ ok: frozen pool carries the same mass (12800 vs 12800 units)
 ok: the whole pool thawed without boiling (0 ice, 0 steam)
 ok: thawed pool has its original water mass (12800 vs 12800 units)
 --- _test_scenario_volcano
-ok: lava that reached the pool crusted to stone (6927 cells)
-ok: pool water boiled into steam (1874 cells)
+ok: lava that reached the pool crusted to stone (6947 cells)
+ok: pool water boiled into steam (1873 cells)
 ok: floor intact
 --- _test_scenario_ice_cave
 ok: ice melted (50328 of 50776 left)

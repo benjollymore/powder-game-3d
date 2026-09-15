@@ -1,0 +1,17 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: Wall selects the cube brush
+ok: L enters line mode on the real editor
+ok: first parsed click anchors the line at the targeted cell
+ok: second click stamps the cube along the connected line into air only (276 changed, 276 expected)
+ok: the line is one undo entry
+ok: the line preserves the wall block it crosses
+ok: Undo restores the bytes from before the line
+ok: K switches to box mode
+ok: first box click anchors a corner
+ok: box fills exactly the half-open box between the corners (96 changed, 96 expected)
+ok: the box is one undo entry
+ok: Undo restores the bytes from before the box
+ok: K again returns to painting
+PLACEMENT_TOOLS_CHECKS 13 FAILURES 0

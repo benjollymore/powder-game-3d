@@ -12,7 +12,7 @@ ok: erase can target the retained section boundary
 ok: out-of-world ray is a miss
 ok: invalid zero-length ray is rejected
 ok: all preview picking leaves exact GPU material bytes unchanged
-surface two-ray transaction completion_us=4845 undo_bytes=18432
+surface two-ray transaction completion_us=14714 undo_bytes=18432
 ok: fast flat-face surface stroke is connected at radius zero
 ok: surface additive stroke preserves every underlying wall cell
 ok: surface undo captures local tiles, not the world (12 bytes per cell with thermal)
@@ -37,10 +37,11 @@ ok: camera inside solid cannot invent an outside add face
 ok: camera inside solid may erase that exact hit cell
 ok: diagonal ray skips wall touched only at an edge
 ok: ray pointing away from the volume does not produce a boundary hit
-ok: surface held source adds 24 actual grains over120 ticks at batch1, got24
-ok: surface held source adds 24 actual grains over120 ticks at batch3, got24
+ok: held surface source over a floor deposits its cap once and never climbs its own output (got 1 grains)
+ok: surface held source attempts exactly 24 tick-owned stamps over 120 ticks at batch 1 (24 attempts, 1 grains)
+ok: surface held source attempts exactly 24 tick-owned stamps over 120 ticks at batch 3 (24 attempts, 1 grains)
 ok: atomic surface emission and material state are identical at batch3
-ok: surface held source adds 24 actual grains over120 ticks at batch7, got24
+ok: surface held source attempts exactly 24 tick-owned stamps over 120 ticks at batch 7 (24 attempts, 1 grains)
 ok: atomic surface emission and material state are identical at batch7
 ok: surface heat raises the picked hit cell by the full strength (293.15 -> 333.15)
 ok: the rim of the sphere warms less than its centre, matching the workplane falloff
@@ -48,4 +49,4 @@ ok: the sphere is centred on the hit cell: wall below and air above warm by the 
 ok: surface heating leaves every voxel byte untouched
 ok: an equal surface cool restores the previous temperatures exactly
 ok: a slow and a fast surface heat stroke over the same path deposit identical temperatures
-Surface GPU: 46 checks, 0 failures
+Surface GPU: 47 checks, 0 failures

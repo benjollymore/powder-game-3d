@@ -1,9 +1,9 @@
 [
   {
-    "name": "brush-shape128",
-    "pass": true,
-    "exit": 0,
-    "seconds": 3.0,
+    "name": "preview128",
+    "pass": false,
+    "exit": 1,
+    "seconds": 2.17,
     "command": [
       "godot",
       "--path",
@@ -13,10 +13,10 @@
       "--resolution",
       "1600x900",
       "-s",
-      "res://tests/milestone/brush_shape_gpu.gd",
+      "res://tests/milestone/preview_cells_gpu.gd",
       "--",
       "grid=128",
-      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/brush-shape128"
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/preview128"
     ]
   }
 ]

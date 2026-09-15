@@ -2,17 +2,20 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
 
 ok: integrated simulation provides tick-owned click completion
-FAIL: 1 samples/frame at a still pointer adds exactly 24 grains over 120 ticks (got 23)
+ok: 1 samples/frame slow drag adds exactly 24 grains over 120 ticks (got 24)
 ok: live drag leaves no immediate geometry queue
-FAIL: 16 samples/frame at a still pointer adds exactly 24 grains over 120 ticks (got 23)
+ok: 16 samples/frame slow drag adds exactly 24 grains over 120 ticks (got 24)
 ok: live drag leaves no immediate geometry queue
 ok: actual packed material state is identical with 1 or 16 pointer samples/frame
-FAIL: 1 samples/frame moving brush deposits on every crossed cell (5 missing)
-FAIL: 16 samples/frame moving brush deposits on every crossed cell (1 missing)
-FAIL: a straight moving path deposits the same cells with 1 or 16 samples/frame
+ok: 1 samples/frame still pointer attempts exactly 24 source stamps over 120 ticks (24 attempts, 23 grains)
+ok: 16 samples/frame still pointer attempts exactly 24 source stamps over 120 ticks (24 attempts, 23 grains)
+ok: still-pointer result is identical with 1 or 16 pointer samples/frame
+ok: 1 samples/frame moving brush deposits on every crossed cell (missing offsets [])
+ok: 16 samples/frame moving brush deposits on every crossed cell (missing offsets [])
+ok: a straight moving path deposits the same cells with 1 or 16 samples/frame
 ok: quick click does not inject outside a simulation tick
 ok: quick click paints once on the next tick
 ok: completed quick click does not leave a held emitter
 ok: surface pointer input cannot bypass the tick-owned source either
 ok: focus cancellation adds no deferred click
-Live paint input GPU: 14 checks, 5 failures
+Live paint input GPU: 17 checks, 0 failures

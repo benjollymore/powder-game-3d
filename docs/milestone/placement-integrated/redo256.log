@@ -23,5 +23,8 @@ ok: Open/replacement clears both history stacks and byte totals
 ok: Empty requested during inverse capture remains queued
 ok: queued Empty executes after Undo and clears both directions
 ok: reset during inverse capture rejects stale restoration and clears unavailable history
-REDO_MEASUREMENT grid=128 full_bytes=8388608 tiny_bytes=12288 action_completion_us=[9988, 5726, 6514, 3925, 4595, 4928, 13905, 2766, 5878]
-Editor Redo GPU: 22 checks, 0 failures
+ok: over-cap region changes nothing, reports limit and retains only accepted prefix history
+ok: partial accepted transaction remains exactly undoable after cap rejection
+ok: Redo restores only the accepted prefix, never the rejected oversized region
+REDO_MEASUREMENT grid=256 full_bytes=67108864 tiny_bytes=12288 action_completion_us=[9307, 9278, 4071, 5541, 11893, 5772, 8444, 9172, 19178, 5471, 9702]
+Editor Redo GPU: 25 checks, 0 failures

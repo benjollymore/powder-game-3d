@@ -3,7 +3,7 @@
     "name": "gui-crossing128",
     "pass": true,
     "exit": 0,
-    "seconds": 2.69,
+    "seconds": 1.8,
     "command": [
       "godot",
       "--path",

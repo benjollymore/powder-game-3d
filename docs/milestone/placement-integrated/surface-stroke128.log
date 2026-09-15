@@ -5,7 +5,7 @@ ok: sixteen rays per frame across a flat face leave one face-connected line (21 
 ok: every cell along the flat path is painted
 ok: dense flat stroke preserves every wall cell
 ok: dense stroke undo restores exact bytes
-FAIL: flat-face result is identical with one or sixteen rays per frame
+ok: flat-face result is identical with one or sixteen rays per frame
 ok: sparse stroke undo restores exact bytes
 ok: stroke around a two-face corner is one face-connected line (18 cells)
 ok: the line passes the diagonal edge cell outside both faces
@@ -15,4 +15,12 @@ ok: no material was written inside the solid
 ok: corner stroke undo restores exact bytes
 ok: a missed sample breaks the segment (only the two endpoints changed, 2 cells)
 ok: broken stroke undo restores exact bytes
-SURFACE_STROKE_CHECKS 14 FAILURES 1
+ok: slow radius-3 surface drag of 10 samples stays one cap thick (top z 84, expected 84)
+ok: slow radius-3 drag of 10 samples preserves every wall cell
+ok: slow drag undo restores exact bytes
+ok: slow radius-3 surface drag of 30 samples stays one cap thick (top z 84, expected 84)
+ok: slow radius-3 drag of 30 samples preserves every wall cell
+ok: slow drag undo restores exact bytes
+ok: live radius-3 surface drag of 10 samples stays one cap thick (top z 84, 238 cells)
+ok: live radius-3 surface drag of 30 samples stays one cap thick (top z 84, 598 cells)
+SURFACE_STROKE_CHECKS 22 FAILURES 0
