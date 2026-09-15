@@ -47,6 +47,15 @@ Subsequent active-input testing fixed Space also activating a focused GUI button
 3. Decide the next physics step with the user: the isolated momentum, thermal and mechanics references establish narrow properties; the comparison against production on a momentum-carrying pour, containment, pressure communication, heat transfer and a moving obstacle has not been started and needs agreed scenes and budgets.
 4. Next rendering candidates from the known list: the regular isosurface bisection moving above-threshold entries inward, wall/water surface noise, pinholes, and the one-cell to two-cell liquid topology switch.
 
+## Try it
+
+```sh
+cd /Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals
+godot --path . -- grid=128
+```
+
+The project opens the paint editor (`scenes/editor.tscn`). Pick Sand, Water or Wall, drag on the workplane or a material surface, Space to run and Space again to return to the authored build. Cmd+S / Cmd+Shift+S / Cmd+O save and open builds; Cmd+Z / Cmd+Shift+Z undo and redo. Two fingers orbit, pinch zooms, Shift + two fingers pans; Option-drag is the fallback. Toggle Cutaway to inspect inside a container. Use `grid=256` for the larger world. Close any GPU test windows first; the editor and the test harness must not share the GPU while measuring.
+
 ## Architectural position
 
 Keep the GPU material sandbox and editor as a useful product foundation. The existing cellular model alone is not a sufficient long-term architecture for all requested ambitions. General momentum, conservative heat/phase change, stress and moving rigid assemblies require explicit state and coupling contracts. The [architecture assessment](architecture-feasibility.md), [thermal reference](thermal-feasibility.md), and [momentum reference](momentum-feasibility.md) distinguish verified narrow properties from missing solver features.
