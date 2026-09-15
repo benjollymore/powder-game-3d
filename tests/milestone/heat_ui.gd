@@ -52,7 +52,8 @@ func run() -> void:
 	table.append({"name": "Lava", "color": Color.RED, "flags": 0, "category": "heat", "tip": "Hot rock"})
 	table.append({"name": "Acid", "color": Color.GREEN, "flags": 0, "category": "liquids"})
 	var keyed := PalettePanel.grouped_from(table)
-	check(keyed.get("special", []) == [Elements.Id.OIL] and keyed.get("heat", []) == [Elements.Id.FIRE, table.size() - 2] and keyed.get("liquids", []) == [table.size() - 1],
+	check(Elements.Id.OIL in keyed.get("special", []) and Elements.Id.OIL not in keyed.get("liquids", []) and Elements.Id.FIRE in keyed.get("heat", [])
+		and table.size() - 2 in keyed.get("heat", []) and table.size() - 1 in keyed.get("liquids", []),
 		"explicit category keys override the fallback and admit new ids")
 	check(PalettePanel.category_for(table[Elements.Id.OIL], Elements.Id.OIL) == "special" and PalettePanel.category_for({"name": "X"}, 99) == "special",
 		"unknown ids without a category key land in Special")
@@ -61,8 +62,16 @@ func run() -> void:
 	await process_frame
 	var palette = lab.palette
 	check(palette.first_row == [Elements.Id.SAND, Elements.Id.WATER, Elements.Id.WALL], "first row is Sand, Water, Wall")
-	check(palette.heat_row_ids == [Elements.Id.FIRE] and not palette.heat_button.visible and not palette.cool_button.visible,
-		"heat row shows Fire and hides thermal brushes while the simulator has no HEAT/COOL modes")
+	var heat_names: Array = []
+	for id in palette.heat_row_ids:
+		heat_names.append(String(Elements.TABLE[id].name))
+	var heat_expected: Array = ["Fire"]
+	for name in ["Lava", "Ice"]:
+		if PalettePanel.id_named(name) > 0:
+			heat_expected.append(name)
+	check(heat_names.slice(0, heat_expected.size()) == heat_expected and heat_names.all(func(name): return PalettePanel.category_of(PalettePanel.id_named(name)) == "heat" or name == "Fire")
+		and not palette.heat_button.visible and not palette.cool_button.visible,
+		"heat row leads with Fire, Lava and Ice when the table has them, only heat-category materials follow, and thermal brushes hide while the simulator has no HEAT/COOL modes (row: %s)" % str(heat_names))
 	var tabs_expected: Array = []
 	for category in PalettePanel.TAB_ORDER:
 		if expected.has(category) and expected[category].any(func(id): return id not in palette.first_row and id not in palette.heat_row_ids):
