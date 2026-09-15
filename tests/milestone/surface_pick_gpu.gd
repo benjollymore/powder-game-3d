@@ -118,6 +118,8 @@ func _run() -> void:
 	await _test_ray_boundaries()
 	if sim.has_method("set_live_emitter"):
 		await _test_tick_surface_emission()
+	if sim.has_method("record_surface_thermal_stroke"):
+		await _test_surface_thermal()
 	print("Surface GPU: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
 
@@ -175,3 +177,54 @@ func _test_ray_boundaries() -> void:
 	check(result.valid and result.hit == Vector3i(45, 45, 64), "diagonal ray skips wall touched only at an edge")
 	result = await query({"origin": Vector3(1, 1, 0), "direction": Vector3(1, -1, 0)}, 0, true)
 	check(not result.valid, "ray pointing away from the volume does not produce a boundary hit")
+
+func read_thermal() -> PackedByteArray:
+	await process_frame
+	sim.request_thermal_readback()
+	return await sim.thermal_ready
+
+func temp_at(thermal: PackedByteArray, cell: Vector3i) -> float:
+	return thermal.decode_float(VoxelCodec.index(cell.x, cell.y, cell.z) * 8)
+
+## Heat then cool the same surface spot through picked rays: the hit cell
+## itself is the target, the brush falloff is the workplane kernel's, voxels
+## are untouched, and an equal cool returns the previous temperatures.
+func _test_surface_thermal() -> void:
+	var n := VoxelCodec.GRID
+	var data := WorldBuilder.empty()
+	WorldBuilder.fill_box(data, Vector3i(32, 20, 32), Vector3i(96, 21, 96), Elements.Id.WALL)
+	var voxels := data.to_byte_array()
+	sim.upload(voxels)
+	var before := await read_thermal()
+	var top := Vector3i(64, 20, 64)
+	var down := {"origin": Vector3(64.5 / n - 0.5, 0.49, 64.5 / n - 0.5), "direction": Vector3.DOWN, "connect": false}
+	var id: int = sim.begin_edit_transaction(func(_result): pass)
+	sim.record_surface_thermal_stroke(id, [down], 3, 40.0)
+	await finish(id)
+	var heated := await read_thermal()
+	check(is_equal_approx(temp_at(heated, top), temp_at(before, top) + 40.0), "surface heat raises the picked hit cell by the full strength (%.2f -> %.2f)" % [temp_at(before, top), temp_at(heated, top)])
+	var rim := Vector3i(66, 20, 64)
+	check(temp_at(heated, rim) > temp_at(before, rim) and temp_at(heated, rim) < temp_at(heated, top), "the rim of the sphere warms less than its centre, matching the workplane falloff")
+	check(temp_at(heated, Vector3i(64, 19, 64)) > temp_at(before, Vector3i(64, 19, 64)) and temp_at(heated, Vector3i(64, 21, 64)) == temp_at(before, Vector3i(64, 21, 64)),
+		"the sphere heats the wall below the surface and leaves the air above at its own temperature")
+	check(await read() == voxels, "surface heating leaves every voxel byte untouched")
+	id = sim.begin_edit_transaction(func(_result): pass)
+	sim.record_surface_thermal_stroke(id, [down], 3, -40.0)
+	await finish(id)
+	var cooled := await read_thermal()
+	check(cooled == before, "an equal surface cool restores the previous temperatures exactly")
+	# A slow drag along the surface and a fast one deposit the same heat.
+	var samples: Array = []
+	for x in range(40, 61):
+		samples.append({"origin": Vector3((x + 0.5) / n - 0.5, 0.49, 64.5 / n - 0.5), "direction": Vector3.DOWN, "connect": x > 40})
+	id = sim.begin_edit_transaction(func(_result): pass)
+	for sample in samples:
+		sim.record_surface_thermal_stroke(id, [sample], 3, 40.0)
+	await finish(id)
+	var slow := await read_thermal()
+	sim.upload(voxels)
+	id = sim.begin_edit_transaction(func(_result): pass)
+	sim.record_surface_thermal_stroke(id, [samples[0], samples[samples.size() - 1]], 3, 40.0)
+	await finish(id)
+	var fast := await read_thermal()
+	check(slow == fast, "a slow and a fast surface heat stroke over the same path deposit identical temperatures")

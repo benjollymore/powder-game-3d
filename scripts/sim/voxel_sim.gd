@@ -41,6 +41,7 @@ signal layer_counts_ready(counts: PackedInt32Array)
 signal activity_ready(counts: PackedInt32Array)
 signal edit_transaction_ready(result: Dictionary)
 const EditGPU := preload("res://scripts/sim/voxel_edit_gpu.gd")
+const ThermalStrokeSpacing := preload("res://scripts/editor/thermal_stroke.gd")
 const EditGeometry := preload("res://scripts/discovery/edit_geometry.gd")
 const GPUProfile := preload("res://scripts/sim/gpu_profile.gd")
 var edit_epoch := 0 # reset boundary; ticks do not invalidate authored history
@@ -853,6 +854,80 @@ func paint_thermal_stroke(centers: Array[Vector3i], radius: int, kelvin: float) 
 		return
 	edit_revision += 1
 	RenderingServer.call_on_render_thread(_rt_paint_thermal_stroke.bind(centers, radius, kelvin))
+
+
+## Heat or cool the material under surface rays. Targets are resolved by the
+## same atomic pick as material surface strokes (erase semantics: the hit
+## cell itself), connected along a shared face like material strokes, and
+## stamped with the brush kernel's HEAT/COOL sphere spaced by the radius
+## (scripts/editor/thermal_stroke.gd), so surface and workplane strokes
+## deposit the same heat. Undoable: history tiles carry the thermal layer.
+func record_surface_thermal_stroke(id: int, rays: Array, radius: int, kelvin: float) -> void:
+	if _edit_epochs.get(id, -1) != edit_epoch or radius < 0 or radius > 12 or not is_finite(kelvin):
+		return
+	var checked := _checked_rays(rays)
+	if not checked.is_empty():
+		edit_revision += 1
+		RenderingServer.call_on_render_thread(_rt_record_surface_thermal_stroke.bind(id, checked, radius, kelvin))
+
+
+## Live (Test) surface heating: immediate, not undoable, same targeting.
+func paint_surface_thermal_stroke(rays: Array, radius: int, kelvin: float) -> void:
+	if radius < 0 or radius > 12 or not is_finite(kelvin):
+		return
+	var checked := _checked_rays(rays)
+	if not checked.is_empty():
+		edit_revision += 1
+		RenderingServer.call_on_render_thread(_rt_paint_surface_thermal_stroke.bind(checked, radius, kelvin))
+
+
+var _live_surface_thermal := {}
+
+
+## Resolve surface rays to spaced stamp centres. `state` keeps the previous
+## pick and last stamp across calls of one stroke; a ray without `connect`
+## starts a new segment.
+func _rt_surface_thermal_centers(rays: Array, radius: int, state: Dictionary) -> Array[Vector3i]:
+	var editor := _rt_edit_gpu()
+	var out: Array[Vector3i] = []
+	for ray in rays:
+		if not ray.connect:
+			state.erase("previous")
+			state["last"] = Vector3i(-1, -1, -1)
+		var picked: Dictionary = editor.pick_sync(ray, radius, true)
+		if not picked.valid:
+			state.erase("previous")
+			continue
+		var centers: Array[Vector3i] = [picked.target]
+		if state.has("previous"):
+			var previous: Dictionary = state.previous
+			var normal: Vector3i = picked.normal
+			var axis := normal.abs().max_axis_index()
+			if normal != Vector3i.ZERO and previous.normal == normal and previous.target[axis] == picked.target[axis]:
+				centers = EditGeometry.stroke(previous.target, picked.target)
+		state.previous = picked
+		var selected: Dictionary = ThermalStrokeSpacing.select(centers, radius, state.get("last", Vector3i(-1, -1, -1)))
+		state["last"] = selected.last
+		out.append_array(selected.centers)
+	return out
+
+
+func _rt_record_surface_thermal_stroke(id: int, rays: Array, radius: int, kelvin: float) -> void:
+	var editor := _rt_edit_gpu()
+	if not editor.transactions.has(id):
+		return
+	var tx: Dictionary = editor.transactions[id]
+	if not tx.has("thermal_surface"):
+		tx["thermal_surface"] = {}
+	var centers := _rt_surface_thermal_centers(rays, radius, tx.thermal_surface)
+	if not centers.is_empty() and editor.capture_stroke(id, centers, radius):
+		_rt_paint_thermal_stroke(centers, radius, kelvin)
+
+
+func _rt_paint_surface_thermal_stroke(rays: Array, radius: int, kelvin: float) -> void:
+	var centers := _rt_surface_thermal_centers(rays, radius, _live_surface_thermal)
+	if not centers.is_empty():
+		_rt_paint_thermal_stroke(centers, radius, kelvin)
 
 
 ## Heat or cool as part of an undoable transaction (history records carry the

@@ -16,6 +16,12 @@ class StateStub extends Node3D:
 		thermal_strokes.append([id, centers.duplicate(), radius, kelvin])
 	func paint_thermal_stroke(centers: Array[Vector3i], radius: int, kelvin: float) -> void:
 		live_thermal.append([centers.duplicate(), radius, kelvin])
+	var surface_thermal: Array = []
+	var live_surface_thermal: Array = []
+	func record_surface_thermal_stroke(id: int, rays: Array, radius: int, kelvin: float) -> void:
+		surface_thermal.append([id, rays.size(), radius, kelvin])
+	func paint_surface_thermal_stroke(rays: Array, radius: int, kelvin: float) -> void:
+		live_surface_thermal.append([rays.duplicate(true), radius, kelvin])
 	func request_readback(callback: Callable) -> void:
 		callback.call_deferred(world.duplicate())
 	func request_state_readback() -> void:

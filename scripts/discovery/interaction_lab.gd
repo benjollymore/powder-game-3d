@@ -10,6 +10,7 @@ const PendingGesture := preload("res://scripts/editor/pending_gesture.gd")
 const PalettePanel := preload("res://scripts/editor/palette_panel.gd")
 const KeepResult := preload("res://scripts/editor/keep_result.gd")
 const CellInspector := preload("res://scripts/editor/cell_inspector.gd")
+const ThermalStroke := preload("res://scripts/editor/thermal_stroke.gd")
 var build_thermal := PackedByteArray()
 var _state_waiters: Array[Callable] = []
 ## Kelvin added (Heat) or removed (Cool) per brush stamp.
@@ -1611,14 +1612,21 @@ func _set_live_source(mouse: Vector2) -> void:
 		_stop_live_emitter()
 		return
 	if stroke_thermal != "":
-		# Heat and cool apply immediately at the pointer; there is no matter to meter.
-		if not surface.is_empty() or center.x < 0:
-			_stop_live_emitter()
+		# Heat and cool apply immediately at the pointer; there is no matter to
+		# meter. Stamps are spaced by the brush radius, as in Build.
+		if not surface.is_empty():
+			if sim.has_method("paint_surface_thermal_stroke"):
+				surface["connect"] = surface_connect
+				surface_connect = true
+				sim.paint_surface_thermal_stroke([surface], stroke_radius, _thermal_kelvin(stroke_thermal))
 			return
-		if center != _last_thermal_center and sim.has_method("paint_thermal_stroke"):
-			_last_thermal_center = center
-			var centers: Array[Vector3i] = [center]
-			sim.paint_thermal_stroke(centers, stroke_radius, _thermal_kelvin(stroke_thermal))
+		if center.x < 0:
+			return
+		var cells: Array[Vector3i] = [center]
+		var picked := ThermalStroke.select(cells, stroke_radius, _last_thermal_center)
+		_last_thermal_center = picked.last
+		if not picked.centers.is_empty() and sim.has_method("paint_thermal_stroke"):
+			sim.paint_thermal_stroke(picked.centers, stroke_radius, _thermal_kelvin(stroke_thermal))
 		return
 	var mode: int = _brush_mode(stroke_erase)
 	var signature := hash([center, stroke_radius, stroke_element, mode, surface])
@@ -1635,9 +1643,9 @@ func _flush() -> void:
 		return
 	if not pending_surface.is_empty() and sim != null:
 		if stroke_thermal != "":
-			# No surface-ray thermal kernel yet: heat and cool need the workplane.
+			if active_transaction >= 0 and sim.has_method("record_surface_thermal_stroke"):
+				sim.record_surface_thermal_stroke(active_transaction, pending_surface, stroke_radius, _thermal_kelvin(stroke_thermal))
 			pending_surface.clear()
-			edit_message = "Heat and Cool paint on the workplane; switch Paint on to Workplane."
 			return
 		var mode: int = _brush_mode(stroke_erase)
 		if active_transaction >= 0:
@@ -1645,8 +1653,11 @@ func _flush() -> void:
 		pending_surface.clear()
 	if not pending.is_empty() and sim != null:
 		if stroke_thermal != "":
-			if active_transaction >= 0 and sim.has_method("record_thermal_stroke"):
-				sim.record_thermal_stroke(active_transaction, pending, stroke_radius, _thermal_kelvin(stroke_thermal))
+			# Space stamps along the path so stroke speed does not change the heat deposited.
+			var picked := ThermalStroke.select(pending, stroke_radius, _last_thermal_center)
+			_last_thermal_center = picked.last
+			if active_transaction >= 0 and not picked.centers.is_empty() and sim.has_method("record_thermal_stroke"):
+				sim.record_thermal_stroke(active_transaction, picked.centers, stroke_radius, _thermal_kelvin(stroke_thermal))
 			pending.clear()
 			return
 		var mode: int = _brush_mode(stroke_erase)
