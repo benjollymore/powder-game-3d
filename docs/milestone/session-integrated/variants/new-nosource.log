@@ -1,0 +1,156 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+EDITOR_SESSION_START {"godot_static_bytes":217836938,"history_bytes":0,"redo_entries":0,"renderer_video_bytes":400277504,"rss_kib":656368,"undo_entries":0}
+ok: water dot target starts as isolated air
+ok: untitled session Save shortcut requests a path
+ok: untitled session Save writes the exact initial build
+ok: cycle authored stroke has one transaction
+ok: cycle paused radius-zero water click is a second transaction that lands as Water
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle normal scheduling advanced authoritative ticks while a live source was held
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+ok: cycle Redo retains accumulated authored history across cycles
+EDITOR_SESSION_CYCLE {"achieved_ticks_per_second":114.879147137212,"active_frames":34,"active_mean_ms":17.9212647058824,"active_p95_ms":25.873,"active_requested_ticks":70,"active_seconds":0.609336,"archive_roundtrip":false,"cap_frames":5,"cycle":1,"cycle_s":2.521494,"elapsed_s":2.521494,"file_phase":{},"memory":{"godot_static_bytes":487318018,"history_bytes":34816,"redo_entries":0,"renderer_video_bytes":400277504,"rss_kib":866384,"undo_entries":2},"retained_undo_entries":2}
+ok: cycle authored stroke has one transaction
+ok: cycle paused radius-zero water click is a second transaction that lands as Water
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle normal scheduling advanced authoritative ticks while a live source was held
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+ok: cycle Redo retains accumulated authored history across cycles
+EDITOR_SESSION_CYCLE {"achieved_ticks_per_second":117.341051766961,"active_frames":37,"active_mean_ms":16.5833513513514,"active_p95_ms":17.305,"active_requested_ticks":72,"active_seconds":0.613596,"archive_roundtrip":false,"cap_frames":0,"cycle":2,"cycle_s":2.411261,"elapsed_s":4.942983,"file_phase":{},"memory":{"godot_static_bytes":487348930,"history_bytes":53248,"redo_entries":0,"renderer_video_bytes":400277504,"rss_kib":932016,"undo_entries":4},"retained_undo_entries":4}
+ok: cycle authored stroke has one transaction
+ok: cycle paused radius-zero water click is a second transaction that lands as Water
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle normal scheduling advanced authoritative ticks while a live source was held
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+ok: cycle Redo retains accumulated authored history across cycles
+EDITOR_SESSION_CYCLE {"achieved_ticks_per_second":119.869941113891,"active_frames":36,"active_mean_ms":16.6842222222222,"active_p95_ms":17.151,"active_requested_ticks":72,"active_seconds":0.600651,"archive_roundtrip":false,"cap_frames":0,"cycle":3,"cycle_s":2.365262,"elapsed_s":7.316276,"file_phase":{},"memory":{"godot_static_bytes":487378094,"history_bytes":71680,"redo_entries":0,"renderer_video_bytes":400277504,"rss_kib":932144,"undo_entries":6},"retained_undo_entries":6}
+ok: cycle authored stroke has one transaction
+ok: cycle paused radius-zero water click is a second transaction that lands as Water
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle normal scheduling advanced authoritative ticks while a live source was held
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+ok: cycle Redo retains accumulated authored history across cycles
+EDITOR_SESSION_CYCLE {"achieved_ticks_per_second":117.080185085633,"active_frames":34,"active_mean_ms":17.8356176470588,"active_p95_ms":26.363,"active_requested_ticks":71,"active_seconds":0.606422,"archive_roundtrip":false,"cap_frames":3,"cycle":4,"cycle_s":2.412394,"elapsed_s":9.737592,"file_phase":{},"memory":{"godot_static_bytes":487407194,"history_bytes":90112,"redo_entries":0,"renderer_video_bytes":400277504,"rss_kib":866880,"undo_entries":8},"retained_undo_entries":8}
+ok: cycle authored stroke has one transaction
+ok: cycle paused radius-zero water click is a second transaction that lands as Water
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle normal scheduling advanced authoritative ticks while a live source was held
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+ok: cycle Redo retains accumulated authored history across cycles
+ok: phase Save As shortcut requests a path for the named build
+ok: phase Save As writes the exact accumulated build and switches the active file
+ok: phase temporary stroke makes the named build dirty
+ok: dirty periodic Open requests explicit discard
+ok: phase Cancel in the unsaved-build dialog preserves the dirty construction and file
+ok: dirty periodic Open requests explicit discard
+ok: phase Save in the unsaved-build dialog saves the dirty build exactly, then opens the requested file
+ok: phase second temporary stroke dirties the reopened initial build
+ok: dirty periodic Open requests explicit discard
+ok: phase Discard in the unsaved-build dialog restores the requested file and clears history
+ok: phase named Save shortcut saves directly without a chooser
+ok: phase named Save shortcut rewrites the exact initial build once
+ok: periodic asynchronous Save/Open restores baseline and clears old history
+EDITOR_SESSION_CYCLE {"achieved_ticks_per_second":119.860163143,"active_frames":36,"active_mean_ms":16.6855277777778,"active_p95_ms":17.199,"active_requested_ticks":72,"active_seconds":0.6007,"archive_roundtrip":true,"cap_frames":0,"cycle":5,"cycle_s":7.979987,"elapsed_s":17.727579,"file_phase":{"cancel":true,"discard":true,"modifier":"ctrl","named_save":true,"phase":1,"save_as":true,"save_first":true},"memory":{"godot_static_bytes":487333238,"history_bytes":0,"redo_entries":0,"renderer_video_bytes":408813568,"rss_kib":999520,"undo_entries":0},"retained_undo_entries":0}
+ok: cycle authored stroke has one transaction
+ok: cycle paused radius-zero water click is a second transaction that lands as Water
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle normal scheduling advanced authoritative ticks while a live source was held
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+ok: cycle Redo retains accumulated authored history across cycles
+EDITOR_SESSION_CYCLE {"achieved_ticks_per_second":116.277546314493,"active_frames":34,"active_mean_ms":17.9584411764706,"active_p95_ms":27.408,"active_requested_ticks":71,"active_seconds":0.610608,"archive_roundtrip":false,"cap_frames":3,"cycle":6,"cycle_s":2.433639,"elapsed_s":20.168861,"file_phase":{},"memory":{"godot_static_bytes":487377886,"history_bytes":34816,"redo_entries":0,"renderer_video_bytes":408813568,"rss_kib":1065104,"undo_entries":2},"retained_undo_entries":2}
+ok: cycle authored stroke has one transaction
+ok: cycle paused radius-zero water click is a second transaction that lands as Water
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle normal scheduling advanced authoritative ticks while a live source was held
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+ok: cycle Redo retains accumulated authored history across cycles
+EDITOR_SESSION_CYCLE {"achieved_ticks_per_second":120.124604928031,"active_frames":37,"active_mean_ms":16.6491891891892,"active_p95_ms":17.117,"active_requested_ticks":74,"active_seconds":0.616027,"archive_roundtrip":false,"cap_frames":0,"cycle":7,"cycle_s":2.391694,"elapsed_s":22.569899,"file_phase":{},"memory":{"godot_static_bytes":487405694,"history_bytes":53248,"redo_entries":0,"renderer_video_bytes":408813568,"rss_kib":1065120,"undo_entries":4},"retained_undo_entries":4}
+ok: cycle authored stroke has one transaction
+ok: cycle paused radius-zero water click is a second transaction that lands as Water
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle normal scheduling advanced authoritative ticks while a live source was held
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+ok: cycle Redo retains accumulated authored history across cycles
+EDITOR_SESSION_CYCLE {"achieved_ticks_per_second":120.272791694026,"active_frames":37,"active_mean_ms":16.6285945945946,"active_p95_ms":17.384,"active_requested_ticks":74,"active_seconds":0.615268,"archive_roundtrip":false,"cap_frames":0,"cycle":8,"cycle_s":2.416572,"elapsed_s":24.996496,"file_phase":{},"memory":{"godot_static_bytes":487434786,"history_bytes":71680,"redo_entries":0,"renderer_video_bytes":408813568,"rss_kib":1065136,"undo_entries":6},"retained_undo_entries":6}
+ok: cycle authored stroke has one transaction
+ok: cycle paused radius-zero water click is a second transaction that lands as Water
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle normal scheduling advanced authoritative ticks while a live source was held
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+ok: cycle Redo retains accumulated authored history across cycles
+EDITOR_SESSION_CYCLE {"achieved_ticks_per_second":116.704649707752,"active_frames":36,"active_mean_ms":17.137,"active_p95_ms":18.112,"active_requested_ticks":72,"active_seconds":0.616942,"archive_roundtrip":false,"cap_frames":0,"cycle":9,"cycle_s":2.362129,"elapsed_s":27.366859,"file_phase":{},"memory":{"godot_static_bytes":487463798,"history_bytes":90112,"redo_entries":0,"renderer_video_bytes":408813568,"rss_kib":999616,"undo_entries":8},"retained_undo_entries":8}
+ok: cycle authored stroke has one transaction
+ok: cycle paused radius-zero water click is a second transaction that lands as Water
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle normal scheduling advanced authoritative ticks while a live source was held
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+ok: cycle Redo retains accumulated authored history across cycles
+ok: phase Save As shortcut requests a path for the named build
+ok: phase Save As writes the exact accumulated build and switches the active file
+ok: phase temporary stroke makes the named build dirty
+ok: dirty periodic Open requests explicit discard
+ok: phase Cancel in the unsaved-build dialog preserves the dirty construction and file
+ok: dirty periodic Open requests explicit discard
+ok: phase Save in the unsaved-build dialog saves the dirty build exactly, then opens the requested file
+ok: phase second temporary stroke dirties the reopened initial build
+ok: dirty periodic Open requests explicit discard
+ok: phase Discard in the unsaved-build dialog restores the requested file and clears history
+ok: phase named Save shortcut saves directly without a chooser
+ok: phase named Save shortcut rewrites the exact initial build once
+ok: periodic asynchronous Save/Open restores baseline and clears old history
+EDITOR_SESSION_CYCLE {"achieved_ticks_per_second":119.827847326008,"active_frames":36,"active_mean_ms":16.69,"active_p95_ms":17.404,"active_requested_ticks":72,"active_seconds":0.600862,"archive_roundtrip":true,"cap_frames":0,"cycle":10,"cycle_s":8.041247,"elapsed_s":35.416949,"file_phase":{"cancel":true,"discard":true,"modifier":"meta","named_save":true,"phase":2,"save_as":true,"save_first":true},"memory":{"godot_static_bytes":487345226,"history_bytes":0,"redo_entries":0,"renderer_video_bytes":408813568,"rss_kib":999648,"undo_entries":0},"retained_undo_entries":0}
+ok: session completed at least one cycle
+ok: every file phase answered the unsaved-build dialog with Save, Discard and Cancel
+Editor session soak: 141 checks, 0 failures; cycles=10; file phases=2

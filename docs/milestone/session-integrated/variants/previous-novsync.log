@@ -1,0 +1,262 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+EDITOR_SESSION_START {"godot_static_bytes":217739715,"history_bytes":0,"redo_entries":0,"renderer_video_bytes":400277504,"rss_kib":655888,"undo_entries":0}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":94,"active_mean_ms":6.43801063829787,"active_p95_ms":8.477,"active_requested_ticks":71,"archive_roundtrip":false,"cycle":1,"cycle_s":0.909481,"elapsed_s":0.90948,"memory":{"godot_static_bytes":420126647,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":400277504,"rss_kib":789456,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":67,"active_mean_ms":9.04714925373135,"active_p95_ms":15.475,"active_requested_ticks":71,"archive_roundtrip":false,"cycle":2,"cycle_s":0.926294,"elapsed_s":1.843322,"memory":{"godot_static_bytes":420128467,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":400277504,"rss_kib":789664,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":38,"active_mean_ms":16.0573421052632,"active_p95_ms":16.937,"active_requested_ticks":75,"archive_roundtrip":false,"cycle":3,"cycle_s":1.169426,"elapsed_s":3.026954,"memory":{"godot_static_bytes":420129427,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":400277504,"rss_kib":789728,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":49,"active_mean_ms":12.3381020408163,"active_p95_ms":26.978,"active_requested_ticks":69,"archive_roundtrip":false,"cycle":4,"cycle_s":0.998936,"elapsed_s":4.033953,"memory":{"godot_static_bytes":420131883,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":400277504,"rss_kib":789824,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":37,"active_mean_ms":16.2416756756757,"active_p95_ms":25.092,"active_requested_ticks":71,"archive_roundtrip":false,"cycle":5,"cycle_s":0.998458,"elapsed_s":5.040006,"memory":{"godot_static_bytes":420133211,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":400277504,"rss_kib":789872,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":43,"active_mean_ms":14.1853488372093,"active_p95_ms":16.343,"active_requested_ticks":73,"archive_roundtrip":false,"cycle":6,"cycle_s":0.976116,"elapsed_s":6.023517,"memory":{"godot_static_bytes":420135483,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":400277504,"rss_kib":789952,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":40,"active_mean_ms":15.511225,"active_p95_ms":22.09,"active_requested_ticks":73,"archive_roundtrip":false,"cycle":7,"cycle_s":0.955615,"elapsed_s":6.986291,"memory":{"godot_static_bytes":420136819,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":400277504,"rss_kib":789984,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":44,"active_mean_ms":13.9854090909091,"active_p95_ms":16.426,"active_requested_ticks":73,"archive_roundtrip":false,"cycle":8,"cycle_s":0.954934,"elapsed_s":7.948194,"memory":{"godot_static_bytes":420139091,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":400277504,"rss_kib":790016,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":42,"active_mean_ms":14.6651666666667,"active_p95_ms":16.865,"active_requested_ticks":73,"archive_roundtrip":false,"cycle":9,"cycle_s":0.94543,"elapsed_s":8.900748,"memory":{"godot_static_bytes":420140931,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":400277504,"rss_kib":790048,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+ok: dirty periodic Open requests explicit discard
+ok: periodic asynchronous Save/Open restores baseline and clears old history
+EDITOR_SESSION_CYCLE {"active_frames":34,"active_mean_ms":18.1049705882353,"active_p95_ms":25.92,"active_requested_ticks":72,"archive_roundtrip":true,"cycle":10,"cycle_s":2.227573,"elapsed_s":11.135512,"memory":{"godot_static_bytes":353041251,"history_bytes":0,"redo_entries":0,"renderer_video_bytes":408813568,"rss_kib":857312,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":41,"active_mean_ms":15.039487804878,"active_p95_ms":17.756,"active_requested_ticks":73,"archive_roundtrip":false,"cycle":11,"cycle_s":1.004152,"elapsed_s":12.147268,"memory":{"godot_static_bytes":420200207,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857344,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":39,"active_mean_ms":15.7997435897436,"active_p95_ms":23.842,"active_requested_ticks":73,"archive_roundtrip":false,"cycle":12,"cycle_s":0.995343,"elapsed_s":13.150119,"memory":{"godot_static_bytes":420201911,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857392,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":41,"active_mean_ms":14.7453902439024,"active_p95_ms":22.768,"active_requested_ticks":72,"archive_roundtrip":false,"cycle":13,"cycle_s":0.941483,"elapsed_s":14.100808,"memory":{"godot_static_bytes":420203679,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857408,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":31,"active_mean_ms":19.8400322580645,"active_p95_ms":25.846,"active_requested_ticks":75,"archive_roundtrip":false,"cycle":14,"cycle_s":0.95825,"elapsed_s":15.066239,"memory":{"godot_static_bytes":420205591,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857424,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":42,"active_mean_ms":14.5675238095238,"active_p95_ms":25.005,"active_requested_ticks":72,"archive_roundtrip":false,"cycle":15,"cycle_s":0.959214,"elapsed_s":16.032658,"memory":{"godot_static_bytes":420207863,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857456,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":45,"active_mean_ms":13.8356666666667,"active_p95_ms":22.445,"active_requested_ticks":73,"archive_roundtrip":false,"cycle":16,"cycle_s":0.992392,"elapsed_s":17.032121,"memory":{"godot_static_bytes":420209631,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857472,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":43,"active_mean_ms":14.1721162790698,"active_p95_ms":16.791,"active_requested_ticks":73,"archive_roundtrip":false,"cycle":17,"cycle_s":0.95482,"elapsed_s":17.994355,"memory":{"godot_static_bytes":420211399,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857472,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":42,"active_mean_ms":14.5815,"active_p95_ms":21.902,"active_requested_ticks":74,"archive_roundtrip":false,"cycle":18,"cycle_s":0.986343,"elapsed_s":18.988145,"memory":{"godot_static_bytes":420213239,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857536,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":32,"active_mean_ms":19.23959375,"active_p95_ms":26.614,"active_requested_ticks":73,"archive_roundtrip":false,"cycle":19,"cycle_s":0.976049,"elapsed_s":19.97195,"memory":{"godot_static_bytes":420214471,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857536,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+ok: dirty periodic Open requests explicit discard
+ok: periodic asynchronous Save/Open restores baseline and clears old history
+EDITOR_SESSION_CYCLE {"active_frames":38,"active_mean_ms":15.8943157894737,"active_p95_ms":26.365,"active_requested_ticks":70,"archive_roundtrip":true,"cycle":20,"cycle_s":2.30904,"elapsed_s":22.288386,"memory":{"godot_static_bytes":353059699,"history_bytes":0,"redo_entries":0,"renderer_video_bytes":408813568,"rss_kib":857536,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":37,"active_mean_ms":16.3528918918919,"active_p95_ms":24.718,"active_requested_ticks":72,"archive_roundtrip":false,"cycle":21,"cycle_s":0.974744,"elapsed_s":23.274625,"memory":{"godot_static_bytes":420218727,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857552,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":41,"active_mean_ms":14.6406341463415,"active_p95_ms":17.591,"active_requested_ticks":72,"archive_roundtrip":false,"cycle":22,"cycle_s":0.940285,"elapsed_s":24.222081,"memory":{"godot_static_bytes":420220239,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857552,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":31,"active_mean_ms":19.6719677419355,"active_p95_ms":25.203,"active_requested_ticks":74,"archive_roundtrip":false,"cycle":23,"cycle_s":0.947779,"elapsed_s":25.176842,"memory":{"godot_static_bytes":420222007,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857568,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":38,"active_mean_ms":16.0483947368421,"active_p95_ms":24.344,"active_requested_ticks":72,"archive_roundtrip":false,"cycle":24,"cycle_s":0.962274,"elapsed_s":26.147028,"memory":{"godot_static_bytes":420223775,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857584,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":42,"active_mean_ms":14.6409761904762,"active_p95_ms":18.822,"active_requested_ticks":73,"archive_roundtrip":false,"cycle":25,"cycle_s":0.979632,"elapsed_s":27.134286,"memory":{"godot_static_bytes":420226047,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857584,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":42,"active_mean_ms":14.648,"active_p95_ms":16.262,"active_requested_ticks":73,"archive_roundtrip":false,"cycle":26,"cycle_s":0.957664,"elapsed_s":28.099502,"memory":{"godot_static_bytes":420227815,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857584,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":39,"active_mean_ms":15.3927435897436,"active_p95_ms":21.898,"active_requested_ticks":71,"archive_roundtrip":false,"cycle":27,"cycle_s":0.945149,"elapsed_s":29.052074,"memory":{"godot_static_bytes":420229079,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857584,"undo_entries":0}}
+ok: cycle authored stroke has one transaction
+ok: cycle Undo restores initial bytes
+ok: cycle Redo restores authored bytes
+ok: cycle enters running Test
+ok: cycle Pause stops authoritative ticks
+ok: cycle Step advances exactly once
+ok: cycle Return restores exact authored bytes
+ok: cycle authored history survives Test and returns to baseline
+EDITOR_SESSION_CYCLE {"active_frames":33,"active_mean_ms":18.6203333333333,"active_p95_ms":27.622,"active_requested_ticks":70,"archive_roundtrip":false,"cycle":28,"cycle_s":0.98531,"elapsed_s":30.045131,"memory":{"godot_static_bytes":420230847,"history_bytes":32768,"redo_entries":1,"renderer_video_bytes":408813568,"rss_kib":857600,"undo_entries":0}}
+ok: session completed at least one cycle
+Editor session soak: 229 checks, 0 failures; cycles=28

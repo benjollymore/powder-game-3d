@@ -1,0 +1,315 @@
+{
+  "aa": 1,
+  "baseline_memory": {
+    "godot_static_bytes": 217836938,
+    "history_bytes": 0,
+    "redo_entries": 0,
+    "renderer_video_bytes": 400277504,
+    "rss_kib": 656368,
+    "undo_entries": 0
+  },
+  "checks": 141,
+  "cycles": [
+    {
+      "achieved_ticks_per_second": 114.879147137212,
+      "active_frames": 34,
+      "active_mean_ms": 17.9212647058824,
+      "active_p95_ms": 25.873,
+      "active_requested_ticks": 70,
+      "active_seconds": 0.609336,
+      "archive_roundtrip": false,
+      "cap_frames": 5,
+      "cycle": 1,
+      "cycle_s": 2.521494,
+      "elapsed_s": 2.521494,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487318018,
+        "history_bytes": 34816,
+        "redo_entries": 0,
+        "renderer_video_bytes": 400277504,
+        "rss_kib": 866384,
+        "undo_entries": 2
+      },
+      "retained_undo_entries": 2
+    },
+    {
+      "achieved_ticks_per_second": 117.341051766961,
+      "active_frames": 37,
+      "active_mean_ms": 16.5833513513514,
+      "active_p95_ms": 17.305,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.613596,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 2,
+      "cycle_s": 2.411261,
+      "elapsed_s": 4.942983,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487348930,
+        "history_bytes": 53248,
+        "redo_entries": 0,
+        "renderer_video_bytes": 400277504,
+        "rss_kib": 932016,
+        "undo_entries": 4
+      },
+      "retained_undo_entries": 4
+    },
+    {
+      "achieved_ticks_per_second": 119.869941113891,
+      "active_frames": 36,
+      "active_mean_ms": 16.6842222222222,
+      "active_p95_ms": 17.151,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.600651,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 3,
+      "cycle_s": 2.365262,
+      "elapsed_s": 7.316276,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487378094,
+        "history_bytes": 71680,
+        "redo_entries": 0,
+        "renderer_video_bytes": 400277504,
+        "rss_kib": 932144,
+        "undo_entries": 6
+      },
+      "retained_undo_entries": 6
+    },
+    {
+      "achieved_ticks_per_second": 117.080185085633,
+      "active_frames": 34,
+      "active_mean_ms": 17.8356176470588,
+      "active_p95_ms": 26.363,
+      "active_requested_ticks": 71,
+      "active_seconds": 0.606422,
+      "archive_roundtrip": false,
+      "cap_frames": 3,
+      "cycle": 4,
+      "cycle_s": 2.412394,
+      "elapsed_s": 9.737592,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487407194,
+        "history_bytes": 90112,
+        "redo_entries": 0,
+        "renderer_video_bytes": 400277504,
+        "rss_kib": 866880,
+        "undo_entries": 8
+      },
+      "retained_undo_entries": 8
+    },
+    {
+      "achieved_ticks_per_second": 119.860163143,
+      "active_frames": 36,
+      "active_mean_ms": 16.6855277777778,
+      "active_p95_ms": 17.199,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.6007,
+      "archive_roundtrip": true,
+      "cap_frames": 0,
+      "cycle": 5,
+      "cycle_s": 7.979987,
+      "elapsed_s": 17.727579,
+      "file_phase": {
+        "cancel": true,
+        "discard": true,
+        "modifier": "ctrl",
+        "named_save": true,
+        "phase": 1,
+        "save_as": true,
+        "save_first": true
+      },
+      "memory": {
+        "godot_static_bytes": 487333238,
+        "history_bytes": 0,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 999520,
+        "undo_entries": 0
+      },
+      "retained_undo_entries": 0
+    },
+    {
+      "achieved_ticks_per_second": 116.277546314493,
+      "active_frames": 34,
+      "active_mean_ms": 17.9584411764706,
+      "active_p95_ms": 27.408,
+      "active_requested_ticks": 71,
+      "active_seconds": 0.610608,
+      "archive_roundtrip": false,
+      "cap_frames": 3,
+      "cycle": 6,
+      "cycle_s": 2.433639,
+      "elapsed_s": 20.168861,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487377886,
+        "history_bytes": 34816,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1065104,
+        "undo_entries": 2
+      },
+      "retained_undo_entries": 2
+    },
+    {
+      "achieved_ticks_per_second": 120.124604928031,
+      "active_frames": 37,
+      "active_mean_ms": 16.6491891891892,
+      "active_p95_ms": 17.117,
+      "active_requested_ticks": 74,
+      "active_seconds": 0.616027,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 7,
+      "cycle_s": 2.391694,
+      "elapsed_s": 22.569899,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487405694,
+        "history_bytes": 53248,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1065120,
+        "undo_entries": 4
+      },
+      "retained_undo_entries": 4
+    },
+    {
+      "achieved_ticks_per_second": 120.272791694026,
+      "active_frames": 37,
+      "active_mean_ms": 16.6285945945946,
+      "active_p95_ms": 17.384,
+      "active_requested_ticks": 74,
+      "active_seconds": 0.615268,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 8,
+      "cycle_s": 2.416572,
+      "elapsed_s": 24.996496,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487434786,
+        "history_bytes": 71680,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1065136,
+        "undo_entries": 6
+      },
+      "retained_undo_entries": 6
+    },
+    {
+      "achieved_ticks_per_second": 116.704649707752,
+      "active_frames": 36,
+      "active_mean_ms": 17.137,
+      "active_p95_ms": 18.112,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.616942,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 9,
+      "cycle_s": 2.362129,
+      "elapsed_s": 27.366859,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487463798,
+        "history_bytes": 90112,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 999616,
+        "undo_entries": 8
+      },
+      "retained_undo_entries": 8
+    },
+    {
+      "achieved_ticks_per_second": 119.827847326008,
+      "active_frames": 36,
+      "active_mean_ms": 16.69,
+      "active_p95_ms": 17.404,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.600862,
+      "archive_roundtrip": true,
+      "cap_frames": 0,
+      "cycle": 10,
+      "cycle_s": 8.041247,
+      "elapsed_s": 35.416949,
+      "file_phase": {
+        "cancel": true,
+        "discard": true,
+        "modifier": "meta",
+        "named_save": true,
+        "phase": 2,
+        "save_as": true,
+        "save_first": true
+      },
+      "memory": {
+        "godot_static_bytes": 487345226,
+        "history_bytes": 0,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 999648,
+        "undo_entries": 0
+      },
+      "retained_undo_entries": 0
+    }
+  ],
+  "duration_s": 30.0,
+  "engine": "4.6.3-stable (official)",
+  "failures": 0,
+  "file_phases": [
+    {
+      "cancel": true,
+      "discard": true,
+      "modifier": "ctrl",
+      "named_save": true,
+      "phase": 1,
+      "save_as": true,
+      "save_first": true
+    },
+    {
+      "cancel": true,
+      "discard": true,
+      "modifier": "meta",
+      "named_save": true,
+      "phase": 2,
+      "save_as": true,
+      "save_first": true
+    }
+  ],
+  "grid": 256,
+  "phase_every": 5,
+  "refresh_hz": 120.0,
+  "render_mode": 0,
+  "render_scale": 1.0,
+  "scheduler": {
+    "max_ticks_per_frame": 3,
+    "target_ticks_per_second": 120.0
+  },
+  "successful_saves": 7,
+  "variant": {
+    "held_source": false,
+    "water_dot": true
+  },
+  "viewport_size": "(1600, 900)",
+  "vsync": 1
+}

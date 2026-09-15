@@ -1,0 +1,315 @@
+{
+  "aa": 1,
+  "baseline_memory": {
+    "godot_static_bytes": 217836830,
+    "history_bytes": 0,
+    "redo_entries": 0,
+    "renderer_video_bytes": 400277504,
+    "rss_kib": 655856,
+    "undo_entries": 0
+  },
+  "checks": 141,
+  "cycles": [
+    {
+      "achieved_ticks_per_second": 115.879267047082,
+      "active_frames": 33,
+      "active_mean_ms": 18.305,
+      "active_p95_ms": 27.531,
+      "active_requested_ticks": 70,
+      "active_seconds": 0.604077,
+      "archive_roundtrip": false,
+      "cap_frames": 4,
+      "cycle": 1,
+      "cycle_s": 2.467004,
+      "elapsed_s": 2.467004,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487317694,
+        "history_bytes": 34816,
+        "redo_entries": 0,
+        "renderer_video_bytes": 400277504,
+        "rss_kib": 865584,
+        "undo_entries": 2
+      },
+      "retained_undo_entries": 2
+    },
+    {
+      "achieved_ticks_per_second": 121.723606264708,
+      "active_frames": 37,
+      "active_mean_ms": 16.6521621621622,
+      "active_p95_ms": 17.319,
+      "active_requested_ticks": 75,
+      "active_seconds": 0.61615,
+      "archive_roundtrip": false,
+      "cap_frames": 1,
+      "cycle": 2,
+      "cycle_s": 2.405709,
+      "elapsed_s": 4.88307,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487347994,
+        "history_bytes": 53248,
+        "redo_entries": 0,
+        "renderer_video_bytes": 400277504,
+        "rss_kib": 931264,
+        "undo_entries": 4
+      },
+      "retained_undo_entries": 4
+    },
+    {
+      "achieved_ticks_per_second": 121.710964048204,
+      "active_frames": 37,
+      "active_mean_ms": 16.6540540540541,
+      "active_p95_ms": 17.309,
+      "active_requested_ticks": 75,
+      "active_seconds": 0.616214,
+      "archive_roundtrip": false,
+      "cap_frames": 1,
+      "cycle": 3,
+      "cycle_s": 2.409774,
+      "elapsed_s": 7.301328,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487377086,
+        "history_bytes": 71680,
+        "redo_entries": 0,
+        "renderer_video_bytes": 400277504,
+        "rss_kib": 931328,
+        "undo_entries": 6
+      },
+      "retained_undo_entries": 6
+    },
+    {
+      "achieved_ticks_per_second": 117.774070075572,
+      "active_frames": 33,
+      "active_mean_ms": 18.5251515151515,
+      "active_p95_ms": 26.063,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.61134,
+      "archive_roundtrip": false,
+      "cap_frames": 6,
+      "cycle": 4,
+      "cycle_s": 2.406803,
+      "elapsed_s": 9.718884,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487406998,
+        "history_bytes": 90112,
+        "redo_entries": 0,
+        "renderer_video_bytes": 400277504,
+        "rss_kib": 931520,
+        "undo_entries": 8
+      },
+      "retained_undo_entries": 8
+    },
+    {
+      "achieved_ticks_per_second": 119.832434312686,
+      "active_frames": 36,
+      "active_mean_ms": 16.6894166666667,
+      "active_p95_ms": 17.295,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.600839,
+      "archive_roundtrip": true,
+      "cap_frames": 0,
+      "cycle": 5,
+      "cycle_s": 7.935823,
+      "elapsed_s": 17.664777,
+      "file_phase": {
+        "cancel": true,
+        "discard": true,
+        "modifier": "ctrl",
+        "named_save": true,
+        "phase": 1,
+        "save_as": true,
+        "save_first": true
+      },
+      "memory": {
+        "godot_static_bytes": 487333114,
+        "history_bytes": 0,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 998560,
+        "undo_entries": 0
+      },
+      "retained_undo_entries": 0
+    },
+    {
+      "achieved_ticks_per_second": 117.278026557692,
+      "active_frames": 34,
+      "active_mean_ms": 17.8055,
+      "active_p95_ms": 25.358,
+      "active_requested_ticks": 71,
+      "active_seconds": 0.605399,
+      "archive_roundtrip": false,
+      "cap_frames": 3,
+      "cycle": 6,
+      "cycle_s": 2.429924,
+      "elapsed_s": 20.102115,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487377730,
+        "history_bytes": 34816,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064176,
+        "undo_entries": 2
+      },
+      "retained_undo_entries": 2
+    },
+    {
+      "achieved_ticks_per_second": 119.966009630605,
+      "active_frames": 36,
+      "active_mean_ms": 16.6710555555556,
+      "active_p95_ms": 17.717,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.60017,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 7,
+      "cycle_s": 2.391158,
+      "elapsed_s": 22.503594,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487405570,
+        "history_bytes": 53248,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064240,
+        "undo_entries": 4
+      },
+      "retained_undo_entries": 4
+    },
+    {
+      "achieved_ticks_per_second": 119.994800225324,
+      "active_frames": 36,
+      "active_mean_ms": 16.6668333333333,
+      "active_p95_ms": 17.307,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.600026,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 8,
+      "cycle_s": 2.387821,
+      "elapsed_s": 24.901241,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487433922,
+        "history_bytes": 71680,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064240,
+        "undo_entries": 6
+      },
+      "retained_undo_entries": 6
+    },
+    {
+      "achieved_ticks_per_second": 115.156516899219,
+      "active_frames": 34,
+      "active_mean_ms": 18.3889117647059,
+      "active_p95_ms": 26.548,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.625236,
+      "archive_roundtrip": false,
+      "cap_frames": 4,
+      "cycle": 9,
+      "cycle_s": 2.408002,
+      "elapsed_s": 27.318171,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487463682,
+        "history_bytes": 90112,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064288,
+        "undo_entries": 8
+      },
+      "retained_undo_entries": 8
+    },
+    {
+      "achieved_ticks_per_second": 121.664171199333,
+      "active_frames": 37,
+      "active_mean_ms": 16.6602702702703,
+      "active_p95_ms": 17.348,
+      "active_requested_ticks": 75,
+      "active_seconds": 0.616451,
+      "archive_roundtrip": true,
+      "cap_frames": 1,
+      "cycle": 10,
+      "cycle_s": 7.956272,
+      "elapsed_s": 35.285063,
+      "file_phase": {
+        "cancel": true,
+        "discard": true,
+        "modifier": "meta",
+        "named_save": true,
+        "phase": 2,
+        "save_as": true,
+        "save_first": true
+      },
+      "memory": {
+        "godot_static_bytes": 487345102,
+        "history_bytes": 0,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 998816,
+        "undo_entries": 0
+      },
+      "retained_undo_entries": 0
+    }
+  ],
+  "duration_s": 30.0,
+  "engine": "4.6.3-stable (official)",
+  "failures": 0,
+  "file_phases": [
+    {
+      "cancel": true,
+      "discard": true,
+      "modifier": "ctrl",
+      "named_save": true,
+      "phase": 1,
+      "save_as": true,
+      "save_first": true
+    },
+    {
+      "cancel": true,
+      "discard": true,
+      "modifier": "meta",
+      "named_save": true,
+      "phase": 2,
+      "save_as": true,
+      "save_first": true
+    }
+  ],
+  "grid": 256,
+  "phase_every": 5,
+  "refresh_hz": 120.0,
+  "render_mode": 0,
+  "render_scale": 1.0,
+  "scheduler": {
+    "max_ticks_per_frame": 3,
+    "target_ticks_per_second": 120.0
+  },
+  "successful_saves": 7,
+  "variant": {
+    "held_source": true,
+    "water_dot": true
+  },
+  "viewport_size": "(1600, 900)",
+  "vsync": 1
+}
