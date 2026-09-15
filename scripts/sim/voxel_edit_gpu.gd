@@ -25,8 +25,12 @@ var pick_pipeline := RID()
 var stamp_shader := RID()
 var stamp_pipeline := RID()
 var surface_buffer := RID()
+var surface_rays := RID()
 var surface_pick_set := RID()
 var surface_stamp_set := RID()
+## Batch picks resolve at most this many rays in one dispatch (one 64-byte
+## ray record and one 64-byte result record each).
+const MAX_BATCH_RAYS := 32
 
 func _init(device: RenderingDevice, texture: RID, thermal_texture: RID, elements_buffer: RID, grid_size: int, compile: Callable) -> void:
 	rd = device
@@ -46,34 +50,66 @@ func ensure_surface() -> void:
 	stamp_shader = rd.shader_create_from_spirv(compile_shader.call("res://shaders/compute/editor/surface_stamp.glsl", false))
 	stamp_pipeline = rd.compute_pipeline_create(stamp_shader)
 	surface_buffer = rd.storage_buffer_create(64)
-	surface_pick_set = _uniforms(surface_buffer, pick_shader)
+	# The single-ray path carries its ray in the push constant; the kernel still
+	# binds a ray buffer, so keep one 64-byte placeholder for that set.
+	surface_rays = rd.storage_buffer_create(64)
+	surface_pick_set = _uniforms(surface_buffer, pick_shader, true, false, surface_rays)
 	surface_stamp_set = _uniforms(surface_buffer, stamp_shader, true, true)
 
+## Single-ray preview pick: a wrapper over the batch path; `callback`
+## receives one decoded record merged with `metadata`.
 func request_pick(ray: Dictionary, radius: int, erase: bool, metadata: Dictionary, callback: Callable) -> void:
+	request_picks([ray], radius, erase, metadata, _deliver_single_pick.bind(callback))
+
+func _deliver_single_pick(results: Array, callback: Callable) -> void:
+	callback.call(results[0])
+
+## Batch pick: up to MAX_BATCH_RAYS rays resolve in one dispatch and one
+## asynchronous 64-byte-per-ray download. `callback` receives an Array of
+## decoded records in ray order, each merged with `metadata` plus its `index`.
+func request_picks(rays: Array, radius: int, erase: bool, metadata: Dictionary, callback: Callable) -> void:
 	ensure_surface()
-	var buffer := rd.storage_buffer_create(64)
-	var uniforms := _uniforms(buffer, pick_shader)
-	pending_buffers[buffer] = uniforms
+	var count := mini(rays.size(), MAX_BATCH_RAYS)
+	var results := rd.storage_buffer_create(64 * count)
+	var records := PackedByteArray()
+	for i in count:
+		records.append_array(_encode_ray(rays[i], radius, erase, 0))
+	var ray_buffer := rd.storage_buffer_create(records.size(), records)
+	var uniforms := _uniforms(results, pick_shader, true, false, ray_buffer)
+	pending_buffers[results] = [uniforms, ray_buffer]
 	var cl := rd.compute_list_begin()
-	_dispatch_pick(cl, ray, radius, erase, uniforms)
+	rd.compute_list_bind_compute_pipeline(cl, pick_pipeline)
+	rd.compute_list_bind_uniform_set(cl, uniforms, 0)
+	var push := _encode_ray(rays[0], radius, erase, count)
+	rd.compute_list_set_push_constant(cl, push, push.size())
+	rd.compute_list_dispatch(cl, count, 1, 1)
+	rd.compute_list_add_barrier(cl)
 	rd.compute_list_end()
-	var err := rd.buffer_get_data_async(buffer, _received_pick.bind(buffer, metadata, callback))
+	var err := rd.buffer_get_data_async(results, _received_picks.bind(results, count, metadata, callback))
 	if err != OK:
-		_finish_pick(rd.buffer_get_data(buffer), buffer, metadata, callback)
+		_finish_picks(rd.buffer_get_data(results), results, count, metadata, callback)
 
-func _received_pick(bytes: PackedByteArray, buffer: RID, metadata: Dictionary, callback: Callable) -> void:
-	RenderingServer.call_on_render_thread(_finish_pick.bind(bytes, buffer, metadata, callback))
+func _received_picks(bytes: PackedByteArray, buffer: RID, count: int, metadata: Dictionary, callback: Callable) -> void:
+	RenderingServer.call_on_render_thread(_finish_picks.bind(bytes, buffer, count, metadata, callback))
 
-func _finish_pick(bytes: PackedByteArray, buffer: RID, metadata: Dictionary, callback: Callable) -> void:
+func _finish_picks(bytes: PackedByteArray, buffer: RID, count: int, metadata: Dictionary, callback: Callable) -> void:
 	if disposed:
 		return
+	_free_pending(buffer)
+	var results: Array = []
+	for i in count:
+		var result := decode_pick(bytes.slice(i * 64, (i + 1) * 64))
+		result.merge(metadata)
+		result.index = i
+		results.append(result)
+	callback.call_deferred(results)
+
+func _free_pending(buffer: RID) -> void:
 	if pending_buffers.has(buffer):
-		rd.free_rid(pending_buffers[buffer])
+		for rid in pending_buffers[buffer]:
+			rd.free_rid(rid)
 		rd.free_rid(buffer)
 		pending_buffers.erase(buffer)
-	var result := decode_pick(bytes)
-	result.merge(metadata)
-	callback.call_deferred(result)
 
 func pick_sync(ray: Dictionary, radius: int, erase: bool) -> Dictionary:
 	ensure_surface()
@@ -96,11 +132,17 @@ static func decode_pick(bytes: PackedByteArray) -> Dictionary:
 		"element": bytes.decode_s32(12), "visited": bytes.decode_s32(48),
 		"temperature": bytes.decode_float(52), "amount": bytes.decode_s32(56), "flags": bytes.decode_s32(60)}
 
-func _dispatch_pick(cl: int, ray: Dictionary, radius: int, erase: bool, uniforms: RID) -> void:
+## 64-byte ray record shared by the push constant (single ray, batch = 0)
+## and the batch ray buffer. See surface_pick.glsl.
+func _encode_ray(ray: Dictionary, radius: int, erase: bool, batch: int) -> PackedByteArray:
 	var origin: Vector3 = ray.origin
 	var direction: Vector3 = ray.direction
-	var push := PackedFloat32Array([origin.x, origin.y, origin.z, 0.0, direction.x, direction.y, direction.z, 0.0]).to_byte_array()
-	push.append_array(PackedInt32Array([size, radius, int(erase), ray.mask, int(ray.section), ray.axis, ray.depth, 0]).to_byte_array())
+	var record := PackedFloat32Array([origin.x, origin.y, origin.z, 0.0, direction.x, direction.y, direction.z, 0.0]).to_byte_array()
+	record.append_array(PackedInt32Array([size, radius, int(erase), ray.mask, int(ray.section), ray.axis, ray.depth, batch]).to_byte_array())
+	return record
+
+func _dispatch_pick(cl: int, ray: Dictionary, radius: int, erase: bool, uniforms: RID) -> void:
+	var push := _encode_ray(ray, radius, erase, 0)
 	rd.compute_list_bind_compute_pipeline(cl, pick_pipeline)
 	rd.compute_list_bind_uniform_set(cl, uniforms, 0)
 	rd.compute_list_set_push_constant(cl, push, push.size())
@@ -265,7 +307,7 @@ func restore(regions: Array) -> void:
 		rd.free_rid(uniforms)
 		rd.free_rid(buffer)
 
-func _uniforms(buffer: RID, for_shader: RID = RID(), with_thermal := true, with_elements := false) -> RID:
+func _uniforms(buffer: RID, for_shader: RID = RID(), with_thermal := true, with_elements := false, rays := RID()) -> RID:
 	var image := RDUniform.new()
 	image.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
 	image.binding = 0
@@ -283,6 +325,13 @@ func _uniforms(buffer: RID, for_shader: RID = RID(), with_thermal := true, with_
 		heat.binding = 2
 		heat.add_id(thermal)
 		uniforms.append(heat)
+	if rays.is_valid():
+		# The pick kernel reads batch rays at binding 3.
+		var batch := RDUniform.new()
+		batch.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+		batch.binding = 3
+		batch.add_id(rays)
+		uniforms.append(batch)
 	if with_elements:
 		var elems := RDUniform.new()
 		elems.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
@@ -305,11 +354,10 @@ func free_resources() -> void:
 		# scripts that own their callables are still alive. Otherwise the device
 		# releases them during display teardown, after script finalisation.
 		rd.buffer_get_data(pending_buffers.keys()[0], 0, 4)
-	for buffer in pending_buffers:
-		rd.free_rid(pending_buffers[buffer])
-		rd.free_rid(buffer)
+	for buffer in pending_buffers.keys():
+		_free_pending(buffer)
 	pending_buffers.clear()
 	transactions.clear()
-	for rid in [surface_pick_set, surface_stamp_set, surface_buffer, pick_pipeline, pick_shader, stamp_pipeline, stamp_shader, pipeline, shader]:
+	for rid in [surface_pick_set, surface_stamp_set, surface_buffer, surface_rays, pick_pipeline, pick_shader, stamp_pipeline, stamp_shader, pipeline, shader]:
 		if rid.is_valid():
 			rd.free_rid(rid)

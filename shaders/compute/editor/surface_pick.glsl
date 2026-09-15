@@ -2,24 +2,36 @@
 #version 450
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 layout(rgba8, set = 0, binding = 0) uniform readonly image3D grid;
-// stats: x = cells visited, y = hit temperature (float bits), z = hit amount,
-// w = hit flags. The last three are the cell probe payload (bytes 52..63).
-layout(std430, set = 0, binding = 1) buffer Result {
-    ivec4 hit; ivec4 normal; ivec4 target; ivec4 stats;
-} result;
+// One 64-byte record per ray. stats: x = cells visited, y = hit temperature
+// (float bits), z = hit amount, w = hit flags; the last three are the cell
+// probe payload (bytes 52..63 of each record).
+struct PickRecord { ivec4 hit; ivec4 normal; ivec4 target; ivec4 stats; };
+layout(std430, set = 0, binding = 1) buffer Result { PickRecord records[]; } result;
 layout(rg32f, set = 0, binding = 2) uniform readonly image3D thermal;
+// Batch rays share the push-constant layout, one 64-byte record each.
+struct RayRecord { vec4 origin; vec4 direction; ivec4 options; ivec4 section; };
+layout(std430, set = 0, binding = 3) readonly buffer Rays { RayRecord rays[]; } batch;
 layout(push_constant, std430) uniform Params {
     vec4 origin; vec4 direction;
     ivec4 options; // grid, radius, erase, included element bitmask
-    ivec4 section; // enabled, axis, maximum visible cell, unused
+    ivec4 section; // enabled, axis, maximum visible cell, batch count (0 = this push constant is the ray)
 } pc;
 void main() {
-    result.hit = ivec4(-1); result.normal = ivec4(0);
-    result.target = ivec4(-1, -1, -1, 0); result.stats = ivec4(0);
-    vec3 origin = (pc.origin.xyz + 0.5) * float(pc.options.x);
-    vec3 dir = normalize(pc.direction.xyz);
-    vec3 hi = vec3(float(pc.options.x));
-    if (pc.section.x != 0) { hi[pc.section.y] = float(pc.section.z + 1); }
+    uint index = gl_GlobalInvocationID.x;
+    RayRecord ray;
+    if (pc.section.w > 0) {
+        if (index >= uint(pc.section.w)) { return; }
+        ray = batch.rays[index];
+    } else {
+        index = 0u;
+        ray = RayRecord(pc.origin, pc.direction, pc.options, pc.section);
+    }
+    result.records[index].hit = ivec4(-1); result.records[index].normal = ivec4(0);
+    result.records[index].target = ivec4(-1, -1, -1, 0); result.records[index].stats = ivec4(0);
+    vec3 origin = (ray.origin.xyz + 0.5) * float(ray.options.x);
+    vec3 dir = normalize(ray.direction.xyz);
+    vec3 hi = vec3(float(ray.options.x));
+    if (ray.section.x != 0) { hi[ray.section.y] = float(ray.section.z + 1); }
     float enter = -1e30, leave = 1e30;
     int entry_axis = 0;
     for (int axis = 0; axis < 3; axis++) {
@@ -47,21 +59,25 @@ void main() {
             next_t[axis] = (face - origin[axis]) / dir[axis];
         }
     }
-    for (int i = 0; i < pc.options.x * 3 + 3; i++) {
+    for (int i = 0; i < ray.options.x * 3 + 3; i++) {
         if (any(lessThan(cell, ivec3(0))) || any(greaterThanEqual(vec3(cell), hi))) { return; }
         uvec4 v = uvec4(imageLoad(grid, cell) * 255.0 + 0.5);
         uint id = v.x;
-        result.stats.x = i + 1;
-        if (id != 0u && (pc.options.w & (1 << int(id))) != 0) {
-            result.hit = ivec4(cell, int(id));
-            result.stats.y = floatBitsToInt(imageLoad(thermal, cell).r);
-            result.stats.z = int(v.z);
-            result.stats.w = int(v.w);
-            result.normal = ivec4(normal, 1);
-            ivec3 target = pc.options.z != 0 ? cell : cell + normal * (pc.options.y + 1);
-            bool valid = (pc.options.z != 0 || any(notEqual(normal, ivec3(0))))
+        result.records[index].stats.x = i + 1;
+        if (id != 0u && (ray.options.w & (1 << int(id))) != 0) {
+            result.records[index].hit = ivec4(cell, int(id));
+            result.records[index].stats.y = floatBitsToInt(imageLoad(thermal, cell).r);
+            result.records[index].stats.z = int(v.z);
+            result.records[index].stats.w = int(v.w);
+            result.records[index].normal = ivec4(normal, 1);
+            // Placement contract: an additive stamp is centred on the first air
+            // cell outside the hit face, so the brush forms a cap resting on the
+            // surface (ONLY_AIR keeps the solid); erase is centred on the hit cell.
+            // The radius no longer moves the centre.
+            ivec3 target = ray.options.z != 0 ? cell : cell + normal;
+            bool valid = (ray.options.z != 0 || any(notEqual(normal, ivec3(0))))
                 && all(greaterThanEqual(target, ivec3(0))) && all(lessThan(vec3(target), hi));
-            result.target = ivec4(target, valid ? 1 : 0);
+            result.records[index].target = ivec4(target, valid ? 1 : 0);
             return;
         }
         int axis = next_t.x <= next_t.y && next_t.x <= next_t.z ? 0 : (next_t.y <= next_t.z ? 1 : 2);

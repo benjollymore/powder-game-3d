@@ -1,14 +1,26 @@
 extends RefCounted
 ## Pure editing geometry, independent of simulation storage or rendering.
 
+## Workplane target (placement-brief contract 2): the cell whose visible face
+## the ray crosses. The plane is the one-cell slab `[cell, cell + 1)` along
+## `axis`; the ray's entry point into that slab (or the origin, when the camera
+## is already inside it) is floored on the other two axes. A ray perpendicular
+## to the plane gets the same cell as the old centre-plane intersection; a
+## grazing ray no longer lands cells away from the face under the pointer.
 static func target(origin: Vector3, direction: Vector3, axis: int, cell: int, grid: int) -> Vector3i:
 	if absf(direction[axis]) < 0.000001:
 		return Vector3i(-1, -1, -1)
-	var plane := (float(cell) + 0.5) / grid - 0.5
-	var t := (plane - origin[axis]) / direction[axis]
-	if t < 0.0:
+	var lo := float(cell) / grid - 0.5
+	var hi := float(cell + 1) / grid - 0.5
+	var t_lo := (lo - origin[axis]) / direction[axis]
+	var t_hi := (hi - origin[axis]) / direction[axis]
+	var t_exit := maxf(t_lo, t_hi)
+	if t_exit < 0.0:
 		return Vector3i(-1, -1, -1)
-	var p := (origin + direction * t + Vector3.ONE * 0.5) * grid
+	var t := maxf(minf(t_lo, t_hi), 0.0)
+	# Nudge along the ray so a hit exactly on a lateral cell edge floors into
+	# the cell the ray is entering, as the GPU pick kernel does.
+	var p := (origin + direction * t + Vector3.ONE * 0.5) * grid + direction * 0.0001
 	var result := Vector3i(p.floor())
 	result[axis] = cell
 	for a in 3:

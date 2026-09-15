@@ -50,7 +50,7 @@ func _run() -> void:
 	check(result.valid and result.hit == Vector3i(64, 64, 90), "authoritative pick includes liquid and skips gas by default")
 	check(result.target == Vector3i(64, 64, 91) and result.normal == Vector3i.BACK, "add selects adjacent outside cell with outward face normal")
 	result = await query(ray(64, 64, wall_mask), 3)
-	check(result.hit.z == 80 and result.target.z == 84, "radius-three add centers brush outside the selected solid surface")
+	check(result.hit.z == 80 and result.target.z == 81, "radius-three add sits on the selected surface (centre is the first air cell outside the hit face)")
 	result = await query(ray(), 0, true)
 	check(result.target == result.hit and result.element == Elements.Id.WATER, "erase targets actual hit material")
 	result = await query(ray(64, 64, wall_mask))
@@ -89,6 +89,24 @@ func _run() -> void:
 	check(transaction.bytes < 49152, "surface undo captures local tiles, not the world (12 bytes per cell with thermal)")
 	sim.restore_edit_transaction(transaction)
 	check(await read() == before, "surface stroke undo restores all packed bytes exactly")
+	# Placement contract 1: a radius-three additive stamp forms a cap resting on
+	# the surface, so at least one stamped cell is face-adjacent to the hit cell
+	# and the wall underneath stays intact.
+	id = sim.begin_edit_transaction(func(_result): pass)
+	sim.record_surface_stroke(id, [ray(64, 64, wall_mask)], 3, Elements.Id.SAND, sim.BrushMode.ONLY_AIR, 82)
+	transaction = await finish(id)
+	after = await read()
+	var cap := 0
+	for dz in range(0, 5):
+		for dy in range(-3, 4):
+			for dx in range(-3, 4):
+				if at(after, 64 + dx, 64 + dy, 81 + dz) == Elements.Id.SAND:
+					cap += 1
+	check(at(after, 64, 64, 81) == Elements.Id.SAND and at(after, 64, 64, 80) == Elements.Id.WALL,
+		"radius-three add sits on the selected surface (at least one stamped cell is face-adjacent to the hit cell)")
+	check(cap > 40 and cap < 123 and at(after, 64, 64, 85) == 0, "the cap is the sphere clipped by the wall, not a floating ball")
+	sim.restore_edit_transaction(transaction)
+	check(await read() == before, "cap stroke undo restores all packed bytes exactly")
 	# Preview is informational: mutation re-picks the ordered current GPU state.
 	result = await query(ray(50, 50, wall_mask))
 	check(result.target.z == 81, "old preview initially sees original wall")

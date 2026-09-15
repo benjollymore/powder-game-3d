@@ -577,13 +577,52 @@ func capture_regions(bounds: Array, callback: Callable) -> int:
 
 ## Preview is asynchronous and tagged; painting re-picks from its frozen ray.
 func request_surface_pick(ray: Dictionary, radius: int, erase: bool, callback: Callable) -> void:
-	var checked := _checked_surface(ray)
+	request_surface_picks([ray], _deliver_surface_pick.bind(callback), radius, erase)
+
+
+func _deliver_surface_pick(results: Array, callback: Callable) -> void:
+	if callback.is_valid():
+		callback.call(results[0])
+
+
+## Batch preview pick (placement-brief contract 3): up to EditGPU.MAX_BATCH_RAYS
+## rays resolve in one dispatch and one asynchronous download, so a frame's
+## motion samples arrive together. `callback` receives an Array of pick
+## dictionaries in ray order (invalid rays decode as misses), each tagged with
+## `epoch`, `revision`, `tick` and `index`. The radius no longer moves an
+## additive target; it is kept for API compatibility and bounds validation.
+func request_surface_picks(rays: Array, callback: Callable, radius: int = 0, erase: bool = false) -> void:
 	var metadata := {"epoch": edit_epoch, "revision": edit_revision, "tick": tick}
-	if checked.is_empty() or radius < 0 or radius > 12:
-		metadata.merge(EditGPU.decode_pick(PackedByteArray()))
-		callback.call_deferred(metadata)
+	var count := mini(rays.size(), EditGPU.MAX_BATCH_RAYS)
+	var checked: Array = []
+	var slots: Array = []
+	for i in count:
+		var value := _checked_surface(rays[i]) if rays[i] is Dictionary else {}
+		if value.is_empty() or radius < 0 or radius > 12:
+			slots.append(-1)
+		else:
+			slots.append(checked.size())
+			checked.append(value)
+	if checked.is_empty():
+		_deliver_surface_picks([], slots, metadata, callback)
 		return
-	RenderingServer.call_on_render_thread(_rt_request_surface_pick.bind(checked, radius, erase, metadata, callback))
+	RenderingServer.call_on_render_thread(_rt_request_surface_picks.bind(checked, radius, erase, metadata, _deliver_surface_picks.bind(slots, metadata, callback)))
+
+
+func _deliver_surface_picks(picked: Array, slots: Array, metadata: Dictionary, callback: Callable) -> void:
+	var results: Array = []
+	for i in slots.size():
+		var slot: int = slots[i]
+		var result: Dictionary
+		if slot >= 0 and slot < picked.size():
+			result = picked[slot]
+		else:
+			result = EditGPU.decode_pick(PackedByteArray())
+			result.merge(metadata)
+		result.index = i
+		results.append(result)
+	if callback.is_valid():
+		callback.call_deferred(results)
 
 
 func record_surface_stroke(id: int, rays: Array, radius: int, element: int, mode: BrushMode = BrushMode.ONLY_AIR, seed: int = 1,
@@ -626,8 +665,8 @@ func _checked_rays(rays: Array) -> Array:
 	return checked
 
 
-func _rt_request_surface_pick(ray: Dictionary, radius: int, erase: bool, metadata: Dictionary, callback: Callable) -> void:
-	_rt_edit_gpu().request_pick(ray, radius, erase, metadata, callback)
+func _rt_request_surface_picks(rays: Array, radius: int, erase: bool, metadata: Dictionary, callback: Callable) -> void:
+	_rt_edit_gpu().request_picks(rays, radius, erase, metadata, callback)
 
 
 func _rt_record_surface_stroke(id: int, rays: Array, radius: int, element: int, mode: int, seed: int, shape: int = BrushShape.SPHERE) -> void:

@@ -49,9 +49,9 @@ var surface_connect := false
 var stroke_view := {}
 var pick_pending := false
 var pick_intent := 0
-var pick_signature := 0
+var pick_request_id := 0 # increases per issued preview pick
+var pick_shown_id := -1  # id of the pick currently displayed
 var pick_cache := {}
-var last_pick_ms := 0
 var tools_column: VBoxContainer
 var archive_panel: Node
 var _queued_editor_action := ""
@@ -1175,7 +1175,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				elif capturing and not painting:
 					_queue_pending_press(event.position)
 				elif not capturing and (targeting_mode == TargetMode.SURFACE or _target_at(event.position).x >= 0):
-					_invalidate_picks()
+					_invalidate_picks(false)
 					stroke_target_mode = targeting_mode
 					stroke_view = {"section": section, "axis": axis, "depth": depth}
 					surface_connect = false
@@ -1542,31 +1542,34 @@ func _ray_at(mouse: Vector2, view: Dictionary = {}) -> Dictionary:
 		"section": view.get("section", section), "axis": view.get("axis", axis), "depth": view.get("depth", depth)}
 
 
-func _invalidate_picks() -> void:
+## Reject every pick still in flight. `clear` also drops the shown target,
+## which is right when the world or the view changed under it; a stroke
+## press keeps the target visible, so the marker never blinks at the click.
+func _invalidate_picks(clear := true) -> void:
 	pick_intent += 1
-	pick_signature = 0
-	pick_cache.clear()
-
-
-func _request_preview(mouse: Vector2) -> void:
-	var ray := _ray_at(mouse)
-	var signature := hash([ray, radius, erase, sim.edit_epoch, 0 if testing else sim.edit_revision])
-	if signature != pick_signature:
-		pick_intent += 1
-		pick_signature = signature
+	if clear:
 		pick_cache.clear()
-	if pick_pending or (not pick_cache.is_empty() and (not testing or Time.get_ticks_msec() - last_pick_ms < 50)):
+		pick_shown_id = -1
+
+
+## Placement-brief contract 3: one preview pick is issued every frame the
+## pointer is over the scene, moving or not; requests carry increasing ids and
+## only a newer id replaces the shown target, which stays until then. Preview
+## is informational: painting re-picks against ordered GPU state, so authored
+## edits do not hide it (only a world reset or an explicit invalidation does).
+func _request_preview(mouse: Vector2) -> void:
+	if pick_pending:
 		return
 	pick_pending = true
-	last_pick_ms = Time.get_ticks_msec()
-	var intent := pick_intent
-	sim.request_surface_pick(ray, radius, erase, _receive_pick.bind(intent))
+	pick_request_id += 1
+	sim.request_surface_pick(_ray_at(mouse), radius, erase, _receive_pick.bind(pick_request_id, pick_intent))
 
 
-func _receive_pick(result: Dictionary, intent: int) -> void:
+func _receive_pick(result: Dictionary, id: int, intent: int) -> void:
 	pick_pending = false
-	if intent != pick_intent or result.epoch != sim.edit_epoch or (not testing and result.revision != sim.edit_revision):
+	if id <= pick_shown_id or intent != pick_intent or result.epoch != sim.edit_epoch:
 		return
+	pick_shown_id = id
 	pick_cache = result
 
 

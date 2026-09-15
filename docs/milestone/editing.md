@@ -28,7 +28,7 @@ Still in progress: authoritative surface picking and intent/generation rejection
 
 # Checkpoint 2: authoritative surface targeting
 
-The editor now offers Workplane and Material surface targeting. Workplanes remain the default and region corner selection remains plane-based. Surface picks read the actual voxel image, skipping gas by default and supporting explicit element masks. Add centers the sphere outside the hit face by radius+1 cells; erase targets the hit cell. Section bounds also constrain picking: hidden positive-side matter cannot intercept the ray, and an add target outside the retained section is rejected.
+The editor now offers Workplane and Material surface targeting. Workplanes remain the default and region corner selection remains plane-based. Surface picks read the actual voxel image, skipping gas by default and supporting explicit element masks. Add centres the brush on the first air cell outside the hit face (`cell + normal`), so ONLY_AIR leaves a cap resting on the surface; erase targets the hit cell. (Until the placement milestone the additive centre was `radius + 1` cells out, which only tangented the surface: at radius 3 the material floated four cells off the face and read as "behind the cursor"; the `radius-three add centers brush outside` check was rewritten to "sits on the selected surface" for that reason.) Section bounds also constrain picking: hidden positive-side matter cannot intercept the ray, and an add target outside the retained section is rejected.
 
 Preview queries download 64 bytes asynchronously. Their ray/gesture intent, reset epoch and authored edit revision are checked before displaying a result. Live previews may lag simulation evolution; preview coordinates are never used as mutation authority. Painting retains frozen ray/material/radius/mode metadata and resolves that command against current ordered GPU state. A new nearer surface inserted after a preview correctly redirects the actual stamp to the nearer surface.
 
@@ -69,3 +69,11 @@ Construction tools also expose **Show workplane grid**. Hiding this visual guide
 # Checkpoint 4: reversible regional history
 
 Build now has bounded Undo and Redo, sharing a 128 MiB retained-byte budget. Inverse capture must validate before restoration; exact no-op painting preserves an existing Redo chain. Both directions survive Run/Return and clear on world replacement. See [regional Redo design, measurements and regression results](editor-redo.md).
+
+# Placement milestone: targeting (2026-09-15)
+
+Root causes and contracts are in [placement-brief.md](placement-brief.md). This checkpoint changes three things.
+
+- **Surface centre.** An additive stamp is centred on the first air cell outside the hit face rather than `radius + 1` cells out; erase is unchanged. A radius-three add now changes a cell face-adjacent to the hit cell and leaves the wall intact (surface suite).
+- **Workplane face.** `Geometry.target` returns the cell whose visible face the ray crosses on the one-cell workplane slab, taking the ray's entry point into the slab (or the camera position when it is inside). Perpendicular rays keep their old cell; grazing rays no longer land several cells away from the face under the pointer (interaction unit checks).
+- **Preview scheduling.** One preview pick is issued every frame the pointer is over the scene, moving or not; requests carry increasing ids and only a newer id replaces the shown target, which stays visible until then. Authored edits no longer clear the shown target (preview is informational; painting re-picks against ordered GPU state); a world reset, view change or explicit invalidation still does. The Test-mode 50 ms throttle is gone. `VoxelSim.request_surface_picks(rays, callback, radius = 0, erase = false)` resolves up to 32 rays in one dispatch and one download (`EditGPU.request_picks`), delivering an ordered Array of pick records tagged with `index`; the single-ray call is a wrapper over it. The preview-pick suite checks a 60-frame parsed drag never shows an invalid target, a newer target replaces an older one within a frame of arriving, and 32 batched picks equal 32 single picks.
