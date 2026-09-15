@@ -1,0 +1,14 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: dirty untitled Open reaches the Save/Discard/Cancel prompt
+ok: guard queues Save As and waits in 'saving'
+ok: a file shortcut does not replace the guard's queued Save (actual: save)
+ok: the rejected request shows visible feedback: 'A file action is already waiting; finish it first.'
+ok: a repeated Save request while one is queued is rejected with feedback, not duplicated
+ok: guard leaves 'saving' with feedback once nothing can resolve the save (actual: '', message 'Saving was interrupted; the requested action was canceled.')
+ok: window close/reset/empty requests reach the prompt again after the interrupted save
+ok: a file shortcut during the guard prompt is rejected with feedback
+after unrelated save: guard.state= continued=0 stale_open=0 dirty=false msg=Saved build: review-guard-165768.p3d
+ok: an unrelated later Save never runs an abandoned continuation (after-save 0, continuation 0, close 0)
+ok: a Save shortcut during a running file operation is rejected with feedback
+Guard queue: 10 checks, 0 failures

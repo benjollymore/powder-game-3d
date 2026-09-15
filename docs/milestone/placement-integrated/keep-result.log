@@ -1,0 +1,18 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: diff reports exactly the tiles whose cells differ, sorted
+ok: identical or malformed worlds report no tiles
+ok: bounds are aligned history tiles clamped to the grid
+ok: byte accounting matches the tile volume
+ok: the combined diff adds tiles that changed only in temperature
+ok: byte accounting uses the 12-byte history cell
+ok: keeping pauses the experiment and blocks other edits
+ok: keep leaves Test and returns to Build
+ok: the authored world and temperatures were restored, then the live tiles written on top
+ok: one undo record holds the authored tiles, including the thermal-only tile, at the new epoch
+ok: the kept build is unsaved and reported
+ok: the undo record carries the authored before-image of both layers, not the live tiles
+ok: an unchanged experiment keeps nothing and stays in Test
+ok: keep requested during capture waits like other actions
+ok: a queued keep is dropped when Test already ended
+Keep result CPU: 15 checks, 0 failures

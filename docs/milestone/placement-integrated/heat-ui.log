@@ -1,0 +1,35 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: grouping follows the table's own category keys
+ok: tooltips come from the table's tip key
+ok: keyless rows group the known ids by the fallback map
+ok: fallback map places oil, wood, plant, steam and smoke in their categories
+ok: a row without a tip falls back to its name
+ok: explicit category keys override the fallback and admit new ids
+ok: unknown ids without a category key land in Special
+ok: first row is Sand, Water, Wall
+ok: heat row leads with Fire, Lava and Ice when the table has them, only heat-category materials follow, and thermal brushes hide while the simulator has no HEAT/COOL modes (row: ["Fire", "Lava", "Ice"])
+ok: one tab per remaining category, every non-air material has a button
+ok: buttons show the table tip and tab contents start hidden
+ok: a tab reveals only its own materials
+ok: choosing another tab hides the previous one
+ok: materials inside a tab select like the fixed rows
+ok: thermal brushes cannot be selected while the simulator lacks them
+ok: material brush mode keeps erase/add semantics
+ok: number keys follow the first row order
+ok: an unassigned number key leaves the selection alone
+ok: key lookup rejects numbers beyond the row
+ok: speed slider stores 1/8x in Build without touching the clock
+ok: in Test the slider drives the clock to 4x
+ok: keyboard time changes sync back to the slider
+ok: Examples lists every scenario except Empty behind a disabled placeholder
+ok: choosing an example asks the guard and resets the picker
+ok: the guard continuation replaces the build with the example's exact bytes as a clean untitled world
+ok: an example chosen mid-capture waits like other editor actions
+ok: the waiting example request resumes after the capture
+ok: unknown example names are ignored
+ok: ambient control starts at 20 °C inside Tools & view options
+ok: ambient control sets the simulator's ambient kelvin
+ok: no probe is requested from a simulator without cell probes
+ok: read_world returns voxels with an empty thermal layer when unsupported
+Heat UI CPU: 32 checks, 0 failures

@@ -1,0 +1,10 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: waiting gesture owns frozen material, radius and nested view metadata
+ok: waiting L-shaped stroke retains both legs rather than shortcutting its curve
+ok: toolbar break cannot create a connector during later replay
+ok: release seals the recorded path before history becomes available
+ok: surface rays are owned snapshots with explicit segment continuity
+ok: long stalls retain a bounded 256-sample prefix, seal it and report the limit
+ok: stationary duplicate pointer updates cannot consume the pending curve budget
+Pending gesture CPU: 7 checks, 0 failures

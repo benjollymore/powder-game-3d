@@ -1,0 +1,93 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: scenario names are unique and include Empty (15 at 256³)
+ok: Demo builds 256³ voxels
+ok: Demo uses only table materials (offending id -1)
+ok: Demo has a thermal layer of 8 bytes per cell (element defaults)
+ok: Demo temperatures are finite and above absolute zero (293.1..1200.0 K)
+ok: Demo places at least one material besides air (8 kinds)
+ok: Demo builds deterministically
+ok: Dam break builds 256³ voxels
+ok: Dam break uses only table materials (offending id -1)
+ok: Dam break has a thermal layer of 8 bytes per cell (element defaults)
+ok: Dam break temperatures are finite and above absolute zero (293.1..293.1 K)
+ok: Dam break places at least one material besides air (5 kinds)
+ok: Dam break builds deterministically
+ok: U-bend builds 256³ voxels
+ok: U-bend uses only table materials (offending id -1)
+ok: U-bend has a thermal layer of 8 bytes per cell (element defaults)
+ok: U-bend temperatures are finite and above absolute zero (293.1..293.1 K)
+ok: U-bend places at least one material besides air (2 kinds)
+ok: U-bend builds deterministically
+ok: Pressure pipe builds 256³ voxels
+ok: Pressure pipe uses only table materials (offending id -1)
+ok: Pressure pipe has a thermal layer of 8 bytes per cell (element defaults)
+ok: Pressure pipe temperatures are finite and above absolute zero (293.1..293.1 K)
+ok: Pressure pipe places at least one material besides air (2 kinds)
+ok: Pressure pipe builds deterministically
+ok: Forest fire builds 256³ voxels
+ok: Forest fire uses only table materials (offending id -1)
+ok: Forest fire has a thermal layer of 8 bytes per cell (element defaults)
+ok: Forest fire temperatures are finite and above absolute zero (293.1..1200.0 K)
+ok: Forest fire places at least one material besides air (5 kinds)
+ok: Forest fire builds deterministically
+ok: Oil spill builds 256³ voxels
+ok: Oil spill uses only table materials (offending id -1)
+ok: Oil spill has a thermal layer of 8 bytes per cell (element defaults)
+ok: Oil spill temperatures are finite and above absolute zero (293.1..1200.0 K)
+ok: Oil spill places at least one material besides air (4 kinds)
+ok: Oil spill builds deterministically
+ok: Steam vent builds 256³ voxels
+ok: Steam vent uses only table materials (offending id -1)
+ok: Steam vent has a thermal layer of 8 bytes per cell (element defaults)
+ok: Steam vent temperatures are finite and above absolute zero (293.1..1200.0 K)
+ok: Steam vent places at least one material besides air (3 kinds)
+ok: Steam vent builds deterministically
+ok: Candle builds 256³ voxels
+ok: Candle uses only table materials (offending id -1)
+ok: Candle has a thermal layer of 8 bytes per cell (element defaults)
+ok: Candle temperatures are finite and above absolute zero (293.1..1200.0 K)
+ok: Candle places at least one material besides air (3 kinds)
+ok: Candle builds deterministically
+ok: Powder keg builds 256³ voxels
+ok: Powder keg uses only table materials (offending id -1)
+ok: Powder keg has a thermal layer of 8 bytes per cell (element defaults)
+ok: Powder keg temperatures are finite and above absolute zero (293.1..1200.0 K)
+ok: Powder keg places at least one material besides air (4 kinds)
+ok: Powder keg builds deterministically
+ok: Acid rain builds 256³ voxels
+ok: Acid rain uses only table materials (offending id -1)
+ok: Acid rain has a thermal layer of 8 bytes per cell (element defaults)
+ok: Acid rain temperatures are finite and above absolute zero (293.1..293.1 K)
+ok: Acid rain places at least one material besides air (6 kinds)
+ok: Acid rain builds deterministically
+ok: Volcano builds 256³ voxels
+ok: Volcano uses only table materials (offending id -1)
+ok: Volcano has a thermal layer of 8 bytes per cell (element defaults)
+ok: Volcano temperatures are finite and above absolute zero (293.1..1500.0 K)
+ok: Volcano places at least one material besides air (4 kinds)
+ok: Volcano builds deterministically
+ok: Ice cave builds 256³ voxels
+ok: Ice cave uses only table materials (offending id -1)
+ok: Ice cave has a thermal layer of 8 bytes per cell (element defaults)
+ok: Ice cave temperatures are finite and above absolute zero (263.1..1500.0 K)
+ok: Ice cave places at least one material besides air (3 kinds)
+ok: Ice cave builds deterministically
+ok: Boiler builds 256³ voxels
+ok: Boiler uses only table materials (offending id -1)
+ok: Boiler has a thermal layer of 8 bytes per cell (element defaults)
+ok: Boiler temperatures are finite and above absolute zero (293.1..1500.0 K)
+ok: Boiler places at least one material besides air (4 kinds)
+ok: Boiler builds deterministically
+ok: Foundry builds 256³ voxels
+ok: Foundry uses only table materials (offending id -1)
+ok: Foundry has a thermal layer of 8 bytes per cell (element defaults)
+ok: Foundry temperatures are finite and above absolute zero (263.1..1500.0 K)
+ok: Foundry places at least one material besides air (4 kinds)
+ok: Foundry builds deterministically
+ok: Empty builds 256³ voxels
+ok: Empty uses only table materials (offending id -1)
+ok: Empty has a thermal layer of 8 bytes per cell (element defaults)
+ok: Empty temperatures are finite and above absolute zero (293.1..293.1 K)
+ok: Empty places at least one material besides air (1 kinds)
+Examples CPU (256³): 90 checks, 0 failures

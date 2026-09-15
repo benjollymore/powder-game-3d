@@ -1,0 +1,20 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: fixture has a 64x64 wall slab
+ok: sphere at radius 2 on a workplane changes exactly the expected 33 cells
+FAIL: cube at radius 2 on a workplane changes exactly the expected 125 cells
+FAIL: cube changes the full 5x5x5 box in open air
+FAIL: disc at radius 2 on a workplane changes exactly the expected 25 cells
+FAIL: disc changes a 5x5 square one cell thick on the workplane axis
+ok: cube over the slab preserves every wall cell
+FAIL: cube over the slab fills exactly the air part of its box (100 cells)
+ok: sphere surface pick hits the slab with the +z normal
+ok: sphere surface stamp changes exactly the expected set around the pick target (33 cells)
+ok: cube surface pick hits the slab with the +z normal
+FAIL: cube surface stamp changes exactly the expected set around the pick target (115 cells)
+ok: disc surface pick hits the slab with the +z normal
+FAIL: disc surface stamp changes exactly the expected set around the pick target (25 cells)
+ok: surface disc lies flat on the picked face plane
+ok: surface stamps of every shape preserve the slab
+BRUSH_SHAPE_CHECKS 16 FAILURES 7

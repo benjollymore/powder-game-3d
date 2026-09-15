@@ -1,0 +1,20 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: initial temperature table has one slot per palette entry
+ok: fire, steam and lava start at their THERMAL initial temperatures (1200.0, 380.0, 1500.0)
+ok: air and unused ids start at ambient
+ok: a changed ambient moves air only
+ok: liquid capacity is linear in amount down to one unit
+ok: compressed liquid holds more heat
+ok: solids and air use their table capacity
+ok: ice and steam carrying a liquid's amount scale their capacity by it
+ok: energy total sums capacity x temperature plus latent (616062.510 vs 616062.522)
+ok: energy total over a region counts only that region
+ok: brush Mode mirrors VoxelSim.BrushMode
+ok: boiling and condensing share water's latent energy (2257 J per cell)
+ok: water freezes to ice and ice melts to water
+ok: lava and stone are a phase pair
+ok: wall insulates
+ok: the interim contact-melt rule for wax is gone; melting is thermal
+ok: element table validates
+Thermal init CPU: 17 checks, 0 failures

@@ -1,0 +1,17 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: immovable solids default to the cube brush
+ok: powders, liquids and gases default to the sphere brush
+ok: out-of-range ids fall back to the sphere
+ok: choosing Wall selects the cube and labels the button
+ok: choosing Sand returns to the sphere while no override is set
+ok: C cycles sphere to cube and marks a session override
+ok: C cycles cube to disc
+ok: a session override survives a material change
+ok: C cycles disc back to sphere
+ok: the Shape button cycles like the key
+ok: number keys change the material but keep the overridden shape
+ok: authored stroke carries the frozen shape and the stroke view's plane axis
+ok: changing the shape mid-stroke does not change the frozen stroke shape
+ok: live source carries the frozen shape and axis
+Brush shape CPU: 14 checks, 0 failures

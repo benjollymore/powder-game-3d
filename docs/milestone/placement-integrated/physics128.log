@@ -1,0 +1,194 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+--- _test_sand_settles
+ok: pile is stable: identical after 300 more ticks
+ok: test world has 4096 sand
+ok: sand count conserved: 4096 -> 4096
+ok: air count conserved
+ok: no unknown element ids after ticking
+ok: no sand floating over air (found 0)
+ok: no sand left at the drop height (found 0)
+--- _test_water_levels
+ok: water mass conserved: 2764800 -> 2764800
+ok: wall count conserved
+ok: all water ended inside the bowl (found 0 outside)
+ok: no water hanging over air (found 0)
+ok: water surface is level: column heights 10.21..10.22
+ok: bowl holds a real depth of water (min column 10.21)
+--- _test_steam_rises
+ok: steam count conserved: 8000 -> 8000
+ok: steam has risen: 8 of 8000 still under air
+ok: no steam left in the lower half (found 0)
+--- _test_brush_paints
+ok: brush painted a radius-5 sphere: 515 voxels (expected 515)
+ok: erase mode removed the sphere
+--- _test_occupancy
+ok: occupancy readback is 16384 bytes (RGBA)
+ok: no fluid bricks flagged for a wall sphere (0)
+ok: water sphere flags the fluid channel only (0, 255)
+ok: occupancy marks exactly the 8 bricks around the sphere (8 set, 0 wrong)
+--- _test_liquid_mass
+ok: liquid mass conserved with mixed fills: 2283520 -> 2283520
+ok: sand count conserved through water
+ok: non-liquids carry no amount (found 0)
+ok: no water cell at zero amount (found 0)
+ok: few tiny remnants (0 of 11960)
+--- _test_u_bend
+ok: u-bend mass conserved
+ok: u-bend arms level out: left 9.07, right 9.04
+ok: water actually crossed to the right arm (9.04)
+--- _test_pressure_pipe
+ok: pressure pipe mass conserved
+amounts: (40,6)=244 (41,6)=244 (42,6)=244 (43,6)=244 (44,6)=244 (45,6)=244 (46,6)=244 (47,6)=244 (48,6)=244 (48,6)=244 (48,7)=242 (48,8)=240 (48,9)=238 (48,10)=236 (48,11)=234 (48,12)=232 (48,13)=230 tank bottom (30,6)=244 top (30,28)=200
+ok: pressure pushes water up the pipe to the tank level: pipe 23.00 vs tank 23.41
+--- _test_density_pass
+ok: fields readback holds at least mip 0 (9586688 bytes)
+ok: wall and sand interior are opaque in the smoothed field (255, 255)
+ok: air beside a wall stays 0 in the smoothed field (walls do not smooth)
+ok: air beside sand gets a partial smoothed value (29)
+ok: sand surface cell is partially smoothed (226)
+ok: readback includes mip 1
+ok: mip 1 sand interior is opaque (255)
+ok: mip 1 air is empty (0)
+ok: mip 1 wall interior is opaque (255)
+ok: air density 0 (got 0)
+ok: wall density 255 (got 255)
+ok: sand density 255 (got 255)
+ok: full water density 255 (got 255)
+ok: half water density ~128 (got 128)
+ok: quarter water density ~85 (got 85)
+ok: steam density 0 (got 0)
+--- _test_fire_burns_plant
+ok: test world has 8000 plant
+ok: fire consumed the plant block (5 of 8000 left)
+ok: fire burnt out afterwards (0 left)
+--- _test_water_boils_on_fire
+ok: some water boiled into steam (79)
+ok: water mass lost matches boiled cells (10115 units, 79 cells)
+ok: fire was put out (0 left)
+--- _test_oil_floats
+ok: oil and water mass conserved
+ok: oil floats on water: 0 water voxels above oil
+--- _test_air_boundary
+ok: air velocity is exactly zero inside solids (max (0.0, 0.0, 0.0))
+ok: air rises above the fire (mean v_y 0.605)
+ok: simulation is deterministic from the same upload
+--- _test_air_plume
+ok: steam count conserved in the plume (4096 -> 4096)
+ok: steam plume rose (centroid y 37.5 -> 124.5)
+ok: plume spread sideways (xz spread 6.5 -> 12.9)
+ok: updraft above the fire (mean v_y 1.221)
+ok: flow recirculates sideways somewhere (max |v_x| 1.544, |v_z| 1.544)
+--- _test_splats
+ok: falling sand emits splats (803)
+ok: a settled pile emits no splats (0)
+--- _test_sprites
+ok: exposed plant grows leaf cards (978)
+ok: a thin falling stream is drawn as droplets (41)
+ok: no fx particles without fire or impacts (0)
+ok: liquid that comes to rest carries the landed bits
+ok: falling water is frothy in fields.A (255)
+ok: calm water carries no froth (0)
+ok: fire feeds embers into the fx pool (319 alive)
+ok: no leaves without plant (0)
+--- _test_gas_ignites
+ok: test world has 5760 gas
+ok: gas flashed into flame (0 of 5760 left)
+ok: wall untouched by the flash
+--- _test_gunpowder_flash
+ok: test world has 720 gunpowder
+ok: flash consumed the trail (1 of 720 left)
+--- _test_acid_dissolves_sand
+ok: test world has 10368 sand
+ok: acid dissolved over a tenth of the sand (0 of 10368 left)
+ok: acid thinned as it ate (800000 -> 388514 units)
+ok: wall is immune to acid
+ok: dissolved sand left smoke or cleared air
+--- _test_clone_emits
+ok: clone cells persist (800)
+ok: clone multiplied the seed water (51200 -> 723000 units)
+ok: water was emitted from the underside of the plate (770 cells below)
+ok: clone emits only the material it was armed with (0 stray cells)
+--- _test_void_sinks
+ok: test world has 6400 water
+ok: void swallowed all the water (0 left)
+ok: void slab persists
+--- _test_wax_melts_on_fire
+ok: flame melted some wax (6651 of 6656 left)
+ok: wax mostly melted rather than vanished (6651 wax + 5 molten of 6656)
+--- _test_fuse_deterministic
+ok: seed grains are still burning down their fuse after one tick (0 fire)
+ok: the fuse advanced into the block-shared neighbour only (4 lit)
+ok: twenty repeats of upload plus one tick are byte-identical
+ok: after eight ticks the fuse has run past the seed (3 lit beyond)
+ok: after eight ticks the seed grains have burnt (0 left)
+--- _test_stale_flags_cleared
+ok: the armed clone emitted gunpowder (1502 grains)
+ok: no grain lit itself from a stale flag (0 fire, 0 smoke)
+--- _test_heat_two_cell_exchange
+ok: fixture transfer (50.000 J) is below the half-equalising clamp
+ok: the pair exchanged heat within 4 ticks
+ok: one exchange equals the canonical transfer (385.71429 / 314.28571 K, expected 385.71429 / 314.28571)
+ok: insulating wall never changes temperature (0 wall cells changed)
+ok: conduction changes no voxel byte
+--- _test_heat_closed_box_equilibrium
+ok: box energy conserved over 1000 ticks (drift 0.00000280177683)
+ok: temperatures stay within the initial bounds (340.40..369.67)
+ok: water mass conserved under the hydro remap
+ok: box energy conserved over 4000 ticks (drift 0.00001129138185)
+ok: box reaches the capacity-weighted equilibrium 354.69 K (354.50..354.90)
+ok: energy did not leak through the wall
+--- _test_heat_falling_water_pool
+falling water pool energy drift -0.00001137911598 (8491565.761 -> 8491469.135 J)
+ok: water mass conserved
+ok: pool energy drift within the air-displacement bound (-0.00001137911598)
+ok: no temperature outside the initial bounds (298.2482..340.0015)
+--- _test_ice_plateau
+ok: melting ice sat exactly at 273.15 K with latent progress
+ok: some ice melted (52 of 64 left)
+ok: melt water exists
+ok: nothing got hotter than the slab (max 299.996 K)
+--- _test_water_over_lava
+ok: water boiled into steam (453 cells)
+ok: lava crusted into stone (512 cells)
+ok: water mass lost matches boiled cells (92011 units, 453 cells)
+ok: basin intact
+--- _test_wood_ignites_by_conduction
+ok: the metal bar carried heat out of the chamber (1058 K at its end)
+ok: wood ignited by conduction alone (6 of 24 left)
+ok: a 400 K heat blob never exceeds 400 K (max 389.23)
+ok: warm but sub-ignition wood does not catch
+--- _test_heat_brush_roundtrip
+ok: heat brush leaves voxel bytes untouched
+ok: heat brush adds full strength at the centre with radial falloff (343.150 K)
+ok: an equal cool restores the thermal bytes exactly
+--- _test_phase_keeps_mass
+ok: the cool brush froze the film
+ok: the ice record carries the film's 20 units (id 10, amount 20)
+ok: the heat brush thawed it back to 20 units of water (water 20 units, steam 0)
+ok: pool mass settled exactly (12800 units)
+ok: the whole pool froze (0 water cells left)
+ok: frozen pool carries the same mass (12800 vs 12800 units)
+ok: the whole pool thawed without boiling (0 ice, 0 steam)
+ok: thawed pool has its original water mass (12800 vs 12800 units)
+--- _test_scenario_volcano
+ok: lava that reached the pool crusted to stone (6927 cells)
+ok: pool water boiled into steam (1874 cells)
+ok: floor intact
+--- _test_scenario_ice_cave
+ok: ice melted (50328 of 50776 left)
+ok: meltwater appeared
+ok: meltwater boiled on the embers (1447 steam)
+ok: bowl intact
+--- _test_scenario_boiler
+ok: the tank water boiled (774 steam cells)
+ok: steam left through the vent pipe (212 cells above the pipe)
+ok: pipe intact
+--- _test_scenario_foundry
+ok: the ice end of the bar warmed (349.0 K)
+ok: the bar melted into the ice (12169 of 12560 left)
+ok: the lava around the bar cooled (mean 1489.2 K)
+--- _test_large_grid_smoke
+skipped (grid 128)
+150 checks, 0 failures
