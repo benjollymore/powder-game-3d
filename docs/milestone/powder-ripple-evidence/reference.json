@@ -1,0 +1,137 @@
+{
+  "results": [
+    {
+      "slope_rise_per_cell": 1.0,
+      "variant": "baseline",
+      "samples": 720,
+      "window_cells": 1.0,
+      "normal_angle_deg": {
+        "rms": 3.1055711818894697e-15,
+        "peak_to_peak": 4.695104529779477e-14
+      },
+      "curvature_factor": {
+        "rms": 0.03693040266672692,
+        "peak_to_peak": 0.10037614517916704
+      },
+      "ao": {
+        "rms": 0.0010772826010169605,
+        "peak_to_peak": 0.0032760203141551925
+      },
+      "hit_height_cells": {
+        "rms": 0.046521611776650214,
+        "peak_to_peak": 0.12644487255843728
+      }
+    },
+    {
+      "slope_rise_per_cell": 1.0,
+      "variant": "candidate",
+      "samples": 720,
+      "window_cells": 1.0,
+      "normal_angle_deg": {
+        "rms": 1.5463673682291189e-15,
+        "peak_to_peak": 2.817062717867686e-14
+      },
+      "curvature_factor": {
+        "rms": 0.008405880681914947,
+        "peak_to_peak": 0.02565174401484338
+      },
+      "ao": {
+        "rms": 0.0010772826010169603,
+        "peak_to_peak": 0.0032760203141551925
+      },
+      "hit_height_cells": {
+        "rms": 0.046521611776650214,
+        "peak_to_peak": 0.12644487255843728
+      }
+    },
+    {
+      "slope_rise_per_cell": 0.6,
+      "variant": "baseline",
+      "samples": 1200,
+      "window_cells": 1.6500000000000001,
+      "normal_angle_deg": {
+        "rms": 1.0396152928064806,
+        "peak_to_peak": 4.419358350936548
+      },
+      "curvature_factor": {
+        "rms": 0.06636831951590183,
+        "peak_to_peak": 0.20659405044227364
+      },
+      "ao": {
+        "rms": 0.00151509868131535,
+        "peak_to_peak": 0.006260363083152809
+      },
+      "hit_height_cells": {
+        "rms": 0.09499784854514108,
+        "peak_to_peak": 0.3193337630263784
+      }
+    },
+    {
+      "slope_rise_per_cell": 0.6,
+      "variant": "candidate",
+      "samples": 1200,
+      "window_cells": 1.6500000000000001,
+      "normal_angle_deg": {
+        "rms": 0.29828663175836123,
+        "peak_to_peak": 1.2478450430609125
+      },
+      "curvature_factor": {
+        "rms": 0.011317753985635953,
+        "peak_to_peak": 0.046266018181877144
+      },
+      "ao": {
+        "rms": 0.0017301912305163517,
+        "peak_to_peak": 0.007204942029767292
+      },
+      "hit_height_cells": {
+        "rms": 0.09499784854514108,
+        "peak_to_peak": 0.3193337630263784
+      }
+    },
+    {
+      "slope_rise_per_cell": 0.35,
+      "variant": "baseline",
+      "samples": 1074,
+      "window_cells": 2.85,
+      "normal_angle_deg": {
+        "rms": 2.351297559106221,
+        "peak_to_peak": 8.476794093898661
+      },
+      "curvature_factor": {
+        "rms": 0.09373843119231101,
+        "peak_to_peak": 0.3107791293957367
+      },
+      "ao": {
+        "rms": 0.001050219545658763,
+        "peak_to_peak": 0.0061148750538194685
+      },
+      "hit_height_cells": {
+        "rms": 0.15737576740583747,
+        "peak_to_peak": 0.518493113757799
+      }
+    },
+    {
+      "slope_rise_per_cell": 0.35,
+      "variant": "candidate",
+      "samples": 1074,
+      "window_cells": 2.85,
+      "normal_angle_deg": {
+        "rms": 0.6238298691367029,
+        "peak_to_peak": 2.59072703982894
+      },
+      "curvature_factor": {
+        "rms": 0.013480721864955842,
+        "peak_to_peak": 0.07110386426675985
+      },
+      "ao": {
+        "rms": 0.001278249667915328,
+        "peak_to_peak": 0.006565269760544279
+      },
+      "hit_height_cells": {
+        "rms": 0.15737576740583747,
+        "peak_to_peak": 0.518493113757799
+      }
+    }
+  ],
+  "failures": []
+}

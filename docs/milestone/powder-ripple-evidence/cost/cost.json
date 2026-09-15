@@ -1,0 +1,87 @@
+{
+	"capture_changed_bytes": 154042,
+	"capture_max_channel_difference": 56,
+	"measurements": [
+		{
+			"frame_mean_ms": 4.84968333333333,
+			"frame_median_ms": 2.358,
+			"frame_p95_ms": 17.945,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"repeat": 0,
+			"sand_cells": 2863384,
+			"screen_space_aa": 1,
+			"variant": "original",
+			"water_cells": 413646
+		},
+		{
+			"frame_mean_ms": 5.18898333333333,
+			"frame_median_ms": 2.392,
+			"frame_p95_ms": 18.08,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"repeat": 0,
+			"sand_cells": 2863384,
+			"screen_space_aa": 1,
+			"variant": "candidate",
+			"water_cells": 413646
+		},
+		{
+			"frame_mean_ms": 6.686875,
+			"frame_median_ms": 2.741,
+			"frame_p95_ms": 19.661,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"repeat": 1,
+			"sand_cells": 2863384,
+			"screen_space_aa": 1,
+			"variant": "candidate",
+			"water_cells": 413646
+		},
+		{
+			"frame_mean_ms": 5.97778333333333,
+			"frame_median_ms": 3.305,
+			"frame_p95_ms": 17.539,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"repeat": 1,
+			"sand_cells": 2863384,
+			"screen_space_aa": 1,
+			"variant": "original",
+			"water_cells": 413646
+		},
+		{
+			"frame_mean_ms": 6.11099166666667,
+			"frame_median_ms": 3.606,
+			"frame_p95_ms": 16.61,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"repeat": 2,
+			"sand_cells": 2863384,
+			"screen_space_aa": 1,
+			"variant": "original",
+			"water_cells": 413646
+		},
+		{
+			"frame_mean_ms": 4.60516666666667,
+			"frame_median_ms": 2.593,
+			"frame_p95_ms": 15.972,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"repeat": 2,
+			"sand_cells": 2863384,
+			"screen_space_aa": 1,
+			"variant": "candidate",
+			"water_cells": 413646
+		}
+	],
+	"note": "frame-post-draw wall intervals, not device timestamps; always-on-top, VSync off; captures are expected to differ on sand",
+	"physical_state_exact": true,
+	"voxel_sha256": "8516c7ff1326297311e47c99bf548fe2c696f5d461454c070cf9cca61a378123"
+}

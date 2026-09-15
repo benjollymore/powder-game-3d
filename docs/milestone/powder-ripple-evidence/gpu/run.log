@@ -1,0 +1,46 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: capture sand-shallow baseline mode 0
+ok: capture sand-shallow baseline mode 8
+{"case":"sand-shallow","lines":5,"luminance_ripple_peak_to_peak":0.204591614747136,"luminance_ripple_rms":0.0493748193253041,"mean_luminance":0.917448163538063,"normal_ripple_peak_to_peak_deg":10.4414848882516,"normal_ripple_rms_deg":2.27338505352998,"samples":6800,"variant":"baseline","window_cells":2.85}
+ok: capture sand-shallow fixed mode 0
+ok: capture sand-shallow fixed mode 8
+{"case":"sand-shallow","lines":5,"luminance_ripple_peak_to_peak":0.102134088026159,"luminance_ripple_rms":0.0131618727350063,"mean_luminance":0.936001362046965,"normal_ripple_peak_to_peak_deg":3.39857974304439,"normal_ripple_rms_deg":0.575838745458386,"samples":6800,"variant":"fixed","window_cells":2.85}
+ok: sand-shallow samples the same substantial visible slope band
+ok: sand-shallow baseline reproduces visible lattice ripple (rms > 1.2% of mean)
+ok: sand-shallow fixed lit ripple at most half of baseline
+ok: sand-shallow fixed normal ripple at most half of baseline
+ok: sand-shallow mean brightness preserved within 8%
+ok: readback completes within 15 seconds
+ok: sand-shallow GPU physical bytes unchanged across all captures
+ok: capture sand-repose baseline mode 0
+ok: capture sand-repose baseline mode 8
+{"case":"sand-repose","lines":5,"luminance_ripple_peak_to_peak":0.167439794313126,"luminance_ripple_rms":0.0403495085110213,"mean_luminance":0.918466888630287,"normal_ripple_peak_to_peak_deg":4.92193164714612,"normal_ripple_rms_deg":0.982341974936148,"samples":5000,"variant":"baseline","window_cells":1.65}
+ok: capture sand-repose fixed mode 0
+ok: capture sand-repose fixed mode 8
+{"case":"sand-repose","lines":5,"luminance_ripple_peak_to_peak":0.10914487841396,"luminance_ripple_rms":0.0102734633224255,"mean_luminance":0.933430652810377,"normal_ripple_peak_to_peak_deg":2.50146044885332,"normal_ripple_rms_deg":0.388156675316939,"samples":5000,"variant":"fixed","window_cells":1.65}
+ok: sand-repose samples the same substantial visible slope band
+ok: sand-repose baseline reproduces visible lattice ripple (rms > 1.2% of mean)
+ok: sand-repose fixed lit ripple at most half of baseline
+ok: sand-repose fixed normal ripple at most half of baseline
+ok: sand-repose mean brightness preserved within 8%
+ok: readback completes within 15 seconds
+ok: sand-repose GPU physical bytes unchanged across all captures
+ok: capture wall-repose baseline mode 0
+ok: capture wall-repose baseline mode 8
+{"case":"wall-repose","lines":5,"luminance_ripple_peak_to_peak":0.166229383823516,"luminance_ripple_rms":0.0242390638316558,"mean_luminance":0.337659675143755,"normal_ripple_peak_to_peak_deg":0.0,"normal_ripple_rms_deg":0.000000000000014210854715202,"samples":5000,"variant":"baseline","window_cells":1.65}
+ok: capture wall-repose fixed mode 0
+ok: capture wall-repose fixed mode 8
+{"case":"wall-repose","lines":5,"luminance_ripple_peak_to_peak":0.166229383823516,"luminance_ripple_rms":0.0242390638316558,"mean_luminance":0.337659675143755,"normal_ripple_peak_to_peak_deg":0.0,"normal_ripple_rms_deg":0.000000000000014210854715202,"samples":5000,"variant":"fixed","window_cells":1.65}
+ok: wall-repose samples the same substantial visible slope band
+{"ab_changed_bytes":0,"ab_max_delta":0,"case":"wall-repose","normals_changed_bytes":0,"normals_max_delta":0,"self_changed_bytes":0,"self_max_delta":0}
+ok: wall-repose normal control image is byte-identical
+ok: wall-repose lit control differs by at most one 8-bit step in no more pixels than self-noise allows
+ok: readback completes within 15 seconds
+ok: wall-repose GPU physical bytes unchanged across all captures
+ok: capture cone baseline
+ok: capture cone fixed
+ok: readback completes within 15 seconds
+ok: cone GPU physical bytes unchanged
+POWDER_RIPPLE_CHECKS 35 FAILURES 0

@@ -85,6 +85,17 @@ vec3 field_gradient_coarse(vec3 p, float lod, float e) {
 	return gp - gm;
 }
 
+// Opaque-density Laplacian at a mip level, scaled to per-cell^2 units so
+// different (lod, e) stencils are comparable. Smoothed powders read shape
+// above the voxel lattice; the level-0 stencil rings on every planar heap.
+float field_laplacian_coarse(vec3 p, float lod, float e) {
+	float c = field_g(p, lod);
+	float sum = field_g(p + vec3(e, 0, 0), lod) + field_g(p - vec3(e, 0, 0), lod)
+		+ field_g(p + vec3(0, e, 0), lod) + field_g(p - vec3(0, e, 0), lod)
+		+ field_g(p + vec3(0, 0, e), lod) + field_g(p - vec3(0, 0, e), lod);
+	return (sum - 6.0 * c) / (e * e);
+}
+
 // Ray setup shared by both passes. Returns false if the ray misses the box.
 struct Ray {
 	vec3 cam;      // camera in model space

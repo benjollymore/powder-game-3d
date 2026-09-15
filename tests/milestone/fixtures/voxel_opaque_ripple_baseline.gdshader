@@ -1,3 +1,4 @@
+// Immutable pre-fix copy of voxel_opaque.gdshader at 6c31842 for the powder ripple A/B regression. Do not edit.
 // Opaque pass: solids and powders as the 0.5 isosurface of the smoothed
 // field, shaded with triplanar textures, grain, cone-traced AO and curvature.
 // A lit material: Godot adds sky ambient, specular, SSAO, fog, DOF and glow;
@@ -114,26 +115,11 @@ void fragment() {
 	vec3 ps = r.p0 + r.dir * t_hit;
 	float lap;
 	vec3 grad = field_gradient(ps, 1, 1.0, lap);
-	vec3 n_fine = -normalize(grad + vec3(1e-6));
+	vec3 n_model = -normalize(grad + vec3(1e-6));
 	vec3 n_coarse = -normalize(field_gradient_coarse(ps, 1.0, 2.0) + vec3(1e-6));
-	// Cell selection (which element/seed shades this hit) keeps the previous
-	// 25/75 blend so material identity and per-cell seed jitter are unchanged
-	// for every material, including crisp walls.
-	vec3 n_model = n_fine;
-	if (dot(n_coarse, n_fine) > 0.0) {
-		n_model = normalize(mix(n_fine, n_coarse, 0.75));
+	if (dot(n_coarse, n_model) > 0.0) {
+		n_model = normalize(mix(n_model, n_coarse, 0.75));
 	}
-	// Smoothed materials take their shading shape from the lattice-free
-	// coarse mips only. The one-cell gradient and Laplacian of a smoothed
-	// heap oscillate with the voxel lattice on every planar slope: the
-	// cell-scale share of the old blend and the level-0 curvature darkening
-	// drew rings on sand cones. Geometry (hit position) is unchanged.
-	vec3 n_wide = -normalize(field_gradient_coarse(ps, 2.0, 4.0) + vec3(1e-6));
-	vec3 n_smooth = normalize(mix(n_coarse, n_wide, dot(n_coarse, n_wide) > 0.0 ? 0.75 : 0.0));
-	if (dot(n_smooth, n_fine) <= 0.0) {
-		n_smooth = n_fine;
-	}
-	float lap_smooth = field_laplacian_coarse(ps, 1.0, 2.0);
 	// Which element: the opaque voxel just behind the surface, else ahead, else the DDA cell.
 	ivec3 behind = ivec3(floor(ps - n_model * 0.6));
 	uvec4 hv = outside(behind) ? value : voxel_at(behind);
@@ -176,7 +162,7 @@ void fragment() {
 
 	mat3 model_basis = mat3(MODEL_MATRIX);
 	float sm = mat_smooth[int(id)];
-	vec3 n = normalize(mix(face_model, n_smooth, sm));
+	vec3 n = normalize(mix(face_model, n_model, sm));
 	vec3 n_geo = n; // before texture and grain perturbation: AO and shadow taps
 	int layer = mat_layer[int(id)];
 	vec3 hit_model = r.cam + r.dir * (r.t_start + t_hit / G);
@@ -202,7 +188,7 @@ void fragment() {
 		n = normalize(n + detail_strength * (pert * 0.6 + gn * mat_grain[int(id)]));
 		base *= mix(1.0, (0.94 + 0.12 * seed), detail_strength);
 		base *= mix(vec3(1.0), 0.55 + 0.9 * tex, detail_strength);
-		base *= 1.0 - clamp(lap_smooth * 0.5, -0.12, 0.12) * sm * detail_strength;
+		base *= 1.0 - clamp(lap * 0.5, -0.12, 0.12) * sm * detail_strength;
 	}
 
 	float ao = 1.0;
