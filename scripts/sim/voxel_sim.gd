@@ -297,6 +297,7 @@ func _ready() -> void:
 	set_param("gas_mask", Elements.gas_mask())
 	_volume_material.set_shader_parameter("extinction", MaterialLibrary.padded(Elements.extinction()))
 	_volume_material.set_shader_parameter("liquid_foam", MaterialLibrary.padded(Elements.floats("foam", 1.0)))
+	set_param("liquid_opacity", Elements.floats("opacity", 1.0))
 	_volume_material.set_shader_parameter("liquid_full", float(Elements.LIQUID_FULL))
 	set_param("fields", _density_texture)
 	set_param("physical_overflow", _physical_overflow_texture)

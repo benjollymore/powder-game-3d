@@ -13,9 +13,6 @@ uniform sampler3D sunvis : filter_linear, repeat_disable;
 // sampled, so output stays byte-identical to the pre-thermal shaders.
 uniform sampler3D thermal : filter_nearest, repeat_disable, hint_default_black;
 uniform bool thermal_glow = false;
-// Per element id: absorption multiplier for that liquid (1 = water-like,
-// large = opaque like lava). Also damps sun caustics cast through it.
-uniform float liquid_opacity[32];
 uniform vec4 palette[32];
 uniform int grid_size = 128;
 uniform int brick_size = 8;

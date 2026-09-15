@@ -14,7 +14,7 @@ const LAYER_PATTERN := 7
 ## unused tail uploads as zero either way.
 const SHADER_SLOTS := 32
 ## Names of shader uniforms indexed by element id.
-const PER_ID_UNIFORMS := ["palette", "extinction", "liquid_foam", "mat_layer", "mat_smooth", "mat_grain", "mat_rough"]
+const PER_ID_UNIFORMS := ["palette", "extinction", "liquid_foam", "liquid_opacity", "mat_layer", "mat_smooth", "mat_grain", "mat_rough"]
 
 static var _albedo: Texture2DArray
 static var _normal: Texture2DArray

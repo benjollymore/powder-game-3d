@@ -7,7 +7,7 @@
 shader_type spatial;
 render_mode cull_front, unshaded, blend_premul_alpha, depth_draw_always;
 
-#include "res://shaders/spatial/voxel_dda.gdshaderinc"
+#include "res://tests/milestone/fixtures/voxel_dda_liquid_base.gdshaderinc"
 
 uniform sampler2D depth_tex : hint_depth_texture, filter_nearest;
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
@@ -236,7 +236,7 @@ void fragment() {
 			float foam = field(r.p0 + r.dir * (0.5 * (t_in + t))).a * foam_strength * liquid_foam[int(liquid_id)];
 			emitted += trans * liquid_col * liquid_shade * (1.0 - exp(-scatter * len)) + trans * liquid_glow * (1.0 - exp(-glow_density * len));
 			emitted += trans * foam_shade * (1.0 - exp(-0.35 * foam * len));
-			trans *= exp(-(absorb * liquid_opacity[int(liquid_id)] + vec3(0.35 * foam)) * len);
+			trans *= exp(-(absorb + vec3(0.35 * foam)) * len);
 			liquid_len += len;
 			t_in = t;
 			liquid_id = id;
@@ -299,7 +299,7 @@ void fragment() {
 				float foam = field(r.p0 + r.dir * (0.5 * (t_in + ts))).a * foam_strength * liquid_foam[int(liquid_id)];
 				emitted += trans * liquid_col * liquid_shade * (1.0 - exp(-scatter * len)) + trans * liquid_glow * (1.0 - exp(-glow_density * len));
 				emitted += trans * foam_shade * (1.0 - exp(-0.35 * foam * len));
-				trans *= exp(-(absorb * liquid_opacity[int(liquid_id)] + vec3(0.35 * foam)) * len);
+				trans *= exp(-(absorb + vec3(0.35 * foam)) * len);
 				liquid_len += len;
 				previous_liquid_exit = ts;
 				in_liquid = false;
@@ -333,7 +333,7 @@ void fragment() {
 				previous_liquid_exit = end;
 				previous_proxy_exit = end;
 				emitted += trans * palette[int(id)].rgb * liquid_shade * (1.0 - exp(-scatter * len)) + trans * (palette[int(id)].rgb * palette[int(id)].a + thermal_emission(r.cell)) * (1.0 - exp(-glow_density * len));
-				trans *= exp(-absorb * liquid_opacity[int(id)] * len);
+				trans *= exp(-absorb * len);
 				liquid_len += len;
 				if (t_first < 0.0) { t_first = start; }
 			}
@@ -360,7 +360,7 @@ void fragment() {
 		float foam = field(r.p0 + r.dir * (t_in + 0.5 * len)).a * foam_strength * liquid_foam[int(liquid_id)];
 		emitted += trans * liquid_col * liquid_shade * (1.0 - exp(-scatter * len)) + trans * liquid_glow * (1.0 - exp(-glow_density * len));
 		emitted += trans * foam_shade * (1.0 - exp(-0.35 * foam * len));
-		trans *= exp(-(absorb * liquid_opacity[int(liquid_id)] + vec3(0.35 * foam)) * len);
+		trans *= exp(-(absorb + vec3(0.35 * foam)) * len);
 		liquid_len += len;
 	}
 	if (volume_debug < 2 && t_first < 0.0 && max(trans.r, max(trans.g, trans.b)) > 0.995) {
