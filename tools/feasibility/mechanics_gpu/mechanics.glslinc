@@ -1,0 +1,4 @@
+layout(std430,set=0,binding=5) readonly buffer Mechanics { vec4 gravity; vec4 plane; vec4 origin; } mechanics;
+layout(std430,set=0,binding=6) buffer Audit { vec4 total[10]; vec4 meta; vec4 node[]; } audit;
+// Seven vec4s per node: pre velocity/mass, after gravity, after wall,
+// applied gravity J/W, requested gravity J/W, applied wall J/W, requested wall J/W.

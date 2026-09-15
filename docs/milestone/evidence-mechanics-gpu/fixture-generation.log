@@ -1,0 +1,6 @@
+/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals-simulation/tests/feasibility/mechanics_gpu/cases.json
+gravity_pic accepted 100 halt False
+plane_pic accepted 20 halt False
+gravity_apic accepted 100 halt False
+plane_apic accepted 20 halt False
+rejected_plane_apic accepted 0 halt True

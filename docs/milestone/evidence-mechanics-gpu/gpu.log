@@ -1,0 +1,73 @@
+=== admission.gd exit 0
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+MECHANICS_ADMISSION checks=12 failures=0
+
+=== run.gd exit 0
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: gravity_pic initial state admitted
+ok: gravity_pic attempted1 GPU acceptance
+ok: gravity_pic particle mass bytes unchanged
+ok: gravity_pic attempted10 GPU acceptance
+ok: gravity_pic particle mass bytes unchanged
+ok: gravity_pic attempted100 GPU acceptance
+ok: gravity_pic particle mass bytes unchanged
+ok: gravity_pic batches[1] preserve particle/ledger/attempt bytes
+ok: gravity_pic batches[3] preserve particle/ledger/attempt bytes
+ok: gravity_pic batches[7, 2, 5, 1, 9] preserve particle/ledger/attempt bytes
+ok: plane_pic initial state admitted
+ok: plane_pic attempted1 GPU acceptance
+ok: plane_pic particle mass bytes unchanged
+ok: plane_pic attempted5 GPU acceptance
+ok: plane_pic particle mass bytes unchanged
+ok: plane_pic attempted20 GPU acceptance
+ok: plane_pic particle mass bytes unchanged
+ok: plane_pic batches[1] preserve particle/ledger/attempt bytes
+ok: plane_pic batches[3] preserve particle/ledger/attempt bytes
+ok: plane_pic batches[7, 2, 5, 1, 9] preserve particle/ledger/attempt bytes
+ok: gravity_apic initial state admitted
+ok: gravity_apic attempted1 GPU acceptance
+ok: gravity_apic particle mass bytes unchanged
+ok: gravity_apic attempted10 GPU acceptance
+ok: gravity_apic particle mass bytes unchanged
+ok: gravity_apic attempted100 GPU acceptance
+ok: gravity_apic particle mass bytes unchanged
+ok: gravity_apic batches[1] preserve particle/ledger/attempt bytes
+ok: gravity_apic batches[3] preserve particle/ledger/attempt bytes
+ok: gravity_apic batches[7, 2, 5, 1, 9] preserve particle/ledger/attempt bytes
+ok: plane_apic initial state admitted
+ok: plane_apic attempted1 GPU acceptance
+ok: plane_apic particle mass bytes unchanged
+ok: plane_apic attempted5 GPU acceptance
+ok: plane_apic particle mass bytes unchanged
+ok: plane_apic attempted20 GPU acceptance
+ok: plane_apic particle mass bytes unchanged
+ok: plane_apic batches[1] preserve particle/ledger/attempt bytes
+ok: plane_apic batches[3] preserve particle/ledger/attempt bytes
+ok: plane_apic batches[7, 2, 5, 1, 9] preserve particle/ledger/attempt bytes
+ok: invalid initial half-space is rejected
+ok: invalid reset clears previous grid and all mechanics ledgers
+ok: invalid reset remains frozen through queued forced steps
+ok: rejected_plane_apic initial state admitted
+ok: rejected_plane_apic attempted1 GPU acceptance
+ok: rejected_plane_apic particle mass bytes unchanged
+ok: rejected mechanics commits neither particles nor external ledger
+ok: rejected mechanics snapshot rebuilds authoritative grid without candidate forces
+ok: plane crossing has explicit rejection status
+ok: rejected attempt actually computed nonzero wall impulse
+ok: rejected_plane_apic attempted3 GPU acceptance
+ok: rejected_plane_apic particle mass bytes unchanged
+ok: rejected mechanics commits neither particles nor external ledger
+ok: rejected mechanics snapshot rebuilds authoritative grid without candidate forces
+ok: plane crossing has explicit rejection status
+ok: rejected attempt actually computed nonzero wall impulse
+ok: rejected_plane_apic batches[1] preserve particle/ledger/attempt bytes
+ok: rejected_plane_apic batches[3] preserve particle/ledger/attempt bytes
+ok: rejected_plane_apic batches[7, 2, 5, 1, 9] preserve particle/ledger/attempt bytes
+MECHANICS_GPU checks=59 failures=0
+
+MECHANICS_DONE
+MECHANICS_DONE

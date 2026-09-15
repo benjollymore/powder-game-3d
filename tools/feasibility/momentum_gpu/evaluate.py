@@ -1,4 +1,5 @@
 """Apply the predeclared FP32 motion criteria; do not rebaseline failures."""
+import argparse
 import json
 import math
 from pathlib import Path
@@ -6,7 +7,12 @@ import sys
 ROOT=Path(__file__).resolve().parents[3]
 sys.path.insert(0,str(ROOT))
 from tools.feasibility.momentum_reference import Particle,Node,particle_totals,grid_totals,sub
-EVIDENCE=ROOT/'docs/milestone/evidence-momentum-gpu'
+parser=argparse.ArgumentParser()
+parser.add_argument('--evidence-dir',default='docs/milestone/evidence-momentum-gpu')
+parser.add_argument('--results',default='results.json')
+parser.add_argument('--metrics',default='metrics.json')
+args=parser.parse_args()
+EVIDENCE=ROOT/args.evidence_dir
 
 def norm(v):return math.sqrt(math.fsum(x*x for x in v))
 def unpack(flat):
@@ -19,7 +25,7 @@ def grid_unpack(flat,shape):
             for i in range(nx*ny*nz) if flat[i*4+3]>0}
 
 fixtures=json.loads((ROOT/'tests/feasibility/momentum_gpu/cases.json').read_text())['cases']
-actual=json.loads((EVIDENCE/'results.json').read_text())
+actual=json.loads((EVIDENCE/args.results).read_text())
 failures=[];metrics=[]
 if actual['failures'] or actual['checks']<=0:failures.append('GPU logical checks failed')
 if [c['name'] for c in fixtures]!=[c['name'] for c in actual['cases']]:raise ValueError('Cohort mismatch')
@@ -65,7 +71,7 @@ for case,result in zip(fixtures,actual['cases']):
                 binary64_energy_retained=expected['totals']['kinetic_energy']/case['initial_totals']['kinetic_energy'],
                 angular_retained=norm(total['angular_momentum'])/initial_L if initial_L>1e-10 else None)
     metrics.append(metric);print('METRIC '+json.dumps(metric,sort_keys=True))
-(EVIDENCE/'metrics.json').write_text(json.dumps(dict(metrics=metrics,failures=failures),indent=2)+'\n')
+(EVIDENCE/args.metrics).write_text(json.dumps(dict(metrics=metrics,failures=failures),indent=2)+'\n')
 for failure in failures:print('FAIL '+failure)
 print('MOMENTUM_MOTION_NUMERICS failures=%d'%len(failures))
 raise SystemExit(bool(failures))

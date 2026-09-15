@@ -1,6 +1,9 @@
 extends SceneTree
 signal ready_result(result: Dictionary)
 var _gpu: RefCounted
+var _gpu_path:="res://tools/feasibility/momentum_gpu/gpu.gd"
+var _cases_path:="res://tests/feasibility/momentum_gpu/cases.json"
+var _results_path:="res://docs/milestone/evidence-momentum-gpu/results.json"
 var _checks:=0
 var _failures:=0
 var _results:={"cases":[],"checks":0,"failures":0}
@@ -11,9 +14,9 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
-	var cases: Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://tests/feasibility/momentum_gpu/cases.json"))
+	var cases: Dictionary=JSON.parse_string(FileAccess.get_file_as_string(_cases_path))
 	for case in cases.cases:
-		_gpu=load("res://tools/feasibility/momentum_gpu/gpu.gd").new()
+		_gpu=load(_gpu_path).new()
 		RenderingServer.call_on_render_thread(_rt_initialize.bind(case))
 		var initial: Dictionary=await ready_result
 		_check(initial.status[0]==0 and initial.status[1]==0,"%s initial complete support admitted"%case.name)
@@ -61,7 +64,7 @@ func _run() -> void:
 		RenderingServer.call_on_render_thread(_gpu.close)
 		await process_frame
 	_results.checks=_checks;_results.failures=_failures
-	FileAccess.open("res://docs/milestone/evidence-momentum-gpu/results.json",FileAccess.WRITE).store_string(JSON.stringify(_results,"  ")+"\n")
+	FileAccess.open(_results_path,FileAccess.WRITE).store_string(JSON.stringify(_results,"  ")+"\n")
 	print("MOMENTUM_MOTION_GPU checks=%d failures=%d"%[_checks,_failures])
 	quit(1 if _failures else 0)
 
