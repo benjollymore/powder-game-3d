@@ -14,7 +14,7 @@ class Files extends Node:
 	func _begin_modal() -> void: _modal = true
 	func _end_modal() -> void: _modal = false
 	func save_to_path(path: String) -> void: requested_path = path
-	func _queue_dialog(which: String) -> void: queued_dialog = which
+	func _queue_dialog(which: String, _from_guard := false) -> void: queued_dialog = which
 class Editor extends Node3D:
 	var document := Document.new()
 	var sim := Sim.new()

@@ -31,6 +31,7 @@ CPU = [
     ("archive-panel", "tests/milestone/archive_panel.gd", 128),
     ("authored-document", "tests/milestone/authored_document.gd", 128),
     ("file-shortcuts", "tests/milestone/file_shortcuts.gd", 128),
+    ("guard-queue", "tests/milestone/guard_queue.gd", 128),
 ]
 GPU = [
     ("physics128", "tests/gpu/run_gpu_tests.gd", 128),

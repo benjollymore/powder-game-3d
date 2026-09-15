@@ -66,6 +66,11 @@ func request(kind: String, callback: Callable, after_save: Callable = Callable()
 func _process(_delta: float) -> void:
 	if state == "waiting":
 		_poll()
+	elif state == "saving" and archive.queued_dialog.is_empty() and archive.operation.is_empty() and not archive._modal:
+		# Nothing in the archive panel can still resolve this save: no queued
+		# chooser, no open dialog, no running operation. Never wait forever.
+		cancel()
+		archive.message.text = "Saving was interrupted; the requested action was canceled."
 
 func _poll() -> void:
 	if editor.sim.edit_epoch != source_epoch:
@@ -116,7 +121,7 @@ func _save_first() -> void:
 	archive._end_modal()
 	state = "saving"
 	if editor.document.path.is_empty():
-		archive._queue_dialog("save")
+		archive._queue_dialog("save", true)
 	else:
 		archive.save_to_path(editor.document.path)
 

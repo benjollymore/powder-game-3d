@@ -780,20 +780,29 @@ func _release_shortcuts() -> void:
 	_file_keys_owned.clear()
 
 
+## Layouts without Latin letters report another keycode for the S key; the
+## physical key is the fallback for application shortcuts.
+func _shortcut_key(event: InputEventKey, accepted: Array) -> int:
+	if event.keycode in accepted:
+		return event.keycode
+	return event.physical_keycode if event.physical_keycode in accepted else KEY_NONE
+
+
 func _route_file_shortcut(event: InputEventKey) -> bool:
-	if event.keycode not in [KEY_S, KEY_O] or event.window_id != get_window().get_window_id():
+	var code := _shortcut_key(event, [KEY_S, KEY_O])
+	if code == KEY_NONE or event.window_id != get_window().get_window_id():
 		return false
 	if not event.pressed:
-		if not _file_keys_owned.has(event.keycode):
+		if not _file_keys_owned.has(code):
 			return false
-		_file_keys_owned.erase(event.keycode)
+		_file_keys_owned.erase(code)
 		get_viewport().set_input_as_handled()
 		return true
 	if event.echo:
-		if _file_keys_owned.has(event.keycode):
+		if _file_keys_owned.has(code):
 			get_viewport().set_input_as_handled()
-		return _file_keys_owned.has(event.keycode)
-	if not (event.ctrl_pressed or event.meta_pressed) or event.alt_pressed or (event.keycode == KEY_O and event.shift_pressed):
+		return _file_keys_owned.has(code)
+	if not (event.ctrl_pressed or event.meta_pressed) or event.alt_pressed or (code == KEY_O and event.shift_pressed):
 		return false
 	if not is_instance_valid(archive_panel) or archive_panel._modal:
 		return false
@@ -802,9 +811,9 @@ func _route_file_shortcut(event: InputEventKey) -> bool:
 		return false
 	# File commands are application shortcuts, including from numeric text.
 	# Undo/Redo and cut/copy/paste continue through the focused text control.
-	_file_keys_owned[event.keycode] = true
+	_file_keys_owned[code] = true
 	get_viewport().set_input_as_handled()
-	if event.keycode == KEY_S:
+	if code == KEY_S:
 		archive_panel.request_save(event.shift_pressed)
 	else:
 		archive_panel._queue_dialog("open")
@@ -915,7 +924,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		var focused := get_viewport().gui_get_focus_owner()
 		if focused is LineEdit or focused is TextEdit:
 			return # Even an empty text Undo stack must not fall through to world Undo.
-		if event.keycode == KEY_Z and (event.ctrl_pressed or event.meta_pressed) and not event.alt_pressed:
+		if _shortcut_key(event, [KEY_Z]) == KEY_Z and (event.ctrl_pressed or event.meta_pressed) and not event.alt_pressed:
 			_end_stroke()
 			if event.shift_pressed:
 				redo_edit()

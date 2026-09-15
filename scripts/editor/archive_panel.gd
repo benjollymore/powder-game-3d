@@ -73,8 +73,22 @@ func _dialog(mode: FileDialog.FileMode) -> FileDialog:
 func request_save(save_as := false) -> void:
 	_queue_dialog("save" if save_as or editor.document.path.is_empty() else "save_current")
 
-func _queue_dialog(which: String) -> void:
-	if operation != "" or _modal:
+## Queue one file action. A second request while one is queued, a dialog is
+## open, an operation is running, or the unsaved-build guard is mid-flow is
+## rejected with visible feedback; it never silently replaces the first.
+func _queue_dialog(which: String, from_guard := false) -> void:
+	var guard: Node = editor.get("document_guard")
+	if operation != "":
+		message.text = "A file operation is still running; try again when it finishes."
+		return
+	if _modal:
+		message.text = "Close the open dialog first."
+		return
+	if queued_dialog != "":
+		message.text = "A file action is already waiting; finish it first."
+		return
+	if not from_guard and is_instance_valid(guard) and not guard.state.is_empty():
+		message.text = "Answer the unsaved-build dialog first."
 		return
 	editor.cancel_pending_paint()
 	editor._end_stroke()

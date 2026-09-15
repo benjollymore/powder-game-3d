@@ -21,6 +21,14 @@ func key(code: int, down: bool, command := "meta", shift := false, alt := false,
 	event.alt_pressed = alt
 	event.echo = echo
 	Input.parse_input_event(event)
+func physical(physical_code: int, layout_code: int, down: bool, command := "meta") -> void:
+	var event := InputEventKey.new()
+	event.keycode = layout_code
+	event.physical_keycode = physical_code
+	event.pressed = down
+	event.ctrl_pressed = command == "ctrl"
+	event.meta_pressed = command == "meta"
+	Input.parse_input_event(event)
 func press(code: int, command := "meta", shift := false, alt := false) -> void:
 	key(code, true, command, shift, alt)
 	key(code, false, command, shift, alt)
@@ -105,6 +113,23 @@ func run() -> void:
 	editor._notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
 	check(editor._file_keys_owned.is_empty(), "focus loss terminates shortcut key ownership")
 	files.queued_dialog = ""
+	editor.play_button.grab_focus()
+	editor.document.path = "/tmp/named.p3d"
+	var saves_before: int = files.saves.size()
+	physical(KEY_S, KEY_NONE, true)
+	physical(KEY_S, KEY_NONE, false)
+	check(files.queued_dialog == "save_current" and editor._file_keys_owned.is_empty() and editor.run_requests == 0, "Cmd+S on a non-Latin layout saves through the physical key and releases ownership")
+	files.queued_dialog = ""
+	physical(KEY_O, KEY_YEN, true, "ctrl")
+	physical(KEY_O, KEY_YEN, false, "ctrl")
+	check(files.queued_dialog == "open", "Ctrl+O on a non-Latin layout opens through the physical key")
+	files.queued_dialog = ""
+	physical(KEY_Z, KEY_SECTION, true)
+	physical(KEY_Z, KEY_SECTION, false)
+	check(editor.undo_requests == 1 and files.saves.size() == saves_before, "Cmd+Z on a non-Latin layout undoes through the physical key")
+	physical(KEY_S, KEY_NONE, true, "")
+	physical(KEY_S, KEY_NONE, false, "")
+	check(files.queued_dialog.is_empty(), "an unmodified physical S key is not a file shortcut")
 	editor.queue_free()
 	await process_frame
 	print("File shortcuts CPU: %d checks, %d failures" % [checks, failures])
