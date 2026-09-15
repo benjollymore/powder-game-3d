@@ -1,0 +1,43 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ERROR: table without category keys groups the known ids by the fallback map
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] check (res://tests/milestone/heat_ui.gd:13)
+       [1] run (res://tests/milestone/heat_ui.gd:27)
+FAIL: table without category keys groups the known ids by the fallback map
+ERROR: fallback map places oil, wood, plant, steam and smoke in their categories
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] check (res://tests/milestone/heat_ui.gd:13)
+       [1] run (res://tests/milestone/heat_ui.gd:29)
+FAIL: fallback map places oil, wood, plant, steam and smoke in their categories
+ok: explicit category keys override the fallback and admit new ids
+ok: unknown ids without a category key land in Special
+ok: first row is Sand, Water, Wall
+ok: heat row shows Fire and hides thermal brushes while the simulator has no HEAT/COOL modes
+ok: one tab per remaining category, every non-air material has a button
+ERROR: tooltips fall back to the material name and tab contents start hidden
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] check (res://tests/milestone/heat_ui.gd:13)
+       [1] run (res://tests/milestone/heat_ui.gd:53)
+FAIL: tooltips fall back to the material name and tab contents start hidden
+ok: a tab reveals only its own materials
+ok: choosing another tab hides the previous one
+ok: materials inside a tab select like the fixed rows
+ok: thermal brushes cannot be selected while the simulator lacks them
+ok: brush mode ignores an unavailable thermal tool and keeps erase/add semantics
+ok: number keys follow the first row order
+ok: an unassigned number key leaves the selection alone
+ok: key lookup rejects numbers beyond the row
+ok: speed slider stores 1/8x in Build without touching the clock
+ok: in Test the slider drives the clock to 4x
+ok: keyboard time changes sync back to the slider
+ok: Examples lists every scenario except Empty behind a disabled placeholder
+ok: choosing an example asks the guard and resets the picker
+ok: the guard continuation replaces the build with the example's exact bytes as a clean untitled world
+ok: an example chosen mid-capture waits like other editor actions
+ok: the waiting example request resumes after the capture
+ok: unknown example names are ignored
+Heat UI CPU: 25 checks, 3 failures

@@ -1,0 +1,42 @@
+[
+  {
+    "name": "physics128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 24.65,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/gpu/run_gpu_tests.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/physics128"
+    ]
+  },
+  {
+    "name": "regional256",
+    "pass": false,
+    "exit": 1,
+    "seconds": 1.75,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/regional_undo_gpu.gd",
+      "--",
+      "grid=256",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/regional256"
+    ]
+  }
+]

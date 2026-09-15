@@ -4,11 +4,15 @@ Updated 2026-09-15. Integration checkout `powder-game-3d-discovery/heat`, branch
 
 ## Current result
 
-Milestone opened. Four workers started in parallel on their first units: elements (table v2 schema and shared `Elem` include), rendering (palette 16 to 32), thermal (thermal texture, bindings, swap permutation, regional history, probe payload), editor (categorised palette, time scale, Examples, Keep result).
+Milestone opened. All four first units are integrated. In flight: thermal physics (conduction, phase change, gated reactions, transfer contract, brushes, tranche A elements), tranche B elements and scenarios, ICE/GLASS layers and the glow scaffold, and the editor inspector/archive v2 plus the Keep fixes.
 
 ## Integrated
 
-Nothing yet.
+- Element schema v2 (`dfdbaa7`): 80-byte shared `Elem` record, category/tip keys, provisional thermal coefficients, reaction min_t/heat encoding; 48 unit checks.
+- Palette 32 (`94465ec`) with byte-identical captures (17 checks); `PALETTE_SIZE = 32`, unused ids transparent.
+- Thermal layer plumbing (`1bd5838`): `R32G32_SFLOAT` texture, per-element initialisation, swap permutation, 12-byte regional records, probe payload; thermal state 23 checks, cadence 30 including thermal bytes. Texture3DRD accepts FORMAT_RGF (day-1 check passed).
+- Editor unit 1 (`0517c08`): categorised palette with tooltips, speed slider, Examples, Keep result. Two Keep GPU checks and three palette-fallback CPU checks fail on the integrated branch and are back with the editor worker.
+- Coordinator reruns: physics 74, regional 17 at 256, surface 36, capacity 112, and 24 further GPU suites pass; test byte expectations updated for 12 bytes per cell.
 
 ## Active follow-through
 

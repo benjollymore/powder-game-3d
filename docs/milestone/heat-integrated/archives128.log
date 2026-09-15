@@ -1,0 +1,20 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: real authored edit produces history and changed GPU bytes
+ok: Build save round-trips exact authored GPU bytes
+ok: entering Test captures the authored revision
+ok: the live experiment has actually evolved
+ok: saving a running experiment preserves the authored construction
+ok: opening returns the editor to paused Build
+ok: opening starts a fresh world epoch and tick count
+ok: opening replaces the live world with exact saved construction
+ok: opening clears history and the previous Test snapshot
+ok: opening leaves no active edit transaction
+ok: failed open leaves actual GPU state intact
+ok: modal input ownership blocks legacy time shortcuts in Build
+ok: a completed newer live-source gesture invalidates an asynchronous Open
+ok: asynchronous file open cannot overwrite a newer real GPU edit
+ok: invalid replacement bytes are rejected without mutation
+ok: editor teardown restores previous legacy time input ownership
+Archive editor GPU: 16 checks, 0 failures

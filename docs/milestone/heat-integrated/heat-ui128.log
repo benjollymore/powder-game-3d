@@ -1,0 +1,22 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: Examples loads the exact scenario bytes as a clean untitled build
+ok: loading an example starts fresh history, like Open
+ok: key 3 selects Wall, the third material of the first row
+ok: key 1 selects Sand
+ok: key 2 selects Water
+ok: a stroke on the example makes it unsaved
+ok: Examples on unsaved work prompts before replacing anything
+ok: Cancel keeps the unsaved example edits
+ok: slider step 1 means 2x
+ok: Run applies the chosen speed
+ok: Keep leaves Test with the evolved experiment as the build
+ok: Keep records one undoable edit and marks the build unsaved
+ok: editor returns to Build controls after Keep
+ok: Undo after Keep restores the exact authored build
+ok: Redo re-applies the exact kept result
+ok: Return after a later run restores the kept revision, not the older build
+FAIL: Keep with no changes stays in Test and adds no history
+FAIL: Return still restores the kept revision
+EDITOR_HEAT_UI_CHECKS 18 FAILURES 2

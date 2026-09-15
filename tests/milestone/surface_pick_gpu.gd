@@ -86,7 +86,7 @@ func _run() -> void:
 		preserved = preserved and at(after, x, 40, 80) == Elements.Id.WALL
 	check(connected, "fast flat-face surface stroke is connected at radius zero")
 	check(preserved, "surface additive stroke preserves every underlying wall cell")
-	check(transaction.bytes < 16384, "surface undo captures local tiles, not the world")
+	check(transaction.bytes < 49152, "surface undo captures local tiles, not the world (12 bytes per cell with thermal)")
 	sim.restore_edit_transaction(transaction)
 	check(await read() == before, "surface stroke undo restores all packed bytes exactly")
 	# Preview is informational: mutation re-picks the ordered current GPU state.

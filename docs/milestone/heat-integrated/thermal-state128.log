@@ -1,0 +1,27 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: thermal texture exists on the render thread
+ok: Texture3DRD is bound to the thermal RID
+ok: Texture3DRD accepts R32G32_SFLOAT as FORMAT_RGF at grid extent (9, 128)
+ok: authoritative texture list names both layers
+ok: thermal readback has eight bytes per cell
+ok: upload without thermal bytes initialises each cell from its element's initial temperature
+ok: initialised latent progress is zero everywhere
+ok: uploaded thermal bytes read back exactly
+ok: thermal upload leaves voxel bytes exact
+ok: energy total is stable across the round trip
+ok: grain fell straight down over twelve movement-only ticks (from y=84 to y=77)
+ok: exactly one cell is hot afterwards and it is the sand cell
+ok: the vacated cell keeps the air's temperature and zero latent
+ok: latent progress travels with the grain too
+ok: moving material conserves the energy total exactly
+ok: one touched tile records 512 cells at 12 bytes each
+ok: regional undo accepts the transaction
+ok: undo restores voxel and thermal bytes exactly
+ok: ticks after undo move the hot grain again
+ok: restoring the same record again returns both layers to the captured state
+ok: probe under the hot grain reports Sand at 900 K ({ "pos": (64, 84, 64), "element": 2, "temperature": 900.0, "amount": 0, "flags": 0 })
+ok: probe reports water amount and temperature ({ "pos": (5, 5, 5), "element": 3, "temperature": 310.0, "amount": 150, "flags": 0 })
+ok: probe through empty air misses
+THERMAL_STATE_CHECKS 23 FAILURES 0
