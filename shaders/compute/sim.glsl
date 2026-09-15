@@ -172,6 +172,7 @@ float fill_of(int i) { return (c[i].z > 0u) ? float(c[i].z) / float(FULL) : 1.0;
 void _transmuted(int i, uint id) {
 	c[i].x = id;
 	c[i].w &= 7u;
+	if (!is_liquid(id)) { c[i].w &= ~FALLING; } // hydro maintains the flag for liquids only
 	ct[i].y = 0.0;
 	float flame = ELEM_FIRE_TEMP(elems[id]);
 	if (flame > 0.0) { ct[i].x = flame; }
@@ -225,8 +226,11 @@ void move_heat(int from, int to, uint L, uint m, uint from_old, uint to_old, uin
 	float share = float(m) / float(from_old);
 	float moved = (cell_capacity(L, from_old) * ct[from].x + ct[from].y) * share;
 	ct[from].y *= 1.0 - share;
-	float Cr = cell_capacity(to_old == 0u ? AIR : L, to_old);
-	float E = Cr * ct[to].x + ct[to].y + moved;
+	// Air is negligible thermal mass: a parcel entering an air cell keeps its
+	// own temperature rather than absorbing the displaced air's energy (which
+	// would lift a two-unit film by several kelvin), and the air a parcel
+	// leaves behind takes the parcel's temperature.
+	float E = (to_old == 0u) ? moved : cell_capacity(L, to_old) * ct[to].x + ct[to].y + moved;
 	float C = cell_capacity(L, to_old + m);
 	ct[to] = settle(vec2(E / C, 0.0), C, ELEM_HOT_AT(elems[L]), ELEM_COLD_AT(elems[L]));
 }

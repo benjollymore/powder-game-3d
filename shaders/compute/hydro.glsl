@@ -20,10 +20,13 @@
 // accepted integer amounts define a monotone mass-coordinate remap of each
 // run's energy, so parcels keep their order along the line and a hot bottom
 // stays a hot bottom. The remap is exact for any run length because it is
-// done in three sweeps that never read what they have written: sweep 0
-// folds each cell's latent progress into one energy value, sweep 1 walks the
-// receivers and reads donors from data it does not write, sweep 2 writes the
-// new amounts and temperatures.
+// done in three stages, each its own dispatch (pc.b.x), so no invocation
+// ever reads a texel it wrote itself (a same-thread read after an image
+// write is not coherent on the Metal backend): stage 0 folds each cell's
+// latent progress into one energy value, stage 1 walks the receivers and
+// reads donors from data only earlier dispatches wrote, stage 2 writes the
+// new amounts and temperatures. Amounts are recomputed identically in each
+// stage from the untouched grid.
 //
 // Voxel bytes: x = element id, y = seed, z = liquid amount, w bit 0 = the
 // run is unsupported (falling), set by the column pass and used by the
@@ -40,6 +43,7 @@ layout(rg32f, set = 0, binding = 2) uniform restrict image3D thermal;
 
 layout(push_constant, std430) uniform Params {
 	uvec4 a; // mode, tick, seed, relax rate in percent
+	uvec4 b; // remap stage (0 fold, 1 receive, 2 finish and write amounts), unused
 } pc;
 
 layout(constant_id = 0) const int GRID = 128;
@@ -195,40 +199,42 @@ void profile_column(int s, int e, uint L, uint M) {
 		extra_rem = r % n;
 		r = 0u;
 	}
-	remap_fold(s, e, L);
-	for (int stage = 1; stage <= 2; stage++) {
-		remap_begin(s, e);
-		uint carry = 0u;
-		for (uint k = 0u; k < n; k++) {
-			uint want;
-			if (k < H) {
-				want = FULL + COMP * (H - 1u - k) + extra_each + ((k < extra_rem) ? 1u : 0u);
-			} else if (k == H) {
-				want = r;
-			} else {
-				want = 0u;
-			}
-			want += carry;
-			carry = (want > MAX_AMOUNT) ? want - MAX_AMOUNT : 0u;
-			want = min(want, MAX_AMOUNT);
-			int idx = s + int(k);
-			if (stage == 1) {
-				remap_receive(idx, L, want);
-				continue;
-			}
-			uvec4 v = load(idx);
-			vec2 ntg = remap_finish(idx, L, v.z, want);
-			// Bits 1-2: "landed" age, set to 3 the tick a falling run comes to rest,
-			// counting down after (splash and foam triggers for the renderer).
-			uint landed = (v.w >> 1) & 3u;
-			if ((v.w & FALLING) != 0u && w == 0u) {
-				landed = 3u;
-			} else if (landed > 0u) {
-				landed -= 1u;
-			}
-			write(idx, v, L, want, w | (landed << 1));
-			imageStore(thermal, cell_at(idx), vec4(ntg, 0.0, 0.0));
+	uint stage = pc.b.x;
+	if (stage == 0u) {
+		remap_fold(s, e, L);
+		return;
+	}
+	remap_begin(s, e);
+	uint carry = 0u;
+	for (uint k = 0u; k < n; k++) {
+		uint want;
+		if (k < H) {
+			want = FULL + COMP * (H - 1u - k) + extra_each + ((k < extra_rem) ? 1u : 0u);
+		} else if (k == H) {
+			want = r;
+		} else {
+			want = 0u;
 		}
+		want += carry;
+		carry = (want > MAX_AMOUNT) ? want - MAX_AMOUNT : 0u;
+		want = min(want, MAX_AMOUNT);
+		int idx = s + int(k);
+		if (stage == 1u) {
+			remap_receive(idx, L, want);
+			continue;
+		}
+		uvec4 v = load(idx);
+		vec2 ntg = remap_finish(idx, L, v.z, want);
+		// Bits 1-2: "landed" age, set to 3 the tick a falling run comes to rest,
+		// counting down after (splash and foam triggers for the renderer).
+		uint landed = (v.w >> 1) & 3u;
+		if ((v.w & FALLING) != 0u && w == 0u) {
+			landed = 3u;
+		} else if (landed > 0u) {
+			landed -= 1u;
+		}
+		write(idx, v, L, want, w | (landed << 1));
+		imageStore(thermal, cell_at(idx), vec4(ntg, 0.0, 0.0));
 	}
 }
 
@@ -245,24 +251,24 @@ void relax_row(int s, int e, uint L, uint M) {
 		int na = clamp(int(a) + int(round(rate * (mean - float(a)))), 1, int(MAX_AMOUNT));
 		drift += na - int(a);
 	}
-	remap_fold(s, e, L);
-	int drift0 = drift;
-	for (int stage = 1; stage <= 2; stage++) {
-		remap_begin(s, e);
-		drift = drift0;
-		for (int k = s; k < e; k++) {
-			uvec4 v = load(k);
-			int na = clamp(int(v.z) + int(round(rate * (mean - float(v.z)))), 1, int(MAX_AMOUNT));
-			if (drift > 0 && na > 1) { na--; drift--; }
-			else if (drift < 0 && na < int(MAX_AMOUNT)) { na++; drift++; }
-			if (stage == 1) {
-				remap_receive(k, L, uint(na));
-				continue;
-			}
-			vec2 ntg = remap_finish(k, L, v.z, uint(na));
-			write(k, v, L, uint(na), v.w);
-			imageStore(thermal, cell_at(k), vec4(ntg, 0.0, 0.0));
+	uint stage = pc.b.x;
+	if (stage == 0u) {
+		remap_fold(s, e, L);
+		return;
+	}
+	remap_begin(s, e);
+	for (int k = s; k < e; k++) {
+		uvec4 v = load(k);
+		int na = clamp(int(v.z) + int(round(rate * (mean - float(v.z)))), 1, int(MAX_AMOUNT));
+		if (drift > 0 && na > 1) { na--; drift--; }
+		else if (drift < 0 && na < int(MAX_AMOUNT)) { na++; drift++; }
+		if (stage == 1u) {
+			remap_receive(k, L, uint(na));
+			continue;
 		}
+		vec2 ntg = remap_finish(k, L, v.z, uint(na));
+		write(k, v, L, uint(na), v.w);
+		imageStore(thermal, cell_at(k), vec4(ntg, 0.0, 0.0));
 	}
 }
 

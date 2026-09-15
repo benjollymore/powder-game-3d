@@ -1569,11 +1569,15 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		# Liquid pressure: exact columns, then relax rows along x or z alternately.
 		_rd.compute_list_bind_compute_pipeline(cl, _hydro_pipeline)
 		_rd.compute_list_bind_uniform_set(cl, _hydro_set, 0)
+		# Each mode runs as three dispatches: fold latent into energy, remap
+		# heat along the run, then write amounts and temperatures. A single
+		# dispatch could not read texels it had just written (hydro.glsl).
 		for mode in [0, 1 + (t & 1)]:
-			var hp := PackedInt32Array([mode, t, world_seed, HYDRO_RELAX_PERCENT]).to_byte_array()
-			_rd.compute_list_set_push_constant(cl, hp, hp.size())
-			_rd.compute_list_dispatch(cl, hydro_groups, hydro_groups, 1)
-			_rd.compute_list_add_barrier(cl)
+			for stage in 3:
+				var hp := PackedInt32Array([mode, t, world_seed, HYDRO_RELAX_PERCENT, stage, 0, 0, 0]).to_byte_array()
+				_rd.compute_list_set_push_constant(cl, hp, hp.size())
+				_rd.compute_list_dispatch(cl, hydro_groups, hydro_groups, 1)
+				_rd.compute_list_add_barrier(cl)
 		_rd.compute_list_end()
 		_stamp("hydro_tick")
 		cl = _rd.compute_list_begin()
