@@ -163,6 +163,23 @@ ok: warm but sub-ignition wood does not catch
 ok: heat brush leaves voxel bytes untouched
 ok: heat brush adds full strength at the centre with radial falloff (343.150 K)
 ok: an equal cool restores the thermal bytes exactly
+--- _test_scenario_volcano
+ok: lava that reached the pool crusted to stone (6989 cells)
+ok: pool water boiled into steam (3721 cells)
+ok: floor intact
+--- _test_scenario_ice_cave
+ok: ice melted (50333 of 50776 left)
+ok: meltwater appeared
+ok: meltwater boiled on the embers (2359 steam)
+ok: bowl intact
+--- _test_scenario_boiler
+ok: the tank water boiled (732 steam cells)
+ok: steam left through the vent pipe (226 cells above the pipe)
+ok: pipe intact
+--- _test_scenario_foundry
+ok: the ice end of the bar warmed (349.0 K)
+ok: the bar melted into the ice (12172 of 12560 left)
+ok: the lava around the bar cooled (mean 1489.2 K)
 --- _test_large_grid_smoke
 skipped (grid 128)
-129 checks, 0 failures
+142 checks, 0 failures

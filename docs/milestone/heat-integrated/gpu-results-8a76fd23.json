@@ -3,7 +3,7 @@
     "name": "archives-thermal128",
     "pass": true,
     "exit": 0,
-    "seconds": 3.69,
+    "seconds": 3.79,
     "command": [
       "godot",
       "--path",

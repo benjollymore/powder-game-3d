@@ -25,7 +25,7 @@ ok: Open same file then Save reloads the new saved bytes instead of applying a s
 ok: Save choice writes exact dirty bytes before resetting the container
 ok: untitled destructive Save requests a native file selection
 ok: native picker cancellation signal preserves unsaved construction
-FAIL: Save As during dirty Open saves current work separately and still opens the originally selected file
+ok: Save As during dirty Open saves current work separately and still opens the originally selected file
 ok: real disk Save failure cannot execute the pending Empty action
 ok: parsed newer paint after Save capture cancels destructive continuation
 ok: saved file contains the older snapshot, never falsely claims to include the newer stroke
@@ -33,4 +33,5 @@ ok: stale asynchronous Open is rejected before a discard dialog can authorize ol
 ok: normal root window-close signal is intercepted for dirty authored work
 ok: canceling window close preserves exact authored bytes and restores editor input
 ok: close confirmation and current unsaved filename remain visible at laptop resolution
-Document protection GPU: 31 checks, 1 failures
+ok: explicit Discard completes the normal close route exactly once
+Document protection GPU: 32 checks, 0 failures

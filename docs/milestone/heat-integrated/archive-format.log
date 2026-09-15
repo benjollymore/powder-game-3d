@@ -6,7 +6,8 @@ ok: every temperature and latent float round-trips exactly
 ok: archive declares authored state, the two-layer schema and per-layer checksums
 ok: world from another session size is rejected before upload
 ok: invalid snapshot size is rejected
-ok: a missing or short temperature layer cannot be saved
+ok: a short temperature layer cannot be saved
+ok: an omitted temperature layer is saved as element defaults, like a version-1 world loads
 ok: non-finite temperatures are rejected and the previous file survives
 ok: successful replacement is exact
 ok: a version-1 world loads its exact voxels with no thermal layer
@@ -24,4 +25,4 @@ ok: layers out of order are rejected
 ok: checksum-valid non-finite temperatures are rejected before upload
 ok: checksum-valid unknown material is rejected before GPU upload
 ok: unsupported material cannot replace an existing valid save
-World archive: 24 checks, 0 failures
+World archive: 25 checks, 0 failures

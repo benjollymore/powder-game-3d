@@ -27,6 +27,6 @@ ok: modal boundary cancels pending authored placement before it can mutate a new
 ok: world boundary cancels pending authored placement before it can mutate a new context
 ok: paint during queued Run preparation is not replayed later into Test
 ok: Run captures the completed earlier edit without replaying canceled pending Build paint into Test
-FAIL: saved fixture is available for asynchronous Open completion
-FAIL: Open completion cannot overwrite a newer Undo plus queued authored gesture
-Pending paint GPU: 28 checks, 2 failures
+ok: saved fixture is available for asynchronous Open completion
+ok: Open completion cannot overwrite a newer Undo plus queued authored gesture
+Pending paint GPU: 28 checks, 0 failures

@@ -12,7 +12,7 @@ ok: erase can target the retained section boundary
 ok: out-of-world ray is a miss
 ok: invalid zero-length ray is rejected
 ok: all preview picking leaves exact GPU material bytes unchanged
-surface two-ray transaction completion_us=3902 undo_bytes=18432
+surface two-ray transaction completion_us=23894 undo_bytes=18432
 ok: fast flat-face surface stroke is connected at radius zero
 ok: surface additive stroke preserves every underlying wall cell
 ok: surface undo captures local tiles, not the world (12 bytes per cell with thermal)
@@ -38,4 +38,10 @@ ok: surface held source adds 24 actual grains over120 ticks at batch3, got24
 ok: atomic surface emission and material state are identical at batch3
 ok: surface held source adds 24 actual grains over120 ticks at batch7, got24
 ok: atomic surface emission and material state are identical at batch7
-Surface GPU: 36 checks, 0 failures
+ok: surface heat raises the picked hit cell by the full strength (293.15 -> 333.15)
+ok: the rim of the sphere warms less than its centre, matching the workplane falloff
+FAIL: the sphere heats the wall below the surface and leaves the air above at its own temperature
+ok: surface heating leaves every voxel byte untouched
+ok: an equal surface cool restores the previous temperatures exactly
+ok: a slow and a fast surface heat stroke over the same path deposit identical temperatures
+Surface GPU: 42 checks, 1 failures

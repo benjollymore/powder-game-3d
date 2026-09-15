@@ -1,6 +1,6 @@
 Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 
-ok: scenario names are unique and include Empty (11 at 256³)
+ok: scenario names are unique and include Empty (15 at 256³)
 ok: Demo builds 256³ voxels
 ok: Demo uses only table materials (offending id -1)
 ok: Demo has a thermal layer of 8 bytes per cell (element defaults)
@@ -61,9 +61,33 @@ ok: Acid rain has a thermal layer of 8 bytes per cell (element defaults)
 ok: Acid rain temperatures are finite and above absolute zero (293.1..293.1 K)
 ok: Acid rain places at least one material besides air (6 kinds)
 ok: Acid rain builds deterministically
+ok: Volcano builds 256³ voxels
+ok: Volcano uses only table materials (offending id -1)
+ok: Volcano has a thermal layer of 8 bytes per cell (element defaults)
+ok: Volcano temperatures are finite and above absolute zero (293.1..1500.0 K)
+ok: Volcano places at least one material besides air (4 kinds)
+ok: Volcano builds deterministically
+ok: Ice cave builds 256³ voxels
+ok: Ice cave uses only table materials (offending id -1)
+ok: Ice cave has a thermal layer of 8 bytes per cell (element defaults)
+ok: Ice cave temperatures are finite and above absolute zero (263.1..1500.0 K)
+ok: Ice cave places at least one material besides air (3 kinds)
+ok: Ice cave builds deterministically
+ok: Boiler builds 256³ voxels
+ok: Boiler uses only table materials (offending id -1)
+ok: Boiler has a thermal layer of 8 bytes per cell (element defaults)
+ok: Boiler temperatures are finite and above absolute zero (293.1..1500.0 K)
+ok: Boiler places at least one material besides air (4 kinds)
+ok: Boiler builds deterministically
+ok: Foundry builds 256³ voxels
+ok: Foundry uses only table materials (offending id -1)
+ok: Foundry has a thermal layer of 8 bytes per cell (element defaults)
+ok: Foundry temperatures are finite and above absolute zero (263.1..1500.0 K)
+ok: Foundry places at least one material besides air (4 kinds)
+ok: Foundry builds deterministically
 ok: Empty builds 256³ voxels
 ok: Empty uses only table materials (offending id -1)
 ok: Empty has a thermal layer of 8 bytes per cell (element defaults)
 ok: Empty temperatures are finite and above absolute zero (293.1..293.1 K)
 ok: Empty places at least one material besides air (1 kinds)
-Examples CPU (256³): 66 checks, 0 failures
+Examples CPU (256³): 90 checks, 0 failures

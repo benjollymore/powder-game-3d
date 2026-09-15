@@ -9,8 +9,10 @@ ok: an interleaved foreign request completes every reader once and leaves nothin
 ok: thermal brushes show once the simulator has HEAT/COOL modes
 ok: Heat selects as a tool, not a material
 ok: a Build heat stroke records one undoable thermal stroke of +40 K
-ok: a surface-targeted thermal stroke is refused with guidance instead of a material stroke
-ok: live cooling paints immediately at the pointer once per new cell ([[[(91, 64, 64)], 2, -40.0]])
+ok: a surface-targeted thermal stroke records one undoable surface thermal stroke
+ok: slow and fast heat strokes stamp the same radius-spaced centres ([(20, 40, 40), (23, 40, 40), (26, 40, 40), (29, 40, 40)] vs [(20, 40, 40), (23, 40, 40), (26, 40, 40), (29, 40, 40)])
+ok: live cooling paints immediately at the pointer once per spacing ([[[(91, 64, 64)], 2, -40.0]])
+ok: live surface cooling sends each sample as a ray, the first starting a new segment (2)
 ok: choosing a material clears the thermal tool
 ok: a simulator without request_state_readback yields voxels and an empty thermal layer ([[1, 0]])
-Read world FIFO: 13 checks, 0 failures
+Read world FIFO: 15 checks, 0 failures

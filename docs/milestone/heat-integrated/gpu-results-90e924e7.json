@@ -1,9 +1,9 @@
 [
   {
     "name": "document-protection256",
-    "pass": false,
-    "exit": 1,
-    "seconds": 49.4,
+    "pass": true,
+    "exit": 0,
+    "seconds": 57.94,
     "command": [
       "godot",
       "--path",
