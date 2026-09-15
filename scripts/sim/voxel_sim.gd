@@ -8,6 +8,12 @@ extends Node3D
 ## RGBA8 rather than R32_UINT because Texture3DRD only accepts formats that map
 ## to an Image format, and unorm8 round-trips bytes exactly.
 ##
+## A second authoritative RG32F texture of the same extent is the thermal
+## layer: R = temperature in kelvin, G = latent progress through a phase
+## plateau. It is carried with material (swaps permute it), captured by
+## regional history, and replaced or initialised by every whole-world path.
+## See docs/milestone/heat-brief.md, contract 3.
+##
 ## Every RenderingDevice call runs on the render thread through
 ## RenderingServer.call_on_render_thread; the main thread only queues work.
 ##
@@ -18,6 +24,8 @@ extends Node3D
 ## old batch-dependent-air measurements do not describe this implementation.
 
 signal readback_ready(bytes: PackedByteArray)
+## Thermal layer readback: GRID^3 cells x 8 bytes (two float32 per cell, x fastest).
+signal thermal_ready(bytes: PackedByteArray)
 signal occupancy_ready(bytes: PackedByteArray)
 signal density_ready(bytes: PackedByteArray)
 signal scenario_changed(name: String)
@@ -46,6 +54,11 @@ const SIM_SHADER_PATH := "res://shaders/compute/sim.glsl"
 const BRUSH_SHADER_PATH := "res://shaders/compute/brush.glsl"
 const BRUSH_LOCAL_SIZE := 8
 const HYDRO_SHADER_PATH := "res://shaders/compute/hydro.glsl"
+const THERMAL_INIT_SHADER_PATH := "res://shaders/compute/thermal_init.glsl"
+## Thermal layer: float32 temperature (K) + float32 latent progress per cell.
+const THERMAL_BYTES_PER_CELL := 8
+const THERMAL_FORMAT := RenderingDevice.DATA_FORMAT_R32G32_SFLOAT
+const THERMAL_IMAGE_FORMAT := Image.FORMAT_RGF
 ## Percent of the gap to a horizontal run's mean closed per hydro pass.
 const HYDRO_RELAX_PERCENT := 50
 const FIELDS_SHADER_PATH := "res://shaders/compute/fields.glsl"
@@ -128,6 +141,9 @@ var volume_debug := 0
 ## Sim seconds per tick, for FX particles and leaf sway; taken from
 ## TimeController when it drives the sim.
 @export var seconds_per_tick := 1.0 / 120.0
+## Temperature (K) of air and of any element without an `initial_temp` table
+## entry; the thermal layer is initialised to it on every whole-world replacement.
+@export var ambient_temp := 293.15
 
 var tick := 0
 ## Absolute simulated tick used by presentation seeds, never rebuild count.
@@ -156,6 +172,13 @@ var _param_overrides := {}
 var _rd: RenderingDevice
 var _grid_rid := RID()
 var _texture := Texture3DRD.new()
+var _thermal_rid := RID()
+## Bound to the thermal layer once the render thread has created it (see _process).
+var thermal_texture := Texture3DRD.new()
+var _thermal_init_shader := RID()
+var _thermal_init_pipeline := RID()
+var _thermal_init_set := RID()
+var _thermal_init_buffer := RID()
 var _material: ShaderMaterial
 var _volume_material: ShaderMaterial
 var _materials: Array = []
@@ -314,12 +337,27 @@ func sunvis_texture() -> Texture3DRD:
 	return _sunvis_texture
 
 
+## Render-thread RID of the thermal layer (valid after _rt_init).
+func thermal_texture_rid() -> RID:
+	return _thermal_rid
+
+
+## Every texture that is authoritative cell state. Whole-world replacement,
+## readback, regional history and cadence tests must cover all of them.
+func authoritative_textures() -> Array[Dictionary]:
+	return [
+		{"name": "voxels", "rid": _grid_rid, "format": RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM, "bytes_per_cell": 4},
+		{"name": "thermal", "rid": _thermal_rid, "format": THERMAL_FORMAT, "bytes_per_cell": THERMAL_BYTES_PER_CELL},
+	]
+
+
 func _exit_tree() -> void:
 	if RenderingServer.frame_pre_draw.is_connected(_prepare_frame):
 		RenderingServer.frame_pre_draw.disconnect(_prepare_frame)
 	# Detach the material's view first, otherwise the renderer rebuilds its
 	# uniform set against a freed texture at shutdown.
 	_texture.texture_rd_rid = RID()
+	thermal_texture.texture_rd_rid = RID()
 	_occ_texture.texture_rd_rid = RID()
 	_density_texture.texture_rd_rid = RID()
 	_physical_overflow_texture.texture_rd_rid = RID()
@@ -330,6 +368,7 @@ func _exit_tree() -> void:
 func _process(_delta: float) -> void:
 	if _rt_ready and _texture.texture_rd_rid != _grid_rid:
 		_texture.texture_rd_rid = _grid_rid
+		thermal_texture.texture_rd_rid = _thermal_rid
 		_occ_texture.texture_rd_rid = _occ_rid
 		_density_texture.texture_rd_rid = _density_rid
 		_physical_overflow_texture.texture_rd_rid = _physical_overflow_rid
@@ -619,7 +658,7 @@ func _history_record_valid(result: Dictionary) -> bool:
 			return false
 		seen[lo] = true
 		var extent := hi - lo
-		if region.bytes.size() != extent.x * extent.y * extent.z * 4:
+		if region.bytes.size() != extent.x * extent.y * extent.z * EditGPU.BYTES_PER_CELL:
 			return false
 		total += region.bytes.size()
 		if total > EditGPU.MAX_TRANSACTION_BYTES:
@@ -686,7 +725,7 @@ func restore_edit_transaction(result: Dictionary) -> bool:
 		var extent := hi - lo
 		if not VoxelCodec.in_bounds(lo) or hi != hi.clamp(Vector3i.ZERO, Vector3i.ONE * GRID) or extent.x <= 0 or extent.y <= 0 or extent.z <= 0:
 			return false
-		if region.bytes.size() != extent.x * extent.y * extent.z * 4:
+		if region.bytes.size() != extent.x * extent.y * extent.z * EditGPU.BYTES_PER_CELL:
 			return false
 	edit_revision += 1
 	RenderingServer.call_on_render_thread(_rt_restore_edit.bind(result.regions))
@@ -695,7 +734,7 @@ func restore_edit_transaction(result: Dictionary) -> bool:
 
 func _rt_edit_gpu() -> RefCounted:
 	if _editor_gpu == null:
-		_editor_gpu = EditGPU.new(_rd, _grid_rid, GRID, _rt_compile)
+		_editor_gpu = EditGPU.new(_rd, _grid_rid, _thermal_rid, GRID, _rt_compile)
 	return _editor_gpu
 
 
@@ -728,12 +767,15 @@ func _rt_restore_edit(regions: Array) -> void:
 	_rt_occupancy_update()
 
 
-## Replace the whole world. `bytes` is GRID^3 * 4 bytes, x fastest.
-func upload(bytes: PackedByteArray) -> void:
+## Replace the whole world. `bytes` is GRID^3 * 4 bytes, x fastest. `thermal`
+## is GRID^3 * 8 bytes (float32 temperature, float32 latent per cell) or empty,
+## in which case every cell starts at its element's initial temperature.
+func upload(bytes: PackedByteArray, thermal: PackedByteArray = PackedByteArray()) -> void:
 	assert(bytes.size() == GRID * GRID * GRID * 4)
+	assert(thermal.is_empty() or thermal.size() == GRID * GRID * GRID * THERMAL_BYTES_PER_CELL)
 	edit_epoch += 1
 	edit_revision += 1
-	RenderingServer.call_on_render_thread(_rt_upload.bind(bytes))
+	RenderingServer.call_on_render_thread(_rt_upload.bind(bytes, thermal))
 	tick = 0
 	TimeController.reset_tick_counter()
 
@@ -750,6 +792,54 @@ func clear() -> void:
 ## main thread (next frame). Stalls the GPU; debug and tests only.
 func request_readback(callback: Callable) -> void:
 	RenderingServer.call_on_render_thread(_rt_readback.bind(callback))
+
+
+## Copy the thermal layer back to the CPU; `thermal_ready` fires on the main
+## thread with GRID^3 * 8 bytes. Stalls the GPU; inspection and tests only.
+func request_thermal_readback() -> void:
+	RenderingServer.call_on_render_thread(_rt_thermal_readback)
+
+
+## One authoritative cell under a ray, for the hover inspector (heat-brief
+## contract 4). `origin` and `direction` are in this node's model space (the
+## unit box), as for request_surface_pick. `callback` receives {pos, element,
+## temperature, amount, flags}; pos.x == -1 on a miss. Rides the surface pick
+## record, never a full readback.
+func request_cell_probe(origin: Vector3, direction: Vector3, callback: Callable) -> void:
+	var mask := ((1 << Elements.count()) - 1) & ~1
+	request_surface_pick({"origin": origin, "direction": direction, "mask": mask}, 0, true,
+		func(result: Dictionary):
+			if result.get("valid", false):
+				callback.call({"pos": result.hit, "element": result.element, "temperature": result.temperature,
+					"amount": result.amount, "flags": result.flags})
+			else:
+				callback.call({"pos": Vector3i(-1, -1, -1), "element": 0, "temperature": 0.0, "amount": 0, "flags": 0}))
+
+
+## Total thermal energy of a world in capacity units: sum over cells of
+## heat_capacity(id) * temperature + latent, with liquid capacity scaled by
+## amount / LIQUID_FULL (no clamp, so compressed liquid holds more). Elements
+## without a `heat_capacity` entry count as 1 per full cell. CPU loop over
+## every cell: tests at 128 only.
+static func energy_total(voxels: PackedByteArray, thermal: PackedByteArray) -> float:
+	var cells := voxels.size() / 4
+	assert(thermal.size() == cells * THERMAL_BYTES_PER_CELL)
+	var capacity := PackedFloat64Array()
+	var liquid := PackedByteArray()
+	capacity.resize(Elements.count())
+	liquid.resize(Elements.count())
+	for id in Elements.count():
+		capacity[id] = float(Elements.TABLE[id].get("heat_capacity", 1.0))
+		liquid[id] = 1 if Elements.is_liquid(id) else 0
+	var values := thermal.to_float32_array()
+	var total := 0.0
+	for i in cells:
+		var id := voxels[i * 4]
+		var c := capacity[id]
+		if liquid[id] == 1:
+			c *= float(voxels[i * 4 + 2]) / float(Elements.LIQUID_FULL)
+		total += c * values[i * 2] + values[i * 2 + 1]
+	return total
 
 
 ## Fetch the 16^3 occupancy grid (one byte per brick, x fastest) without
@@ -844,6 +934,22 @@ func _rt_init() -> void:
 	)
 	_grid_rid = _rd.texture_create(fmt, RDTextureView.new())
 	_rd.texture_clear(_grid_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
+
+	var thermal_fmt := RDTextureFormat.new()
+	thermal_fmt.format = THERMAL_FORMAT
+	thermal_fmt.texture_type = RenderingDevice.TEXTURE_TYPE_3D
+	thermal_fmt.width = GRID
+	thermal_fmt.height = GRID
+	thermal_fmt.depth = GRID
+	thermal_fmt.mipmaps = 1
+	thermal_fmt.usage_bits = fmt.usage_bits
+	_thermal_rid = _rd.texture_create(thermal_fmt, RDTextureView.new())
+	_rd.texture_clear(_thermal_rid, Color(ambient_temp, 0, 0, 0), 0, 1, 0, 1)
+	# Per-element initial temperatures for the thermal initialiser. Read through
+	# the table so the elements worker's `initial_temp` key applies as soon as it
+	# lands; rows without one start at ambient.
+	var initial := Elements.floats("initial_temp", ambient_temp).to_byte_array()
+	_thermal_init_buffer = _rd.storage_buffer_create(initial.size(), initial)
 
 	var props := Elements.property_bytes()
 	_elements_buffer = _rd.storage_buffer_create(props.size(), props)
@@ -1027,6 +1133,7 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	var brush_spirv := _rt_compile(BRUSH_SHADER_PATH, from_source)
 	var occ_spirv := _rt_compile(OCCUPANCY_SHADER_PATH, from_source)
 	var hydro_spirv := _rt_compile(HYDRO_SHADER_PATH, from_source)
+	var thermal_init_spirv := _rt_compile(THERMAL_INIT_SHADER_PATH, from_source)
 	var density_spirv := _rt_compile(FIELDS_SHADER_PATH, from_source)
 	var mip_spirv := _rt_compile(FIELDS_MIP_SHADER_PATH, from_source)
 	var sunvis_spirv := _rt_compile(SUNVIS_SHADER_PATH, from_source)
@@ -1034,7 +1141,7 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	var fx_spirv := _rt_compile(FX_SHADER_PATH, from_source)
 	if sim_spirv == null or brush_spirv == null or occ_spirv == null or hydro_spirv == null \
 			or density_spirv == null or mip_spirv == null or sunvis_spirv == null or splat_spirv == null \
-			or fx_spirv == null:
+			or fx_spirv == null or thermal_init_spirv == null:
 		return
 	var air_spirv := {}
 	for k in AIR_KERNELS:
@@ -1055,7 +1162,12 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	u_reacts.binding = 2
 	u_reacts.add_id(_reactions_buffer)
 	_sim_set = _rd.uniform_set_create(
-		[_image_uniform(0), u_elems, u_reacts, _sampler_uniform(3, _air_vel[0])], _sim_shader, 0)
+		[_image_uniform(0), u_elems, u_reacts, _sampler_uniform(3, _air_vel[0]), _image_uniform(4, _thermal_rid)], _sim_shader, 0)
+
+	_thermal_init_shader = _rd.shader_create_from_spirv(thermal_init_spirv)
+	_thermal_init_pipeline = _rd.compute_pipeline_create(_thermal_init_shader, _spec([GRID]))
+	_thermal_init_set = _rd.uniform_set_create(
+		[_image_uniform(0), _image_uniform(1, _thermal_rid), _buffer_uniform(2, _thermal_init_buffer)], _thermal_init_shader, 0)
 
 	# Air solver: downsample -> advect (vel0 -> vel1) -> divergence -> jacobi
 	# (pres ping-pong, even count so the result lands in pres0) -> project (vel1 -> vel0).
@@ -1147,9 +1259,12 @@ func _rt_free_pipelines() -> void:
 			_occ_set, _occ_pipeline, _occ_shader, _hydro_set, _hydro_pipeline, _hydro_shader,
 			_density_set, _density_pipeline, _density_shader, _mip_pipeline, _mip_shader,
 			_sunvis_set, _sunvis_pipeline, _sunvis_shader, _splat_set, _splat_pipeline, _splat_shader,
-			_fx_set, _fx_pipeline, _fx_shader]:
+			_fx_set, _fx_pipeline, _fx_shader, _thermal_init_set, _thermal_init_pipeline, _thermal_init_shader]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
+	_thermal_init_set = RID()
+	_thermal_init_pipeline = RID()
+	_thermal_init_shader = RID()
 	_sim_set = RID()
 	_sim_pipeline = RID()
 	_sim_shader = RID()
@@ -1192,7 +1307,7 @@ func _rt_free() -> void:
 		if v.is_valid():
 			_rd.free_rid(v)
 	_fields_views = []
-	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _occ_rid, _density_rid, _physical_overflow_rid, _sunvis_rid, _splat_counter,
+	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _thermal_rid, _thermal_init_buffer, _occ_rid, _density_rid, _physical_overflow_rid, _sunvis_rid, _splat_counter,
 			_fx_pool, _fx_spawns,
 			_air_vel[0], _air_vel[1], _air_pres[0], _air_pres[1], _air_div, _air_occ, _air_src, _air_sampler]:
 		if rid.is_valid():
@@ -1200,6 +1315,8 @@ func _rt_free() -> void:
 	_elements_buffer = RID()
 	_reactions_buffer = RID()
 	_grid_rid = RID()
+	_thermal_rid = RID()
+	_thermal_init_buffer = RID()
 	_occ_rid = RID()
 	_density_rid = RID()
 	_physical_overflow_rid = RID()
@@ -1511,17 +1628,38 @@ func _rt_run_ops(ops: Array) -> void:
 			var c: Vector3 = op["center"]
 			_rt_brush_sphere(cl, Vector3i(c.round()), int(round(op["radius"])), op["id"], BrushMode.REPLACE, seed, op["amount"])
 	_rd.compute_list_end()
+	_rt_thermal_init()
 	_rt_occupancy_update()
 
 
-func _rt_upload(bytes: PackedByteArray) -> void:
+## Set every cell's temperature from its element (thermal_init.glsl). Only for
+## whole-world replacements that carry no thermal bytes; never per tick.
+func _rt_thermal_init() -> void:
+	if not _thermal_init_pipeline.is_valid():
+		return
+	var cl := _rd.compute_list_begin()
+	_rd.compute_list_bind_compute_pipeline(cl, _thermal_init_pipeline)
+	_rd.compute_list_bind_uniform_set(cl, _thermal_init_set, 0)
+	var push := PackedFloat32Array([ambient_temp, 0.0, 0.0, 0.0]).to_byte_array()
+	_rd.compute_list_set_push_constant(cl, push, push.size())
+	var groups := ceili(GRID / 8.0)
+	_rd.compute_list_dispatch(cl, groups, groups, groups)
+	_rd.compute_list_end()
+
+
+func _rt_upload(bytes: PackedByteArray, thermal: PackedByteArray) -> void:
 	_rd.texture_update(_grid_rid, 0, bytes)
 	_rt_reset_world_history()
+	if thermal.is_empty():
+		_rt_thermal_init()
+	else:
+		_rd.texture_update(_thermal_rid, 0, thermal)
 	_rt_occupancy_update()
 
 
 func _rt_clear() -> void:
 	_rd.texture_clear(_grid_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
+	_rd.texture_clear(_thermal_rid, Color(ambient_temp, 0, 0, 0), 0, 1, 0, 1)
 	_rt_reset_world_history()
 	_rt_occupancy_update()
 
@@ -1710,6 +1848,11 @@ func _rt_readback(callback: Callable) -> void:
 	var bytes := _rd.texture_get_data(_grid_rid, 0)
 	callback.call_deferred(bytes)
 	readback_ready.emit.call_deferred(bytes)
+
+
+func _rt_thermal_readback() -> void:
+	_rt_flush_render_preparation()
+	thermal_ready.emit.call_deferred(_rd.texture_get_data(_thermal_rid, 0))
 
 
 # --- debug / test data -----------------------------------------------------------

@@ -42,3 +42,16 @@ change: 0 for air and gases, 1 for solids and powders, and for liquids a remap
 of the fill level chosen so that trilinear sampling puts the 0.5 crossing
 exactly `fill` of the way up a partial cell resting on a full one. The
 raymarcher draws liquids as that isosurface.
+
+## Thermal layer (heat milestone)
+
+A second authoritative 3D texture of the same extent, `R32G32_SFLOAT`: R is
+the cell's temperature in kelvin, G its latent progress through a phase
+plateau. It is carried with material (every Margolus swap permutes it),
+captured and restored by regional history (12 bytes per cell in a record:
+the four packed voxel bytes then two floats), and replaced or initialised
+from each element's `initial_temp` by every whole-world path (`upload`,
+`clear`, scenario load). `VoxelSim.authoritative_textures()` lists both
+layers; `request_thermal_readback()` returns GRID³ × 8 bytes, x fastest.
+Archive v2 (editor worker) stores it as a second layer. Conduction, phase
+change and brushes that write it land in the following unit.

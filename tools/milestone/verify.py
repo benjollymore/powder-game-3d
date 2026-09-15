@@ -37,6 +37,7 @@ GPU = [
     ("physics128", "tests/gpu/run_gpu_tests.gd", 128),
     ("regional256", "tests/milestone/regional_undo_gpu.gd", 256),
     ("cadence128", "tests/milestone/batch_cadence.gd", 128),
+    ("thermal-state128", "tests/milestone/thermal_state_gpu.gd", 128),
     ("reset128", "tests/milestone/presentation_reset.gd", 128),
     ("sources128", "tests/milestone/live_emitter.gd", 128),
     ("clicks128", "tests/milestone/live_click.gd", 128),

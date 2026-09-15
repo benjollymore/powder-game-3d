@@ -27,6 +27,7 @@ func _run() -> void:
 		for schedule in [[3], [7, 2, 5, 1, 9]]:
 			var actual: Dictionary = await _timeline(scenario, schedule)
 			_check(actual.voxels == reference.voxels, "%s voxel bytes equal for %s" % [scenario, schedule])
+			_check(actual.thermal == reference.thermal, "%s thermal bytes equal for %s" % [scenario, schedule])
 			_check(actual.air == reference.air, "%s velocity/heat bytes equal for %s" % [scenario, schedule])
 			_check(actual.solver == reference.solver, "%s all air solver textures equal for %s" % [scenario, schedule])
 	print("BATCH_CADENCE grid=%d checks=%d failures=%d" % [VoxelCodec.GRID, _checks, _failures])
@@ -62,15 +63,18 @@ func _timeline(scenario: String, schedule: Array) -> Dictionary:
 	await _drain()
 	_sim.request_readback(func(_bytes): pass)
 	var voxels: PackedByteArray = await _sim.readback_ready
+	_sim.request_thermal_readback()
+	var thermal: PackedByteArray = await _sim.thermal_ready
 	_sim.request_velocity_readback()
 	var air: PackedByteArray = await _sim.velocity_ready
 	RenderingServer.call_on_render_thread(_rt_air_snapshot)
 	var solver: PackedByteArray = await air_snapshot_ready
 	print("STATE scenario=%s schedule=%s ticks=%d voxel_sha256=%s air_sha256=%s" % [scenario, schedule, cursor, _hash(voxels), _hash(air)])
 	_check(voxels.size() == VoxelCodec.GRID * VoxelCodec.GRID * VoxelCodec.GRID * 4, "full voxel readback completed")
+	_check(thermal.size() == VoxelCodec.GRID * VoxelCodec.GRID * VoxelCodec.GRID * _sim.THERMAL_BYTES_PER_CELL, "full thermal readback completed")
 	_check(air.size() == _sim.AIR_GRID * _sim.AIR_GRID * _sim.AIR_GRID * 8, "full air readback completed")
 	_check(solver.size() == _sim.AIR_GRID * _sim.AIR_GRID * _sim.AIR_GRID * 31, "all seven air solver textures read back")
-	return {"voxels": voxels, "air": air, "solver": solver}
+	return {"voxels": voxels, "thermal": thermal, "air": air, "solver": solver}
 
 func _rt_air_snapshot() -> void:
 	var bytes := PackedByteArray()

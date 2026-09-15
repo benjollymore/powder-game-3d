@@ -16,9 +16,9 @@ func check(ok: bool, message: String) -> void:
 		failures += 1
 func record(lo := Vector3i.ZERO, value := 0) -> Dictionary:
 	var bytes := PackedByteArray()
-	bytes.resize(2048)
+	bytes.resize(6144) # one 8^3 tile at EditGPU.BYTES_PER_CELL (voxel + thermal bytes)
 	bytes.fill(value)
-	return {"valid": true, "epoch": 0, "id": 1, "bytes": 2048, "error": "",
+	return {"valid": true, "epoch": 0, "id": 1, "bytes": 6144, "error": "",
 		"regions": [{"lo": lo, "hi": lo + Vector3i.ONE * 8, "bytes": bytes}]}
 func run() -> void:
 	var undo: Array = [{"bytes": 4, "id": "oldest"}, {"bytes": 4, "id": "nearest past"}]
@@ -44,7 +44,7 @@ func run() -> void:
 	bad = record(Vector3i.ONE)
 	check(not sim._history_record_valid(bad), "unaligned history bounds are rejected")
 	bad = original.duplicate(true)
-	bad.regions[0].bytes.resize(2047)
+	bad.regions[0].bytes.resize(6143)
 	check(not sim._history_record_valid(bad), "truncated packed regional bytes are rejected")
 	var replies: Array = []
 	var callback := func(reply): replies.append(reply)
@@ -53,7 +53,7 @@ func run() -> void:
 		var revision: int = sim.edit_revision
 		var at_tick: int = sim.tick
 		match kind:
-			"truncated": captured.regions[0].bytes.resize(2047)
+			"truncated": captured.regions[0].bytes.resize(6143)
 			"wrong region": captured = record(Vector3i(8, 0, 0), 2)
 			"readback error": captured.error = "Injected readback failure"
 			"stale revision": revision -= 1

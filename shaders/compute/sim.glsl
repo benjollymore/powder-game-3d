@@ -18,6 +18,10 @@
 layout(local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
 
 layout(rgba8, set = 0, binding = 0) uniform restrict image3D grid;
+// Authoritative thermal layer: R temperature (K), G latent progress. Carried
+// with material through every swap so heat belongs to the cell's contents,
+// never to the grid location. No rule reads it yet (conduction lands next).
+layout(rg32f, set = 0, binding = 4) uniform restrict image3D thermal;
 
 #include "elem.glslinc"
 layout(std430, set = 0, binding = 1) restrict readonly buffer Elems { Elem elems[]; };
@@ -61,6 +65,8 @@ ivec3 origin;
 ivec3 pos[8];
 uvec4 c[8];
 uvec4 before[8];
+vec2 ct[8];
+vec2 before_t[8];
 uint state;
 
 // --- helpers ---------------------------------------------------------------
@@ -91,6 +97,19 @@ void store(ivec3 p, uvec4 v) {
 	}
 }
 
+vec2 load_thermal(ivec3 p) {
+	if (!in_bounds(p)) {
+		return vec2(0.0);
+	}
+	return imageLoad(thermal, p).rg;
+}
+
+void store_thermal(ivec3 p, vec2 t) {
+	if (in_bounds(p)) {
+		imageStore(thermal, p, vec4(t, 0.0, 0.0));
+	}
+}
+
 uint flags_of(uint id) { return elems[id].flags & 0xFFu; }
 float density_of(uint id) { return elems[id].density; }
 float spread_of(uint id) { return elems[id].spread; }
@@ -110,6 +129,7 @@ float rnd() {
 
 void swap_cells(int i, int j) {
 	uvec4 tmp = c[i]; c[i] = c[j]; c[j] = tmp;
+	vec2 tt = ct[i]; ct[i] = ct[j]; ct[j] = tt;
 }
 
 // Turn cell i into element id with that element's default amount, keeping its seed.
@@ -442,6 +462,8 @@ void main() {
 		pos[i] = origin + l;
 		c[i] = load(pos[i]);
 		before[i] = c[i];
+		ct[i] = load_thermal(pos[i]);
+		before_t[i] = ct[i];
 	}
 
 	if ((pc.a.w & RULE_NO_REACTIONS) == 0u) {
@@ -474,6 +496,9 @@ void main() {
 		}
 		if (c[i] != before[i]) {
 			store(pos[i], c[i]);
+		}
+		if (ct[i] != before_t[i]) {
+			store_thermal(pos[i], ct[i]);
 		}
 	}
 }

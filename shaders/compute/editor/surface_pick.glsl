@@ -2,9 +2,12 @@
 #version 450
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 layout(rgba8, set = 0, binding = 0) uniform readonly image3D grid;
+// stats: x = cells visited, y = hit temperature (float bits), z = hit amount,
+// w = hit flags. The last three are the cell probe payload (bytes 52..63).
 layout(std430, set = 0, binding = 1) buffer Result {
     ivec4 hit; ivec4 normal; ivec4 target; ivec4 stats;
 } result;
+layout(rg32f, set = 0, binding = 2) uniform readonly image3D thermal;
 layout(push_constant, std430) uniform Params {
     vec4 origin; vec4 direction;
     ivec4 options; // grid, radius, erase, included element bitmask
@@ -46,10 +49,14 @@ void main() {
     }
     for (int i = 0; i < pc.options.x * 3 + 3; i++) {
         if (any(lessThan(cell, ivec3(0))) || any(greaterThanEqual(vec3(cell), hi))) { return; }
-        uint id = uint(imageLoad(grid, cell).r * 255.0 + 0.5);
+        uvec4 v = uvec4(imageLoad(grid, cell) * 255.0 + 0.5);
+        uint id = v.x;
         result.stats.x = i + 1;
         if (id != 0u && (pc.options.w & (1 << int(id))) != 0) {
             result.hit = ivec4(cell, int(id));
+            result.stats.y = floatBitsToInt(imageLoad(thermal, cell).r);
+            result.stats.z = int(v.z);
+            result.stats.w = int(v.w);
             result.normal = ivec4(normal, 1);
             ivec3 target = pc.options.z != 0 ? cell : cell + normal * (pc.options.y + 1);
             bool valid = (pc.options.z != 0 || any(notEqual(normal, ivec3(0))))
