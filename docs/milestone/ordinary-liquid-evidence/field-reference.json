@@ -1,0 +1,48 @@
+{
+  "units": "cell lengths; amount200 is one full cell",
+  "full_cell_rays_with_real_surface_but_no_boundary_crossing": 400,
+  "rows": [
+    {
+      "amount": 1,
+      "fill": 0.005,
+      "density_byte": 3,
+      "isolated_peak": 0.011764705882352941,
+      "unsupported_sheet_iso_thickness_cells": 0
+    },
+    {
+      "amount": 50,
+      "fill": 0.25,
+      "density_byte": 85,
+      "isolated_peak": 0.3333333333333333,
+      "unsupported_sheet_iso_thickness_cells": 0
+    },
+    {
+      "amount": 100,
+      "fill": 0.5,
+      "density_byte": 128,
+      "isolated_peak": 0.5019607843137255,
+      "unsupported_sheet_iso_thickness_cells": 0.0078125
+    },
+    {
+      "amount": 150,
+      "fill": 0.75,
+      "density_byte": 170,
+      "isolated_peak": 0.6666666666666666,
+      "unsupported_sheet_iso_thickness_cells": 0.5
+    },
+    {
+      "amount": 200,
+      "fill": 1.0,
+      "density_byte": 255,
+      "isolated_peak": 1.0,
+      "unsupported_sheet_iso_thickness_cells": 1.0
+    },
+    {
+      "amount": 255,
+      "fill": 1.275,
+      "density_byte": 255,
+      "isolated_peak": 1.0,
+      "unsupported_sheet_iso_thickness_cells": 1.0
+    }
+  ]
+}

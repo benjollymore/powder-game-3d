@@ -1,0 +1,81 @@
+{
+	"capture_changed_bytes": 0,
+	"capture_max_channel_difference": 0,
+	"measurements": [
+		{
+			"frame_mean_ms": 3.02313333333333,
+			"frame_median_ms": 2.305,
+			"frame_p95_ms": 8.38,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 0,
+			"screen_space_aa": 1,
+			"variant": "original"
+		},
+		{
+			"frame_mean_ms": 2.86304166666667,
+			"frame_median_ms": 2.381,
+			"frame_p95_ms": 8.074,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 0,
+			"screen_space_aa": 1,
+			"variant": "candidate"
+		},
+		{
+			"frame_mean_ms": 3.05504166666667,
+			"frame_median_ms": 2.391,
+			"frame_p95_ms": 8.435,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 1,
+			"screen_space_aa": 1,
+			"variant": "candidate"
+		},
+		{
+			"frame_mean_ms": 3.26818333333333,
+			"frame_median_ms": 2.289,
+			"frame_p95_ms": 8.539,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 1,
+			"screen_space_aa": 1,
+			"variant": "original"
+		},
+		{
+			"frame_mean_ms": 2.81954166666667,
+			"frame_median_ms": 2.296,
+			"frame_p95_ms": 8.174,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 2,
+			"screen_space_aa": 1,
+			"variant": "original"
+		},
+		{
+			"frame_mean_ms": 3.09961666666667,
+			"frame_median_ms": 2.372,
+			"frame_p95_ms": 8.382,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 2,
+			"screen_space_aa": 1,
+			"variant": "candidate"
+		}
+	],
+	"note": "frame-post-draw wall intervals, not device timestamps; always-on-top, VSync off",
+	"physical_state_exact": true,
+	"voxel_sha256": "a2ebcdd62ad085d2ba62e16fd70d1617d8741035a2f76f8dd392860ec76ac827"
+}

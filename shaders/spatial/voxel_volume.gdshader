@@ -1,7 +1,7 @@
-// Volume pass: liquids as the 0.5 isosurface of the liquid field (Fresnel
-// reflection, sun highlight, in-scattering, Beer-Lambert absorption of what
-// lies behind) and gases as participating media lit through the sun
-// visibility field. Drawn after the opaque pass and stopped at its depth, so
+// Volume pass: bulk liquids use the 0.5 isosurface; ordinary thin features
+// and overflow droplets use amount-aware analytic proxies. Fresnel
+// reflection, sun highlights, scattering and Beer-Lambert absorption shade
+// liquids; gases are participating media lit through the sun visibility field. Drawn after the opaque pass and stopped at its depth, so
 // it never re-marches solids. Premultiplied alpha over the scene; depth is
 // written at the first liquid or gas surface so sprites composite.
 shader_type spatial;
@@ -27,6 +27,41 @@ bool thin_spray(ivec3 cell, uvec4 value) {
 		if (all(greaterThanEqual(b, ivec3(0))) && all(lessThan(b, ivec3(grid_size))) && is_liquid(voxel_at(b).x)) { wet++; }
 	}
 	return wet <= 2;
+}
+
+// Ordinary one-cell-thick features cannot rely on the reconstructed iso
+// surface: partial cells may never reach 0.5, and a full isolated peak can
+// sit entirely between DDA samples. Use raw physical neighbors, independent
+// of section clipping. Existing falling droplet eligibility is untouched.
+uniform bool ordinary_thin_proxy = true;
+bool liquid_open_neighbor(ivec3 cell) {
+	if (any(lessThan(cell, ivec3(0))) || any(greaterThanEqual(cell, ivec3(grid_size)))) { return true; }
+	uint id = voxel_at(cell).x;
+	return id == 0u || is_gas(id);
+}
+bool ordinary_thin(ivec3 cell, uvec4 value) {
+	if (!ordinary_thin_proxy || !is_liquid(value.x) || value.z == 0u || (value.w & 1u) != 0u) { return false; }
+	for (int axis = 0; axis < 3; axis++) {
+		ivec3 offset = ivec3(0); offset[axis] = 1;
+		if (liquid_open_neighbor(cell + offset) && liquid_open_neighbor(cell - offset)) { return true; }
+	}
+	return false;
+}
+
+// Gravity-aligned, bottom-anchored slab. Its volume is min(fill,1) cells;
+// compressed amount is carried by optical density, as for overflow droplets.
+// This is a coarse representation contract, not reconstructed fluid dynamics.
+vec2 ordinary_proxy_interval(Ray r, ivec3 cell, float fill, out vec3 entry_normal) {
+	vec3 lower = vec3(cell);
+	vec3 upper = lower + vec3(1.0, clamp(fill, 0.0, 1.0), 1.0);
+	vec3 lo = (lower - r.p0) * r.inv;
+	vec3 hi = (upper - r.p0) * r.inv;
+	vec3 near3 = min(lo, hi);
+	vec3 far3 = max(lo, hi);
+	int axis = (near3.x > near3.y && near3.x > near3.z) ? 0 : ((near3.y > near3.z) ? 1 : 2);
+	entry_normal = vec3(0.0);
+	entry_normal[axis] = -float(r.step_dir[axis]);
+	return vec2(max(near3.x, max(near3.y, near3.z)), min(far3.x, min(far3.y, far3.z)));
 }
 
 // Full physical liquid cells share an interior face even when an isolated
@@ -64,7 +99,7 @@ uniform vec3 absorb = vec3(0.10, 0.045, 0.02);
 uniform float scatter = 0.05;
 uniform float liquid_specular = 0.7;
 uniform float liquid_f0 = 0.04;
-// Diagnostic A/B control; only affects the coarse overflow droplet interface.
+// Diagnostic A/B control for analytic liquid interfaces only.
 uniform bool proxy_surface_reflection = true;
 uniform float ambient = 0.38;
 // 0 normal, 1 ignore the opaque depth, 2 show t_stop / t_box as grey,
@@ -118,6 +153,7 @@ void fragment() {
 	vec3 entry_n_view = vec3(0.0);
 	float liquid_len = 0.0;
 	float previous_liquid_exit = -1.0;
+	float previous_proxy_exit = -1.0;
 	uint liquid_id = 0u;       // liquid the current segment is travelling through
 	float f_prev = field(r.p0).r;
 	float t_prev = 0.0;
@@ -126,7 +162,7 @@ void fragment() {
 	float dbg_leaps = 0.0;
 	{
 		uint id0 = voxel_at(r.cell).x;
-		if (is_liquid(id0) && f_prev >= 0.5 && !(droplet_fallback && thin_spray(r.cell, voxel_at(r.cell)))) {
+		if (is_liquid(id0) && f_prev >= 0.5 && !(droplet_fallback && thin_spray(r.cell, voxel_at(r.cell))) && !ordinary_thin(r.cell, voxel_at(r.cell))) {
 			in_liquid = true;
 			liquid_id = id0;
 			liquid_col = palette[int(id0)].rgb;
@@ -157,9 +193,14 @@ void fragment() {
 		uvec4 value = voxel_at(r.cell);
 		uint id = value.x;
 		float t_next = min(min(r.t_max.x, min(r.t_max.y, r.t_max.z)), t_stop);
-		bool proxy = droplet_fallback && is_liquid(id) && thin_spray(r.cell, value);
-		bool liquid = is_liquid(id) && !proxy;
 		float f = field(r.p0 + r.dir * t_next).r;
+		// A nominally full (not compressed) cell already covered by an uninterrupted same-material
+		// segment needs no thin-feature rescue: its box interval is identical.
+		// Keep checking all partial, entry/exit and material-change intervals.
+		bool represented_full = in_liquid && id == liquid_id && float(value.z) == liquid_full && f_prev >= 0.5 && f >= 0.5;
+		bool ordinary_proxy = !represented_full && ordinary_thin(r.cell, value);
+		bool proxy = ordinary_proxy || (droplet_fallback && is_liquid(id) && thin_spray(r.cell, value));
+		bool liquid = is_liquid(id) && !proxy;
 		if (liquid) { dbg_visited = 1.0; }
 
 		if (id != 0u && !liquid && is_gas(id)) {
@@ -196,7 +237,11 @@ void fragment() {
 		// otherwise it can absorb/scatter all the way to the volume box exit.
 		if (!proxy && (in_liquid || liquid || prev_liquid)) {
 			if (!in_liquid && f >= 0.5) {
-				float ts = bisect(r.p0, r.dir, t_prev, t_next, 0, true);
+				// A filled proxy can end directly inside the regular liquid field.
+				// Bisection assumes a crossing and would invent a small gap here.
+				bool proxy_join = previous_proxy_exit >= 0.0 && abs(t_prev - previous_proxy_exit) < 0.002 && f_prev >= 0.5;
+				float ts = proxy_join ? t_prev : bisect(r.p0, r.dir, t_prev, t_next, 0, true);
+				bool air_interface = ts > previous_proxy_exit + 0.002;
 				vec3 ps = r.p0 + r.dir * ts;
 				float lap;
 				vec3 n = -normalize(field_gradient(ps, 0, 0.5, lap) + vec3(1e-6));
@@ -211,21 +256,21 @@ void fragment() {
 				uint under_id = outside(lcell - ivec3(0, 1, 0)) ? 1u : voxel_at(lcell - ivec3(0, 1, 0)).x;
 				float thick = is_liquid(under_id) ? 1.0 : clamp(float(lv.z) / liquid_full, 0.0, 1.0);
 				thick = smoothstep(0.0, 0.8, thick);
-				fresnel *= mix(0.15, 1.0, thick);
+				fresnel *= mix(0.15, 1.0, thick) * float(air_interface);
 				vec3 refl_world = normalize(mat3(MODEL_MATRIX) * reflect(r.dir, n));
 				vec3 refl_col = hemi_light(refl_world) * 1.05;
 				float vis = sun_vis(ps + n * 0.75 + sun * 1.25);
-				float spec = pow(max(dot(refl_world, sun), 0.0), 96.0) * liquid_specular * vis * mix(0.2, 1.0, thick);
+				float spec = pow(max(dot(refl_world, sun), 0.0), 96.0) * liquid_specular * vis * mix(0.2, 1.0, thick) * float(air_interface);
 				liquid_id = liquid ? id : voxel_at(ivec3(floor(ps))).x;
 				liquid_col = palette[int(liquid_id)].rgb;
-				float sheen = 0.12 * max(dot(n_world, sun), 0.0) * vis;
+				float sheen = 0.12 * max(dot(n_world, sun), 0.0) * vis * float(air_interface);
 				emitted += trans * (fresnel * refl_col + spec * sun_color + sheen * liquid_col);
 				trans *= 1.0 - fresnel;
 				// Froth on the surface: white, matte, mostly opaque.
-				float foam = clamp(field(ps).a * foam_strength, 0.0, 1.0) * 0.7;
+				float foam = clamp(field(ps).a * foam_strength, 0.0, 1.0) * 0.7 * float(air_interface);
 				emitted += trans * foam * foam_shade * (0.55 + 0.45 * vis);
 				trans *= 1.0 - foam;
-				if (!entered && thick > 0.5) {
+				if (air_interface && !entered && thick > 0.5) {
 					entered = true;
 					entry_n_view = (VIEW_MATRIX * vec4(n_world, 0.0)).xyz;
 				}
@@ -250,7 +295,9 @@ void fragment() {
 		if (proxy) {
 			float fill = float(value.z) / liquid_full;
 			vec3 proxy_normal;
-			vec2 interval = droplet_proxy_interval(r, r.cell, fill, proxy_normal);
+			vec2 interval;
+			if (ordinary_proxy) { interval = ordinary_proxy_interval(r, r.cell, fill, proxy_normal); }
+			else { interval = droplet_proxy_interval(r, r.cell, fill, proxy_normal); }
 			float start = max(t, interval.x);
 			float end = min(t_next, interval.y);
 			float len = max(end - start, 0.0) * max(fill, 1.0);
@@ -271,6 +318,7 @@ void fragment() {
 					trans *= 1.0 - fresnel;
 				}
 				previous_liquid_exit = end;
+				previous_proxy_exit = end;
 				emitted += trans * palette[int(id)].rgb * liquid_shade * (1.0 - exp(-scatter * len));
 				trans *= exp(-absorb * len);
 				liquid_len += len;

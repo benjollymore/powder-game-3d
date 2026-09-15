@@ -41,6 +41,8 @@ func _run() -> void:
 	sim.get_node("VolumeMesh").material_override.shader = shader
 	sim.set_param("physical_overflow",sim._physical_overflow_texture)
 	sim.set_param("volume_debug",5)
+	# Isolate the overflow interface contract from ordinary thin-feature rescue.
+	sim.set_param("ordinary_thin_proxy",false)
 	var cell_size: float = sim.world_size()/VoxelCodec.GRID
 	var center := (Vector3(TARGET)+Vector3.ONE*0.5-Vector3.ONE*VoxelCodec.GRID*0.5)*cell_size
 	var blocker := MeshInstance3D.new()

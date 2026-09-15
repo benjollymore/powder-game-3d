@@ -1,0 +1,44 @@
+[
+	{
+		"amount": 200,
+		"case": "bulk-full",
+		"images_identical": true,
+		"liquid_cells": 100,
+		"voxel_sha256": "1621bed0190215ff55c562a4ea53e6024c7122cb20888f3f2934c245f0f1899b"
+	},
+	{
+		"amount": 50,
+		"case": "supported-film",
+		"images_identical": true,
+		"liquid_cells": 25,
+		"voxel_sha256": "f69eb60ebb533f8390fe93d3a639175140edc9edf0c14525e84ae09919bfb809"
+	},
+	{
+		"amount": 200,
+		"case": "thin-full",
+		"images_identical": false,
+		"liquid_cells": 25,
+		"voxel_sha256": "26cef0940946922dc3c0ee8fd3413b4062ab805de8fab48bdc873d5a46f894b4"
+	},
+	{
+		"amount": 200,
+		"case": "thick-full",
+		"images_identical": true,
+		"liquid_cells": 50,
+		"voxel_sha256": "2d9e79074d9a19208d81db19fc10c81d7383167478b5dcdfd2b860d2dce35250"
+	},
+	{
+		"amount": 50,
+		"case": "tilted-partial",
+		"images_identical": false,
+		"liquid_cells": 25,
+		"voxel_sha256": "3a017b9f9bfde9d6970677092e73ff6be9f081b5cf42098b2345e53e7aaac739"
+	},
+	{
+		"amount": 50,
+		"case": "thick-low-fill-unresolved",
+		"images_identical": true,
+		"liquid_cells": 50,
+		"voxel_sha256": "782892a0b7e9883f55a6d7cb77507da642f426f60c3bd53a24c721b55585f996"
+	}
+]
