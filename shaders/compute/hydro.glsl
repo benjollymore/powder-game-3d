@@ -43,7 +43,7 @@ layout(rg32f, set = 0, binding = 2) uniform restrict image3D thermal;
 
 layout(push_constant, std430) uniform Params {
 	uvec4 a; // mode, tick, seed, relax rate in percent
-	uvec4 b; // remap stage (0 fold, 1 receive, 2 finish and write amounts), unused
+	uvec4 b; // remap stage (0 fold, 1 receive, 2 finish and write amounts), skip-unchanged-runs flag
 } pc;
 
 layout(constant_id = 0) const int GRID = 128;
@@ -200,6 +200,29 @@ void profile_column(int s, int e, uint L, uint M) {
 		r = 0u;
 	}
 	uint stage = pc.b.x;
+	if (pc.b.y != 0u) {
+		// Cost variant: a run whose profile already matches its amounts moves
+		// no mass, so its heat needs no remap (exact; every stage agrees
+		// because the target is a pure function of the untouched grid).
+		bool changed = false;
+		uint probe_carry = 0u;
+		for (uint k = 0u; k < n && !changed; k++) {
+			uint want;
+			if (k < H) {
+				want = FULL + COMP * (H - 1u - k) + extra_each + ((k < extra_rem) ? 1u : 0u);
+			} else if (k == H) {
+				want = r;
+			} else {
+				want = 0u;
+			}
+			want += probe_carry;
+			probe_carry = (want > MAX_AMOUNT) ? want - MAX_AMOUNT : 0u;
+			want = min(want, MAX_AMOUNT);
+			uvec4 v = load(s + int(k));
+			changed = want != v.z || ((v.w & FALLING) != w);
+		}
+		if (!changed) { return; }
+	}
 	if (stage == 0u) {
 		remap_fold(s, e, L);
 		return;
@@ -252,6 +275,18 @@ void relax_row(int s, int e, uint L, uint M) {
 		drift += na - int(a);
 	}
 	uint stage = pc.b.x;
+	if (pc.b.y != 0u) {
+		bool changed = false;
+		int probe_drift = drift;
+		for (int k = s; k < e && !changed; k++) {
+			uint a = uint(load(k).z);
+			int na = clamp(int(a) + int(round(rate * (mean - float(a)))), 1, int(MAX_AMOUNT));
+			if (probe_drift > 0 && na > 1) { na--; probe_drift--; }
+			else if (probe_drift < 0 && na < int(MAX_AMOUNT)) { na++; probe_drift++; }
+			changed = uint(na) != a;
+		}
+		if (!changed) { return; }
+	}
 	if (stage == 0u) {
 		remap_fold(s, e, L);
 		return;

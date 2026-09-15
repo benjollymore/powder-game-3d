@@ -38,6 +38,16 @@ Flammable elements at or above `ignition_temp` catch with `ignite_chance` per ti
 
 Steam's capacity is 0.05 J/K, so shedding the 2257 J that condensation by temperature requires takes far longer than a session; in practice steam condenses through its probabilistic decay to water (carrying its amount), and the temperature path only matters for steam held against something cold for a long time.
 
+## Cost variants (off by default, A/B via `thermal_bench.gd variant=`)
+
+The first mains-power bench (`docs/milestone/heat-bench/`) put the thermal layer at roughly +1 ms at 128 and +5 to 7 ms at 256 per running-source frame, against a +3 ms budget at 256; on battery in Low Power Mode, so ratios not absolutes. The cost is bandwidth: the 128 MiB thermal texture is read by every simulation block, three extra full-line hydro dispatches per mode read the grid and the thermal layer, and the air downsample reads the thermal layer for every air voxel. Five candidates sit behind `VoxelSim` exports:
+
+- `thermal_skip_air_blocks` (`skip_air`): all-air blocks skip thermal loads, conduction and phase change. In a mostly empty world this removes most of the thermal traffic; the only loss is air-to-air conduction inside such blocks (air's conductivity is 0.02), and hot air still conducts wherever it meets material. Expected: the largest saving, most of the 256 overhead.
+- `hydro_remap_skip_unchanged` (`hydro_skip`): a run whose new amounts equal its old ones skips fold, receive and finish. Exact. Expected: most of the hydro thermal traffic for settled water; the three extra grid scans remain.
+- `thermal_block_early_out` (`early_out`): a block whose eight temperatures are identical skips conduction. Exact (every transfer is proportional to a difference). Saves arithmetic, not the loads. Expected: small.
+- `air_heat_subsample = 2` (`air_sub2`): buoyancy samples the thermal layer at every second voxel per axis, weighted by eight. Eight times fewer thermal reads in the downsample; approximate on a 32³ field that is already coarse.
+- `thermal_interval = 2` (`interval2`): conduction, phase change and ignition run every second tick with twice the thermal step and ignition chance. Halves the thermal work; changes results (conduction order, ignition timing) and the two-cell exchange test would need its expectation taken on the tick that fires and the batch-cadence suite rerun; energy conservation and the maximum principle still hold because the clamp scales with the step.
+
 ## Limits
 
 No conservation across species change; no sun heating; no bulk convection of air heat back into voxels (only gases move); painting water into a hot cell starts it cold; the hydro ring fallback and air displacement are the two documented energy leaks. Tuning constants (`thermal_speed`, `ignite_chance`, conductivities) are gameplay choices to be judged by play, with the physics tests as the floor.

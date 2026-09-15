@@ -162,6 +162,21 @@ var volume_debug := 0
 @export var thermal_speed := 120.0
 ## Per-tick chance that a flammable cell at or above its ignition temperature catches.
 @export var ignite_chance := 0.05
+## Cost variants for the thermal layer (docs/milestone/thermal-physics.md,
+## A/B'd by tools/milestone/thermal_bench.gd). All default to the plain
+## behaviour.
+## Skip conduction in blocks whose eight temperatures are identical (exact).
+@export var thermal_block_early_out := false
+## Skip thermal loads, conduction and phase change in all-air blocks (loses
+## air-to-air conduction inside them; hot air still conducts where it meets material).
+@export var thermal_skip_air_blocks := false
+## Skip the hydro heat remap for runs whose amounts the pass leaves unchanged (exact).
+@export var hydro_remap_skip_unchanged := false
+## Read the thermal layer for buoyancy at every Nth voxel per axis (1 = all).
+@export var air_heat_subsample := 1
+## Run conduction, phase change and ignition every Nth tick with N times the
+## thermal step (and N times the ignition chance), 1 = every tick.
+@export var thermal_interval := 1
 
 var tick := 0
 ## Absolute simulated tick used by presentation seeds, never rebuild count.
@@ -1551,10 +1566,13 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		push[5] = offset.y
 		push[6] = offset.z
 		push[7] = Elements.REACTIONS.size()
-		push[8] = _float_bits(seconds_per_tick * thermal_speed)
+		var interval := maxi(thermal_interval, 1)
+		var thermal_tick := t % interval == 0
+		push[3] = rule_flags | (0 if air_enabled else RULE_NO_AIR) | (0 if thermal_tick else RULE_NO_THERMAL)
+		push[8] = _float_bits(seconds_per_tick * thermal_speed * interval)
 		push[9] = _float_bits(ambient_temp)
-		push[10] = _float_bits(ignite_chance)
-		push[11] = 0
+		push[10] = _float_bits(minf(ignite_chance * interval, 1.0))
+		push[11] = (1 if thermal_block_early_out else 0) | (2 if thermal_skip_air_blocks else 0)
 		var bytes := push.to_byte_array()
 		_rd.compute_list_bind_compute_pipeline(cl, _sim_pipeline)
 		_rd.compute_list_bind_uniform_set(cl, _sim_set, 0)
@@ -1574,7 +1592,7 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		# dispatch could not read texels it had just written (hydro.glsl).
 		for mode in [0, 1 + (t & 1)]:
 			for stage in 3:
-				var hp := PackedInt32Array([mode, t, world_seed, HYDRO_RELAX_PERCENT, stage, 0, 0, 0]).to_byte_array()
+				var hp := PackedInt32Array([mode, t, world_seed, HYDRO_RELAX_PERCENT, stage, 1 if hydro_remap_skip_unchanged else 0, 0, 0]).to_byte_array()
 				_rd.compute_list_set_push_constant(cl, hp, hp.size())
 				_rd.compute_list_dispatch(cl, hydro_groups, hydro_groups, 1)
 				_rd.compute_list_add_barrier(cl)
@@ -1673,7 +1691,7 @@ func _rt_air_step(cl: int, dt: int, tick_now: int) -> void:
 	if not _air_pipelines.has("air_project"):
 		return
 	var params := PackedFloat32Array([float(dt), air_buoyancy, air_drag, air_max_speed]).to_byte_array()
-	params.append_array(PackedInt32Array([tick_now, _float_bits(ambient_temp), 0, 0]).to_byte_array())
+	params.append_array(PackedInt32Array([tick_now, _float_bits(ambient_temp), maxi(air_heat_subsample, 1), 0]).to_byte_array())
 	var iters := jacobi_iterations + (jacobi_iterations & 1) # even, so the result is in pres0
 	var order: Array = ["air_downsample", "air_advect", "air_divergence"]
 	for i in iters:

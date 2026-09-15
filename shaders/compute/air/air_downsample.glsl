@@ -20,7 +20,7 @@ layout(rg32f, set = 0, binding = 4) uniform restrict readonly image3D thermal;
 
 layout(push_constant, std430) uniform Params {
 	vec4 p;  // dt (ticks), buoyancy, drag per tick, max speed
-	uvec4 m; // tick, ambient temperature (float bits), unused, unused
+	uvec4 m; // tick, ambient temperature (float bits), thermal subsample stride (1 = every voxel), unused
 } pc;
 
 layout(constant_id = 0) const int AIR_GRID = 32;
@@ -40,6 +40,10 @@ void main() {
 	ivec3 c = ivec3(gl_GlobalInvocationID);
 	ivec3 base = c * SUB;
 	float ambient = uintBitsToFloat(pc.m.y);
+	// Cost variant: read the thermal layer at every stride-th voxel per axis
+	// and weight it by the skipped volume (the 32^3 source is coarse anyway).
+	int stride = max(int(pc.m.z), 1);
+	float weight = float(stride * stride * stride);
 	float solid = 0.0;
 	float heat = 0.0;
 	for (int z = 0; z < SUB; z++) {
@@ -54,8 +58,8 @@ void main() {
 				} else if ((flags & FLAG_LIQUID) != 0u) {
 					solid += min(float(v.z) / FULL, 1.0);
 				}
-				if ((flags & FLAG_GAS) != 0u) {
-					heat += max(0.0, imageLoad(thermal, p).r - ambient) / HEAT_SCALE;
+				if ((flags & FLAG_GAS) != 0u && (x % stride) == 0 && (y % stride) == 0 && (z % stride) == 0) {
+					heat += weight * max(0.0, imageLoad(thermal, p).r - ambient) / HEAT_SCALE;
 				}
 			}
 		}

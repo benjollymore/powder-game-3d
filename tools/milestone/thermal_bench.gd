@@ -16,6 +16,9 @@ var _sim: Node3D
 var _frames := 120
 var _repeats := 3
 var _output := ""
+## Cost variant applied to both sides of every pair (variant=name):
+## baseline, early_out, skip_air, hydro_skip, air_sub2, interval2, all.
+var _variant := "baseline"
 const WARMUP := 30
 const TICKS_PER_FRAME := 2
 
@@ -29,7 +32,17 @@ func _initialize() -> void:
 			_repeats = int(arg.substr(8))
 		elif arg.begins_with("output="):
 			_output = arg.substr(7)
+		elif arg.begins_with("variant="):
+			_variant = arg.substr(8)
 	call_deferred("_run")
+
+func _apply_variant() -> void:
+	var all := _variant == "all"
+	_sim.thermal_block_early_out = all or _variant == "early_out"
+	_sim.thermal_skip_air_blocks = all or _variant == "skip_air"
+	_sim.hydro_remap_skip_unchanged = all or _variant == "hydro_skip"
+	_sim.air_heat_subsample = 2 if (all or _variant == "air_sub2") else 1
+	_sim.thermal_interval = 2 if (all or _variant == "interval2") else 1
 
 func _power_mode() -> Dictionary:
 	var lines := []
@@ -53,15 +66,16 @@ func _run() -> void:
 	root.add_child(scene)
 	current_scene = scene
 	scene.get_node("Brush").set_process(false)
+	_apply_variant()
 	var rig: Node3D = scene.get_node("CameraRig")
 	rig.frame_position = Vector3(0.85, 0.65, 0.85) * rig.world_size
 	rig.frame_box(false)
 	for i in 20:
 		await RenderingServer.frame_post_draw
-	var report := {"grid": VoxelCodec.GRID, "warmup": WARMUP, "measured": _frames, "ticks_per_frame": TICKS_PER_FRAME,
+	var report := {"grid": VoxelCodec.GRID, "warmup": WARMUP, "measured": _frames, "ticks_per_frame": TICKS_PER_FRAME, "variant": _variant,
 		"resolution": [root.size.x, root.size.y], "thermal_speed": _sim.thermal_speed, "scenario": "Demo",
 		"workload": "running Sand source, air on, hydro on", "environment": _power_mode(), "samples": []}
-	print("CONFIG grid=%d warmup=%d measured=%d ticks/frame=%d resolution=%s power=%s" % [VoxelCodec.GRID, WARMUP, _frames, TICKS_PER_FRAME, root.size, report.environment])
+	print("CONFIG grid=%d variant=%s warmup=%d measured=%d ticks/frame=%d resolution=%s power=%s" % [VoxelCodec.GRID, _variant, WARMUP, _frames, TICKS_PER_FRAME, root.size, report.environment])
 	for repeat_index in _repeats:
 		for thermal in ([true, false] if repeat_index % 2 == 0 else [false, true]):
 			var sample := await _case(thermal, repeat_index)
@@ -77,7 +91,7 @@ func _run() -> void:
 				else: off = sample.frame_median_ms
 		deltas.append(on - off)
 	report["paired_median_delta_ms"] = deltas
-	print("THERMAL_BENCH grid=%d paired_median_delta_ms=%s" % [VoxelCodec.GRID, deltas])
+	print("THERMAL_BENCH grid=%d variant=%s paired_median_delta_ms=%s" % [VoxelCodec.GRID, _variant, deltas])
 	if _output != "":
 		var file := FileAccess.open(_output, FileAccess.WRITE)
 		file.store_string(JSON.stringify(report, "\t"))
@@ -114,7 +128,7 @@ func _case(thermal: bool, repeat_index: int) -> Dictionary:
 	samples.sort()
 	var result := {"thermal": thermal, "repeat": repeat_index, "frame_mean_ms": mean, "drained_mean_ms": drained_mean,
 		"frame_median_ms": samples[samples.size() / 2], "p95_ms": samples[int(samples.size() * 0.95)]}
-	print("CASE thermal=%s repeat=%d frame_mean_ms=%.3f drained_mean_ms=%.3f median_ms=%.3f p95_ms=%.3f" % [thermal, repeat_index, mean, drained_mean, result.frame_median_ms, result.p95_ms])
+	print("CASE variant=%s thermal=%s repeat=%d frame_mean_ms=%.3f drained_mean_ms=%.3f median_ms=%.3f p95_ms=%.3f" % [_variant, thermal, repeat_index, mean, drained_mean, result.frame_median_ms, result.p95_ms])
 	return result
 
 func _drain() -> void:

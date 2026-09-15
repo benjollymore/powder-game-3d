@@ -39,7 +39,7 @@ layout(set = 0, binding = 3) uniform sampler3D air_vel;
 layout(push_constant, std430) uniform Params {
 	uvec4 a; // tick, seed, reserved (zero), rule flags
 	uvec4 b; // partition offset x, y, z, reaction count
-	uvec4 c; // thermal seconds per tick, ambient K, ignition chance per tick (float bits), unused
+	uvec4 c; // thermal seconds per tick, ambient K, ignition chance per tick (float bits), cost-variant flags
 } pc;
 
 const uint RULE_NO_REACTIONS = 1u;
@@ -47,6 +47,9 @@ const uint RULE_NO_DECAY = 2u;
 const uint RULE_NO_AIR = 4u;
 const uint RULE_NO_SPECIALS = 8u; // clone, void and the gunpowder fuse
 const uint RULE_NO_THERMAL = 16u;   // no conduction, phase change or ignition (plumbing tests)
+// Cost variants (pc.c.w), all off by default; see docs/milestone/thermal-physics.md.
+const uint THERMAL_EARLY_OUT = 1u;   // skip conduction when the block's temperature spread is zero (exact)
+const uint THERMAL_SKIP_AIR = 2u;    // skip thermal loads, conduction and phase for all-air blocks (air-air conduction lost there)
 const float DX = 0.01;              // metres per voxel (VoxelSim.METRES_PER_VOXEL)
 // Heat capacity is exactly linear in the amount byte whenever it is set: for
 // liquids always, and for a solid or gas that carries the amount of the
@@ -722,6 +725,13 @@ void pin_fire() {
 void rule_thermal() {
 	float dt = uintBitsToFloat(pc.c.x);
 	pin_fire();
+	if ((pc.c.w & THERMAL_EARLY_OUT) != 0u) {
+		// Every transfer is proportional to a temperature difference, so a
+		// block with no spread changes nothing: skipping it is exact.
+		float lo_t = ct[0].x, hi_t = ct[0].x;
+		for (int i = 1; i < 8; i++) { lo_t = min(lo_t, ct[i].x); hi_t = max(hi_t, ct[i].x); }
+		if (hi_t == lo_t) { return; }
+	}
 	for (int i = 0; i < 8; i++) {
 		if (!in_bounds(pos[i])) { continue; }
 		for (int axis = 0; axis < 3; axis++) {
@@ -838,11 +848,25 @@ void main() {
 		pos[i] = origin + l;
 		c[i] = load(pos[i]);
 		before[i] = c[i];
-		ct[i] = load_thermal(pos[i]);
-		before_t[i] = ct[i];
+	}
+	bool thermal_active = (pc.a.w & RULE_NO_THERMAL) == 0u;
+	bool thermal_loaded = true;
+	if ((pc.c.w & THERMAL_SKIP_AIR) != 0u) {
+		bool all_air = true;
+		for (int i = 0; i < 8; i++) { all_air = all_air && c[i].x == AIR; }
+		thermal_loaded = !all_air;
+	}
+	if (thermal_loaded) {
+		for (int i = 0; i < 8; i++) {
+			ct[i] = load_thermal(pos[i]);
+			before_t[i] = ct[i];
+		}
+	} else {
+		thermal_active = false;
+		for (int i = 0; i < 8; i++) { ct[i] = vec2(0.0); before_t[i] = ct[i]; }
 	}
 
-	if ((pc.a.w & RULE_NO_THERMAL) == 0u) {
+	if (thermal_active) {
 		rule_thermal();
 		rule_phase();
 	}
@@ -881,7 +905,7 @@ void main() {
 		if (c[i] != before[i]) {
 			store(pos[i], c[i]);
 		}
-		if (ct[i] != before_t[i]) {
+		if (thermal_loaded && ct[i] != before_t[i]) {
 			store_thermal(pos[i], ct[i]);
 		}
 	}
