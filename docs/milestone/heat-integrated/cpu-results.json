@@ -3,7 +3,7 @@
     "name": "unit",
     "pass": true,
     "exit": 0,
-    "seconds": 2.1,
+    "seconds": 2.08,
     "command": [
       "godot",
       "--path",
@@ -14,6 +14,23 @@
       "--",
       "grid=128",
       "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/unit"
+    ]
+  },
+  {
+    "name": "unit256",
+    "pass": true,
+    "exit": 0,
+    "seconds": 14.93,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/unit/run_unit.gd",
+      "--",
+      "grid=256",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/unit256"
     ]
   },
   {
@@ -54,7 +71,7 @@
     "name": "paint-tools",
     "pass": true,
     "exit": 0,
-    "seconds": 0.39,
+    "seconds": 0.4,
     "command": [
       "godot",
       "--path",
@@ -88,7 +105,7 @@
     "name": "gpu-profile",
     "pass": true,
     "exit": 0,
-    "seconds": 0.31,
+    "seconds": 0.3,
     "command": [
       "godot",
       "--path",
@@ -122,7 +139,7 @@
     "name": "history-guards",
     "pass": true,
     "exit": 0,
-    "seconds": 0.4,
+    "seconds": 0.41,
     "command": [
       "godot",
       "--path",
@@ -156,7 +173,7 @@
     "name": "surface-feedback",
     "pass": true,
     "exit": 0,
-    "seconds": 0.39,
+    "seconds": 0.4,
     "command": [
       "godot",
       "--path",
@@ -173,7 +190,7 @@
     "name": "archive-format",
     "pass": true,
     "exit": 0,
-    "seconds": 0.3,
+    "seconds": 0.29,
     "command": [
       "godot",
       "--path",
@@ -207,7 +224,7 @@
     "name": "archive-panel",
     "pass": true,
     "exit": 0,
-    "seconds": 1.99,
+    "seconds": 1.97,
     "command": [
       "godot",
       "--path",
@@ -258,7 +275,7 @@
     "name": "heat-ui",
     "pass": false,
     "exit": 1,
-    "seconds": 0.79,
+    "seconds": 0.81,
     "command": [
       "godot",
       "--path",
