@@ -2,17 +2,26 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 
 ok: authored save is written
 ok: all packed material, seed, amount and flag bytes round-trip
-ok: archive declares authored state and schema
+ok: every temperature and latent float round-trips exactly
+ok: archive declares authored state, the two-layer schema and per-layer checksums
 ok: world from another session size is rejected before upload
 ok: invalid snapshot size is rejected
-ok: failed save leaves previous file intact
+ok: a missing or short temperature layer cannot be saved
+ok: non-finite temperatures are rejected and the previous file survives
 ok: successful replacement is exact
+ok: a version-1 world loads its exact voxels with no thermal layer
+ok: default temperatures follow each cell's element with no latent progress
+ok: a damaged version-1 world is still rejected
 ok: missing file returns a readable failure
 ok: truncated or unrelated file rejected
 ok: oversized header rejected before allocation
 ok: unknown schema version rejected
+ok: a version-1 label on two-layer data is rejected
 ok: unbounded dimensions rejected before allocation
-ok: checksum detects changed payload
+ok: checksum detects a changed temperature
+ok: a layer checksum that disagrees with the whole is rejected
+ok: layers out of order are rejected
+ok: checksum-valid non-finite temperatures are rejected before upload
 ok: checksum-valid unknown material is rejected before GPU upload
 ok: unsupported material cannot replace an existing valid save
-World archive: 15 checks, 0 failures
+World archive: 24 checks, 0 failures

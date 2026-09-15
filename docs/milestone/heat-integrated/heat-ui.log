@@ -1,22 +1,15 @@
 Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 
-ERROR: table without category keys groups the known ids by the fallback map
-   at: push_error (core/variant/variant_utility.cpp:1024)
-   GDScript backtrace (most recent call first):
-       [0] check (res://tests/milestone/heat_ui.gd:13)
-       [1] run (res://tests/milestone/heat_ui.gd:27)
-FAIL: table without category keys groups the known ids by the fallback map
-ERROR: fallback map places oil, wood, plant, steam and smoke in their categories
-   at: push_error (core/variant/variant_utility.cpp:1024)
-   GDScript backtrace (most recent call first):
-       [0] check (res://tests/milestone/heat_ui.gd:13)
-       [1] run (res://tests/milestone/heat_ui.gd:29)
-FAIL: fallback map places oil, wood, plant, steam and smoke in their categories
+ok: grouping follows the table's own category keys
+ok: tooltips come from the table's tip key
+ok: keyless rows group the known ids by the fallback map
+ok: fallback map places oil, wood, plant, steam and smoke in their categories
+ok: a row without a tip falls back to its name
 ERROR: explicit category keys override the fallback and admit new ids
    at: push_error (core/variant/variant_utility.cpp:1024)
    GDScript backtrace (most recent call first):
        [0] check (res://tests/milestone/heat_ui.gd:13)
-       [1] run (res://tests/milestone/heat_ui.gd:40)
+       [1] run (res://tests/milestone/heat_ui.gd:55)
 FAIL: explicit category keys override the fallback and admit new ids
 ok: unknown ids without a category key land in Special
 ok: first row is Sand, Water, Wall
@@ -24,20 +17,10 @@ ERROR: heat row shows Fire and hides thermal brushes while the simulator has no 
    at: push_error (core/variant/variant_utility.cpp:1024)
    GDScript backtrace (most recent call first):
        [0] check (res://tests/milestone/heat_ui.gd:13)
-       [1] run (res://tests/milestone/heat_ui.gd:49)
+       [1] run (res://tests/milestone/heat_ui.gd:64)
 FAIL: heat row shows Fire and hides thermal brushes while the simulator has no HEAT/COOL modes
-ERROR: one tab per remaining category, every non-air material has a button
-   at: push_error (core/variant/variant_utility.cpp:1024)
-   GDScript backtrace (most recent call first):
-       [0] check (res://tests/milestone/heat_ui.gd:13)
-       [1] run (res://tests/milestone/heat_ui.gd:51)
-FAIL: one tab per remaining category, every non-air material has a button
-ERROR: tooltips fall back to the material name and tab contents start hidden
-   at: push_error (core/variant/variant_utility.cpp:1024)
-   GDScript backtrace (most recent call first):
-       [0] check (res://tests/milestone/heat_ui.gd:13)
-       [1] run (res://tests/milestone/heat_ui.gd:53)
-FAIL: tooltips fall back to the material name and tab contents start hidden
+ok: one tab per remaining category, every non-air material has a button
+ok: buttons show the table tip and tab contents start hidden
 ok: a tab reveals only its own materials
 ok: choosing another tab hides the previous one
 ok: materials inside a tab select like the fixed rows
@@ -55,4 +38,8 @@ ok: the guard continuation replaces the build with the example's exact bytes as 
 ok: an example chosen mid-capture waits like other editor actions
 ok: the waiting example request resumes after the capture
 ok: unknown example names are ignored
-Heat UI CPU: 25 checks, 6 failures
+ok: ambient control starts at 20 °C inside Tools & view options
+ok: ambient control sets the simulator's ambient kelvin
+ok: no probe is requested from a simulator without cell probes
+ok: read_world returns voxels with an empty thermal layer when unsupported
+Heat UI CPU: 32 checks, 2 failures
