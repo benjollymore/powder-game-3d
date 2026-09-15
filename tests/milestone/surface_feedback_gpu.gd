@@ -53,7 +53,7 @@ func run() -> void:
 	check(not editor.pick_cache.get("valid", true) and editor._surface_block_reason() == "section" and editor.section_action.is_visible_in_tree(),
 		"default water cut face produces explicit blocked feedback and visible recovery")
 	check(editor.section_action.get_global_rect().end.x <= 1280 and editor.tools_panel.size.x <= 430,
-		"Cutaway and recovery controls fit a 1280×800 laptop window")
+		"Cutaway and recovery controls fit a 1280×800 laptop window (recovery ends at %.0f, panel %.0f wide)" % [editor.section_action.get_global_rect().end.x, editor.tools_panel.size.x])
 	await capture_pointer("blocked-cut-face")
 	var selected_axis: int = editor.axis
 	var selected_depth: int = editor.depth
@@ -119,7 +119,7 @@ func run() -> void:
 	await preview()
 	await capture_pointer("paused-test-cutaway")
 	check(editor.pause_button.get_global_rect().end.y < editor.tools_panel.get_global_rect().end.y and editor.status.get_global_rect().end.y <= editor.tools_panel.get_global_rect().end.y - 4,
-		"Test controls and full status remain inside the 1280×800 sidebar with cutaway feedback")
+		"Test controls and full status remain inside the 1280×800 sidebar with cutaway feedback (status ends at %.0f, panel at %.0f)" % [editor.status.get_global_rect().end.y, editor.tools_panel.get_global_rect().end.y])
 	await click(editor.step_button)
 	var after_step := await read()
 	check(sim.histogram(after_step)[Elements.Id.SAND] == sand_before,

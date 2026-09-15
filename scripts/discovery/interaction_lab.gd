@@ -318,9 +318,13 @@ func _build_ui() -> void:
 	tools_panel = panel
 	panel.position = Vector2(16, 16)
 	layer.add_child(panel)
+	var panel_column := VBoxContainer.new()
+	panel_column.add_theme_constant_override("separation", 6)
+	panel.add_child(panel_column)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	panel.add_child(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel_column.add_child(scroll)
 	panel.size = Vector2(390, get_viewport().get_visible_rect().size.y - 32.0)
 	get_viewport().size_changed.connect(func():
 		panel.size.y = maxf(100.0, get_viewport().get_visible_rect().size.y - 32.0))
@@ -348,7 +352,8 @@ func _build_ui() -> void:
 		radius = int(value))
 	brush_row.add_child(radius_input)
 	erase_button = Button.new()
-	erase_button.text = "Erase·X"
+	erase_button.text = "Erase"
+	erase_button.tooltip_text = "Remove material instead of adding it (X)."
 	erase_button.toggle_mode = true
 	erase_button.pressed.connect(func():
 		_end_stroke()
@@ -361,15 +366,15 @@ func _build_ui() -> void:
 	brush_row.add_child(shape_button)
 	_refresh_shape_button()
 	line_button = Button.new()
-	line_button.text = "Line·L"
+	line_button.text = "Line"
 	line_button.toggle_mode = true
-	line_button.tooltip_text = "Click a start cell, then an end cell: the brush is stamped along a connected line between them."
+	line_button.tooltip_text = "Line (L): click a start cell, then an end cell, and the brush is stamped along a connected line between them."
 	line_button.toggled.connect(func(enabled): _set_tool("line" if enabled else ""))
 	brush_row.add_child(line_button)
 	box_button = Button.new()
-	box_button.text = "Box·K"
+	box_button.text = "Box"
 	box_button.toggle_mode = true
-	box_button.tooltip_text = "Click two corners: the box between them fills with the current material where it is empty."
+	box_button.tooltip_text = "Box (K): click two corners and the box between them fills with the current material where it is empty, or clears it when Erase is on."
 	box_button.toggled.connect(func(enabled): _set_tool("box" if enabled else ""))
 	brush_row.add_child(box_button)
 	play_button = Button.new()
@@ -574,7 +579,9 @@ func _build_ui() -> void:
 	status = Label.new()
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	status.custom_minimum_size.x = 300
-	column.add_child(status)
+	# Pinned below the scrolling controls: what the next click will do must stay
+	# on screen at laptop heights, whatever rows the current phase adds above.
+	panel_column.add_child(status)
 	get_tree().process_frame.connect(_refresh_palette)
 	_refresh_palette()
 
@@ -631,7 +638,7 @@ static func shape_name(value: int) -> String:
 
 func _refresh_shape_button() -> void:
 	if shape_button:
-		shape_button.text = "%s·C" % shape_name(shape)
+		shape_button.text = shape_name(shape)
 
 
 ## Two-click tools. Switching tools or leaving tool mode drops the anchor;
@@ -719,10 +726,22 @@ func preview_cells() -> Array[Vector3i]:
 	return _preview_cells
 
 
+## Identity of the stamp the ghost must describe. `preview_signature` holds the
+## signature of the cells currently displayed, so the ghost is up to date
+## exactly when the two agree and nothing is in flight (`preview_current`).
+func _preview_signature() -> int:
+	return hash([target, radius, shape, erase, thermal_tool != "", _preview_axis(), sim.edit_revision, sim.edit_epoch])
+
+
+## True when the displayed ghost describes the stamp the next click would make.
+func preview_current() -> bool:
+	return not preview_pending and target.x >= 0 and preview_signature == _preview_signature()
+
+
 func _request_stamp_preview() -> void:
 	if preview_pending or not sim.has_method("request_stamp_preview"):
 		return
-	var signature := hash([target, radius, shape, erase, thermal_tool != "", _preview_axis(), sim.edit_revision, sim.edit_epoch])
+	var signature := _preview_signature()
 	if signature == preview_signature:
 		return
 	preview_pending = true
@@ -1197,6 +1216,8 @@ func _update_plane() -> void:
 	sim.set_param("section_enabled", section)
 	sim.set_param("section_axis", axis)
 	sim.set_param("section_cell", depth)
+	if guide == null:
+		return # the workplane state is set; there is no guide to redraw yet
 	var mesh := ImmediateMesh.new()
 	mesh.surface_begin(Mesh.PRIMITIVE_LINES)
 	var u := (axis + 1) % 3

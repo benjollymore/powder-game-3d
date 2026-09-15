@@ -84,10 +84,25 @@ func settled() -> void:
 
 ## Wait until the preview for the shown target has arrived (pending cleared and a set shown).
 func preview_ready() -> void:
-	for i in 40:
+	# Contract 6 is a stationary-pointer guarantee, and both the surface pick and
+	# the ghost are asynchronous with one request in flight. Wait until the
+	# target has stopped moving *and* the displayed ghost describes it, held for
+	# several frames so a pick still in flight cannot move the target afterwards.
+	# Let the warp's motion event reach the editor first, or the stability loop
+	# below can lock onto the previous target before the pointer has moved.
+	for i in 3:
 		await process_frame
-		if editor.target.x >= 0 and not editor.preview_pending and editor.preview_signature != 0:
-			return
+	var settled_target := Vector3i(-2, -2, -2)
+	var stable := 0
+	for i in 160:
+		await process_frame
+		if editor.target == settled_target and editor.preview_current():
+			stable += 1
+			if stable >= 6:
+				return
+		else:
+			settled_target = editor.target
+			stable = 0
 
 func _restore_input() -> void:
 	if not input_configured:
@@ -139,6 +154,16 @@ func run() -> void:
 		await settled()
 		var after := await read()
 		var changed := changed_ids(before, after)
+		if not same_set(previewed, changed):
+			var cset := {}
+			for c in changed: cset[c] = true
+			var only_prev := []
+			for c in previewed: if not cset.has(c): only_prev.append(c)
+			var pset := {}
+			for c in previewed: pset[c] = true
+			var only_chg := []
+			for c in changed: if not pset.has(c): only_chg.append(c)
+			print("PROBEWP %s shown_target=%s live_target=%s axis=%d depth=%d only_preview=%d %s only_changed=%d %s" % [names[shape], str(shown_target), str(editor.target), editor.axis, editor.depth, only_prev.size(), str(only_prev.slice(0, 3)), only_chg.size(), str(only_chg.slice(0, 3))])
 		check(same_set(previewed, changed), "%s workplane stamp changes exactly the previewed cells (%d previewed, %d changed)" % [names[shape], previewed.size(), changed.size()])
 		stamp_cells.append(previewed.size())
 		before = after
@@ -175,6 +200,16 @@ func run() -> void:
 		await settled()
 		var after := await read()
 		var changed := changed_ids(before, after)
+		if not same_set(previewed, changed):
+			var pset := {}
+			for c in previewed: pset[c] = true
+			var cset := {}
+			for c in changed: cset[c] = true
+			var only_prev := []
+			for c in previewed: if not cset.has(c): only_prev.append(c)
+			var only_chg := []
+			for c in changed: if not pset.has(c): only_chg.append(c)
+			print("PROBE %s target=%s normal=%s previewed=%d changed=%d only_preview=%d %s only_changed=%d %s" % [names[shape], str(editor.target), str(editor.pick_cache.get("normal", Vector3i.ZERO)), previewed.size(), changed.size(), only_prev.size(), str(only_prev.slice(0, 4)), only_chg.size(), str(only_chg.slice(0, 4))])
 		check(same_set(previewed, changed), "%s surface stamp changes exactly the previewed cells (%d previewed, %d changed)" % [names[shape], previewed.size(), changed.size()])
 		var walls := true
 		for i in range(0, after.size(), 4):
