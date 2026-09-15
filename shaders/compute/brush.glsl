@@ -29,7 +29,7 @@ layout(r8, set = 0, binding = 3) uniform restrict image3D stroke_mask;
 
 layout(push_constant, std430) uniform Params {
 	ivec4 center_radius;      // sphere: cx, cy, cz, radius (voxels); box: lo xyz, unused
-	uvec4 element_mode_seed;  // element id, mode (0 replace, 1 only into air, 2 erase, 3 box, 4 box only air, 5 heat, 6 cool), seed, liquid amount
+	uvec4 element_mode_seed;  // element id, mode (0 replace, 1 only into air, 2 erase, 3 box, 4 box only air, 5 heat, 6 cool, 7 box erase), seed, liquid amount
 	ivec4 box_hi;             // box: exclusive upper corner; brush: x = shape, y = disc axis, z = mark stroke mask; heat/cool: w = strength in kelvin (float bits)
 } pc;
 
@@ -37,6 +37,7 @@ layout(constant_id = 0) const int GRID = 128;
 const uint MODE_ERASE = 2u;
 const uint MODE_HEAT = 5u;
 const uint MODE_COOL = 6u;
+const uint MODE_BOX_ERASE = 7u;
 const int SHAPE_SPHERE = 0;
 const int SHAPE_CUBE = 1;
 const int SHAPE_DISC = 2;
@@ -52,7 +53,8 @@ uint hash(uint x) {
 
 void main() {
 	uint mode = pc.element_mode_seed.y;
-	bool box = (mode == 3u || mode == 4u);
+	bool box = (mode == 3u || mode == 4u || mode == MODE_BOX_ERASE);
+	bool erasing = (mode == MODE_ERASE || mode == MODE_BOX_ERASE);
 	ivec3 lo = box ? pc.center_radius.xyz : pc.center_radius.xyz - ivec3(pc.center_radius.w);
 	ivec3 p = lo + ivec3(gl_GlobalInvocationID);
 	if (any(lessThan(p, ivec3(0))) || any(greaterThanEqual(p, ivec3(GRID)))) {
@@ -99,7 +101,14 @@ void main() {
 		return;
 	}
 	uint id = pc.element_mode_seed.x;
-	if (mode == MODE_ERASE) {
+	if (erasing) {
+		// Erase changes only occupied cells: air keeps its seed and latent
+		// state, so the ghost preview's occupied-cell set is exactly the set
+		// of cells whose bytes change.
+		uvec4 cur = uvec4(imageLoad(grid, p) * 255.0 + 0.5);
+		if (cur.x == 0u) {
+			return;
+		}
 		id = 0u;
 	} else if (mode == 1u || mode == 4u) {
 		uvec4 cur = uvec4(imageLoad(grid, p) * 255.0 + 0.5);
@@ -109,12 +118,12 @@ void main() {
 	}
 	uint seed = hash(uint(p.x) * 73856093u ^ uint(p.y) * 19349663u ^ uint(p.z) * 83492791u
 			^ pc.element_mode_seed.z) & 0xFFu;
-	uint amount = (mode == MODE_ERASE) ? 0u : pc.element_mode_seed.w;
+	uint amount = erasing ? 0u : pc.element_mode_seed.w;
 	imageStore(grid, p, vec4(uvec4(id, seed, amount, 0u)) / 255.0);
 	if (!box && pc.box_hi.z != 0) {
 		imageStore(stroke_mask, p, vec4(1.0));
 	}
-	if (mode == MODE_ERASE) {
+	if (erasing) {
 		vec2 tg = imageLoad(thermal, p).rg;
 		imageStore(thermal, p, vec4(tg.x, 0.0, 0.0, 0.0));
 	} else {

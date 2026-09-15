@@ -1,6 +1,6 @@
 extends "res://scripts/discovery/interaction_lab.gd"
 class SimStub extends Node3D:
-	enum BrushMode { NORMAL, ONLY_AIR, ERASE }
+	enum BrushMode { NORMAL, ONLY_AIR, ERASE, BOX, BOX_ONLY_AIR, HEAT, COOL, BOX_ERASE } # mirrors VoxelSim.BrushMode values
 	var records: Array = []
 	var source: Dictionary = {}
 	var finished := 0
@@ -17,8 +17,12 @@ class SimStub extends Node3D:
 	func begin_edit_transaction(_callback) -> int:
 		transactions += 1
 		return transactions
-	func record_region(id, lo, hi, material) -> void:
-		regions.append([id, lo, hi, material])
+	func set_param(_name, _value) -> void:
+		pass
+	func reverse_edit_transaction(_record, _callback) -> bool:
+		return false
+	func record_region(id, lo, hi, material, mode = 4) -> void:
+		regions.append([id, lo, hi, material, mode])
 	func finish_edit_transaction(_id) -> void:
 		pass
 	func set_live_emitter(center, brush_radius, material, mode, rate, seed, surface, shape = 0, axis = 1) -> void:

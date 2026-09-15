@@ -73,12 +73,57 @@ func run() -> void:
 	lab._choose_material(Elements.Id.WATER)
 	check(lab.tool_mode == "line" and lab.tool_anchor == Vector3i(5, 5, 5), "choosing a material keeps the tool and its anchor")
 	key(lab, KEY_L)
-	# Test mode refuses the tools with a message and records nothing.
-	key(lab, KEY_K)
-	lab.testing = true
+	# An anchor belongs to one target space, history state and phase.
+	var anchor := Vector3i(7, 7, 7)
+	lab._set_tool("line")
+	lab._tool_click(anchor)
+	lab._set_target_mode(lab.TargetMode.SURFACE)
+	check(lab.tool_anchor.x < 0, "changing the targeting mode drops the anchor")
+	lab._set_target_mode(lab.TargetMode.PLANE)
+	lab._tool_click(anchor)
+	lab.set_plane(0)
+	check(lab.tool_anchor.x < 0, "changing the plane axis drops the anchor")
+	lab.set_plane(2)
+	lab._tool_click(anchor)
+	lab.depth_input.value = lab.depth + 3
+	check(lab.tool_anchor.x < 0, "moving the workplane depth drops the anchor")
+	lab._tool_click(anchor)
+	lab.undo_history.append({"valid": true, "epoch": lab.sim.edit_epoch, "regions": []})
+	lab.undo_edit()
+	check(lab.tool_anchor.x < 0, "Undo drops the anchor")
+	lab.undo_history.clear()
+	lab.capturing = false
+	lab._tool_click(anchor)
+	lab._reset_gesture()
+	check(lab.tool_anchor.x < 0, "a gesture reset (focus loss, world replacement) drops the anchor")
+	lab._tool_click(anchor)
+	lab.cancel_pending_paint()
+	check(lab.tool_anchor == anchor, "orbiting between the two clicks keeps the anchor")
+	# Line keeps the disc axis of the face it was anchored on.
+	lab._set_tool("line")
+	lab._set_target_mode(lab.TargetMode.SURFACE)
+	lab.pick_cache = {"valid": true, "normal": Vector3i(1, 0, 0), "target": anchor}
+	lab._tool_click(anchor)
+	lab.pick_cache = {"valid": true, "normal": Vector3i(0, 0, 1), "target": anchor + Vector3i(0, 4, 0)}
+	lab.capturing = false
+	lab._tool_click(anchor + Vector3i(0, 4, 0))
+	check(lab.sim.records[-1][7] == 0, "a line's disc axis is the axis frozen at the anchor click, not the commit-time pick")
+	lab.capturing = false
+	lab._set_target_mode(lab.TargetMode.PLANE)
+	# Erase plus Box clears the region instead of filling it.
+	lab._set_tool("box")
+	lab.erase = true
+	lab._tool_click(Vector3i(2, 2, 2))
+	lab._tool_click(Vector3i(4, 4, 4))
+	check(lab.sim.regions[-1][3] == Elements.Id.AIR and lab.sim.regions[-1][4] == lab.sim.BrushMode.BOX_ERASE, "Box with Erase on records a box erase, never a fill")
+	lab.capturing = false
+	lab.erase = false
+	# Test mode refuses the tools with a message, records nothing and drops the anchor.
+	lab._set_tool("box")
 	lab._tool_click(Vector3i(1, 1, 1))
+	lab.testing = true
 	lab._tool_click(Vector3i(3, 3, 3))
-	check(lab.tool_anchor.x < 0 and lab.sim.regions.size() == 1 and not lab.edit_message.is_empty(), "Test mode refuses two-click tools with a message")
+	check(lab.tool_anchor.x < 0 and lab.sim.regions.size() == 2 and not lab.edit_message.is_empty(), "Test mode refuses two-click tools with a message and drops a pre-Run anchor")
 	lab.testing = false
 	lab.queue_free()
 	await process_frame

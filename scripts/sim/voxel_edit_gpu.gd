@@ -99,6 +99,8 @@ func _finish_preview(bytes: PackedByteArray, buffer: RID, center: Vector3i, radi
 	if disposed:
 		return
 	_free_pending(buffer)
+	if not callback.is_valid():
+		return # the editor that asked is gone
 	callback.call_deferred(decode_preview(bytes, center, radius), metadata)
 
 static func decode_preview(bytes: PackedByteArray, center: Vector3i, radius: int) -> Array[Vector3i]:

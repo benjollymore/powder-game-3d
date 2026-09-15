@@ -40,6 +40,7 @@ void main() {
     if (any(lessThan(p, ivec3(0))) || any(greaterThanEqual(p, ivec3(pc.brush.x)))) { return; }
     uint old = uint(imageLoad(grid, p).r * 255.0 + 0.5);
     if (pc.brush.w == 1 && old != 0u) { return; }
+    if (pc.brush.w == 2 && old == 0u) { return; } // erase changes occupied cells only (matches the ghost preview)
     uint id = pc.brush.w == 2 ? 0u : uint(pc.brush.z);
     uint amount = pc.brush.w == 2 ? 0u : uint(pc.material.y);
     uint seed = hash(uint(p.x) * 73856093u ^ uint(p.y) * 19349663u ^ uint(p.z) * 83492791u ^ uint(pc.material.x)) & 255u;

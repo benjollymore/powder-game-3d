@@ -43,6 +43,9 @@ var preview_center := Vector3i(-1, -1, -1)
 ## anchors, the second commits one authored transaction.
 var tool_mode := ""
 var tool_anchor := Vector3i(-1, -1, -1)
+## Disc axis frozen at the anchor click, so a Line lies on the face the user
+## started on even if the second pick lands on a differently facing surface.
+var tool_anchor_axis := 1
 var line_button: Button
 var box_button: Button
 var tool_box_mesh: MeshInstance3D
@@ -481,6 +484,8 @@ func _build_ui() -> void:
 	depth_input.value = depth
 	depth_input.value_changed.connect(func(value):
 		_end_stroke()
+		if depth != int(value):
+			_drop_tool_anchor()
 		depth = int(value)
 		_update_plane())
 	row.add_child(depth_input)
@@ -635,9 +640,7 @@ func _set_tool(mode: String) -> void:
 	cancel_pending_paint()
 	_end_stroke()
 	tool_mode = mode
-	tool_anchor = Vector3i(-1, -1, -1)
-	if tool_box_mesh:
-		tool_box_mesh.visible = false
+	_drop_tool_anchor()
 	if line_button:
 		line_button.set_pressed_no_signal(mode == "line")
 	if box_button:
@@ -649,6 +652,17 @@ func _toggle_tool(mode: String) -> void:
 	_set_tool("" if tool_mode == mode else mode)
 
 
+## An anchor belongs to one world, view and phase: it is dropped whenever the
+## target space changes (targeting mode, plane axis or depth), history moves
+## (undo, redo), the world is replaced (Open, Examples, Return), a gesture
+## stream resets (focus loss), or the editor enters Test. Orbiting between the
+## two clicks keeps it, since the target space is unchanged.
+func _drop_tool_anchor() -> void:
+	tool_anchor = Vector3i(-1, -1, -1)
+	if tool_box_mesh:
+		tool_box_mesh.visible = false
+
+
 ## Second click of a two-click tool: one authored transaction from the anchor
 ## to `cell`. Lines stamp the frozen brush along a face-connected path; boxes
 ## fill the axis-aligned box into air with the current material.
@@ -656,15 +670,16 @@ func _tool_click(cell: Vector3i) -> void:
 	if cell.x < 0:
 		return
 	if testing:
+		_drop_tool_anchor()
 		edit_message = "Line and Box build the authored construction; return to Build to use them."
 		return
 	if tool_anchor.x < 0:
 		tool_anchor = cell
+		tool_anchor_axis = _preview_axis()
 		return
 	var anchor := tool_anchor
-	tool_anchor = Vector3i(-1, -1, -1)
-	if tool_box_mesh:
-		tool_box_mesh.visible = false
+	var anchor_axis := tool_anchor_axis
+	_drop_tool_anchor()
 	if capturing:
 		edit_message = "Previous edit still finishing; click again."
 		tool_anchor = anchor
@@ -679,9 +694,12 @@ func _tool_click(cell: Vector3i) -> void:
 	if tool_mode == "box":
 		var lo := anchor.min(cell)
 		var hi := anchor.max(cell) + Vector3i.ONE
-		sim.record_region(active_transaction, lo, hi, element)
+		if stroke_erase:
+			sim.record_region(active_transaction, lo, hi, Elements.Id.AIR, sim.BrushMode.BOX_ERASE)
+		else:
+			sim.record_region(active_transaction, lo, hi, element)
 	else:
-		sim.record_stroke(active_transaction, Geometry.stroke(anchor, cell), stroke_radius, stroke_element, _brush_mode(stroke_erase), active_transaction, stroke_shape, _preview_axis())
+		sim.record_stroke(active_transaction, Geometry.stroke(anchor, cell), stroke_radius, stroke_element, _brush_mode(stroke_erase), active_transaction, stroke_shape, anchor_axis)
 	_end_stroke()
 
 
@@ -709,7 +727,9 @@ func _request_stamp_preview() -> void:
 		return
 	preview_pending = true
 	preview_request_id += 1
-	sim.request_stamp_preview(target, radius, erase, shape, _preview_axis(), _receive_stamp_preview.bind(preview_request_id, signature), thermal_tool != "")
+	# Heat and cool always stamp the sphere (brush.glsl forces it for those modes).
+	var preview_shape: int = BrushScript.Shape.SPHERE if thermal_tool != "" else shape
+	sim.request_stamp_preview(target, radius, erase, preview_shape, _preview_axis(), _receive_stamp_preview.bind(preview_request_id, signature), thermal_tool != "")
 
 
 func _receive_stamp_preview(cells: Array[Vector3i], metadata: Dictionary, id: int, signature: int) -> void:
@@ -1017,6 +1037,7 @@ func _resume_editor_action() -> void:
 func _set_target_mode(value: int) -> void:
 	cancel_pending_paint()
 	_end_stroke()
+	_drop_tool_anchor()
 	targeting_mode = value
 	target_choice.select(value)
 	_invalidate_picks()
@@ -1068,6 +1089,7 @@ func _refresh_target_controls() -> void:
 
 func set_plane(value: int) -> void:
 	_end_stroke()
+	_drop_tool_anchor()
 	axis = value
 	_face_plane()
 	_update_plane()
@@ -1123,6 +1145,7 @@ func _stop_navigation() -> void:
 func _reset_gesture() -> void:
 	gesture_owner = -1
 	last_gesture_ms = -1
+	_drop_tool_anchor()
 
 
 func _route_gesture(event: InputEventGesture) -> void:
@@ -1619,6 +1642,7 @@ func _history_action(redo: bool) -> void:
 	var source: Array[Dictionary] = redo_history if redo else undo_history
 	if source.is_empty():
 		return
+	_drop_tool_anchor()
 	var original: Dictionary = source.back()
 	capturing = true
 	_capture_accepts_pending = true
@@ -1694,6 +1718,7 @@ func _begin_test(bytes: PackedByteArray, thermal: PackedByteArray, epoch: int, r
 	build_snapshot = bytes
 	build_thermal = thermal
 	edit_message = ""
+	_drop_tool_anchor()
 	testing = true
 	TimeController.time_scale = speed_scale
 	TimeController.paused = false

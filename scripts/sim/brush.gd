@@ -12,7 +12,7 @@ signal changed
 ## Brush modes, mirroring VoxelSim.BrushMode (docs/milestone/heat-brief.md
 ## contract 5). HEAT and COOL change only the thermal layer by a strength in
 ## kelvin with radial falloff; voxel bytes are untouched.
-enum Mode { REPLACE, ONLY_AIR, ERASE, BOX, BOX_ONLY_AIR, HEAT, COOL }
+enum Mode { REPLACE, ONLY_AIR, ERASE, BOX, BOX_ONLY_AIR, HEAT, COOL, BOX_ERASE }
 
 ## Brush shapes, mirroring VoxelSim.BrushShape (docs/milestone/placement-brief.md
 ## contract 5). SPHERE is a ball of radius r; CUBE the axis-aligned box

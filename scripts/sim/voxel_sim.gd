@@ -100,7 +100,7 @@ var OCCUPANCY_GRID: int = GRID / BRICK
 
 ## HEAT and COOL change only the thermal layer (strength in kelvin, radial
 ## falloff); see scripts/sim/brush.gd Mode, which mirrors this enum.
-enum BrushMode { REPLACE, ONLY_AIR, ERASE, BOX, BOX_ONLY_AIR, HEAT, COOL }
+enum BrushMode { REPLACE, ONLY_AIR, ERASE, BOX, BOX_ONLY_AIR, HEAT, COOL, BOX_ERASE }
 ## Brush shapes (docs/milestone/placement-brief.md contract 5); see
 ## scripts/sim/brush.gd Shape, which mirrors this enum. The disc's plane axis
 ## is the workplane axis for cell strokes and the picked face for surface stamps.
@@ -599,15 +599,17 @@ func record_stroke(id: int, centers: Array[Vector3i], radius: int, element: int,
 	RenderingServer.call_on_render_thread(_rt_record_stroke.bind(id, valid, radius, element, mode, seed, shape, clampi(axis, 0, 2)))
 
 
-func record_region(id: int, lo: Vector3i, hi: Vector3i, element: int) -> void:
-	if _edit_epochs.get(id, -1) != edit_epoch:
+## Half-open region into air with `element` (BOX_ONLY_AIR), or BOX_ERASE to
+## clear every occupied cell in the region; other modes are rejected.
+func record_region(id: int, lo: Vector3i, hi: Vector3i, element: int, mode: BrushMode = BrushMode.BOX_ONLY_AIR) -> void:
+	if _edit_epochs.get(id, -1) != edit_epoch or mode not in [BrushMode.BOX_ONLY_AIR, BrushMode.BOX_ERASE]:
 		return
 	lo = lo.clamp(Vector3i.ZERO, Vector3i.ONE * GRID)
 	hi = hi.clamp(Vector3i.ZERO, Vector3i.ONE * GRID)
 	if lo.x >= hi.x or lo.y >= hi.y or lo.z >= hi.z or element < 0 or element >= Elements.count():
 		return
 	edit_revision += 1
-	RenderingServer.call_on_render_thread(_rt_record_region.bind(id, lo, hi, element))
+	RenderingServer.call_on_render_thread(_rt_record_region.bind(id, lo, hi, element, mode))
 
 
 func finish_edit_transaction(id: int) -> void:
@@ -969,9 +971,9 @@ func _rt_record_stroke(id: int, centers: Array[Vector3i], radius: int, element: 
 		_rt_paint_stroke(centers, radius, element, mode, seed, shape, axis)
 
 
-func _rt_record_region(id: int, lo: Vector3i, hi: Vector3i, element: int) -> void:
+func _rt_record_region(id: int, lo: Vector3i, hi: Vector3i, element: int, mode: int = BrushMode.BOX_ONLY_AIR) -> void:
 	if _rt_edit_gpu().capture_region(id, lo, hi):
-		_rt_paint_region(lo, hi, element)
+		_rt_paint_region(lo, hi, element, mode)
 
 
 func _rt_finish_edit(id: int) -> void:
@@ -2106,13 +2108,13 @@ func _rt_record_thermal_stroke(id: int, centers: Array[Vector3i], radius: int, k
 		_rt_paint_thermal_stroke(centers, radius, kelvin)
 
 
-func _rt_paint_region(lo: Vector3i, hi: Vector3i, element: int) -> void:
+func _rt_paint_region(lo: Vector3i, hi: Vector3i, element: int, mode: int = BrushMode.BOX_ONLY_AIR) -> void:
 	if not _brush_pipeline.is_valid():
 		return
 	var cl := _rd.compute_list_begin()
 	_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
 	_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
-	_rt_brush_box(cl, lo, hi, element, 7919, Elements.default_amount(element), BrushMode.BOX_ONLY_AIR)
+	_rt_brush_box(cl, lo, hi, element, 7919, Elements.default_amount(element), mode)
 	_rd.compute_list_end()
 	_rt_occupancy_update()
 

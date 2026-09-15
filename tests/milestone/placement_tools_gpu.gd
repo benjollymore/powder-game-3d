@@ -115,6 +115,35 @@ func run() -> void:
 	editor.undo_edit()
 	await settled()
 	check(await read() == before, "Undo restores the bytes from before the box")
+	# Erase plus Box clears exactly the sand box just placed.
+	await click_cell(c1)
+	await click_cell(c2)
+	await settled()
+	var filled := await read()
+	editor.erase = true
+	undo_before = editor.undo_history.size()
+	await click_cell(c1)
+	await click_cell(c2)
+	await settled()
+	var cleared := await read()
+	check(same_set(changed_ids(filled, cleared).keys(), want_box) and editor.undo_history.size() == undo_before + 1, "Box with Erase clears exactly the filled box as one undo entry")
+	editor.erase = false
+	# An anchor does not survive entering Test.
+	await click_cell(c1)
+	check(editor.tool_anchor == c1, "a box corner is anchored before Run")
+	editor.run_or_restore()
+	for i in 60:
+		await process_frame
+		if editor.testing:
+			break
+	check(editor.testing and editor.tool_anchor.x < 0, "entering Test drops the pending anchor")
+	editor.run_or_restore()
+	for i in 60:
+		await process_frame
+		if not editor.testing:
+			break
+	await settled()
+	check(not editor.testing and editor.tool_anchor.x < 0, "Return leaves no anchor behind")
 	key(KEY_K)
 	check(editor.tool_mode == "", "K again returns to painting")
 	_restore_input()
