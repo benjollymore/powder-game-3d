@@ -12,6 +12,7 @@ func _initialize() -> void:
 	_test_time_controller()
 	_test_liquid_constants()
 	_test_scenarios()
+	_test_elements()
 	print("%d checks, %d failures" % [_checks, _failures])
 	quit(1 if _failures > 0 else 0)
 
@@ -87,3 +88,25 @@ func _test_scenarios() -> void:
 			if bytes[i] != 0:
 				nonair += 1
 		check(nonair > 0, "scenario '%s' is not empty" % name)
+
+
+func _test_elements() -> void:
+	var problems := Elements.validate()
+	check(problems.is_empty(), "element table validates: " + ", ".join(problems))
+	var include := FileAccess.get_file_as_string(Elements.ELEM_INCLUDE)
+	var re := RegEx.create_from_string("ELEM_BYTES_SENTINEL\\s+(\\d+)u")
+	var m := re.search(include)
+	check(m != null and int(m.get_string(1)) == Elements.ELEM_BYTES, "shader Elem sentinel matches Elements.ELEM_BYTES (%d)" % Elements.ELEM_BYTES)
+	check(Elements.ELEM_BYTES % 16 == 0, "Elem record is 16-byte aligned for std430")
+	var bytes := Elements.property_bytes()
+	check(bytes.size() == Elements.count() * Elements.ELEM_BYTES, "property buffer is count * ELEM_BYTES")
+	# Original 32-byte prefix is unchanged for every element.
+	var water := Elements.Id.WATER * Elements.ELEM_BYTES
+	check(bytes.decode_u32(water) == Elements.FLAG_LIQUID and is_equal_approx(bytes.decode_float(water + 4), 100.0), "water prefix packs flags and density as before")
+	check(is_equal_approx(bytes.decode_float(water + 32), 4.18) and is_equal_approx(bytes.decode_float(water + 52), 373.15), "water thermal fields pack capacity and hot_at")
+	check(bytes.decode_u32(water + 64) & 0xFF == Elements.Id.STEAM, "water hot_to packs into ids.x")
+	check(Elements.thermal(Elements.Id.WALL, "hot_to") == 0.0 and Elements.thermal(Elements.Id.SAND, "ignition_temp") == 0.0, "defaults apply where a row is silent")
+	var reacts := Elements.reaction_bytes()
+	check(reacts.size() == Elements.REACTIONS.size() * 16, "reaction buffer is 16 bytes per rule")
+	check(reacts.decode_float(8) == 0.0 and reacts.decode_float(12) == 0.0, "rules without a thermal dictionary encode zero min_t and heat")
+	check(Elements.PALETTE_SIZE >= Elements.count(), "palette holds every element")

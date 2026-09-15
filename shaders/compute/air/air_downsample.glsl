@@ -11,16 +11,7 @@ layout(rgba8, set = 0, binding = 0) uniform restrict readonly image3D grid;
 layout(r8, set = 0, binding = 1) uniform restrict writeonly image3D occ;
 layout(rgba16f, set = 0, binding = 2) uniform restrict writeonly image3D src;
 
-struct Elem {
-	uint flags;
-	float density;
-	float decay;
-	float spread;
-	float extinction;
-	float air_coupling;
-	float heat;
-	float smoothing;       // renderer: 0 crisp cubes .. 1 smooth heap
-};
+#include "../elem.glslinc"
 layout(std430, set = 0, binding = 3) restrict readonly buffer Elems { Elem elems[]; };
 
 

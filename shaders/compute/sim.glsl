@@ -19,16 +19,7 @@ layout(local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
 
 layout(rgba8, set = 0, binding = 0) uniform restrict image3D grid;
 
-struct Elem {
-	uint flags;         // low byte: FLAG_* bits, high byte: decay target id
-	float density;      // lighter rises through heavier
-	float decay;        // per-tick chance to turn into decay target
-	float spread;       // sideways flow chance (liquids: how readily they level)
-	float extinction;   // renderer: volume opacity per voxel (gases)
-	float air_coupling; // air solver: how strongly the velocity field moves it
-	float heat;         // air solver: buoyancy source
-	float smoothing;       // renderer: 0 crisp cubes .. 1 smooth heap
-};
+#include "elem.glslinc"
 layout(std430, set = 0, binding = 1) restrict readonly buffer Elems { Elem elems[]; };
 
 // x = a | b << 8 | out_a << 16 | out_b << 24, y = probability * 65535.

@@ -1,0 +1,39 @@
+// Per-element property record shared by every compute kernel. Packed by
+// Elements.property_bytes() in scripts/sim/elements.gd; ELEM_BYTES_SENTINEL
+// must equal Elements.ELEM_BYTES (checked by tests/unit/run_unit.gd).
+//
+// 80 bytes in std430 (the trailing uvec4 is 16-byte aligned). The first 32
+// bytes are the original record read by every kernel; then thermal
+// coefficients (heat milestone):
+//   thermal_a = (heat_capacity J/K per full cell, conductivity W/(m K),
+//                initial_temp K, fire_temp K)
+//   thermal_b = (ignition_temp K, hot_at K, cold_at K, latent K*capacity)
+//   ids.x     = hot_to | cold_to << 8 | burn_to << 16 (element ids, 0 = none
+//               when the matching *_at threshold is 0); ids.yzw reserved.
+#define ELEM_BYTES_SENTINEL 80u
+
+struct Elem {
+	uint flags;         // low byte: FLAG_* bits, high byte: decay target id
+	float density;      // lighter rises through heavier
+	float decay;        // per-tick chance to turn into decay target
+	float spread;       // sideways flow chance (liquids: how readily they level)
+	float extinction;   // renderer: volume opacity per voxel (gases)
+	float air_coupling; // air solver: how strongly the velocity field moves it
+	float heat;         // air solver: buoyancy source
+	float smoothing;    // renderer: 0 crisp cubes .. 1 smooth heap
+	vec4 thermal_a;
+	vec4 thermal_b;
+	uvec4 ids;
+};
+
+#define ELEM_HEAT_CAPACITY(e) ((e).thermal_a.x)
+#define ELEM_CONDUCTIVITY(e) ((e).thermal_a.y)
+#define ELEM_INITIAL_TEMP(e) ((e).thermal_a.z)
+#define ELEM_FIRE_TEMP(e) ((e).thermal_a.w)
+#define ELEM_IGNITION_TEMP(e) ((e).thermal_b.x)
+#define ELEM_HOT_AT(e) ((e).thermal_b.y)
+#define ELEM_COLD_AT(e) ((e).thermal_b.z)
+#define ELEM_LATENT(e) ((e).thermal_b.w)
+#define ELEM_HOT_TO(e) ((e).ids.x & 0xFFu)
+#define ELEM_COLD_TO(e) (((e).ids.x >> 8u) & 0xFFu)
+#define ELEM_BURN_TO(e) (((e).ids.x >> 16u) & 0xFFu)

@@ -19,16 +19,7 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 layout(rgba8, set = 0, binding = 0) uniform restrict readonly image3D grid;
 layout(rgba8, set = 0, binding = 1) uniform restrict image3D fields;
 
-struct Elem {
-	uint flags;
-	float density;
-	float decay;
-	float spread;
-	float extinction;
-	float air_coupling;
-	float heat;
-	float smoothing;
-};
+#include "elem.glslinc"
 layout(std430, set = 0, binding = 2) restrict readonly buffer Elems { Elem elems[]; };
 
 // No CPU readback: exact eligibility selects the whole layer's representation.

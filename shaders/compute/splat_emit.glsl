@@ -20,16 +20,7 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 layout(rgba8, set = 0, binding = 0) uniform restrict readonly image3D grid;
 layout(rgba8, set = 0, binding = 1) uniform restrict readonly image3D occupancy;
 
-struct Elem {
-	uint flags;
-	float density;
-	float decay;
-	float spread;
-	float extinction;
-	float air_coupling;
-	float heat;
-	float smoothing;
-};
+#include "elem.glslinc"
 layout(std430, set = 0, binding = 2) restrict readonly buffer Elems { Elem elems[]; };
 // 0 grains, 1 leaves, 2 droplets, 3 spawns, 4 fx claim, 5 fx alive, 6-7 unused,
 // then activity for the soundscape, reduced once per workgroup:
