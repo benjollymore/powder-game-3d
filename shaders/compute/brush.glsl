@@ -22,11 +22,15 @@ layout(rgba8, set = 0, binding = 0) uniform restrict image3D grid;
 layout(rg32f, set = 0, binding = 1) uniform restrict image3D thermal;
 #include "elem.glslinc"
 layout(std430, set = 0, binding = 2) restrict readonly buffer Elems { Elem elems[]; };
+// Per-stroke "written" mask: cells this stroke stamped. The surface pick treats
+// them as air so a stroke never re-targets its own cap. Cleared when a stroke
+// begins and ends; only stroke stamps (box_hi.z != 0) set it.
+layout(r8, set = 0, binding = 3) uniform restrict image3D stroke_mask;
 
 layout(push_constant, std430) uniform Params {
 	ivec4 center_radius;      // sphere: cx, cy, cz, radius (voxels); box: lo xyz, unused
 	uvec4 element_mode_seed;  // element id, mode (0 replace, 1 only into air, 2 erase, 3 box, 4 box only air, 5 heat, 6 cool), seed, liquid amount
-	ivec4 box_hi;             // box: exclusive upper corner; brush: x = shape, y = disc axis; heat/cool: w = strength in kelvin (float bits)
+	ivec4 box_hi;             // box: exclusive upper corner; brush: x = shape, y = disc axis, z = mark stroke mask; heat/cool: w = strength in kelvin (float bits)
 } pc;
 
 layout(constant_id = 0) const int GRID = 128;
@@ -107,6 +111,9 @@ void main() {
 			^ pc.element_mode_seed.z) & 0xFFu;
 	uint amount = (mode == MODE_ERASE) ? 0u : pc.element_mode_seed.w;
 	imageStore(grid, p, vec4(uvec4(id, seed, amount, 0u)) / 255.0);
+	if (!box && pc.box_hi.z != 0) {
+		imageStore(stroke_mask, p, vec4(1.0));
+	}
 	if (mode == MODE_ERASE) {
 		vec2 tg = imageLoad(thermal, p).rg;
 		imageStore(thermal, p, vec4(tg.x, 0.0, 0.0, 0.0));

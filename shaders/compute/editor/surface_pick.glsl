@@ -11,6 +11,9 @@ layout(rg32f, set = 0, binding = 2) uniform readonly image3D thermal;
 // Batch rays share the push-constant layout, one 64-byte record each.
 struct RayRecord { vec4 origin; vec4 direction; ivec4 options; ivec4 section; };
 layout(std430, set = 0, binding = 3) readonly buffer Rays { RayRecord rays[]; } batch;
+// Cells written by the stroke in progress read as air: a stroke targets the
+// surface as it was when it began and never climbs its own cap.
+layout(r8, set = 0, binding = 4) uniform readonly image3D stroke_mask;
 layout(push_constant, std430) uniform Params {
     vec4 origin; vec4 direction;
     ivec4 options; // grid, radius, erase, included element bitmask
@@ -64,7 +67,8 @@ void main() {
         uvec4 v = uvec4(imageLoad(grid, cell) * 255.0 + 0.5);
         uint id = v.x;
         result.records[index].stats.x = i + 1;
-        if (id != 0u && (ray.options.w & (1 << int(id))) != 0) {
+        bool own = imageLoad(stroke_mask, cell).r > 0.5;
+        if (id != 0u && !own && (ray.options.w & (1 << int(id))) != 0) {
             result.records[index].hit = ivec4(cell, int(id));
             result.records[index].stats.y = floatBitsToInt(imageLoad(thermal, cell).r);
             result.records[index].stats.z = int(v.z);

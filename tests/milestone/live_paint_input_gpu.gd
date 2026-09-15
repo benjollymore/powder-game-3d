@@ -65,27 +65,50 @@ func _run() -> void:
 	lab.depth = n / 2
 	var world := WorldBuilder.empty()
 	WorldBuilder.fill_box(world, Vector3i(1, 1, 1), Vector3i(n - 1, 2, n - 1), Elements.Id.WALL)
+	# A slow drag of one cell per frame: the source stamps once per frame at
+	# the new cell and the crossed-path stamp lands on the same cell first, so
+	# the physical result is exactly one grain per frame, whatever the number
+	# of pointer events within the frame.
 	var baseline := PackedByteArray()
 	for samples in [1, 16]:
 		sim.upload(world.to_byte_array())
 		start()
 		for frame in 24:
-			var end := point(Vector3i(n / 2, n * 3 / 4, n / 2))
+			var end := point(Vector3i(n / 2 - 12 + frame, n * 3 / 4, n / 2))
 			for sample in samples:
-				# More events land on the same cell (sub-pixel jitter); a still
-				# brush is a source metered by ticks, never by pointer events.
-				var mouse := end + Vector2(0.5 * float(samples - sample - 1) / samples, 0)
-				lab._sample(mouse)
+				# More events within the frame at the same position: a source
+				# is metered by ticks, not by pointer events.
+				lab._sample(end)
 				lab._flush()
 			await tick(5)
 		release()
 		var bytes := await read()
-		check(count(bytes) == 24, "%d samples/frame at a still pointer adds exactly 24 grains over 120 ticks (got %d)" % [samples, count(bytes)])
+		check(count(bytes) == 24, "%d samples/frame slow drag adds exactly 24 grains over 120 ticks (got %d)" % [samples, count(bytes)])
 		check(lab.pending.is_empty() and lab.pending_surface.is_empty(), "live drag leaves no immediate geometry queue")
 		if baseline.is_empty():
 			baseline = bytes
 		else:
 			check(bytes == baseline, "actual packed material state is identical with 1 or 16 pointer samples/frame")
+	# A still pointer attempts exactly 24 source stamps; ONLY_AIR deposits only
+	# when the cell is free, so the grain count is bounded by the attempts and
+	# identical across event densities (the simulation is deterministic).
+	var still := PackedByteArray()
+	for samples in [1, 16]:
+		sim.upload(world.to_byte_array())
+		start()
+		var end := point(Vector3i(n / 2, n * 3 / 4, n / 2))
+		for frame in 24:
+			for sample in samples:
+				lab._sample(end)
+				lab._flush()
+			await tick(5)
+		release()
+		var bytes := await read()
+		check(sim._rt_live_emitter_stamps == 24 and count(bytes) <= 24 and count(bytes) > 0, "%d samples/frame still pointer attempts exactly 24 source stamps over 120 ticks (%d attempts, %d grains)" % [samples, sim._rt_live_emitter_stamps, count(bytes)])
+		if still.is_empty():
+			still = bytes
+		else:
+			check(bytes == still, "still-pointer result is identical with 1 or 16 pointer samples/frame")
 	# A moving brush lays a connected line: every cell it crosses gets a stamp
 	# inside the next tick, in addition to the source's own rate. A wall shelf
 	# under the path keeps each grain where it landed.
@@ -97,23 +120,26 @@ func _run() -> void:
 		sim.upload(shelf.to_byte_array())
 		start()
 		var x0 := n / 2 - 20
+		# Both densities start at x0 and end at x0 + 40; only the intermediate
+		# sample count differs.
 		for frame in 8:
 			for sample in samples:
-				var t: float = (float(frame) + float(sample + 1) / float(samples)) / 8.0
+				var t: float = float(frame * samples + sample) / float(8 * samples)
 				var cell := Vector3i(x0 + int(round(40.0 * t)), path_y, n / 2)
 				lab._sample(point(cell))
+				lab._flush()
+			if frame == 7:
+				lab._sample(point(Vector3i(x0 + 40, path_y, n / 2)))
 				lab._flush()
 			await tick(5)
 		release()
 		await tick(1)
 		var bytes := await read()
-		var covered := true
-		var missing := 0
+		var missing: Array[int] = []
 		for x in range(x0, x0 + 41):
 			if bytes[VoxelCodec.index(x, path_y, n / 2) * 4] != Elements.Id.SAND:
-				covered = false
-				missing += 1
-		check(covered, "%d samples/frame moving brush deposits on every crossed cell (%d missing)" % [samples, missing])
+				missing.append(x - x0)
+		check(missing.is_empty(), "%d samples/frame moving brush deposits on every crossed cell (missing offsets %s)" % [samples, str(missing)])
 		if moving.is_empty():
 			moving = bytes
 		else:

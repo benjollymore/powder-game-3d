@@ -12,6 +12,7 @@ const COPY_PATH := "res://shaders/compute/editor/region_copy.glsl"
 var rd: RenderingDevice
 var grid: RID
 var thermal: RID
+var stroke_mask: RID
 var elements: RID
 var size: int
 var shader := RID()
@@ -36,7 +37,8 @@ const MAX_PREVIEW_RADIUS := 12
 ## ray record and one 64-byte result record each).
 const MAX_BATCH_RAYS := 32
 
-func _init(device: RenderingDevice, texture: RID, thermal_texture: RID, elements_buffer: RID, grid_size: int, compile: Callable) -> void:
+func _init(device: RenderingDevice, texture: RID, thermal_texture: RID, elements_buffer: RID, grid_size: int, compile: Callable, mask_texture: RID = RID()) -> void:
+	stroke_mask = mask_texture
 	rd = device
 	grid = texture
 	thermal = thermal_texture
@@ -57,8 +59,8 @@ func ensure_surface() -> void:
 	# The single-ray path carries its ray in the push constant; the kernel still
 	# binds a ray buffer, so keep one 64-byte placeholder for that set.
 	surface_rays = rd.storage_buffer_create(64)
-	surface_pick_set = _uniforms(surface_buffer, pick_shader, true, false, surface_rays)
-	surface_stamp_set = _uniforms(surface_buffer, stamp_shader, true, true)
+	surface_pick_set = _uniforms(surface_buffer, pick_shader, true, false, surface_rays, true)
+	surface_stamp_set = _uniforms(surface_buffer, stamp_shader, true, true, RID(), true)
 
 func ensure_preview() -> void:
 	if preview_pipeline.is_valid():
@@ -128,7 +130,7 @@ func request_picks(rays: Array, radius: int, erase: bool, metadata: Dictionary, 
 	for i in count:
 		records.append_array(_encode_ray(rays[i], radius, erase, 0))
 	var ray_buffer := rd.storage_buffer_create(records.size(), records)
-	var uniforms := _uniforms(results, pick_shader, true, false, ray_buffer)
+	var uniforms := _uniforms(results, pick_shader, true, false, ray_buffer, true)
 	pending_buffers[results] = [uniforms, ray_buffer]
 	var cl := rd.compute_list_begin()
 	rd.compute_list_bind_compute_pipeline(cl, pick_pipeline)
@@ -187,7 +189,7 @@ func pick_sync_batch(rays: Array, radius: int, erase: bool) -> Array:
 			records.append_array(_encode_ray(rays[start + i], radius, erase, 0))
 		var out := rd.storage_buffer_create(64 * count)
 		var ray_buffer := rd.storage_buffer_create(records.size(), records)
-		var uniforms := _uniforms(out, pick_shader, true, false, ray_buffer)
+		var uniforms := _uniforms(out, pick_shader, true, false, ray_buffer, true)
 		var cl := rd.compute_list_begin()
 		rd.compute_list_bind_compute_pipeline(cl, pick_pipeline)
 		rd.compute_list_bind_uniform_set(cl, uniforms, 0)
@@ -234,13 +236,14 @@ func _dispatch_pick(cl: int, ray: Dictionary, radius: int, erase: bool, uniforms
 	rd.compute_list_dispatch(cl, 1, 1, 1)
 	rd.compute_list_add_barrier(cl)
 
-func stamp_surface(cl: int, ray: Dictionary, radius: int, element: int, mode: int, seed: int, amount: int, shape: int = 0) -> void:
+func stamp_surface(cl: int, ray: Dictionary, radius: int, element: int, mode: int, seed: int, amount: int, shape: int = 0, mark: int = 0) -> void:
 	ensure_surface()
 	_dispatch_pick(cl, ray, radius, mode == 2, surface_pick_set)
 	rd.compute_list_bind_compute_pipeline(cl, stamp_pipeline)
 	rd.compute_list_bind_uniform_set(cl, surface_stamp_set, 0)
-	# material.z carries the brush shape (0 sphere, 1 cube, 2 disc on the picked face).
-	var push := PackedInt32Array([size, radius, element, mode, seed, amount, shape, 0]).to_byte_array()
+	# material.z carries the brush shape (0 sphere, 1 cube, 2 disc on the picked
+	# face); material.w marks the stroke mask so later picks skip this stamp.
+	var push := PackedInt32Array([size, radius, element, mode, seed, amount, shape, mark]).to_byte_array()
 	rd.compute_list_set_push_constant(cl, push, push.size())
 	var groups := ceili(float(2 * radius + 1) / 8.0)
 	rd.compute_list_dispatch(cl, groups, groups, groups)
@@ -392,7 +395,7 @@ func restore(regions: Array) -> void:
 		rd.free_rid(uniforms)
 		rd.free_rid(buffer)
 
-func _uniforms(buffer: RID, for_shader: RID = RID(), with_thermal := true, with_elements := false, rays := RID()) -> RID:
+func _uniforms(buffer: RID, for_shader: RID = RID(), with_thermal := true, with_elements := false, rays := RID(), with_mask := false) -> RID:
 	var image := RDUniform.new()
 	image.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
 	image.binding = 0
@@ -423,6 +426,13 @@ func _uniforms(buffer: RID, for_shader: RID = RID(), with_thermal := true, with_
 		elems.binding = 3
 		elems.add_id(elements)
 		uniforms.append(elems)
+	if with_mask and stroke_mask.is_valid():
+		# Pick and stamp share the per-stroke written mask at binding 4.
+		var mask := RDUniform.new()
+		mask.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		mask.binding = 4
+		mask.add_id(stroke_mask)
+		uniforms.append(mask)
 	return rd.uniform_set_create(uniforms, for_shader if for_shader.is_valid() else shader, 0)
 
 func _dispatch(cl: int, lo: Vector3i, hi: Vector3i, offset: int, restore_mode: bool) -> void:

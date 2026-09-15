@@ -10,9 +10,11 @@ layout(std430, set = 0, binding = 1) readonly buffer Result {
 layout(rg32f, set = 0, binding = 2) uniform restrict image3D thermal;
 #include "../elem.glslinc"
 layout(std430, set = 0, binding = 3) restrict readonly buffer Elems { Elem elems[]; };
+// Per-stroke "written" mask shared with brush.glsl and surface_pick.glsl.
+layout(r8, set = 0, binding = 4) uniform restrict image3D stroke_mask;
 layout(push_constant, std430) uniform Params {
     ivec4 brush; // grid size, radius, element, mode (ONLY_AIR/ERASE)
-    ivec4 material; // seed, initial liquid amount, shape (0 sphere, 1 cube, 2 disc on the hit-face plane), unused
+    ivec4 material; // seed, initial liquid amount, shape (0 sphere, 1 cube, 2 disc on the hit-face plane), mark stroke mask
 } pc;
 uint hash(uint x) {
     x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15;
@@ -42,6 +44,7 @@ void main() {
     uint amount = pc.brush.w == 2 ? 0u : uint(pc.material.y);
     uint seed = hash(uint(p.x) * 73856093u ^ uint(p.y) * 19349663u ^ uint(p.z) * 83492791u ^ uint(pc.material.x)) & 255u;
     imageStore(grid, p, vec4(uvec4(id, seed, amount, 0u)) / 255.0);
+    if (pc.material.w != 0) { imageStore(stroke_mask, p, vec4(1.0)); }
     if (pc.brush.w == 2) {
         imageStore(thermal, p, vec4(imageLoad(thermal, p).r, 0.0, 0.0, 0.0));
     } else {

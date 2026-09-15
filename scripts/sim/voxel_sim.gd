@@ -189,6 +189,7 @@ var _frame := 0
 ## Nonzero only while preparing presentation for elapsed simulation time.
 var _rt_presentation_seconds := 0.0
 ## Render-thread-owned live source. Metadata updates never reset its phase.
+var _stroke_mask_rid: RID
 var _rt_live_emitter: Dictionary = {}
 var _rt_live_emitter_phase := 0.0
 var _rt_live_emitter_initial := false
@@ -751,19 +752,20 @@ func _rt_record_surface_stroke(id: int, rays: Array, radius: int, element: int, 
 		if not picked.valid:
 			tx.erase("surface_previous")
 			continue
-		var centers: Array[Vector3i] = [picked.target]
 		var normal: Vector3i = picked.normal
-		var axis := normal.abs().max_axis_index()
+		var join := {"centers": [picked.target] as Array[Vector3i], "axes": [normal.abs().max_axis_index()] as Array[int]}
 		if tx.has("surface_previous"):
-			centers = _surface_join(tx.surface_previous, picked)
+			join = _surface_join(tx.surface_previous, picked, mode)
+		var centers: Array[Vector3i] = join.centers
+		var axes: Array[int] = join.axes
 		if not editor.capture_stroke(id, centers, radius):
 			break
 		var cl := _rd.compute_list_begin()
 		_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
 		_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
-		for center in centers:
-			# A disc lies on the picked face plane, one cell thick along its normal.
-			_rt_brush_sphere(cl, center, radius, element, mode, seed, Elements.default_amount(element), 0, shape, axis)
+		for k in centers.size():
+			# A disc lies on the face plane of the leg its centre belongs to.
+			_rt_brush_sphere(cl, centers[k], radius, element, mode, seed, Elements.default_amount(element), 0, shape, axes[k], 1)
 		_rd.compute_list_end()
 		tx.surface_previous = picked
 		mutated = true
@@ -771,36 +773,57 @@ func _rt_record_surface_stroke(id: int, rays: Array, radius: int, element: int, 
 		_rt_occupancy_update()
 
 
-## Join two consecutive surface targets. On the same face plane the join is the
-## straight face-connected line. Across a corner (different normal) or a step
-## (same normal, different plane) the line goes through the projection of the
-## new target onto the previous face plane, so it follows the edge instead of
-## cutting through space; ONLY_AIR keeps any solid it crosses intact.
-static func _surface_join(previous: Dictionary, picked: Dictionary) -> Array[Vector3i]:
+## Join two consecutive surface targets. `previous` was stamped already, so
+## the result starts after it. On the same face plane the join is the straight
+## face-connected line. Across a convex or concave 90-degree corner (different
+## normal axes) an additive join runs along the previous face plane to the
+## cell in line with the new target, then along the new face plane; both legs
+## lie in air beside the two faces and ONLY_AIR never writes into a solid.
+## Erase joins and same-axis changes (a step up or down, or a face and its
+## opposite) break instead: a straight leg there would run through material
+## that neither endpoint touches. `axes` gives each centre the face axis of
+## its leg, so a disc lies flat on the face it belongs to.
+static func _surface_join(previous: Dictionary, picked: Dictionary, mode: int = BrushMode.ONLY_AIR) -> Dictionary:
 	var normal: Vector3i = picked.normal
 	var from: Vector3i = previous.target
 	var to: Vector3i = picked.target
-	if normal == Vector3i.ZERO or previous.normal == Vector3i.ZERO:
-		return [to]
 	var axis: int = normal.abs().max_axis_index()
-	if previous.normal == normal and from[axis] == to[axis]:
-		return EditGeometry.stroke(from, to)
+	var alone := {"centers": [to] as Array[Vector3i], "axes": [axis] as Array[int]}
+	if normal == Vector3i.ZERO or previous.normal == Vector3i.ZERO or from == to:
+		return alone
 	var previous_axis: int = (previous.normal as Vector3i).abs().max_axis_index()
+	if previous.normal == normal and from[axis] == to[axis]:
+		var line := EditGeometry.stroke(from, to)
+		line.remove_at(0)
+		var line_axes: Array[int] = []
+		line_axes.resize(line.size())
+		line_axes.fill(axis)
+		return {"centers": line, "axes": line_axes}
+	if previous_axis == axis or mode == BrushMode.ERASE:
+		return alone
 	var corner := to
 	corner[previous_axis] = from[previous_axis]
-	var centers := EditGeometry.stroke(from, corner)
+	var centers: Array[Vector3i] = []
+	var axes: Array[int] = []
+	var first := EditGeometry.stroke(from, corner)
+	first.remove_at(0)
+	for cell in first:
+		centers.append(cell)
+		axes.append(previous_axis)
 	if corner != to:
 		var second := EditGeometry.stroke(corner, to)
 		second.remove_at(0)
-		centers.append_array(second)
-	return centers
+		for cell in second:
+			centers.append(cell)
+			axes.append(axis)
+	return {"centers": centers, "axes": axes}
 
 
 func _rt_paint_surface_stroke(rays: Array, radius: int, element: int, mode: int, seed: int, shape: int = BrushShape.SPHERE) -> void:
 	_rt_prepare_surface_emitter()
 	var cl := _rd.compute_list_begin()
 	for ray in rays:
-		_rt_surface_emitter_stamp(cl, ray, radius, element, mode, seed, shape)
+		_rt_surface_emitter_stamp(cl, ray, radius, element, mode, seed, shape, 0)
 	_rd.compute_list_end()
 	_rt_occupancy_update()
 
@@ -810,10 +833,10 @@ func _rt_prepare_surface_emitter() -> void:
 
 
 ## Called inside the simulator's authoritative tick list. No CPU pick is used.
-func _rt_surface_emitter_stamp(cl: int, surface: Dictionary, radius: int, element: int, mode: int, seed: int, shape: int = BrushShape.SPHERE) -> void:
+func _rt_surface_emitter_stamp(cl: int, surface: Dictionary, radius: int, element: int, mode: int, seed: int, shape: int = BrushShape.SPHERE, mark: int = 1) -> void:
 	var ray := _checked_surface(surface)
 	if not ray.is_empty():
-		_rt_edit_gpu().stamp_surface(cl, ray, radius, element, mode, seed, Elements.default_amount(element), shape)
+		_rt_edit_gpu().stamp_surface(cl, ray, radius, element, mode, seed, Elements.default_amount(element), shape, mark)
 
 
 ## Capture and validate the inverse before changing GPU material. Failure
@@ -920,12 +943,19 @@ func restore_edit_transaction(result: Dictionary) -> bool:
 
 func _rt_edit_gpu() -> RefCounted:
 	if _editor_gpu == null:
-		_editor_gpu = EditGPU.new(_rd, _grid_rid, _thermal_rid, _elements_buffer, GRID, _rt_compile)
+		_editor_gpu = EditGPU.new(_rd, _grid_rid, _thermal_rid, _elements_buffer, GRID, _rt_compile, _stroke_mask_rid)
 	return _editor_gpu
 
 
 func _rt_begin_edit(id: int, epoch: int, callback: Callable) -> void:
+	_rt_clear_stroke_mask()
 	_rt_edit_gpu().begin(id, epoch, _on_edit_transaction.bind(callback))
+
+
+## A stroke picks against the surface as it was when the stroke began.
+func _rt_clear_stroke_mask() -> void:
+	if _stroke_mask_rid.is_valid():
+		_rd.texture_clear(_stroke_mask_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
 
 
 func _on_edit_transaction(result: Dictionary, callback: Callable) -> void:
@@ -946,6 +976,7 @@ func _rt_record_region(id: int, lo: Vector3i, hi: Vector3i, element: int) -> voi
 
 func _rt_finish_edit(id: int) -> void:
 	_rt_edit_gpu().finish(id)
+	_rt_clear_stroke_mask()
 
 
 func _rt_capture_regions(id: int, bounds: Array) -> void:
@@ -1274,6 +1305,19 @@ func _rt_init() -> void:
 	thermal_fmt.usage_bits = fmt.usage_bits
 	_thermal_rid = _rd.texture_create(thermal_fmt, RDTextureView.new())
 	_rd.texture_clear(_thermal_rid, Color(ambient_temp, 0, 0, 0), 0, 1, 0, 1)
+	# Per-stroke written mask (one byte per cell): stroke stamps set it, the
+	# surface pick reads marked cells as air, and it is cleared at stroke
+	# begin and end, so a stroke never re-targets its own cap.
+	var mask_fmt := RDTextureFormat.new()
+	mask_fmt.format = RenderingDevice.DATA_FORMAT_R8_UNORM
+	mask_fmt.texture_type = RenderingDevice.TEXTURE_TYPE_3D
+	mask_fmt.width = GRID
+	mask_fmt.height = GRID
+	mask_fmt.depth = GRID
+	mask_fmt.mipmaps = 1
+	mask_fmt.usage_bits = fmt.usage_bits
+	_stroke_mask_rid = _rd.texture_create(mask_fmt, RDTextureView.new())
+	_rd.texture_clear(_stroke_mask_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
 	var initial := initial_temperatures(ambient_temp).to_byte_array()
 	_thermal_init_buffer = _rd.storage_buffer_create(initial.size(), initial)
 
@@ -1521,7 +1565,7 @@ func _rt_build_pipelines(from_source: bool) -> void:
 	_brush_shader = _rd.shader_create_from_spirv(brush_spirv)
 	_brush_pipeline = _rd.compute_pipeline_create(_brush_shader, _spec([GRID]))
 	_brush_set = _rd.uniform_set_create(
-		[_image_uniform(0), _image_uniform(1, _thermal_rid), _buffer_uniform(2, _elements_buffer)], _brush_shader, 0)
+		[_image_uniform(0), _image_uniform(1, _thermal_rid), _buffer_uniform(2, _elements_buffer), _image_uniform(3, _stroke_mask_rid)], _brush_shader, 0)
 
 	_hydro_shader = _rd.shader_create_from_spirv(hydro_spirv)
 	_hydro_pipeline = _rd.compute_pipeline_create(_hydro_shader, _spec([GRID]))
@@ -1638,13 +1682,14 @@ func _rt_free() -> void:
 	_fields_views = []
 	for rid in [_elements_buffer, _reactions_buffer, _grid_rid, _thermal_rid, _thermal_init_buffer, _occ_rid, _density_rid, _physical_overflow_rid, _sunvis_rid, _splat_counter,
 			_fx_pool, _fx_spawns,
-			_air_vel[0], _air_vel[1], _air_pres[0], _air_pres[1], _air_div, _air_occ, _air_src, _air_sampler]:
+			_air_vel[0], _air_vel[1], _air_pres[0], _air_pres[1], _air_div, _air_occ, _air_src, _air_sampler, _stroke_mask_rid]:
 		if rid.is_valid():
 			_rd.free_rid(rid)
 	_elements_buffer = RID()
 	_reactions_buffer = RID()
 	_grid_rid = RID()
 	_thermal_rid = RID()
+	_stroke_mask_rid = RID()
 	_thermal_init_buffer = RID()
 	_occ_rid = RID()
 	_density_rid = RID()
@@ -1766,6 +1811,10 @@ func _rt_set_live_emitter(command: Dictionary) -> void:
 		_rt_live_emitter_phase = 0.0
 		_rt_live_emitter_initial = true
 		_rt_live_emitter_stamps = 0
+		# Path stamp ordinals seed each grain; they restart with the session so
+		# the same gesture gives the same bytes whenever it is replayed.
+		_rt_live_path_stamps = 0
+		_rt_clear_stroke_mask()
 
 
 ## Cancel: the held source and any crossed-but-unstamped path are dropped.
@@ -1777,6 +1826,8 @@ func _rt_clear_live_emitter(keep_path: bool = false) -> void:
 	if not keep_path:
 		_rt_pending_live_path.clear()
 		_rt_pending_live_surface.clear()
+	if _rt_pending_live_path.is_empty() and _rt_pending_live_surface.is_empty():
+		_rt_clear_stroke_mask()
 
 
 func _rt_finish_live_emitter() -> void:
@@ -1791,10 +1842,13 @@ func _rt_finish_live_emitter() -> void:
 	_rt_clear_live_emitter(true)
 
 
+## Queues carry over between ticks: each tick stamps at most
+## MAX_LIVE_PATH_STAMPS and keeps the rest in order. Only a backlog of eight
+## ticks' worth (a stalled window) drops the newest cells, with a warning.
 func _rt_queue_live_path(command: Dictionary) -> void:
 	for center in command["centers"]:
-		if _rt_pending_live_path.size() >= MAX_LIVE_PATH_STAMPS:
-			push_warning("Live path queue full (%d); newest cells dropped until simulation advances" % MAX_LIVE_PATH_STAMPS)
+		if _rt_pending_live_path.size() >= MAX_LIVE_PATH_STAMPS * 8:
+			push_warning("Live path backlog full (%d cells); newest cells dropped" % (MAX_LIVE_PATH_STAMPS * 8))
 			return
 		_rt_pending_live_path.append({"center": center, "radius": command["radius"], "element": command["element"],
 			"mode": command["mode"], "seed": command["seed"], "shape": command["shape"], "axis": command["axis"]})
@@ -1802,8 +1856,8 @@ func _rt_queue_live_path(command: Dictionary) -> void:
 
 func _rt_queue_live_surface_path(command: Dictionary) -> void:
 	for ray in command["rays"]:
-		if _rt_pending_live_surface.size() >= MAX_LIVE_PATH_STAMPS:
-			push_warning("Live surface path queue full (%d); newest rays dropped until simulation advances" % MAX_LIVE_PATH_STAMPS)
+		if _rt_pending_live_surface.size() >= MAX_LIVE_PATH_STAMPS * 8:
+			push_warning("Live surface path backlog full (%d rays); newest rays dropped" % (MAX_LIVE_PATH_STAMPS * 8))
 			return
 		_rt_pending_live_surface.append({"ray": ray, "radius": command["radius"], "element": command["element"],
 			"mode": command["mode"], "seed": command["seed"], "shape": command["shape"]})
@@ -1827,36 +1881,51 @@ func _rt_interpolate_rays(a: Dictionary, b: Dictionary) -> Array:
 
 
 ## Stamp the crossed path once per cell, before the held source's own stamp.
+## At most MAX_LIVE_PATH_STAMPS per tick; the remainder waits for the next
+## tick in order, and the surface cursor advances only past stamped steps.
 func _rt_live_path_step(cl: int) -> void:
+	var budget := MAX_LIVE_PATH_STAMPS
+	var mark := 0 if _rt_live_emitter.is_empty() else 1
 	if not _rt_pending_live_path.is_empty():
 		_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
 		_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
-		for stamp in _rt_pending_live_path:
+		var count := mini(budget, _rt_pending_live_path.size())
+		for k in count:
+			var stamp: Dictionary = _rt_pending_live_path[k]
 			var seed := (int(stamp["seed"]) + _rt_live_path_stamps * 7919) & 0x7FFFFFFF
-			_rt_brush_sphere(cl, stamp["center"], stamp["radius"], stamp["element"], stamp["mode"], seed, Elements.default_amount(stamp["element"]), 0, stamp["shape"], stamp["axis"])
+			_rt_brush_sphere(cl, stamp["center"], stamp["radius"], stamp["element"], stamp["mode"], seed, Elements.default_amount(stamp["element"]), 0, stamp["shape"], stamp["axis"], mark)
 			_rt_live_path_stamps += 1
-		_rt_pending_live_path.clear()
+		_rt_pending_live_path = _rt_pending_live_path.slice(count)
+		budget -= count
 	if _rt_pending_live_surface.is_empty():
 		return
 	if not has_method("_rt_surface_emitter_stamp"):
 		_rt_pending_live_surface.clear()
 		return
 	call("_rt_prepare_surface_emitter")
-	var stamps := 0
-	for entry in _rt_pending_live_surface:
-		var ray: Dictionary = entry["ray"]
-		var steps: Array = [ray]
-		if ray.get("connect", false) and not _rt_live_surface_previous.is_empty():
-			steps = _rt_interpolate_rays(_rt_live_surface_previous, ray)
-		for step in steps:
-			if stamps >= MAX_LIVE_PATH_STAMPS:
-				break
+	while budget > 0 and not _rt_pending_live_surface.is_empty():
+		var entry: Dictionary = _rt_pending_live_surface[0]
+		var steps: Array = entry.get("steps", [])
+		if steps.is_empty():
+			var ray: Dictionary = entry["ray"]
+			steps = [ray]
+			if ray.get("connect", false) and not _rt_live_surface_previous.is_empty():
+				steps = _rt_interpolate_rays(_rt_live_surface_previous, ray)
+		var count := mini(budget, steps.size())
+		for k in count:
 			var seed := (int(entry["seed"]) + _rt_live_path_stamps * 7919) & 0x7FFFFFFF
-			call("_rt_surface_emitter_stamp", cl, step, entry["radius"], entry["element"], entry["mode"], seed, entry["shape"])
+			call("_rt_surface_emitter_stamp", cl, steps[k], entry["radius"], entry["element"], entry["mode"], seed, entry["shape"], mark)
 			_rt_live_path_stamps += 1
-			stamps += 1
-		_rt_live_surface_previous = ray
-	_rt_pending_live_surface.clear()
+		_rt_live_surface_previous = steps[count - 1]
+		budget -= count
+		if count < steps.size():
+			entry = entry.duplicate()
+			entry["steps"] = steps.slice(count)
+			_rt_pending_live_surface[0] = entry
+		else:
+			_rt_pending_live_surface.pop_front()
+	if _rt_live_emitter.is_empty() and _rt_pending_live_path.is_empty() and _rt_pending_live_surface.is_empty():
+		_rt_clear_stroke_mask()
 
 
 ## Record at most four queued clicks plus one held-source stamp in a tick.
@@ -1895,12 +1964,12 @@ func _rt_emit_source(cl: int, command: Dictionary, ordinal: int) -> bool:
 			return false
 		# Editing owns the GPU pick+stamp implementation. It must add barriers
 		# after the pick and mutation; air/sim rebind their pipelines afterward.
-		call("_rt_surface_emitter_stamp", cl, surface, command["radius"], command["element"], command["mode"], seed, command.get("shape", BrushShape.SPHERE))
+		call("_rt_surface_emitter_stamp", cl, surface, command["radius"], command["element"], command["mode"], seed, command.get("shape", BrushShape.SPHERE), 1)
 	else:
 		_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
 		_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
 		_rt_brush_sphere(cl, command["center"], command["radius"], command["element"], command["mode"], seed, Elements.default_amount(command["element"]),
-			0, command.get("shape", BrushShape.SPHERE), command.get("axis", 1))
+			0, command.get("shape", BrushShape.SPHERE), command.get("axis", 1), 1)
 	return true
 
 
@@ -1999,9 +2068,9 @@ func _rt_paint_stroke(centers: Array[Vector3i], radius: int, element: int, mode:
 ## The shape and disc axis ride in the box corner words the brush modes do
 ## not use; heat and cool always use the sphere with its falloff.
 func _rt_brush_sphere(cl: int, center: Vector3i, radius: int, element: int, mode: int, seed: int, amount: int, strength_bits: int = 0,
-		shape: int = BrushShape.SPHERE, axis: int = 1) -> void:
+		shape: int = BrushShape.SPHERE, axis: int = 1, mark: int = 0) -> void:
 	var groups := ceili(float(2 * radius + 1) / BRUSH_LOCAL_SIZE)
-	var push := PackedInt32Array([center.x, center.y, center.z, radius, element, mode, seed, amount, shape, axis, 0, strength_bits])
+	var push := PackedInt32Array([center.x, center.y, center.z, radius, element, mode, seed, amount, shape, axis, mark, strength_bits])
 	var bytes := push.to_byte_array()
 	_rd.compute_list_set_push_constant(cl, bytes, bytes.size())
 	_rd.compute_list_dispatch(cl, groups, groups, groups)

@@ -147,9 +147,28 @@ func _run() -> void:
 func _test_tick_surface_emission() -> void:
 	var data := WorldBuilder.empty()
 	WorldBuilder.fill_box(data, Vector3i(32, 20, 32), Vector3i(96, 21, 96), Elements.Id.WALL)
+	# A held surface source stamps against the surface it started on and never
+	# its own output (placement contract: no self-retargeting), so over a
+	# floor it deposits its cap once and then only when that cell frees. The
+	# cadence is therefore checked as stamp attempts and as byte-identical
+	# results across batch sizes, not as a grain count.
 	var source := {"origin": Vector3(0.5 / VoxelCodec.GRID, 1.0, 0.5 / VoxelCodec.GRID), "direction": Vector3.DOWN}
-	var baseline := PackedByteArray()
 	sim.seconds_per_tick = 1.0 / 120.0
+	sim.upload(data.to_byte_array())
+	var floor_source := source
+	sim.set_live_emitter(Vector3i.ZERO, 0, Elements.Id.SAND, sim.BrushMode.ONLY_AIR, 24.0, 123, floor_source)
+	sim.request_ticks(120)
+	await process_frame
+	sim.request_layer_counts()
+	await sim.layer_counts_ready
+	sim.clear_live_emitter()
+	var resting := await read()
+	var on_floor := 0
+	for i in range(0, resting.size(), 4):
+		if resting[i] == Elements.Id.SAND:
+			on_floor += 1
+	check(on_floor == 1, "held surface source over a floor deposits its cap once and never climbs its own output (got %d grains)" % on_floor)
+	var baseline := PackedByteArray()
 	for batch in [1, 3, 7]:
 		sim.upload(data.to_byte_array())
 		sim.set_live_emitter(Vector3i.ZERO, 0, Elements.Id.SAND, sim.BrushMode.ONLY_AIR, 24.0, 123, source)
@@ -161,13 +180,14 @@ func _test_tick_surface_emission() -> void:
 			await process_frame
 			sim.request_layer_counts()
 			await sim.layer_counts_ready
+		var attempts: int = sim._rt_live_emitter_stamps
 		sim.clear_live_emitter()
 		var bytes := await read()
 		var count := 0
 		for i in range(0, bytes.size(), 4):
 			if bytes[i] == Elements.Id.SAND:
 				count += 1
-		check(count == 24, "surface held source adds 24 actual grains over120 ticks at batch%d, got%d" % [batch, count])
+		check(attempts == 24 and count >= 1 and count <= 24, "surface held source attempts exactly 24 tick-owned stamps over 120 ticks at batch %d (%d attempts, %d grains)" % [batch, attempts, count])
 		if baseline.is_empty():
 			baseline = bytes
 		else:

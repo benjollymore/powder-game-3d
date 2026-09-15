@@ -106,13 +106,16 @@ func stroke(rays: Array) -> Dictionary:
 	return await finish(id)
 
 
+## The same straight path at both densities: both start at t = 0 and end at
+## t = 1, so only the number of intermediate rays differs.
 func flat_rays(per_frame: int) -> Array:
 	var rays: Array = []
 	var frames := 4
 	for frame in frames:
 		for sample in per_frame:
-			var t: float = (float(frame) + float(sample + 1) / float(per_frame)) / float(frames)
+			var t: float = float(frame * per_frame + sample) / float(frames * per_frame)
 			rays.append(front(40.0 + 20.0 * t, 40.0, not rays.is_empty()))
+	rays.append(front(60.0, 40.0, true))
 	return rays
 
 
@@ -183,6 +186,49 @@ func _run() -> void:
 	check(gap_cells.size() == 2, "a missed sample breaks the segment (only the two endpoints changed, %d cells)" % gap_cells.size())
 	sim.restore_edit_transaction(gap)
 	check(await read() == before, "broken stroke undo restores exact bytes")
+
+	# A stroke never re-targets its own stamps: a slow radius-3 drag across the
+	# flat face (one sample per frame, one cell apart) stays one cap thick
+	# whatever its length, instead of climbing its own paint toward the camera.
+	for length in [10, 30]:
+		var slow: Array = []
+		for i in length:
+			slow.append(front(40.0 + i, 40.0, i > 0))
+		var id: int = sim.begin_edit_transaction(func(_result): pass)
+		sim.record_surface_stroke(id, slow, 3, Elements.Id.SAND, sim.BrushMode.ONLY_AIR, 81)
+		var cap := await finish(id)
+		var after_cap := await read()
+		var top := 0
+		for cell in changed_cells(before, after_cap):
+			top = maxi(top, cell.z)
+		check(top == 81 + 3, "slow radius-3 surface drag of %d samples stays one cap thick (top z %d, expected %d)" % [length, top, 84])
+		check(wall_count(after_cap) == walls, "slow radius-3 drag of %d samples preserves every wall cell" % length)
+		sim.restore_edit_transaction(cap)
+		check(await read() == before, "slow drag undo restores exact bytes")
+
+	# The same in Test mode: a live surface drag lays its path and the held
+	# source keeps stamping, all against the surface the stroke began on.
+	for length in [10, 30]:
+		sim.upload(data.to_byte_array())
+		await read()
+		var previous_ray: Dictionary = {}
+		for i in length:
+			var ray := front(40.0 + i, 40.0, not previous_ray.is_empty())
+			sim.queue_live_surface_path([ray], 3, Elements.Id.WALL, sim.BrushMode.ONLY_AIR, 1)
+			sim.set_live_emitter(Vector3i.ZERO, 3, Elements.Id.WALL, sim.BrushMode.ONLY_AIR, 24.0, 7, ray)
+			sim.request_ticks(5)
+			await process_frame
+			previous_ray = ray
+		sim.clear_live_emitter()
+		var after_live := await read()
+		var top_live := 0
+		var painted := 0
+		for cell in changed_cells(before, after_live):
+			top_live = maxi(top_live, cell.z)
+			painted += 1
+		check(painted > 0 and top_live == 81 + 3, "live radius-3 surface drag of %d samples stays one cap thick (top z %d, %d cells)" % [length, top_live, painted])
+	sim.upload(data.to_byte_array())
+	await read()
 
 	if out_dir != "":
 		DirAccess.make_dir_recursive_absolute(out_dir)

@@ -35,6 +35,7 @@ CPU = [
     ("archive-panel", "tests/milestone/archive_panel.gd", 128),
     ("authored-document", "tests/milestone/authored_document.gd", 128),
     ("file-shortcuts", "tests/milestone/file_shortcuts.gd", 128),
+    ("surface-join", "tests/milestone/surface_join.gd", 128),
     ("heat-ui", "tests/milestone/heat_ui.gd", 128),
     ("keep-result", "tests/milestone/keep_result.gd", 128),
     ("cell-inspector", "tests/milestone/cell_inspector.gd", 128),

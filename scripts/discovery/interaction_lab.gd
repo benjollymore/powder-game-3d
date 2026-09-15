@@ -1884,10 +1884,15 @@ func _set_live_source(mouse: Vector2) -> void:
 func _queue_live_path(center: Vector3i, surface: Dictionary, brush_radius: int, material: int, mode: int) -> void:
 	if surface.is_empty():
 		_live_surface_previous = {}
-		if _live_previous.x >= 0 and center != _live_previous and sim.has_method("queue_live_path"):
-			var path := Geometry.stroke(_live_previous, center)
-			path.remove_at(0)
-			sim.queue_live_path(path, brush_radius, material, mode, 1, stroke_shape, _stroke_axis())
+		if sim.has_method("queue_live_path"):
+			# The first sample's cell is part of the path too: the held source
+			# may already have moved on before its first tick-owned stamp.
+			var path: Array[Vector3i] = [center]
+			if _live_previous.x >= 0 and center != _live_previous:
+				path = Geometry.stroke(_live_previous, center)
+				path.remove_at(0)
+			if _live_previous.x < 0 or center != _live_previous:
+				sim.queue_live_path(path, brush_radius, material, mode, 1, stroke_shape, _stroke_axis())
 		_live_previous = center
 		return
 	_live_previous = Vector3i(-1, -1, -1)

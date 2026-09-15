@@ -18,6 +18,20 @@ Placement milestone, contract 4 ([placement-brief.md](placement-brief.md)). Ben 
 
 The targeting unit (contract 1) moved the additive surface centre from `cell + normal * (radius + 1)` to `cell + normal`. The stroke fixtures use radius 0, for which both rules give the same centre, so the expected cells are unchanged: the front-face line sits at z = 81 outside the slab face z = 80, the corner passes the edge cell (64, 95, 81) then (64, 96, 81) and (64, 96, 79) outside both faces. Build surface strokes now resolve a frame's rays in one batched pick (`pick_sync_batch`, one fence per 32 rays) against the state they were aimed at, then stamp in pointer order; a same-frame sample can no longer be picked against a stamp made earlier in the same frame, which is what keeps one and sixteen rays per frame identical on a flat face.
 
+## A stroke never re-targets its own stamps
+
+During a surface stroke each new pick used to land on the previous sample's fresh cap, so a radius-3 brush dragged slowly across a flat slab climbed its own paint about three cells per frame and built a tower toward the camera. The rule now: picks issued during a stroke resolve against the surface as it was when the stroke began. Implementation: a per-stroke "written" mask (one byte per cell, `R8` texture beside the grid). Stroke stamps set it (`brush.glsl` binding 3 with `box_hi.z`, `surface_stamp.glsl` binding 4 with `material.w`), the pick kernel reads marked cells as air (`surface_pick.glsl` binding 4), and the simulator clears it when a Build transaction begins and ends and when a live session starts and drains. Immediate API paints (`paint`, `paint_stroke`, `paint_surface_stroke`, region fill, thermal) do not mark, so picks between strokes see everything. This was chosen over a pre-stroke occupancy snapshot (a full-grid copy per stroke) and over plane sliding (which cannot know when the pointer leaves the plane without a pick, and breaks corners); the mask is exact, costs one texture clear per stroke, and works unchanged for corners, live painting and batch picks.
+
+Consequences, all covered by tests: a slow radius-3 surface drag of 10 or 30 samples is one cap thick (top at `slab + 1 + radius`) in Build and in Test; a held surface source over a floor deposits its cap once and then only into cells that free up, so the surface emission cadence check now asserts 24 tick-owned stamp attempts and byte-identical results across batch sizes rather than 24 grains; a still workplane source likewise attempts exactly 24 stamps with a bounded, deterministic grain count. Path stamp ordinals restart with each live session so a replayed gesture gives the same bytes.
+
+## Joins after review
+
+`_surface_join` now returns per-centre face axes and excludes the previous target (already stamped). Same-plane joins are the straight line. Across a convex or concave corner with different normal axes an additive join takes the L-path along the previous face plane then the new one, both legs in air beside the faces. Same-axis changes (a step, or a face and its opposite) and every erase join break the segment instead, because a straight leg would run through material neither endpoint touches. `tests/milestone/surface_join.gd` pins these.
+
+## Live path queues
+
+Each tick stamps at most 512 path stamps and carries the remainder over in order, advancing the surface cursor only past stamped steps; only an eight-tick backlog drops cells, with a warning. The first sample of a live stroke is itself a path cell, because the held source may have moved on before its first tick-owned stamp. `pick_sync_batch` still fences once per 32 rays, so a Build surface drag stalls the render thread once or twice per frame; noted, not changed here.
+
 ## Limits
 
 - Surface live subdivision assumes the surface is within three model units of the camera; farther surfaces can still gap at very fast motion until the batch pick (contract 3) lets the render thread join picked targets exactly as Build does.
