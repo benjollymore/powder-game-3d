@@ -5,15 +5,16 @@ extends RefCounted
 ## Replace with CC0 textures (ambientCG) by loading images into the same arrays.
 
 const SIZE := 256
-const LAYERS := 7  # 0 stone, 1 sand, 2 plant, 3 generic, 4 wood, 5 ice, 6 glass
+const LAYERS := 8  # 0 stone, 1 sand, 2 plant, 3 generic, 4 wood, 5 ice, 6 glass, 7 pattern
 const LAYER_ICE := 5
 const LAYER_GLASS := 6
+const LAYER_PATTERN := 7
 ## Per-element-id uniform array length in every spatial shader (`palette[32]`,
 ## `extinction[32]`, `mat_*[32]`). Elements.PALETTE_SIZE may lag behind; the
 ## unused tail uploads as zero either way.
 const SHADER_SLOTS := 32
 ## Names of shader uniforms indexed by element id.
-const PER_ID_UNIFORMS := ["palette", "extinction", "mat_layer", "mat_smooth", "mat_grain", "mat_rough"]
+const PER_ID_UNIFORMS := ["palette", "extinction", "liquid_foam", "mat_layer", "mat_smooth", "mat_grain", "mat_rough"]
 
 static var _albedo: Texture2DArray
 static var _normal: Texture2DArray
@@ -60,6 +61,7 @@ static func _build() -> void:
 		[0.05, 4, 1.4, 3.5],   # wood: squashed into vertical grain below
 		[0.04, 3, 0.45, 1.2],  # ice: pale, low contrast, faint cracks added below
 		[0.02, 2, 0.15, 0.4],  # glass: near-white, almost featureless, very smooth
+		[0.05, 2, 1.6, 2.0],   # pattern: bold embossed grid for machine-like blocks (clone)
 	]
 	for i in LAYERS:
 		var n := FastNoiseLite.new()
@@ -74,6 +76,8 @@ static func _build() -> void:
 			height = _cracks(height, 0.35)
 		elif i == LAYER_GLASS:
 			height = _flatten(height, 0.9)
+		elif i == LAYER_PATTERN:
+			height = _grid_pattern(height, 32, 4)
 		var albedo := height.duplicate()
 		albedo.convert(Image.FORMAT_RGB8)
 		albedo.adjust_bcs(1.0, params[i][2], 1.0)
@@ -116,6 +120,18 @@ static func _cracks(src: Image, strength: float) -> Image:
 			var crack := 1.0 - smoothstep(0.0, 0.12, e)
 			var h: Color = out.get_pixel(x, y)
 			out.set_pixel(x, y, Color(h.r * (1.0 - strength * crack), h.g * (1.0 - strength * crack), h.b * (1.0 - strength * crack)))
+	return out
+
+
+## Emboss a repeating grid of raised tiles with dark grooves (clone blocks).
+static func _grid_pattern(src: Image, pitch: int, groove: int) -> Image:
+	var out := src.duplicate()
+	for y in SIZE:
+		for x in SIZE:
+			var on_groove := (x % pitch) < groove or (y % pitch) < groove
+			var h: Color = out.get_pixel(x, y)
+			var v: float = 0.25 if on_groove else 0.55 + 0.35 * h.r
+			out.set_pixel(x, y, Color(v, v, v))
 	return out
 
 
