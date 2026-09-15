@@ -858,7 +858,10 @@ func paint_thermal_stroke(centers: Array[Vector3i], radius: int, kelvin: float) 
 
 ## Heat or cool the material under surface rays. Targets are resolved by the
 ## same atomic pick as material surface strokes (erase semantics: the hit
-## cell itself), connected along a shared face like material strokes, and
+## cell itself, so the sphere is centred on the surface exactly like a
+## workplane stamp and warms the air above as much as the material below;
+## it is not pushed inward, which would overshoot thin walls), connected
+## along a shared face like material strokes, and
 ## stamped with the brush kernel's HEAT/COOL sphere spaced by the radius
 ## (scripts/editor/thermal_stroke.gd), so surface and workplane strokes
 ## deposit the same heat. Undoable: history tiles carry the thermal layer.

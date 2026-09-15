@@ -48,9 +48,8 @@ func _run() -> void:
 		["_test_fuse_deterministic", 0], ["_test_stale_flags_cleared", 0],
 		["_test_heat_two_cell_exchange", 3], ["_test_heat_closed_box_equilibrium", 3],
 		["_test_heat_falling_water_pool", 3], ["_test_ice_plateau", 3], ["_test_water_over_lava", 2],
-		["_test_wood_ignites_by_conduction", 2], ["_test_heat_brush_roundtrip", 3],
-		["_test_scenario_volcano", 0], ["_test_scenario_ice_cave", 0], ["_test_scenario_boiler", 0], ["_test_scenario_foundry", 0],
 		["_test_wood_ignites_by_conduction", 2], ["_test_heat_brush_roundtrip", 3], ["_test_phase_keeps_mass", 3],
+		["_test_scenario_volcano", 0], ["_test_scenario_ice_cave", 0], ["_test_scenario_boiler", 0], ["_test_scenario_foundry", 0],
 		["_test_large_grid_smoke", 0],
 	]
 	for t in tests:

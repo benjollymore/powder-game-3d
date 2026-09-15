@@ -205,8 +205,13 @@ func _test_surface_thermal() -> void:
 	check(is_equal_approx(temp_at(heated, top), temp_at(before, top) + 40.0), "surface heat raises the picked hit cell by the full strength (%.2f -> %.2f)" % [temp_at(before, top), temp_at(heated, top)])
 	var rim := Vector3i(66, 20, 64)
 	check(temp_at(heated, rim) > temp_at(before, rim) and temp_at(heated, rim) < temp_at(heated, top), "the rim of the sphere warms less than its centre, matching the workplane falloff")
-	check(temp_at(heated, Vector3i(64, 19, 64)) > temp_at(before, Vector3i(64, 19, 64)) and temp_at(heated, Vector3i(64, 21, 64)) == temp_at(before, Vector3i(64, 21, 64)),
-		"the sphere heats the wall below the surface and leaves the air above at its own temperature")
+	# The sphere is centred on the hit cell exactly like a workplane stamp, so
+	# the wall below and the air above receive the same falloff at the same
+	# distance; pushing it inward would put the centre past a one-cell wall.
+	var below := temp_at(heated, Vector3i(64, 19, 64)) - temp_at(before, Vector3i(64, 19, 64))
+	var above := temp_at(heated, Vector3i(64, 21, 64)) - temp_at(before, Vector3i(64, 21, 64))
+	check(below > 0.0 and is_equal_approx(below, above) and below < 40.0,
+		"the sphere is centred on the hit cell: wall below and air above warm by the same falloff (%.2f / %.2f K)" % [below, above])
 	check(await read() == voxels, "surface heating leaves every voxel byte untouched")
 	id = sim.begin_edit_transaction(func(_result): pass)
 	sim.record_surface_thermal_stroke(id, [down], 3, -40.0)
