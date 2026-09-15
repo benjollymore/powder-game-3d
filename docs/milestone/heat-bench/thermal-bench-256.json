@@ -1,0 +1,73 @@
+{
+	"environment": {
+		"pmset_powermode": 1,
+		"pmset_source": "unknown",
+		"refresh_hz": 120.0
+	},
+	"grid": 256,
+	"measured": 120,
+	"paired_median_delta_ms": [
+		6.908,
+		5.741,
+		5.126
+	],
+	"resolution": [
+		1600,
+		900
+	],
+	"samples": [
+		{
+			"drained_mean_ms": 36.1980083333333,
+			"frame_mean_ms": 35.827225,
+			"frame_median_ms": 36.578,
+			"p95_ms": 41.019,
+			"repeat": 0,
+			"thermal": true
+		},
+		{
+			"drained_mean_ms": 29.6053083333333,
+			"frame_mean_ms": 29.3027666666667,
+			"frame_median_ms": 29.67,
+			"p95_ms": 32.424,
+			"repeat": 0,
+			"thermal": false
+		},
+		{
+			"drained_mean_ms": 30.01535,
+			"frame_mean_ms": 29.7209083333333,
+			"frame_median_ms": 29.546,
+			"p95_ms": 33.249,
+			"repeat": 1,
+			"thermal": false
+		},
+		{
+			"drained_mean_ms": 35.5111666666667,
+			"frame_mean_ms": 35.16995,
+			"frame_median_ms": 35.287,
+			"p95_ms": 38.598,
+			"repeat": 1,
+			"thermal": true
+		},
+		{
+			"drained_mean_ms": 35.692675,
+			"frame_mean_ms": 35.3475833333333,
+			"frame_median_ms": 36.077,
+			"p95_ms": 38.582,
+			"repeat": 2,
+			"thermal": true
+		},
+		{
+			"drained_mean_ms": 30.5064,
+			"frame_mean_ms": 30.2146416666667,
+			"frame_median_ms": 30.951,
+			"p95_ms": 34.115,
+			"repeat": 2,
+			"thermal": false
+		}
+	],
+	"scenario": "Demo",
+	"thermal_speed": 120.0,
+	"ticks_per_frame": 2,
+	"warmup": 30,
+	"workload": "running Sand source, air on, hydro on"
+}

@@ -11,11 +11,15 @@ ok: Examples on unsaved work prompts before replacing anything
 ok: Cancel keeps the unsaved example edits
 ok: slider step 1 means 2x
 ok: Run applies the chosen speed
-ERROR: Workflow requested a missing or hidden UI control
-   at: push_error (core/variant/variant_utility.cpp:1024)
-   GDScript backtrace (most recent call first):
-       [0] click (res://tests/milestone/editor_workflow_gpu.gd:74)
-       [1] run (res://tests/milestone/editor_heat_ui_gpu.gd:83)
-       [2] read_thermal (res://tests/milestone/editor_heat_ui_gpu.gd:12)
-WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
-   at: cleanup (core/object/object.cpp:2663)
+ok: Test controls stay visible after the experiment ran (testing=true, controls=true, waited=0, epoch=2, queued='', guard='', message='')
+ok: Keep leaves Test with the evolved experiment as the build
+ok: Keep carries the experiment's temperatures into the build
+ok: Keep records one undoable edit and marks the build unsaved
+ok: editor returns to Build controls after Keep
+ok: Undo after Keep restores the exact authored build
+ok: Redo re-applies the exact kept result
+ok: Return after a later run restores the kept revision, not the older build
+ok: with no ticks requested the paused experiment equals its Run snapshot (voxels true, thermal true)
+ok: Keep with no changes stays in Test and adds no history (testing=true history=2 message='Nothing changed; the build is already this result.')
+ok: Return still restores the kept revision
+EDITOR_HEAT_UI_CHECKS 21 FAILURES 0

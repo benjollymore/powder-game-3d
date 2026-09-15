@@ -1,0 +1,11 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+CONFIG grid=256 warmup=30 measured=120 ticks/frame=2 resolution=(1600, 900) power={ "pmset_powermode": 1, "pmset_source": "unknown", "refresh_hz": 120.0 }
+CASE thermal=true repeat=0 frame_mean_ms=35.827 drained_mean_ms=36.198 median_ms=36.578 p95_ms=41.019
+CASE thermal=false repeat=0 frame_mean_ms=29.303 drained_mean_ms=29.605 median_ms=29.670 p95_ms=32.424
+CASE thermal=false repeat=1 frame_mean_ms=29.721 drained_mean_ms=30.015 median_ms=29.546 p95_ms=33.249
+CASE thermal=true repeat=1 frame_mean_ms=35.170 drained_mean_ms=35.511 median_ms=35.287 p95_ms=38.598
+CASE thermal=true repeat=2 frame_mean_ms=35.348 drained_mean_ms=35.693 median_ms=36.077 p95_ms=38.582
+CASE thermal=false repeat=2 frame_mean_ms=30.215 drained_mean_ms=30.506 median_ms=30.951 p95_ms=34.115
+THERMAL_BENCH grid=256 paired_median_delta_ms=[6.908, 5.741, 5.126]

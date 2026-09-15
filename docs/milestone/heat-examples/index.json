@@ -1,0 +1,704 @@
+{
+	"grid": 128,
+	"power_mode": "powermode            1",
+	"refresh_hz": 120.0,
+	"resolution": [
+		1600,
+		900
+	],
+	"scenarios": {
+		"acid-rain": {
+			"achieved_ticks_per_second": 165.172536764597,
+			"frames": [
+				{
+					"file": "acid-rain-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "acid-rain-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.0,
+					"tick": 184
+				},
+				{
+					"file": "acid-rain-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.0,
+					"tick": 364
+				},
+				{
+					"file": "acid-rain-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.0,
+					"tick": 543
+				},
+				{
+					"file": "acid-rain-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.0,
+					"tick": 723
+				},
+				{
+					"file": "acid-rain-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 699,
+			"mean_frame_ms": 5.43721602288984,
+			"name": "Acid rain",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 723,
+			"wall_seconds": 4.377241
+		},
+		"boiler": {
+			"achieved_ticks_per_second": 165.059276570725,
+			"frames": [
+				{
+					"file": "boiler-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "boiler-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.0,
+					"tick": 183
+				},
+				{
+					"file": "boiler-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.0,
+					"tick": 363
+				},
+				{
+					"file": "boiler-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.0,
+					"tick": 543
+				},
+				{
+					"file": "boiler-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.0,
+					"tick": 724
+				},
+				{
+					"file": "boiler-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 821,
+			"mean_frame_ms": 4.63240560292326,
+			"name": "Boiler",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 724,
+			"wall_seconds": 4.386303
+		},
+		"candle": {
+			"achieved_ticks_per_second": 164.906485705938,
+			"frames": [
+				{
+					"file": "candle-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "candle-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.0,
+					"tick": 183
+				},
+				{
+					"file": "candle-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.0,
+					"tick": 363
+				},
+				{
+					"file": "candle-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.0,
+					"tick": 543
+				},
+				{
+					"file": "candle-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.0,
+					"tick": 723
+				},
+				{
+					"file": "candle-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 829,
+			"mean_frame_ms": 4.62470446320869,
+			"name": "Candle",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 723,
+			"wall_seconds": 4.384303
+		},
+		"dam-break": {
+			"achieved_ticks_per_second": 160.347301683096,
+			"frames": [
+				{
+					"file": "dam-break-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "dam-break-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.00555555555556,
+					"tick": 194
+				},
+				{
+					"file": "dam-break-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.01111111111111,
+					"tick": 372
+				},
+				{
+					"file": "dam-break-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.01111111111111,
+					"tick": 551
+				},
+				{
+					"file": "dam-break-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.0,
+					"tick": 728
+				},
+				{
+					"file": "dam-break-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 329,
+			"mean_frame_ms": 11.3885440729483,
+			"name": "Dam break",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 728,
+			"wall_seconds": 4.540145
+		},
+		"demo": {
+			"achieved_ticks_per_second": 163.044050336715,
+			"frames": [
+				{
+					"file": "demo-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "demo-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.00555555555556,
+					"tick": 186
+				},
+				{
+					"file": "demo-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.0,
+					"tick": 365
+				},
+				{
+					"file": "demo-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.0,
+					"tick": 546
+				},
+				{
+					"file": "demo-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.00555555555556,
+					"tick": 728
+				},
+				{
+					"file": "demo-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 506,
+			"mean_frame_ms": 7.57048418972332,
+			"name": "Demo",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 728,
+			"wall_seconds": 4.465051
+		},
+		"empty": {
+			"achieved_ticks_per_second": 164.817529645469,
+			"frames": [
+				{
+					"file": "empty-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "empty-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.0,
+					"tick": 183
+				},
+				{
+					"file": "empty-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.0,
+					"tick": 363
+				},
+				{
+					"file": "empty-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.0,
+					"tick": 543
+				},
+				{
+					"file": "empty-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.0,
+					"tick": 722
+				},
+				{
+					"file": "empty-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 856,
+			"mean_frame_ms": 4.46567757009346,
+			"name": "Empty",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 722,
+			"wall_seconds": 4.380602
+		},
+		"forest-fire": {
+			"achieved_ticks_per_second": 170.631290997762,
+			"frames": [
+				{
+					"file": "forest-fire-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "forest-fire-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.0,
+					"tick": 185
+				},
+				{
+					"file": "forest-fire-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.00555555555556,
+					"tick": 365
+				},
+				{
+					"file": "forest-fire-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.0,
+					"tick": 543
+				},
+				{
+					"file": "forest-fire-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.00555555555556,
+					"tick": 724
+				},
+				{
+					"file": "forest-fire-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 666,
+			"mean_frame_ms": 5.71568618618619,
+			"name": "Forest fire",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 724,
+			"wall_seconds": 4.243067
+		},
+		"foundry": {
+			"achieved_ticks_per_second": 165.903921665813,
+			"frames": [
+				{
+					"file": "foundry-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "foundry-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.0,
+					"tick": 183
+				},
+				{
+					"file": "foundry-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.0,
+					"tick": 363
+				},
+				{
+					"file": "foundry-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.0,
+					"tick": 543
+				},
+				{
+					"file": "foundry-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.0,
+					"tick": 723
+				},
+				{
+					"file": "foundry-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 821,
+			"mean_frame_ms": 4.65287941534714,
+			"name": "Foundry",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 723,
+			"wall_seconds": 4.357944
+		},
+		"ice-cave": {
+			"achieved_ticks_per_second": 164.562013095051,
+			"frames": [
+				{
+					"file": "ice-cave-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "ice-cave-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.0,
+					"tick": 184
+				},
+				{
+					"file": "ice-cave-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.0,
+					"tick": 364
+				},
+				{
+					"file": "ice-cave-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.0,
+					"tick": 543
+				},
+				{
+					"file": "ice-cave-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.0,
+					"tick": 725
+				},
+				{
+					"file": "ice-cave-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 737,
+			"mean_frame_ms": 5.18353188602442,
+			"name": "Ice cave",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 725,
+			"wall_seconds": 4.405634
+		},
+		"oil-spill": {
+			"achieved_ticks_per_second": 161.13456514226,
+			"frames": [
+				{
+					"file": "oil-spill-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "oil-spill-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.0,
+					"tick": 188
+				},
+				{
+					"file": "oil-spill-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.00555555555556,
+					"tick": 368
+				},
+				{
+					"file": "oil-spill-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.0,
+					"tick": 545
+				},
+				{
+					"file": "oil-spill-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.0,
+					"tick": 725
+				},
+				{
+					"file": "oil-spill-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 524,
+			"mean_frame_ms": 7.28787022900763,
+			"name": "Oil spill",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 725,
+			"wall_seconds": 4.499345
+		},
+		"powder-keg": {
+			"achieved_ticks_per_second": 165.503582263487,
+			"frames": [
+				{
+					"file": "powder-keg-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "powder-keg-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.0,
+					"tick": 185
+				},
+				{
+					"file": "powder-keg-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.0,
+					"tick": 364
+				},
+				{
+					"file": "powder-keg-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.0,
+					"tick": 544
+				},
+				{
+					"file": "powder-keg-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.00555555555556,
+					"tick": 726
+				},
+				{
+					"file": "powder-keg-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 670,
+			"mean_frame_ms": 5.69472388059702,
+			"name": "Powder keg",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 726,
+			"wall_seconds": 4.386612
+		},
+		"pressure-pipe": {
+			"achieved_ticks_per_second": 159.910326358619,
+			"frames": [
+				{
+					"file": "pressure-pipe-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "pressure-pipe-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.0,
+					"tick": 185
+				},
+				{
+					"file": "pressure-pipe-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.0,
+					"tick": 363
+				},
+				{
+					"file": "pressure-pipe-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.0,
+					"tick": 543
+				},
+				{
+					"file": "pressure-pipe-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.0,
+					"tick": 723
+				},
+				{
+					"file": "pressure-pipe-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 822,
+			"mean_frame_ms": 4.65998905109489,
+			"name": "Pressure pipe",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 723,
+			"wall_seconds": 4.521284
+		},
+		"steam-vent": {
+			"achieved_ticks_per_second": 159.366068450022,
+			"frames": [
+				{
+					"file": "steam-vent-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "steam-vent-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.00555555555556,
+					"tick": 188
+				},
+				{
+					"file": "steam-vent-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.00555555555556,
+					"tick": 367
+				},
+				{
+					"file": "steam-vent-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.0,
+					"tick": 549
+				},
+				{
+					"file": "steam-vent-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.01111111111111,
+					"tick": 729
+				},
+				{
+					"file": "steam-vent-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 478,
+			"mean_frame_ms": 7.96808368200837,
+			"name": "Steam vent",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 729,
+			"wall_seconds": 4.574374
+		},
+		"u-bend": {
+			"achieved_ticks_per_second": 157.646819230121,
+			"frames": [
+				{
+					"file": "u-bend-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "u-bend-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.0,
+					"tick": 184
+				},
+				{
+					"file": "u-bend-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.0,
+					"tick": 364
+				},
+				{
+					"file": "u-bend-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.0,
+					"tick": 543
+				},
+				{
+					"file": "u-bend-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.0,
+					"tick": 723
+				},
+				{
+					"file": "u-bend-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 842,
+			"mean_frame_ms": 4.53828147268408,
+			"name": "U-bend",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 723,
+			"wall_seconds": 4.586201
+		},
+		"volcano": {
+			"achieved_ticks_per_second": 165.848722305083,
+			"frames": [
+				{
+					"file": "volcano-build.png",
+					"phase": "build",
+					"sim_seconds": 0.0
+				},
+				{
+					"file": "volcano-run-01.png",
+					"phase": "run",
+					"sim_seconds": 1.01111111111111,
+					"tick": 189
+				},
+				{
+					"file": "volcano-run-02.png",
+					"phase": "run",
+					"sim_seconds": 2.0,
+					"tick": 366
+				},
+				{
+					"file": "volcano-run-03.png",
+					"phase": "run",
+					"sim_seconds": 3.00555555555556,
+					"tick": 548
+				},
+				{
+					"file": "volcano-run-04.png",
+					"phase": "run",
+					"sim_seconds": 4.00555555555556,
+					"tick": 729
+				},
+				{
+					"file": "volcano-returned.png",
+					"phase": "returned",
+					"sim_seconds": 0.0
+				}
+			],
+			"frames_timed": 407,
+			"mean_frame_ms": 9.36986732186732,
+			"name": "Volcano",
+			"reached_target": true,
+			"restored": true,
+			"ticks": 729,
+			"wall_seconds": 4.395572
+		}
+	},
+	"seconds": 4.0,
+	"timing_note": "Tick rate and frame intervals are not comparable across runs unless taken on mains power with an idle GPU.",
+	"vsync": 0
+}
