@@ -13,6 +13,9 @@ var baseline_memory: Dictionary = {}
 var file_phases: Array[Dictionary] = []
 var successful_saves := 0
 var initial: PackedByteArray
+# Controlled-variant opt-outs; the default is the complete new workload.
+var held_source := true
+var water_dot := true
 var initial_path := ""
 var build_path := ""
 
@@ -23,6 +26,10 @@ func _initialize() -> void:
 			duration = clampf(float(argument.trim_prefix("seconds=")), 5.0, 600.0)
 		elif argument.begins_with("output_dir="):
 			output_dir = argument.trim_prefix("output_dir=")
+		elif argument == "source=0":
+			held_source = false
+		elif argument == "water=0":
+			water_dot = false
 	create_timer(duration + 120.0).timeout.connect(func():
 		push_error("Editor session soak watchdog expired")
 		_restore_input()
@@ -45,7 +52,8 @@ func write_result() -> void:
 		"baseline_memory": baseline_memory, "viewport_size": str(root.size),
 		"engine": Engine.get_version_info().string, "vsync": DisplayServer.window_get_vsync_mode(),
 		"render_scale": root.scaling_3d_scale, "render_mode": root.scaling_3d_mode,
-		"aa": root.screen_space_aa, "scheduler": {"target_ticks_per_second": clock.TICKS_PER_SECOND,
+		"aa": root.screen_space_aa, "refresh_hz": DisplayServer.screen_get_refresh_rate(root.get_window().current_screen),
+		"variant": {"held_source": held_source, "water_dot": water_dot}, "scheduler": {"target_ticks_per_second": clock.TICKS_PER_SECOND,
 		"max_ticks_per_frame": clock.MAX_TICKS_PER_FRAME}, "phase_every": PHASE_EVERY,
 		"successful_saves": successful_saves, "file_phases": file_phases,
 		"checks": checks, "failures": failures, "cycles": cycles}, "  "))
@@ -242,18 +250,22 @@ func run() -> void:
 		# A paused radius-zero water click is the ordinary thin-liquid case: an
 		# isolated nonfalling cell that the volume shader must still show.
 		var water_at := water + Vector3i(0, 3 * in_phase, 0)
-		editor.radius_input.value = 0
-		await click(editor.material_buttons[Elements.Id.WATER])
-		await stroke(water_at, water_at)
+		var transactions := 1
+		if water_dot:
+			transactions = 2
+			editor.radius_input.value = 0
+			await click(editor.material_buttons[Elements.Id.WATER])
+			await stroke(water_at, water_at)
 		var authored := await read()
-		check(id_at(base, water_at) == Elements.Id.AIR and id_at(authored, water_at) == Elements.Id.WATER and editor.undo_history.size() == history_before + 2 and clock.paused, "cycle paused radius-zero water click is a second transaction that lands as Water")
+		if water_dot:
+			check(id_at(base, water_at) == Elements.Id.AIR and id_at(authored, water_at) == Elements.Id.WATER and editor.undo_history.size() == history_before + 2 and clock.paused, "cycle paused radius-zero water click is a second transaction that lands as Water")
 		if cycles.is_empty():
 			await capture("first-cycle-build")
-		for i in 2:
+		for i in transactions:
 			await click(editor.undo_button)
 			await settled()
 		check(await read() == base, "cycle Undo restores initial bytes")
-		for i in 2:
+		for i in transactions:
 			await click(editor.redo_button)
 			await settled()
 		check(await read() == authored, "cycle Redo restores authored bytes")
@@ -264,7 +276,8 @@ func run() -> void:
 		await click(editor.material_buttons[Elements.Id.SAND])
 		move_to(point(live))
 		await frames(2)
-		mouse(true)
+		if held_source:
+			mouse(true)
 		var active_started := Time.get_ticks_usec()
 		var previous := active_started
 		var tick_before: int = sim.tick
@@ -279,7 +292,8 @@ func run() -> void:
 				cap_frames += 1
 		var active_seconds := float(Time.get_ticks_usec() - active_started) / 1e6
 		var active_ticks: int = sim.tick - tick_before
-		mouse(false)
+		if held_source:
+			mouse(false)
 		check(active_ticks > 0 and editor.testing, "cycle normal scheduling advanced authoritative ticks while a live source was held")
 		await click(editor.pause_button)
 		var paused_tick: int = sim.tick
@@ -290,14 +304,14 @@ func run() -> void:
 		await click(editor.play_button)
 		await settled()
 		check(not editor.testing and clock.paused and await read() == authored, "cycle Return restores exact authored bytes")
-		for i in 2:
+		for i in transactions:
 			await click(editor.undo_button)
 			await settled()
 		check(await read() == base, "cycle authored history survives Test and returns to baseline")
-		for i in 2:
+		for i in transactions:
 			await click(editor.redo_button)
 			await settled()
-		check(await read() == authored and editor.undo_history.size() == history_before + 2 and editor.redo_history.is_empty(), "cycle Redo retains accumulated authored history across cycles")
+		check(await read() == authored and editor.undo_history.size() == history_before + transactions and editor.redo_history.is_empty(), "cycle Redo retains accumulated authored history across cycles")
 		base = authored
 		in_phase += 1
 		var archive_roundtrip := false
