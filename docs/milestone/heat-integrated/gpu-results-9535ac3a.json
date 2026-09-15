@@ -1,0 +1,82 @@
+[
+  {
+    "name": "liquid-render128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 4.94,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/render_liquid_section_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/liquid-render128"
+    ]
+  },
+  {
+    "name": "liquid-edges128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 12.1,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/render_liquid_edges_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/liquid-edges128"
+    ]
+  },
+  {
+    "name": "ordinary-interface128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 4.25,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/ordinary_liquid_interface_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/ordinary-interface128"
+    ]
+  },
+  {
+    "name": "palette128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 4.66,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/palette_capture_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/palette128"
+    ]
+  }
+]
