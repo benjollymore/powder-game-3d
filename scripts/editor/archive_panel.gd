@@ -30,10 +30,12 @@ func bind_editor(target: Node3D, column: VBoxContainer) -> void:
 	column.move_child(row, mini(5, column.get_child_count() - 1))
 	save_button = Button.new()
 	save_button.text = "Save build…"
-	save_button.pressed.connect(func(): _queue_dialog("save"))
+	save_button.pressed.connect(request_save)
+	save_button.tooltip_text = "Cmd/Ctrl+S: Save · Cmd/Ctrl+Shift+S: Save As"
 	row.add_child(save_button)
 	open_button = Button.new()
 	open_button.text = "Open build…"
+	open_button.tooltip_text = "Cmd/Ctrl+O: Open a build"
 	open_button.pressed.connect(func(): _queue_dialog("open"))
 	row.add_child(open_button)
 	message = Label.new()
@@ -68,6 +70,9 @@ func _dialog(mode: FileDialog.FileMode) -> FileDialog:
 	add_child(dialog)
 	return dialog
 
+func request_save(save_as := false) -> void:
+	_queue_dialog("save" if save_as or editor.document.path.is_empty() else "save_current")
+
 func _queue_dialog(which: String) -> void:
 	if operation != "" or _modal:
 		return
@@ -77,6 +82,7 @@ func _queue_dialog(which: String) -> void:
 	message.text = "Finishing edit…" if editor.capturing else ""
 
 func _begin_modal() -> void:
+	editor._release_shortcuts()
 	editor.cancel_pending_paint()
 	editor._end_stroke()
 	_modal = true
@@ -153,6 +159,7 @@ func open_path(path: String) -> void:
 func _process(_delta: float) -> void:
 	if editor == null:
 		return
+	save_button.text = "Save build…" if editor.document.path.is_empty() else "Save build"
 	document_status.text = editor.document.label()
 	document_status.tooltip_text = editor.document.path
 	message.visible = not message.text.is_empty()
@@ -160,11 +167,15 @@ func _process(_delta: float) -> void:
 	save_button.disabled = busy
 	open_button.disabled = busy
 	if queued_dialog != "" and not editor.capturing:
-		var dialog := save_dialog if queued_dialog == "save" else open_dialog
+		var requested := queued_dialog
 		queued_dialog = ""
 		message.text = ""
-		_begin_modal()
-		dialog.popup_centered_ratio(0.7)
+		if requested == "save_current" and not editor.document.path.is_empty():
+			save_to_path(editor.document.path)
+		else:
+			var dialog := open_dialog if requested == "open" else save_dialog
+			_begin_modal()
+			dialog.popup_centered_ratio(0.7)
 	if job == null or not job.is_ready():
 		return
 	var result: Dictionary = job.take_result()

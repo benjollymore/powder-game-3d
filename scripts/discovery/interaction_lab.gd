@@ -96,6 +96,7 @@ var gesture_owner := -1 # -1: no sequence, 0: tools, 1: scene
 var last_gesture_ms := -1
 var gesture_trace := false
 var _space_owned := false
+var _file_keys_owned := {}
 
 
 func _ready() -> void:
@@ -163,6 +164,7 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	_release_shortcuts()
 	cancel_pending_paint()
 	if _owns_time_input and is_instance_valid(TimeController):
 		TimeController.set_process_unhandled_input(_previous_time_input)
@@ -400,7 +402,7 @@ func _build_ui() -> void:
 	controls.text = "Drag: paint · two fingers: orbit · pinch: zoom\nShift + two fingers: pan · Option + drag: orbit"
 	var secondary_controls := Label.new()
 	secondary_controls.add_theme_font_size_override("font_size", 14)
-	secondary_controls.text = "Option + Shift + drag: pan · RMB/wheel work too\nPlane: −/+ above · Shift-wheel · [ ] brush size\n1 wall · 2 sand · 3 water · X erase · F angle"
+	secondary_controls.text = "Option + Shift + drag: pan · RMB/wheel work too\nPlane: −/+ above · Shift-wheel · [ ] brush size\n1 wall · 2 sand · 3 water · X erase · F angle\nCmd/Ctrl: S save · Shift+S save as · O open"
 	advanced_tools.add_child(secondary_controls)
 	controls.tooltip_text = controls.text + "\n" + secondary_controls.text
 	column.add_child(controls)
@@ -773,8 +775,44 @@ func _route_space(event: InputEventKey) -> bool:
 	return true
 
 
+func _release_shortcuts() -> void:
+	_space_owned = false
+	_file_keys_owned.clear()
+
+
+func _route_file_shortcut(event: InputEventKey) -> bool:
+	if event.keycode not in [KEY_S, KEY_O] or event.window_id != get_window().get_window_id():
+		return false
+	if not event.pressed:
+		if not _file_keys_owned.has(event.keycode):
+			return false
+		_file_keys_owned.erase(event.keycode)
+		get_viewport().set_input_as_handled()
+		return true
+	if event.echo:
+		if _file_keys_owned.has(event.keycode):
+			get_viewport().set_input_as_handled()
+		return _file_keys_owned.has(event.keycode)
+	if not (event.ctrl_pressed or event.meta_pressed) or event.alt_pressed or (event.keycode == KEY_O and event.shift_pressed):
+		return false
+	if not is_instance_valid(archive_panel) or archive_panel._modal:
+		return false
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused is OptionButton and focused.get_popup().visible:
+		return false
+	# File commands are application shortcuts, including from numeric text.
+	# Undo/Redo and cut/copy/paste continue through the focused text control.
+	_file_keys_owned[event.keycode] = true
+	get_viewport().set_input_as_handled()
+	if event.keycode == KEY_S:
+		archive_panel.request_save(event.shift_pressed)
+	else:
+		archive_panel._queue_dialog("open")
+	return true
+
+
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and _route_space(event):
+	if event is InputEventKey and (_route_file_shortcut(event) or _route_space(event)):
 		return
 	if event is InputEventPanGesture or event is InputEventMagnifyGesture:
 		_route_gesture(event)
@@ -810,7 +848,7 @@ func _input(event: InputEvent) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		cancel_pending_paint()
-		_space_owned = false
+		_release_shortcuts()
 		_reset_gesture()
 		_end_stroke()
 		_stop_navigation()
@@ -874,14 +912,23 @@ func _unhandled_input(event: InputEvent) -> void:
 		_sample(event.position)
 		get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.pressed and not event.echo:
+		var focused := get_viewport().gui_get_focus_owner()
+		if focused is LineEdit or focused is TextEdit:
+			return # Even an empty text Undo stack must not fall through to world Undo.
+		if event.keycode == KEY_Z and (event.ctrl_pressed or event.meta_pressed) and not event.alt_pressed:
+			_end_stroke()
+			if event.shift_pressed:
+				redo_edit()
+			else:
+				undo_edit()
+			get_viewport().set_input_as_handled()
+			return
+		if event.ctrl_pressed or event.meta_pressed or event.alt_pressed or event.shift_pressed:
+			return
+		if event.keycode not in [KEY_P, KEY_N, KEY_R, KEY_0, KEY_COMMA, KEY_PERIOD, KEY_BACKSLASH, KEY_B, KEY_1, KEY_2, KEY_3, KEY_X, KEY_BRACKETLEFT, KEY_BRACKETRIGHT, KEY_V, KEY_F]:
+			return
 		_end_stroke()
 		match event.keycode:
-			KEY_Z:
-				if event.ctrl_pressed or event.meta_pressed:
-					if event.shift_pressed:
-						redo_edit()
-					else:
-						undo_edit()
 			KEY_P:
 				toggle_test_pause()
 			KEY_N:

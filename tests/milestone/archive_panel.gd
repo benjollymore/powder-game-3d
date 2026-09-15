@@ -18,6 +18,8 @@ class FakeEditor extends Node3D:
 	var testing := false
 	var build_snapshot := PackedByteArray()
 	var replacements := 0
+	func _release_shortcuts() -> void:
+		pass
 	func _input(_event: InputEvent) -> void:
 		pass
 	func _unhandled_input(_event: InputEvent) -> void:
