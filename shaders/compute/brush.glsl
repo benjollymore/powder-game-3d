@@ -53,7 +53,7 @@ void main() {
 	} else {
 		ivec3 d = p - pc.center_radius.xyz;
 		int r = pc.center_radius.w;
-		d2 = dot(d, d);
+		d2 = d.x * d.x + d.y * d.y + d.z * d.z; // dot() is float-only in GLSL
 		if (d2 > r * r) {
 			return;
 		}
