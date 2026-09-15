@@ -28,33 +28,50 @@ func run() -> void:
 	await frames(12)
 	var n := VoxelCodec.GRID
 	# A flat wall slab facing the default camera plus a raised block, so a drag
-	# crosses a height change without leaving material.
+	# crosses a height change without leaving material. The slab sits well
+	# below the default cutaway depth (n / 2): a radius-three cap painted on it
+	# must never reach the cut plane, where an add target is legitimately
+	# blocked and the marker legitimately hides (surface-feedback contract).
 	var data := WorldBuilder.empty()
-	WorldBuilder.fill_box(data, Vector3i(n / 8, n / 8, n / 2 - 2), Vector3i(n * 7 / 8, n * 7 / 8, n / 2 - 1), Elements.Id.WALL)
-	WorldBuilder.fill_box(data, Vector3i(n / 2 - 4, n / 2 - 4, n / 2 - 1), Vector3i(n / 2 + 4, n / 2 + 4, n / 2 + 3), Elements.Id.WALL)
+	var floor_z := n / 4
+	WorldBuilder.fill_box(data, Vector3i(n / 8, n / 8, floor_z), Vector3i(n * 7 / 8, n * 7 / 8, floor_z + 1), Elements.Id.WALL)
+	WorldBuilder.fill_box(data, Vector3i(n / 2 - 4, n / 2 - 4, floor_z + 1), Vector3i(n / 2 + 4, n / 2 + 4, floor_z + 5), Elements.Id.WALL)
 	sim.upload(data.to_byte_array())
 	await frames(4)
 	var original := await read()
 	editor._set_target_mode(editor.TargetMode.SURFACE)
 	await click(editor.material_buttons[Elements.Id.SAND])
-	var start := Vector3i(n / 4, n / 2, n / 2 - 1)
-	var finish := Vector3i(n * 3 / 4, n / 2, n / 2 - 1)
+	# Radius zero: a surface brush wider than the per-frame drag distance lands
+	# each pick on the previous frame's cap and climbs its own paint toward the
+	# camera (a real property of surface painting, outside this suite); one
+	# cell per frame keeps every pick on the slab so validity is what is measured.
+	while editor.radius > 0:
+		key(KEY_BRACKETLEFT)
+		await frames(1)
+	check(editor.radius == 0, "drag uses a radius-zero brush")
+	var start := Vector3i(n / 4, n / 2, floor_z + 1)
+	var finish := Vector3i(n * 3 / 4, n / 2, floor_z + 1)
 	move_to(point(start))
 	var warm := 0
 	while not editor.pick_cache.get("valid", false) and warm < 30:
 		await frames(1)
 		warm += 1
+	await frames(1) # the deferred pick delivery lands after _process; the marker follows next frame
 	check(editor.pick_cache.get("valid", false) and editor.marker.visible, "stationary hover over the wall obtains a visible surface target (%d frames)" % warm)
 	# 60-frame parsed drag with the button held: every frame must show a target.
 	var hidden := 0
 	var stale_ids := 0
 	var last_shown: int = editor.pick_shown_id
 	mouse(true)
+	var trace: Array = []
 	for i in 60:
 		move_to(point(start).lerp(point(finish), float(i + 1) / 60.0))
 		await frames(1)
 		if editor.target.x < 0 or not editor.marker.visible:
 			hidden += 1
+			trace.append("frame %d target=%s valid=%s cache_empty=%s pending=%s shown=%d req=%d over_ui=%s orbiting=%s painting=%s capturing=%s hit=%s normal=%s" % [i, editor.target, editor.pick_cache.get("valid", null), editor.pick_cache.is_empty(), editor.pick_pending, editor.pick_shown_id, editor.pick_request_id, editor.get_viewport().gui_get_hovered_control() != null, editor.orbiting, editor.painting, editor.capturing, editor.pick_cache.get("hit", null), editor.pick_cache.get("normal", null)])
+	for line in trace:
+		print("HIDDEN ", line)
 		if editor.pick_shown_id < last_shown:
 			stale_ids += 1
 		last_shown = editor.pick_shown_id
@@ -66,7 +83,7 @@ func run() -> void:
 	var painted := await read()
 	check(painted != original and preserved_walls(original, painted), "the drag painted onto the surface and preserved every wall cell")
 	# A newer target replaces the older one within a frame of arriving.
-	var far := Vector3i(n / 4, n / 4, n / 2 - 1)
+	var far := Vector3i(n / 4, n / 4, floor_z + 1)
 	var before_id: int = editor.pick_shown_id
 	move_to(point(far))
 	var waited := 0

@@ -120,18 +120,21 @@ func _run() -> void:
 	result = await query(ray())
 	lab._receive_pick(result, lab.pick_shown_id + 1, 4) # newer id, stale intent
 	check(lab.pick_cache.is_empty(), "old ray/gesture intent cannot replace newer preview")
+	lab._receive_pick(result, lab.pick_shown_id, 5) # matching intent, id not newer
+	check(lab.pick_cache.is_empty(), "a pick id that is not newer than the shown one cannot replace the preview")
 	sim.paint(Vector3i(1, 1, 1), 0, Elements.Id.SAND)
-	lab._receive_pick(result, 5)
-	check(lab.pick_cache.is_empty(), "changed authored edit revision rejects stale preview")
+	lab._receive_pick(result, lab.pick_shown_id + 1, 5)
+	check(not lab.pick_cache.is_empty(), "an authored edit does not reject the preview: it is informational and painting re-picks (placement contract 3)")
+	lab.pick_cache.clear()
 	result = await query(ray())
 	sim.upload(before)
-	lab._receive_pick(result, 5)
+	lab._receive_pick(result, lab.pick_shown_id + 1, 5)
 	check(lab.pick_cache.is_empty(), "world reset epoch rejects otherwise matching preview")
 	# Live preview may describe a previous tick, but never drives the actual stamp.
 	lab.testing = true
 	result = await query(ray())
 	sim.paint(Vector3i(2, 2, 2), 0, Elements.Id.SAND)
-	lab._receive_pick(result, 5)
+	lab._receive_pick(result, lab.pick_shown_id + 1, 5)
 	check(not lab.pick_cache.is_empty(), "live preview tolerates world evolution while atomic stamping owns correctness")
 	await _test_ray_boundaries()
 	if sim.has_method("set_live_emitter"):
