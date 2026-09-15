@@ -1,0 +1,9 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ERROR: compressed-interior optical length and opaque clipping
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/material_proxy_geometry_gpu.gd:193)
+       [1] _run (res://tests/milestone/ordinary_liquid_interface_gpu.gd:145)
+ORDINARY_INTERFACE_CHECKS 119 FAILURES 1

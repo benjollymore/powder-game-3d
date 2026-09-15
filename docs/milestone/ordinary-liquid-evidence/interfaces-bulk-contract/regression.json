@@ -1,0 +1,291 @@
+[
+	{
+		"case": "front",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "front",
+		"expected_entries": 1.0,
+		"measured_entries": 1.0006331205368,
+		"reflection": true
+	},
+	{
+		"case": "front",
+		"expected_optical_cells": 1.0,
+		"measured_optical_cells": 1.0006331205368
+	},
+	{
+		"case": "inside",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "inside",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "inside",
+		"expected_optical_cells": 0.5,
+		"measured_optical_cells": 0.499087274074554
+	},
+	{
+		"case": "section-cap",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "section-cap",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "section-cap",
+		"expected_optical_cells": 1.0,
+		"measured_optical_cells": 1.0006331205368
+	},
+	{
+		"case": "section-cap-x",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "section-cap-x",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "section-cap-x",
+		"expected_optical_cells": 1.0,
+		"measured_optical_cells": 1.0006331205368
+	},
+	{
+		"case": "section-cap-y",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "section-cap-y",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "section-cap-y",
+		"expected_optical_cells": 1.0,
+		"measured_optical_cells": 1.0006331205368
+	},
+	{
+		"case": "partial-inside-section",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "partial-inside-section",
+		"expected_entries": 1.0,
+		"measured_entries": 1.0006331205368,
+		"reflection": true
+	},
+	{
+		"case": "partial-inside-section",
+		"expected_optical_cells": 0.25,
+		"measured_optical_cells": 0.252040088176727
+	},
+	{
+		"case": "touching",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "touching",
+		"expected_entries": 1.0,
+		"measured_entries": 1.0006331205368,
+		"reflection": true
+	},
+	{
+		"case": "touching",
+		"expected_optical_cells": 2.0,
+		"measured_optical_cells": 2.01154589653015
+	},
+	{
+		"case": "ordinary-liquid-join",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "ordinary-liquid-join",
+		"expected_entries": 1.0,
+		"measured_entries": 1.0006331205368,
+		"reflection": true
+	},
+	{
+		"case": "ordinary-liquid-join",
+		"expected_optical_cells": 2.0,
+		"measured_optical_cells": 2.01154589653015
+	},
+	{
+		"case": "separated",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "separated",
+		"expected_entries": 2.0,
+		"measured_entries": 2.01154589653015,
+		"reflection": true
+	},
+	{
+		"case": "separated",
+		"expected_optical_cells": 2.0,
+		"measured_optical_cells": 2.01154589653015
+	},
+	{
+		"case": "opaque-blocker",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "opaque-blocker",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "opaque-blocker",
+		"expected_optical_cells": 0.0,
+		"measured_optical_cells": 0.0
+	},
+	{
+		"case": "removed",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "removed",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "removed",
+		"expected_optical_cells": 0.0,
+		"measured_optical_cells": 0.0
+	},
+	{
+		"case": "mixed-ordinary-front",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "mixed-ordinary-front",
+		"expected_entries": 1.0,
+		"measured_entries": 1.0006331205368,
+		"reflection": true
+	},
+	{
+		"case": "mixed-ordinary-front",
+		"expected_optical_cells": 2.0,
+		"measured_optical_cells": 2.01154589653015
+	},
+	{
+		"case": "mixed-overflow-front",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "mixed-overflow-front",
+		"expected_entries": 1.0,
+		"measured_entries": 1.0006331205368,
+		"reflection": true
+	},
+	{
+		"case": "mixed-overflow-front",
+		"expected_optical_cells": 2.0,
+		"measured_optical_cells": 2.01154589653015
+	},
+	{
+		"case": "mixed-separated",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "mixed-separated",
+		"expected_entries": 2.0,
+		"measured_entries": 2.01154589653015,
+		"reflection": true
+	},
+	{
+		"case": "mixed-separated",
+		"expected_optical_cells": 2.0,
+		"measured_optical_cells": 2.01154589653015
+	},
+	{
+		"case": "mixed-section",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "mixed-section",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "mixed-section",
+		"expected_optical_cells": 2.0,
+		"measured_optical_cells": 1.98773217201233
+	},
+	{
+		"case": "ordinary-to-bulk",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "ordinary-to-bulk",
+		"expected_entries": 1.0,
+		"measured_entries": 1.0006331205368,
+		"reflection": true
+	},
+	{
+		"case": "ordinary-to-bulk",
+		"expected_optical_cells": 3.0,
+		"measured_optical_cells": 3.01176881790161
+	},
+	{
+		"case": "compressed-interior",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "compressed-interior",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "compressed-interior",
+		"expected_optical_cells": 2.5,
+		"measured_optical_cells": 2.49584150314331
+	}
+]

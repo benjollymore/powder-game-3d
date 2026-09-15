@@ -285,7 +285,7 @@
 	},
 	{
 		"case": "compressed-interior",
-		"expected_optical_cells": 2.775,
-		"measured_optical_cells": 2.49584150314331
+		"expected_optical_cells": 2.5,
+		"measured_optical_cells": 2.77548718452454
 	}
 ]

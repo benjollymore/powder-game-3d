@@ -1,0 +1,175 @@
+{
+	"fixtures": {
+		"hydro-compressed": {
+			"capture_changed_bytes": 0,
+			"capture_max_channel_difference": 0,
+			"physical_state_exact": true,
+			"voxel_sha256": "2de6cd5d69d27ce964c1d33de25f21db93b6b3106a7940d8a8e4416eddbf4834"
+		},
+		"uniform-200": {
+			"capture_changed_bytes": 0,
+			"capture_max_channel_difference": 0,
+			"physical_state_exact": true,
+			"voxel_sha256": "a2ebcdd62ad085d2ba62e16fd70d1617d8741035a2f76f8dd392860ec76ac827"
+		}
+	},
+	"measurements": [
+		{
+			"fixture": "uniform-200",
+			"frame_mean_ms": 5.26815,
+			"frame_median_ms": 2.485,
+			"frame_p95_ms": 16.759,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 0,
+			"screen_space_aa": 1,
+			"variant": "original"
+		},
+		{
+			"fixture": "uniform-200",
+			"frame_mean_ms": 5.65756666666667,
+			"frame_median_ms": 2.675,
+			"frame_p95_ms": 16.706,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 0,
+			"screen_space_aa": 1,
+			"variant": "candidate"
+		},
+		{
+			"fixture": "uniform-200",
+			"frame_mean_ms": 6.68446666666667,
+			"frame_median_ms": 2.982,
+			"frame_p95_ms": 20.296,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 1,
+			"screen_space_aa": 1,
+			"variant": "candidate"
+		},
+		{
+			"fixture": "uniform-200",
+			"frame_mean_ms": 6.73343333333333,
+			"frame_median_ms": 3.384,
+			"frame_p95_ms": 20.677,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 1,
+			"screen_space_aa": 1,
+			"variant": "original"
+		},
+		{
+			"fixture": "uniform-200",
+			"frame_mean_ms": 6.82958333333333,
+			"frame_median_ms": 3.864,
+			"frame_p95_ms": 20.423,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 2,
+			"screen_space_aa": 1,
+			"variant": "original"
+		},
+		{
+			"fixture": "uniform-200",
+			"frame_mean_ms": 7.232525,
+			"frame_median_ms": 4.609,
+			"frame_p95_ms": 16.969,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 2,
+			"screen_space_aa": 1,
+			"variant": "candidate"
+		},
+		{
+			"fixture": "hydro-compressed",
+			"frame_mean_ms": 8.18278333333333,
+			"frame_median_ms": 7.176,
+			"frame_p95_ms": 19.335,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 0,
+			"screen_space_aa": 1,
+			"variant": "original"
+		},
+		{
+			"fixture": "hydro-compressed",
+			"frame_mean_ms": 6.250375,
+			"frame_median_ms": 2.779,
+			"frame_p95_ms": 16.954,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 0,
+			"screen_space_aa": 1,
+			"variant": "candidate"
+		},
+		{
+			"fixture": "hydro-compressed",
+			"frame_mean_ms": 6.634625,
+			"frame_median_ms": 3.377,
+			"frame_p95_ms": 17.336,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 1,
+			"screen_space_aa": 1,
+			"variant": "candidate"
+		},
+		{
+			"fixture": "hydro-compressed",
+			"frame_mean_ms": 6.56074166666667,
+			"frame_median_ms": 3.795,
+			"frame_p95_ms": 16.709,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 1,
+			"screen_space_aa": 1,
+			"variant": "original"
+		},
+		{
+			"fixture": "hydro-compressed",
+			"frame_mean_ms": 6.89425,
+			"frame_median_ms": 3.543,
+			"frame_p95_ms": 17.569,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 2,
+			"screen_space_aa": 1,
+			"variant": "original"
+		},
+		{
+			"fixture": "hydro-compressed",
+			"frame_mean_ms": 6.86390833333333,
+			"frame_median_ms": 3.542,
+			"frame_p95_ms": 19.993,
+			"grid": 256,
+			"native_scale": 1.0,
+			"paused": true,
+			"physical_cells": 1048576,
+			"repeat": 2,
+			"screen_space_aa": 1,
+			"variant": "candidate"
+		}
+	],
+	"note": "frame-post-draw wall intervals, not device timestamps; always-on-top, VSync off; paired original/candidate medians only"
+}

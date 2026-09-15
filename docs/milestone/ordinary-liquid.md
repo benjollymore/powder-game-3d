@@ -66,27 +66,48 @@ Final combined-production-default interface tests pass **119 checks**. They cove
 
 The historical overflow-only interface suite now explicitly sets `ordinary_thin_proxy=false`. Its previous ordinary-neighbor case counted only the overflow proxy; enabling the newly visible ordinary proxy changes what that diagnostic counts. The historical suite remains isolated and passes **66 checks**. The separate combined suite tests the actual default configuration rather than leaving their interaction untested.
 
-The fast path applies only to **amount exactly 200**, in the same already-open liquid segment, with both field endpoints at least 0.5. That full-cell interval is already represented and requires no neighbor classification. Partial, compressed, entry/exit, and material-change intervals still use the classifier. No N³ allocation, compute pass, mask packing, or authoritative write is introduced.
+The fast path applies to any **full cell, amount 200 or above**, in the same already-open liquid segment, with both field endpoints at least 0.5. That interval is already represented by the regular bulk path and requires no neighbor classification. Partial, entry/exit, and material-change intervals still use the classifier. No N³ allocation, compute pass, mask packing, or authoritative write is introduced.
 
-A compressed ordinary thin cell inside a regular segment has expected optical length 2.775 cells across the fixture; the measured result is **2.775487**. The deliberately wrong `>=200` fast path measures **2.495842** and fails exactly that optical gate. Its expected failure is retained in `compressed-negative/`; the production suite has zero failures.
+**Contract for compressed bulk (coordinator decision after review).** An interval already covered by an uninterrupted regular same-material liquid segment with both field endpoints ≥ 0.5 is represented by the regular bulk path at unit density regardless of amount; the thin classifier only rescues intervals the regular marcher does not represent. Hydrostatic compression is solver bookkeeping (`hydro.glsl` compresses every settled cell by 2 per cell of liquid above it, capped at 255), not visible extra water; rendering it only in cells that happen to meet the thin classifier would be inconsistent with the neighbouring bulk. The first integrated version required amount **exactly** 200 for the fast path, so in any simulated reservoir only the surface row took it and every cell below ran the six-fetch classifier, and a compressed cell that met the classifier inside a regular segment was drawn at 1.275 density. A standalone compressed thin cell (not inside a regular segment) still carries optical density 1.275 in the geometry suite; that is unchanged.
+
+A compressed ordinary thin cell inside a regular segment now has expected optical length **2.5** cells across the fixture (1.5 cells of regular segment plus the compressed cell at unit density); the measured result is **2.495842**. The earlier expectation of 2.775 encoded the inconsistency described above and was replaced, with this reasoning, when the contract was decided. The negative control is inverted accordingly: `legacy_exact_fast_path=1` restores the retired exact-200 comparison, measures **2.775487**, and fails exactly that optical gate (119 checks, one failure, retained in `compressed-negative/`). The production suite passes **119 checks** under the bulk contract ([interfaces-bulk-contract](ordinary-liquid-evidence/interfaces-bulk-contract/)).
 
 An initial version of that fixture started outside the regular surface and measured 3.196411 versus its overly exact 3.275 box expectation. It mixed the pre-existing regular isosurface/bisection error with the new compressed interval, and its reflection-off expectation also incorrectly ignored a regular surface. The regular marcher still uses four bisection steps and can move an already-above-threshold entry inward; general regular-surface accuracy is **not fixed here**. Failed log/JSON are retained as `interfaces/initial-compressed-fixture.*`. The final compressed test starts inside the regular segment, so its expectation isolates interior mass-density accounting without changing tolerances or production behavior to accommodate the failure.
 
 Unchanged controls pass **28 checks**: full bulk, supported partial film, and a two-cell-thick full sheet have byte-identical before/after images. A thicker unsupported low-fill fixture also remains unchanged—and omitted—recording the classifier's limit. The final 256 reservoir before/after images and full voxel arrays are byte-identical.
 
-Existing regressions pass: liquid section depth **61**, liquid exit **102**, overflow interface **66**, and overflow geometry **145**. Their new evidence is under `regressions/`, leaving historical captures intact. There are **1,083 positive GPU checks** across the matched probe, ordinary geometry/interfaces/controls, and these four existing suites; the pinned historical omission reproduction adds 316 checks, and the compressed negative control intentionally fails one of 119 checks.
+Existing regressions pass: liquid section depth **61**, liquid exit **102**, overflow interface **66**, and overflow geometry **145**. Their new evidence is under `regressions/`, leaving historical captures intact. After the bulk-contract change the reruns at grid 128 again pass: ordinary interfaces **119**, ordinary controls **28**, ordinary geometry **138**, overflow interface **66**, liquid exit **102**, and the matched probe with its new negative control **428** ([regressions-bulk-contract](ordinary-liquid-evidence/regressions-bulk-contract/), [fixed-bulk-contract](ordinary-liquid-evidence/fixed-bulk-contract/)). There are **1,083 positive GPU checks** across the matched probe, ordinary geometry/interfaces/controls, and these four existing suites; the pinned historical omission reproduction adds 316 checks, and the compressed negative control intentionally fails one of 119 checks.
 
 ### Bounded rendering-cost measurement
 
-Frozen 256-grid reservoir, **1,048,576 full ordinary water cells**, native 900×700, FXAA, VSync off, always-on-top, alternating original/candidate three times, 30 warm-up frames plus 120 measured frame-post-draw intervals per sample. These are wall intervals, not GPU device timestamps or active simulation throughput.
+Frozen 256-grid reservoir, **1,048,576 water cells**, native 900×700, FXAA, VSync off, always-on-top, alternating original/candidate three times, 30 warm-up frames plus 120 measured frame-post-draw intervals per sample. These are wall intervals, not GPU device timestamps or active simulation throughput.
 
-| Variant | Median frame interval across three samples |
+The first measurement uploaded amount 200 everywhere with no hydro tick, so it did not represent live water (review finding). `ordinary_liquid_cost.gd` now measures two fixtures: **uniform-200** (the original) and **hydro-compressed** (amount 200 + 2 × cells above, capped at 255, which is what `hydro.glsl` leaves in a settled reservoir; only the surface row is exactly 200).
+
+| Fixture / variant | Median frame interval across three samples |
 |---|---:|
-| Original shader | 2.289–2.305 ms |
-| Initial unoptimized classifier | 3.162–3.172 ms in its earlier paired run |
-| Final classifier with nominal-full fast path | 2.372–2.391 ms |
+| Original shader, uniform-200 (first measurement, mains power) | 2.289–2.305 ms |
+| Initial unoptimized classifier, uniform-200 (earlier paired run) | 3.162–3.172 ms |
+| Exact-200 fast path, uniform-200 (earlier paired run) | 2.372–2.391 ms |
 
-Final paired median overhead is **0.076–0.102 ms**, approximately **3–4%** in this fixture. The first version added 0.859–0.875 ms and was rejected for integration. Its separate original/candidate measurements and shader are retained in `cost-unoptimized/`. Frame p95 remains roughly 8 ms with substantial presentation scheduling noise; means vary enough that this experiment does not justify an FPS claim. Sparse/partial-heavy scenes and live editing need broader integrated performance checks. Window occlusion would invalidate these timings.
+Earlier paired median overhead of the exact-200 fast path on uniform-200 was **0.076–0.102 ms** (about 3–4%). That figure is retained as measured, but it never represented a simulated reservoir.
+
+Remeasurement under the bulk contract was made on battery in macOS **Low Power Mode** (60 Hz display cap, throttled SoC): p95 intervals sit at 16–20 ms and the same shader's median drifts by more than 1 ms between repeats, so only paired medians are shown and no cost conclusion finer than that drift is claimed. [cost-bulk-contract/cost.json](ordinary-liquid-evidence/cost-bulk-contract/cost.json).
+
+| Fixture | Pair | Original median | Candidate median | Paired difference |
+|---|---|---:|---:|---:|
+| uniform-200 | 0 | 2.485 ms | 2.675 ms | +0.190 ms |
+| uniform-200 | 1 | 3.384 ms | 2.982 ms | −0.402 ms |
+| uniform-200 | 2 | 3.864 ms | 4.609 ms | +0.745 ms |
+| hydro-compressed | 0 (first run, cold) | 7.176 ms | 2.779 ms | −4.397 ms |
+| hydro-compressed | 1 | 3.795 ms | 3.377 ms | −0.418 ms |
+| hydro-compressed | 2 | 3.543 ms | 3.542 ms | −0.001 ms |
+
+With the `>= 200` fast path, both fixtures render **byte-identical images** in original and candidate (0 changed bytes each), so the hydro-compressed reservoir is now drawn by the same bulk path as before the thin rescue, and its paired differences (−0.42, 0.00 ms; the cold first pair is discarded) are within the throttled drift. The uniform-200 pairs (+0.19, −0.40, +0.75 ms) are likewise within drift. The earlier 0.08–0.10 ms figure can be neither confirmed nor refuted in this power mode; a mains-power rerun is needed for a finer number. Physical bytes were exact for both fixtures.
+
+### Falling non-spray thin liquid (documented limitation)
+
+The rescue excludes the falling flag. Falling liquid with more than two wet face neighbours is not spray either (no droplet sprite), so a one-cell partial sheet dropping as a unit is pickable but has no volume-pass representation. The probe now carries this as a negative control: a 5×5 vertical sheet, amount 50, `flags = 1`, front view. Result: 25 physical cells, authoritative pick valid at (64, 64, 64), **0 volume-pass pixels**, and only the four corner cells (two wet neighbours each) become droplet sprites (droplets = eligible = 4). [Row in probe.json](ordinary-liquid-evidence/fixed-bulk-contract/probe.json), [capture](ordinary-liquid-evidence/fixed-bulk-contract/falling-sheet-50-front-length.png). Fixing it needs a decision on whether falling non-spray sheets should be rescued as slabs (they move every tick, so a bottom-anchored slab would visibly lag) or emitted as sprites; neither is done here.
 
 ### Useful visual comparisons
 
@@ -110,7 +131,7 @@ python3 tools/milestone/ordinary_liquid_reference.py
 /opt/homebrew/bin/godot --path . --always-on-top --disable-vsync -s res://tests/milestone/ordinary_liquid_interface_gpu.gd -- grid=128
 /opt/homebrew/bin/godot --path . --always-on-top --disable-vsync -s res://tests/milestone/ordinary_liquid_controls_gpu.gd -- grid=128
 /opt/homebrew/bin/godot --path . --always-on-top --disable-vsync -s res://tests/milestone/ordinary_liquid_cost.gd -- grid=256
-/opt/homebrew/bin/godot --path . --always-on-top --disable-vsync -s res://tests/milestone/ordinary_liquid_interface_gpu.gd -- grid=128 bad_compressed_fast_path=1 output_dir=res://docs/milestone/ordinary-liquid-evidence/compressed-negative
+/opt/homebrew/bin/godot --path . --always-on-top --disable-vsync -s res://tests/milestone/ordinary_liquid_interface_gpu.gd -- grid=128 legacy_exact_fast_path=1 output_dir=res://docs/milestone/ordinary-liquid-evidence/compressed-negative
 /opt/homebrew/bin/godot --path . --always-on-top --disable-vsync -s res://tests/milestone/render_liquid_section_gpu.gd -- grid=128 output_dir=res://docs/milestone/ordinary-liquid-evidence/regressions/depth
 /opt/homebrew/bin/godot --path . --always-on-top --disable-vsync -s res://tests/milestone/material_proxy_interface_gpu.gd -- grid=128 output_dir=res://docs/milestone/ordinary-liquid-evidence/regressions/overflow-interface
 /opt/homebrew/bin/godot --path . --always-on-top --disable-vsync -s res://tests/milestone/material_proxy_geometry_gpu.gd -- grid=128 output_dir=res://docs/milestone/ordinary-liquid-evidence/regressions/overflow-geometry

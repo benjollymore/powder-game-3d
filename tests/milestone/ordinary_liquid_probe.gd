@@ -96,6 +96,45 @@ func _run() -> void:
 								if amount>=50: _check(represented>0,"ordinary visible material retained")
 					results.append(row)
 					print(JSON.stringify(row))
+	# Documented negative control (reviewer finding): falling liquid with more
+	# than two wet face neighbours is neither spray (no droplet sprite) nor
+	# rescued by the ordinary thin classifier, which excludes the falling flag.
+	# A one-cell partial sheet dropping as a unit stays pickable but invisible
+	# in the volume pass. Corner cells (two wet neighbours) do go to droplets;
+	# they are hidden here so only volume-pass coverage is measured.
+	if candidate:
+		var falling := WorldBuilder.empty()
+		var sheet: Array[Vector3i] = []
+		for a in range(-2,3):
+			for b in range(-2,3):
+				var p := TARGET+Vector3i(0,a,b)
+				falling[VoxelCodec.index(p.x,p.y,p.z)] = VoxelCodec.encode(Elements.Id.WATER,17,50)|(1<<24)
+				sheet.append(p)
+		var falling_bytes := falling.to_byte_array()
+		sim.upload(falling_bytes)
+		for i in 3: await process_frame
+		RenderingServer.call_on_render_thread(_rt_probe_snapshot.bind(sheet))
+		var falling_state: Dictionary = await snapshot_ready
+		_check(falling_state.voxels==falling_bytes,"falling sheet physical bytes retained")
+		camera.position = center+Vector3(8,0,0)*cell_size
+		camera.look_at(center,Vector3.UP)
+		var ray := {"origin":camera.position/sim.world_size(),"direction":(center-camera.position).normalized(),"mask":1<<Elements.Id.WATER}
+		sim.request_surface_pick(ray,0,true,func(result: Dictionary): picked.emit(result))
+		var falling_pick: Dictionary = await picked
+		_check(falling_pick.valid and falling_pick.element==Elements.Id.WATER,"falling partial sheet remains pickable")
+		sim.get_node("Droplets").visible = false
+		sim.set_param("volume_debug",4)
+		for i in 4: await process_frame
+		await RenderingServer.frame_post_draw
+		var falling_image := root.get_texture().get_image()
+		var falling_pixels := 0
+		for y in falling_image.get_height():
+			for x in falling_image.get_width():
+				if falling_image.get_pixel(x,y).r>0.0: falling_pixels += 1
+		_check(falling_pixels==0,"documented limitation: falling non-spray partial sheet has no volume-pass representation")
+		_check(falling_image.save_png(destination+"/falling-sheet-50-front-length.png")==OK,"save falling sheet negative control")
+		sim.get_node("Droplets").visible = true
+		results.append({"case":"falling-non-spray-sheet-negative-control","amount":50,"physical_cells":sheet.size(),"liquid_pixels":falling_pixels,"droplets":falling_state.droplets,"eligible":falling_state.eligible,"picked":str(falling_pick.hit),"voxel_sha256":_sha256(falling_bytes),"limitation":"falling flag excluded from thin rescue; only corner cells (<=2 wet neighbours) become droplet sprites"})
 	# Exercise the real radius-zero edit entry point while paused, rather than
 	# only uploading a reconstructed test array. Seed is recorded after paint.
 	sim.upload(WorldBuilder.empty().to_byte_array())

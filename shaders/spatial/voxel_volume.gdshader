@@ -194,10 +194,15 @@ void fragment() {
 		uint id = value.x;
 		float t_next = min(min(r.t_max.x, min(r.t_max.y, r.t_max.z)), t_stop);
 		float f = field(r.p0 + r.dir * t_next).r;
-		// A nominally full (not compressed) cell already covered by an uninterrupted same-material
-		// segment needs no thin-feature rescue: its box interval is identical.
-		// Keep checking all partial, entry/exit and material-change intervals.
-		bool represented_full = in_liquid && id == liquid_id && float(value.z) == liquid_full && f_prev >= 0.5 && f >= 0.5;
+		// A full cell (nominal 200 or hydrostatically compressed above it) already
+		// covered by an uninterrupted same-material segment with both field
+		// endpoints at or above the surface is represented by the regular bulk
+		// path at unit density. Compression is solver bookkeeping, not visible
+		// extra water; rendering it only in cells that happen to meet the thin
+		// classifier would be inconsistent with neighbouring bulk. The thin
+		// rescue applies only to intervals the regular marcher does not
+		// represent: partial, entry/exit and material-change intervals.
+		bool represented_full = in_liquid && id == liquid_id && float(value.z) >= liquid_full && f_prev >= 0.5 && f >= 0.5;
 		bool ordinary_proxy = !represented_full && ordinary_thin(r.cell, value);
 		bool proxy = ordinary_proxy || (droplet_fallback && is_liquid(id) && thin_spray(r.cell, value));
 		bool liquid = is_liquid(id) && !proxy;

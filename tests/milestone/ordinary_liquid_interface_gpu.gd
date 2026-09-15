@@ -29,8 +29,12 @@ func _run() -> void:
 	stage.add_child(world)
 	for i in 20: await process_frame
 	var source := FileAccess.get_file_as_string("res://shaders/spatial/voxel_volume.gdshader")
-	if "bad_compressed_fast_path=1" in OS.get_cmdline_user_args():
-		source = source.replace("float(value.z) == liquid_full", "float(value.z) >= liquid_full")
+	# Negative control: the retired exact-200 fast path rendered a compressed
+	# cell inside a regular segment at 1.275 density (2.775 cells here), which
+	# is inconsistent with the unit-density bulk around it. It must fail the
+	# compressed-interior optical gate below.
+	if "legacy_exact_fast_path=1" in OS.get_cmdline_user_args():
+		source = source.replace("float(value.z) >= liquid_full && f_prev >= 0.5", "float(value.z) == liquid_full && f_prev >= 0.5")
 	source = source.replace("float previous_liquid_exit = -1.0;", "float previous_liquid_exit = -1.0;\n\tfloat proxy_reflections = 0.0;")
 	source = source.replace("if (proxy_surface_reflection && air_entry && !cut_entry && !touching_full_liquid(r.cell, proxy_normal, fill, liquid_full)) {", "if (proxy_surface_reflection && air_entry && !cut_entry && !touching_full_liquid(r.cell, proxy_normal, fill, liquid_full)) {\n\t\t\t\t\tproxy_reflections += 1.0;")
 	source = source.replace("\tif (volume_debug == 3) {", "\tif (volume_debug == 6) { ALBEDO = vec3(liquid_len / 4.0); ALPHA = 1.0; }\n\tif (volume_debug == 5) { ALBEDO = vec3(proxy_reflections / 4.0); ALPHA = 1.0; }\n\tif (volume_debug == 3) {")
@@ -134,7 +138,10 @@ func _run() -> void:
 		if c.name=="partial-inside-section": expected_length = 0.25
 		if c.name in ["touching","ordinary-liquid-join","separated"] or c.name.begins_with("mixed-"): expected_length = 2
 		if c.name=="ordinary-to-bulk": expected_length = 3
-		if c.name=="compressed-interior": expected_length = 2.775
+		# Regular-bulk contract: 1.5 cells of regular segment plus the compressed
+		# cell at unit density = 2.5. A standalone compressed thin cell (not
+		# inside a segment) still carries 1.275 in the geometry suite.
+		if c.name=="compressed-interior": expected_length = 2.5
 		_check(absf(optical-expected_length)<0.035,c.name+" optical length and opaque clipping")
 		results.append({"case":c.name,"expected_optical_cells":expected_length,"measured_optical_cells":optical})
 		optical_image.save_png(out_dir+"/%s-length.png"%c.name)
