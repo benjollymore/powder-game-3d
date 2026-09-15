@@ -5,7 +5,7 @@ extends RefCounted
 ## Adding an element = one row in TABLE (+ shader code only if it needs
 ## bespoke behaviour).
 
-enum Id { AIR, WALL, SAND, WATER, STEAM, FIRE, PLANT, OIL, SMOKE, WOOD }
+enum Id { AIR, WALL, SAND, WATER, STEAM, FIRE, PLANT, OIL, SMOKE, WOOD, ICE, LAVA, STONE, METAL, WAX, MOLTEN_WAX, GUNPOWDER, GAS, ACID, CLONE, VOID }
 
 const FLAG_IMMOVABLE := 1 << 0
 const FLAG_POWDER := 1 << 1
@@ -40,6 +40,21 @@ const TABLE := [
 	{ "name": "Oil",   "color": Color(0.35, 0.25, 0.15),    "flags": FLAG_LIQUID | FLAG_FLAMMABLE, "density": 80.0,   "decay": 0.0,  "decay_to": 0, "spread": 0.5, "air_coupling": 0.1 , "category": "liquids", "tip": "Oil: floats on water and burns fiercely." },
 	{ "name": "Smoke", "color": Color(0.2, 0.2, 0.22),      "flags": FLAG_GAS,                     "density": 3.0,    "decay": 0.002, "decay_to": 0, "spread": 0.5, "extinction": 0.3, "air_coupling": 1.0, "heat": 0.3 , "category": "gases", "tip": "Smoke: rises from fire and slowly clears." },
 	{ "name": "Wood",  "color": Color(0.42, 0.28, 0.16),    "flags": FLAG_IMMOVABLE | FLAG_FLAMMABLE, "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0, "smooth": 0.5, "mat": 4, "grain": 0.15, "rough": 0.8 , "category": "solids", "tip": "Wood: sturdy, burns slowly." },
+	# Heat milestone rows (ids 10..20, docs/milestone/heat-brief.md contract 1).
+	# Tranche A (10..13): rows and colours here; the thermal worker tunes their
+	# THERMAL coefficients and the hot/cold transitions that give them life.
+	{ "name": "Ice",    "color": Color(0.78, 0.9, 1.0),     "flags": FLAG_IMMOVABLE,               "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0, "smooth": 0.2, "mat": 5, "grain": 0.05, "rough": 0.3, "category": "heat", "tip": "Ice: frozen water, melts when warmed." },
+	{ "name": "Lava",   "color": Color(1.0, 0.35, 0.05),    "flags": FLAG_LIQUID,                  "density": 150.0,  "decay": 0.0, "decay_to": 0, "spread": 0.25, "emission": 1.8, "air_coupling": 0.02, "category": "heat", "tip": "Lava: cools into stone, boils water, sets things alight." },
+	{ "name": "Stone",  "color": Color(0.5, 0.48, 0.45),    "flags": FLAG_IMMOVABLE,               "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0, "smooth": 0.3, "mat": 0, "grain": 0.2, "rough": 0.9, "category": "solids", "tip": "Stone: solid rock, melts back into lava when very hot." },
+	{ "name": "Metal",  "color": Color(0.62, 0.64, 0.68),   "flags": FLAG_IMMOVABLE,               "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0, "smooth": 0.0, "mat": 0, "grain": 0.03, "rough": 0.35, "category": "solids", "tip": "Metal: carries heat quickly from one end to the other." },
+	# Tranche B (14..20): table-driven behaviour plus bespoke CLONE/VOID rules in sim.glsl.
+	{ "name": "Wax",    "color": Color(0.93, 0.88, 0.72),   "flags": FLAG_IMMOVABLE,               "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0, "smooth": 0.3, "mat": 3, "grain": 0.05, "rough": 0.5, "category": "solids", "tip": "Wax: soft solid that melts near flame and sets again when cool." },
+	{ "name": "Molten wax", "color": Color(0.95, 0.85, 0.55), "flags": FLAG_LIQUID,                "density": 90.0,   "decay": 0.0, "decay_to": 0, "spread": 0.3, "air_coupling": 0.05, "category": "liquids", "tip": "Molten wax: flows slowly and sets back into wax as it cools." },
+	{ "name": "Gunpowder", "color": Color(0.22, 0.2, 0.18), "flags": FLAG_POWDER | FLAG_FLAMMABLE, "density": 210.0,  "decay": 0.0, "decay_to": 0, "spread": 0.0, "air_coupling": 0.05, "smooth": 1.0, "mat": 1, "grain": 0.4, "rough": 0.95, "category": "powders", "tip": "Gunpowder: a spark sets the whole trail off in a flash." },
+	{ "name": "Gas",    "color": Color(0.75, 0.85, 0.6),    "flags": FLAG_GAS | FLAG_FLAMMABLE,    "density": 1.5,    "decay": 0.0, "decay_to": 0, "spread": 0.6, "extinction": 0.08, "air_coupling": 1.0, "category": "gases", "tip": "Gas: drifts and rises, flashes into flame on contact with fire." },
+	{ "name": "Acid",   "color": Color(0.45, 0.95, 0.2),    "flags": FLAG_LIQUID,                  "density": 110.0,  "decay": 0.0, "decay_to": 0, "spread": 0.8, "emission": 0.4, "air_coupling": 0.1, "category": "liquids", "tip": "Acid: eats through sand, wood, plant and more, but never wall." },
+	{ "name": "Clone",  "color": Color(0.85, 0.75, 0.25),   "flags": FLAG_IMMOVABLE,               "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0, "smooth": 0.0, "mat": 3, "grain": 0.1, "rough": 0.6, "category": "special", "tip": "Clone: copies the first material that touches it, forever." },
+	{ "name": "Void",   "color": Color(0.08, 0.05, 0.12),   "flags": FLAG_IMMOVABLE,               "density": 1000.0, "decay": 0.0, "decay_to": 0, "spread": 0.0, "smooth": 0.0, "mat": 3, "grain": 0.0, "rough": 1.0, "category": "special", "tip": "Void: swallows anything that touches it, except wall." },
 ]
 
 
@@ -65,6 +80,19 @@ const THERMAL := {
 	Id.OIL:   { "heat_capacity": 1.6,  "conductivity": 0.15,  "initial_temp": 293.15, "ignition_temp": 500.0, "burn_to": Id.FIRE },
 	Id.SMOKE: { "heat_capacity": 0.05, "conductivity": 0.03,  "initial_temp": 400.0 },
 	Id.WOOD:  { "heat_capacity": 1.0,  "conductivity": 0.15,  "initial_temp": 293.15, "ignition_temp": 570.0, "burn_to": Id.FIRE },
+	# Tranche A provisional values; the thermal worker owns tuning these.
+	Id.ICE:   { "heat_capacity": 2.1,  "conductivity": 2.2,   "initial_temp": 263.15, "hot_at": 273.15, "hot_to": Id.WATER, "latent": 80.0 },
+	Id.LAVA:  { "heat_capacity": 3.0,  "conductivity": 1.5,   "initial_temp": 1500.0, "cold_at": 1000.0, "cold_to": Id.STONE, "latent": 300.0 },
+	Id.STONE: { "heat_capacity": 2.1,  "conductivity": 1.5,   "initial_temp": 293.15, "hot_at": 1300.0, "hot_to": Id.LAVA, "latent": 300.0 },
+	Id.METAL: { "heat_capacity": 3.5,  "conductivity": 50.0,  "initial_temp": 293.15 },
+	# Tranche B.
+	Id.WAX:        { "heat_capacity": 1.8, "conductivity": 0.25, "initial_temp": 293.15, "hot_at": 330.0, "hot_to": Id.MOLTEN_WAX, "latent": 50.0 },
+	Id.MOLTEN_WAX: { "heat_capacity": 2.0, "conductivity": 0.2,  "initial_temp": 340.0,  "cold_at": 325.0, "cold_to": Id.WAX, "latent": 50.0, "ignition_temp": 640.0, "burn_to": Id.FIRE },
+	Id.GUNPOWDER:  { "heat_capacity": 1.2, "conductivity": 0.2,  "initial_temp": 293.15, "ignition_temp": 420.0, "burn_to": Id.FIRE },
+	Id.GAS:        { "heat_capacity": 0.05, "conductivity": 0.03, "initial_temp": 293.15, "ignition_temp": 500.0, "burn_to": Id.FIRE },
+	Id.ACID:       { "heat_capacity": 3.0, "conductivity": 0.5,  "initial_temp": 293.15 },
+	Id.CLONE:      { "heat_capacity": 2.1, "conductivity": 0.5,  "initial_temp": 293.15 },
+	Id.VOID:       { "heat_capacity": 2.1, "conductivity": 0.0,  "initial_temp": 293.15 },
 }
 
 const THERMAL_DEFAULTS := {
@@ -111,6 +139,20 @@ const REACTIONS := [
 	[Id.FIRE, Id.WOOD, Id.FIRE, Id.FIRE, 0.08],   # wood burns, slowly
 	[Id.FIRE, Id.WATER, Id.AIR, Id.STEAM, 1.0],   # water puts fire out and boils
 	[Id.PLANT, Id.WATER, Id.PLANT, Id.PLANT, 0.0015], # plant drinks water and grows (slowly)
+	# Heat milestone. `heat` is released into the pair once thermal lands; `cost`
+	# is liquid consumed (amount units) from a liquid input that survives unchanged.
+	[Id.FIRE, Id.GAS, Id.FIRE, Id.FIRE, 1.0, { "heat": 400.0 }],          # gas flashes
+	[Id.FIRE, Id.GUNPOWDER, Id.FIRE, Id.FIRE, 1.0, { "heat": 600.0 }],    # gunpowder goes off
+	[Id.FIRE, Id.WAX, Id.FIRE, Id.MOLTEN_WAX, 0.05],   # interim contact melt until rule_phase lands
+	[Id.FIRE, Id.MOLTEN_WAX, Id.FIRE, Id.FIRE, 0.02, { "heat": 120.0 }], # candle: molten wax feeds the flame
+	[Id.ACID, Id.SAND, Id.ACID, Id.SMOKE, 0.3, { "cost": 40 }],
+	[Id.ACID, Id.PLANT, Id.ACID, Id.SMOKE, 0.3, { "cost": 40 }],
+	[Id.ACID, Id.WOOD, Id.ACID, Id.SMOKE, 0.15, { "cost": 50 }],
+	[Id.ACID, Id.ICE, Id.ACID, Id.SMOKE, 0.2, { "cost": 40 }],
+	[Id.ACID, Id.WAX, Id.ACID, Id.SMOKE, 0.2, { "cost": 40 }],
+	[Id.ACID, Id.GUNPOWDER, Id.ACID, Id.SMOKE, 0.3, { "cost": 40 }],
+	[Id.ACID, Id.STONE, Id.ACID, Id.SMOKE, 0.05, { "cost": 60 }],
+	[Id.ACID, Id.METAL, Id.ACID, Id.SMOKE, 0.02, { "cost": 80 }],
 ]
 
 
@@ -228,9 +270,11 @@ static func floats(key: String, default := 0.0) -> PackedFloat32Array:
 
 
 ## 16 bytes per reaction: packed ids (a | b<<8 | out_a<<16 | out_b<<24),
-## probability as 16-bit fixed point, then min_t and heat as float bits from
-## an optional sixth `{ "min_t": K, "heat": K per full cell }` dictionary
-## (zero when absent). Matches `Reacts` in sim.glsl. One rule per unordered
+## probability as 16-bit fixed point in the low half of the second word with
+## `cost` (liquid amount units consumed from a liquid input whose output is
+## itself) in the high half, then min_t and heat as float bits, all from an
+## optional sixth `{ "min_t": K, "heat": K per full cell, "cost": units }`
+## dictionary (zero when absent). Matches `Reacts` in sim.glsl. One rule per unordered
 ## pair: the kernel stops at the first matching rule even when its roll fails,
 ## so table order decides which rule a pair gets.
 static func reaction_bytes() -> PackedByteArray:
@@ -240,8 +284,8 @@ static func reaction_bytes() -> PackedByteArray:
 		var r: Array = REACTIONS[i]
 		var packed: int = int(r[0]) | (int(r[1]) << 8) | (int(r[2]) << 16) | (int(r[3]) << 24)
 		out.encode_u32(i * 16 + 0, packed)
-		out.encode_u32(i * 16 + 4, int(clampf(r[4], 0.0, 1.0) * 65535.0))
 		var extra: Dictionary = r[5] if r.size() > 5 and r[5] is Dictionary else {}
+		out.encode_u32(i * 16 + 4, int(clampf(r[4], 0.0, 1.0) * 65535.0) | (clampi(int(extra.get("cost", 0)), 0, 255) << 16))
 		out.encode_float(i * 16 + 8, float(extra.get("min_t", 0.0)))
 		out.encode_float(i * 16 + 12, float(extra.get("heat", 0.0)))
 	return out

@@ -59,6 +59,10 @@ const uint MIN_SPLIT = 40u;    // don't spread into empty cells below this share
 const uint MIN_KEEP = 6u;      // cells below this donate everything to a neighbour
 const uint FALLING = 1u;       // byte w flag: this liquid is falling (do not spray sideways)
 const uint AGE_SHIFT = 1u;     // byte w bits 1-2: powder moved age
+const uint CLONE_ARMED = 128u; // byte w bit 7 on a Clone cell: byte y holds the element it copies
+const uint CLONE = 19u;
+const uint VOID = 20u;
+const float CLONE_RATE = 0.02; // per air partner per tick
 
 // Per-invocation block state.
 ivec3 origin;
@@ -196,14 +200,21 @@ void rule_reactions() {
 					continue;
 				}
 				// Thin films of liquid react proportionally less often.
-				float p = float(re.y) / 65535.0;
+				float p = float(re.y & 0xFFFFu) / 65535.0;
+				uint cost = (re.y >> 16u) & 0xFFu;
 				if (is_liquid(a)) { p *= min(1.0, float(c[i].z) / float(FULL)); }
 				if (is_liquid(b)) { p *= min(1.0, float(c[j].z) / float(FULL)); }
 				if (rnd() > p) {
 					break;
 				}
-				set_element(i, fwd ? out_a : out_b);
-				set_element(j, fwd ? out_b : out_a);
+				uint new_a = fwd ? out_a : out_b;
+				uint new_b = fwd ? out_b : out_a;
+				// An input that survives as itself keeps its amount, minus the
+				// rule's cost when it is a liquid (acid thins as it eats).
+				if (new_a == a) { if (is_liquid(a)) { set_liquid(i, a, c[i].z > cost ? c[i].z - cost : 0u); } }
+				else { set_element(i, new_a); }
+				if (new_b == b) { if (is_liquid(b)) { set_liquid(j, b, c[j].z > cost ? c[j].z - cost : 0u); } }
+				else { set_element(j, new_b); }
 				break;
 			}
 		}
@@ -215,6 +226,49 @@ void rule_decay() {
 		float p = decay_of(c[i].x);
 		if (p > 0.0 && rnd() < p) {
 			set_element(i, decay_target(c[i].x));
+		}
+	}
+}
+
+// Clone and Void: immovable specials that act on their three block partners.
+// A Clone arms itself with the first ordinary material it touches (stored in
+// byte y, flagged in byte w so a fresh paint seed is never mistaken for an
+// id) and then emits that material into air partners at CLONE_RATE. A Void
+// swallows any partner that is not air, wall or another special.
+bool is_special(uint id) { return id == CLONE || id == VOID; }
+
+void rule_special() {
+	for (int i = 0; i < 8; i++) {
+		uint me = c[i].x;
+		if (me == CLONE) {
+			bool armed = (c[i].w & CLONE_ARMED) != 0u;
+			for (int axis = 0; axis < 3 && !armed; axis++) {
+				int j = i ^ (1 << axis);
+				uint other = c[j].x;
+				if (other != AIR && other != WALL && !is_special(other)) {
+					c[i].y = other;
+					c[i].w |= CLONE_ARMED;
+					armed = true;
+				}
+			}
+			if (!armed) {
+				continue;
+			}
+			uint copy = c[i].y;
+			for (int axis = 0; axis < 3; axis++) {
+				int j = i ^ (1 << axis);
+				if (c[j].x == AIR && rnd() < CLONE_RATE) {
+					set_element(j, copy);
+				}
+			}
+		} else if (me == VOID) {
+			for (int axis = 0; axis < 3; axis++) {
+				int j = i ^ (1 << axis);
+				uint other = c[j].x;
+				if (other != AIR && other != WALL && !is_special(other)) {
+					c[j] = uvec4(AIR, c[j].y, 0u, 0u);
+				}
+			}
 		}
 	}
 }
@@ -467,6 +521,7 @@ void main() {
 	}
 
 	if ((pc.a.w & RULE_NO_REACTIONS) == 0u) {
+		rule_special();
 		rule_reactions();
 	}
 	if ((pc.a.w & RULE_NO_DECAY) == 0u) {

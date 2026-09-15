@@ -43,6 +43,8 @@ func _run() -> void:
 		["_test_u_bend", 3], ["_test_pressure_pipe", 3], ["_test_density_pass", 3],
 		["_test_fire_burns_plant", 0], ["_test_water_boils_on_fire", 0], ["_test_oil_floats", 3],
 		["_test_air_boundary", 3], ["_test_air_plume", 2], ["_test_splats", 3], ["_test_sprites", 3],
+		["_test_gas_ignites", 0], ["_test_gunpowder_flash", 0], ["_test_acid_dissolves_sand", 0],
+		["_test_clone_emits", 0], ["_test_void_sinks", 0], ["_test_wax_melts_on_fire", 0],
 		["_test_large_grid_smoke", 0],
 	]
 	for t in tests:
@@ -264,6 +266,106 @@ func _test_water_boils_on_fire() -> void:
 	# Each boiled cell removes between 1 and 255 units of water.
 	check(lost >= boiled and lost <= boiled * 255, "water mass lost matches boiled cells (%d units, %d cells)" % [lost, boiled])
 	check(after[Elements.Id.FIRE] == 0, "fire was put out (%d left)" % after[Elements.Id.FIRE])
+
+
+# --- heat milestone, tranche B elements ------------------------------------------
+
+func _test_gas_ignites() -> void:
+	# Gas sealed in a box with a flame at the top: it rises into the flame and
+	# every cell flashes (FIRE + GAS at p = 1).
+	var data := _empty_world()
+	_fill_box(data, Vector3i(40, 4, 40), Vector3i(72, 40, 72), Elements.Id.WALL)
+	_fill_box(data, Vector3i(42, 6, 42), Vector3i(70, 38, 70), Elements.Id.AIR)
+	_fill_box(data, Vector3i(44, 6, 44), Vector3i(68, 16, 68), Elements.Id.GAS)
+	_fill_box(data, Vector3i(52, 34, 52), Vector3i(60, 38, 60), Elements.Id.FIRE)
+	var world := data.to_byte_array()
+	_sim.upload(world)
+	var before: PackedInt64Array = _sim.histogram(world)
+	var after: PackedInt64Array = _sim.histogram(await _run_and_read(1500))
+	check(before[Elements.Id.GAS] == 24 * 10 * 24, "test world has 5760 gas")
+	check(after[Elements.Id.GAS] <= before[Elements.Id.GAS] / 100, "gas flashed into flame (%d of %d left)" % [after[Elements.Id.GAS], before[Elements.Id.GAS]])
+	check(after[Elements.Id.WALL] == before[Elements.Id.WALL], "wall untouched by the flash")
+
+
+func _test_gunpowder_flash() -> void:
+	# A spark at one end of a trail on the floor burns the whole trail.
+	var data := _empty_world()
+	_fill_box(data, Vector3i(10, 4, 60), Vector3i(100, 6, 64), Elements.Id.GUNPOWDER)
+	_fill_box(data, Vector3i(6, 4, 58), Vector3i(10, 8, 66), Elements.Id.FIRE)
+	var world := data.to_byte_array()
+	_sim.upload(world)
+	var before: PackedInt64Array = _sim.histogram(world)
+	var after: PackedInt64Array = _sim.histogram(await _run_and_read(2500))
+	check(before[Elements.Id.GUNPOWDER] == 90 * 2 * 4, "test world has 720 gunpowder")
+	check(after[Elements.Id.GUNPOWDER] <= before[Elements.Id.GUNPOWDER] / 50, "flash consumed the trail (%d of %d left)" % [after[Elements.Id.GUNPOWDER], before[Elements.Id.GUNPOWDER]])
+
+
+func _test_acid_dissolves_sand() -> void:
+	# Acid poured onto sand in a wall bowl eats sand and thins; the bowl is immune.
+	var data := _empty_world()
+	_fill_box(data, Vector3i(40, 4, 40), Vector3i(80, 40, 80), Elements.Id.WALL)
+	_fill_box(data, Vector3i(42, 6, 42), Vector3i(78, 40, 78), Elements.Id.AIR)
+	_fill_box(data, Vector3i(42, 6, 42), Vector3i(78, 14, 78), Elements.Id.SAND)
+	_fill_box(data, Vector3i(50, 20, 50), Vector3i(70, 30, 70), Elements.Id.ACID)
+	var world := data.to_byte_array()
+	_sim.upload(world)
+	var before: PackedInt64Array = _sim.histogram(world)
+	var acid_before: int = _sim.mass(world, Elements.Id.ACID)
+	var bytes: PackedByteArray = await _run_and_read(1500)
+	var after: PackedInt64Array = _sim.histogram(bytes)
+	check(before[Elements.Id.SAND] == 36 * 8 * 36, "test world has 10368 sand")
+	check(after[Elements.Id.SAND] < before[Elements.Id.SAND] * 9 / 10, "acid dissolved over a tenth of the sand (%d of %d left)" % [after[Elements.Id.SAND], before[Elements.Id.SAND]])
+	check(_sim.mass(bytes, Elements.Id.ACID) < acid_before, "acid thinned as it ate (%d -> %d units)" % [acid_before, _sim.mass(bytes, Elements.Id.ACID)])
+	check(after[Elements.Id.WALL] == before[Elements.Id.WALL], "wall is immune to acid")
+	check(after[Elements.Id.SMOKE] + after[Elements.Id.AIR] > before[Elements.Id.SMOKE] + before[Elements.Id.AIR], "dissolved sand left smoke or cleared air")
+
+
+func _test_clone_emits() -> void:
+	# A capped clone tray seeded with water underneath keeps producing water.
+	var data := _empty_world()
+	_fill_box(data, Vector3i(50, 60, 50), Vector3i(70, 62, 70), Elements.Id.WALL)
+	_fill_box(data, Vector3i(50, 58, 50), Vector3i(70, 60, 70), Elements.Id.CLONE)
+	_fill_box(data, Vector3i(50, 57, 50), Vector3i(70, 58, 70), Elements.Id.WATER)
+	var world := data.to_byte_array()
+	_sim.upload(world)
+	var before: PackedInt64Array = _sim.histogram(world)
+	var bytes: PackedByteArray = await _run_and_read(600)
+	var after: PackedInt64Array = _sim.histogram(bytes)
+	check(after[Elements.Id.CLONE] == before[Elements.Id.CLONE], "clone cells persist (%d)" % after[Elements.Id.CLONE])
+	check(_sim.mass(bytes, Elements.Id.WATER) > _sim.mass(world, Elements.Id.WATER) * 2, "clone multiplied the seed water (%d -> %d units)" % [_sim.mass(world, Elements.Id.WATER), _sim.mass(bytes, Elements.Id.WATER)])
+	var stray := 0
+	for id in Elements.count():
+		if id != Elements.Id.AIR and id != Elements.Id.WALL and id != Elements.Id.CLONE and id != Elements.Id.WATER:
+			stray += after[id]
+	check(stray == 0, "clone emits only the material it was armed with (%d stray cells)" % stray)
+
+
+func _test_void_sinks() -> void:
+	# Water dropped onto a void slab vanishes; the slab persists.
+	var data := _empty_world()
+	_fill_box(data, Vector3i(40, 4, 40), Vector3i(80, 6, 80), Elements.Id.VOID)
+	_fill_box(data, Vector3i(50, 20, 50), Vector3i(70, 36, 70), Elements.Id.WATER)
+	var world := data.to_byte_array()
+	_sim.upload(world)
+	var before: PackedInt64Array = _sim.histogram(world)
+	var after: PackedInt64Array = _sim.histogram(await _run_and_read(1500))
+	check(before[Elements.Id.WATER] == 20 * 16 * 20, "test world has 6400 water")
+	check(after[Elements.Id.WATER] == 0, "void swallowed all the water (%d left)" % after[Elements.Id.WATER])
+	check(after[Elements.Id.VOID] == before[Elements.Id.VOID], "void slab persists")
+
+
+func _test_wax_melts_on_fire() -> void:
+	# Placeholder until temperature-driven phase change lands: the interim
+	# FIRE + WAX contact rule must melt some of a pillar under a flame.
+	var data := _empty_world()
+	_fill_box(data, Vector3i(56, 4, 56), Vector3i(72, 30, 72), Elements.Id.WAX)
+	_fill_box(data, Vector3i(60, 30, 60), Vector3i(68, 36, 68), Elements.Id.FIRE)
+	var world := data.to_byte_array()
+	_sim.upload(world)
+	var before: PackedInt64Array = _sim.histogram(world)
+	var after: PackedInt64Array = _sim.histogram(await _run_and_read(600))
+	check(after[Elements.Id.WAX] < before[Elements.Id.WAX], "flame melted some wax (%d of %d left)" % [after[Elements.Id.WAX], before[Elements.Id.WAX]])
+	check(after[Elements.Id.WAX] + after[Elements.Id.MOLTEN_WAX] >= before[Elements.Id.WAX] * 9 / 10, "wax mostly melted rather than vanished")
 
 
 func _test_oil_floats() -> void:

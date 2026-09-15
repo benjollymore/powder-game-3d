@@ -13,6 +13,7 @@ func _initialize() -> void:
 	_test_liquid_constants()
 	_test_scenarios()
 	_test_elements()
+	_test_scenario_oracle()
 	print("%d checks, %d failures" % [_checks, _failures])
 	quit(1 if _failures > 0 else 0)
 
@@ -110,3 +111,31 @@ func _test_elements() -> void:
 	check(reacts.size() == Elements.REACTIONS.size() * 16, "reaction buffer is 16 bytes per rule")
 	check(reacts.decode_float(8) == 0.0 and reacts.decode_float(12) == 0.0, "rules without a thermal dictionary encode zero min_t and heat")
 	check(Elements.PALETTE_SIZE >= Elements.count(), "palette holds every element")
+
+
+## CPU-replay oracle for the heat milestone scenarios, pinned per grid size as
+## the SHA-256 of the built world. A deliberate scenario edit re-pins it.
+const SCENARIO_ORACLE := {
+	128: {
+		"Candle": "fbf188db49f6bc9bba9b252aa9e505509b38a1240d37127bc088fb37734fa124",
+		"Powder keg": "c3de548bba4ae045e24005a10eac72f6ec499f8d13e020244f2133b526ed71d1",
+		"Acid rain": "d02f96db653f2cc1b23ae03952343b35cd5abb07d09c8bd461e104f9fd717d73",
+	},
+	256: {
+		"Candle": "c888f8470cc38e43dc5336ef52fa12d2d0931e0b6f2c1a59a0b94c76fb62528b",
+		"Powder keg": "43e70f2930bc577ff97e23dc3c0b37cae58d5ab46b49bd745bdcef1b3dd2520a",
+		"Acid rain": "d4aaf79b33bd357b0e816718a22abf70a6ec1d058042a157baad70dde921e45b",
+	},
+}
+
+
+func _test_scenario_oracle() -> void:
+	if not SCENARIO_ORACLE.has(VoxelCodec.GRID):
+		return
+	var pinned: Dictionary = SCENARIO_ORACLE[VoxelCodec.GRID]
+	for name in pinned:
+		var ctx := HashingContext.new()
+		ctx.start(HashingContext.HASH_SHA256)
+		ctx.update(Scenarios.build(name))
+		var actual := ctx.finish().hex_encode()
+		check(actual == pinned[name], "scenario '%s' CPU build matches its pinned oracle at %d (got %s)" % [name, VoxelCodec.GRID, actual])

@@ -15,6 +15,11 @@ const FIRE := Elements.Id.FIRE
 const PLANT := Elements.Id.PLANT
 const OIL := Elements.Id.OIL
 const WOOD := Elements.Id.WOOD
+const WAX := Elements.Id.WAX
+const GUNPOWDER := Elements.Id.GUNPOWDER
+const ACID := Elements.Id.ACID
+const CLONE := Elements.Id.CLONE
+const VOID := Elements.Id.VOID
 
 const DEFAULT := "Demo"
 ## Reference box the coordinates below are written in.
@@ -22,7 +27,7 @@ const REF := 128
 
 
 static func names() -> PackedStringArray:
-	return PackedStringArray(["Demo", "Dam break", "U-bend", "Pressure pipe", "Forest fire", "Oil spill", "Steam vent", "Empty"])
+	return PackedStringArray(["Demo", "Dam break", "U-bend", "Pressure pipe", "Forest fire", "Oil spill", "Steam vent", "Candle", "Powder keg", "Acid rain", "Empty"])
 
 
 ## Primitive ops (already scaled to the grid) that make up a scenario.
@@ -42,6 +47,9 @@ static func ops(name: String) -> Array:
 		"Forest fire": _forest_fire(data)
 		"Oil spill": _oil_spill(data)
 		"Steam vent": _steam_vent(data)
+		"Candle": _candle(data)
+		"Powder keg": _powder_keg(data)
+		"Acid rain": _acid_rain(data)
 		"Empty": _floor(data)
 		_: _demo(data)
 	var out := _ops
@@ -137,6 +145,38 @@ static func _steam_vent(data: PackedInt32Array) -> void:
 	_bowl(data, Vector3i(30, 0, 30), Vector3i(98, 50, 98), 3)
 	_box(data, Vector3i(33, 3, 33), Vector3i(95, 12, 95), FIRE)
 	_box(data, Vector3i(33, 12, 33), Vector3i(95, 36, 95), WATER)
+
+
+## A wax pillar with a flame on top: it melts, runs down and sets again.
+static func _candle(data: PackedInt32Array) -> void:
+	_floor(data)
+	_box(data, Vector3i(56, 4, 56), Vector3i(72, 44, 72), WAX)
+	_box(data, Vector3i(60, 44, 60), Vector3i(68, 50, 68), FIRE)
+
+
+## A gunpowder trail from a spark to a keg standing beside an oil pool.
+static func _powder_keg(data: PackedInt32Array) -> void:
+	_floor(data)
+	_box(data, Vector3i(10, 4, 60), Vector3i(92, 6, 64), GUNPOWDER)        # trail
+	_bowl(data, Vector3i(88, 4, 48), Vector3i(112, 30, 76), 2)             # keg
+	_box(data, Vector3i(90, 6, 50), Vector3i(110, 26, 74), GUNPOWDER)
+	_box(data, Vector3i(88, 4, 60), Vector3i(90, 8, 64), GUNPOWDER)        # trail enters the keg
+	_bowl(data, Vector3i(30, 4, 80), Vector3i(110, 24, 124), 3)            # oil pool
+	_box(data, Vector3i(33, 7, 83), Vector3i(107, 18, 121), OIL)
+	_box(data, Vector3i(6, 4, 58), Vector3i(10, 8, 66), FIRE)              # spark
+
+
+## A clone tray drips acid onto a layered pile; a void floor drains the runoff.
+static func _acid_rain(data: PackedInt32Array) -> void:
+	_floor(data)
+	_box(data, Vector3i(6, 4, 6), Vector3i(REF - 6, 5, REF - 6), VOID)     # drain
+	_box(data, Vector3i(40, 4, 40), Vector3i(88, 8, 88), WALL)             # platform
+	_box(data, Vector3i(42, 8, 42), Vector3i(86, 20, 86), SAND)
+	_box(data, Vector3i(42, 20, 42), Vector3i(86, 30, 86), WOOD)
+	_box(data, Vector3i(42, 30, 42), Vector3i(86, 40, 86), SAND)
+	_box(data, Vector3i(52, 102, 52), Vector3i(76, 104, 76), WALL)         # cap
+	_box(data, Vector3i(52, 100, 52), Vector3i(76, 102, 76), CLONE)        # tray
+	_box(data, Vector3i(52, 99, 52), Vector3i(76, 100, 76), ACID)          # seed
 
 
 ## Wood trunk with a canopy of overlapping plant spheres; face-connected so
