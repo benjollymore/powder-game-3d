@@ -94,6 +94,8 @@ vec2 droplet_proxy_interval(Ray r, ivec3 cell, float fill, out vec3 entry_normal
 uniform float refraction = 0.045;
 // How strongly froth (fields.A) whitens surfaces and interiors.
 uniform float foam_strength = 1.0;
+// Optical density of liquid self-illumination per cell of path (lava, acid).
+uniform float glow_density = 0.6;
 // Per element id: foam multiplier for that liquid (1 = normal, 0 = never foams).
 uniform float liquid_foam[32];
 uniform float liquid_full = 200.0;
@@ -232,7 +234,7 @@ void fragment() {
 			// the old colour and start a new one, with no surface in between.
 			float len = max(t - t_in, 0.0);
 			float foam = field(r.p0 + r.dir * (0.5 * (t_in + t))).a * foam_strength * liquid_foam[int(liquid_id)];
-			emitted += trans * (liquid_col * liquid_shade + liquid_glow) * (1.0 - exp(-scatter * len));
+			emitted += trans * liquid_col * liquid_shade * (1.0 - exp(-scatter * len)) + trans * liquid_glow * (1.0 - exp(-glow_density * len));
 			emitted += trans * foam_shade * (1.0 - exp(-0.35 * foam * len));
 			trans *= exp(-(absorb + vec3(0.35 * foam)) * len);
 			liquid_len += len;
@@ -295,7 +297,7 @@ void fragment() {
 				float ts = bisect(r.p0, r.dir, t_prev, t_next, 0, false);
 				float len = max(ts - t_in, 0.0);
 				float foam = field(r.p0 + r.dir * (0.5 * (t_in + ts))).a * foam_strength * liquid_foam[int(liquid_id)];
-				emitted += trans * (liquid_col * liquid_shade + liquid_glow) * (1.0 - exp(-scatter * len));
+				emitted += trans * liquid_col * liquid_shade * (1.0 - exp(-scatter * len)) + trans * liquid_glow * (1.0 - exp(-glow_density * len));
 				emitted += trans * foam_shade * (1.0 - exp(-0.35 * foam * len));
 				trans *= exp(-(absorb + vec3(0.35 * foam)) * len);
 				liquid_len += len;
@@ -330,7 +332,7 @@ void fragment() {
 				}
 				previous_liquid_exit = end;
 				previous_proxy_exit = end;
-				emitted += trans * (palette[int(id)].rgb * (liquid_shade + vec3(palette[int(id)].a)) + thermal_emission(r.cell)) * (1.0 - exp(-scatter * len));
+				emitted += trans * palette[int(id)].rgb * liquid_shade * (1.0 - exp(-scatter * len)) + trans * (palette[int(id)].rgb * palette[int(id)].a + thermal_emission(r.cell)) * (1.0 - exp(-glow_density * len));
 				trans *= exp(-absorb * len);
 				liquid_len += len;
 				if (t_first < 0.0) { t_first = start; }
@@ -356,7 +358,7 @@ void fragment() {
 	if (in_liquid) {
 		float len = max(min(t_stop, r.t_box) - t_in, 0.0);
 		float foam = field(r.p0 + r.dir * (t_in + 0.5 * len)).a * foam_strength * liquid_foam[int(liquid_id)];
-		emitted += trans * (liquid_col * liquid_shade + liquid_glow) * (1.0 - exp(-scatter * len));
+		emitted += trans * liquid_col * liquid_shade * (1.0 - exp(-scatter * len)) + trans * liquid_glow * (1.0 - exp(-glow_density * len));
 		emitted += trans * foam_shade * (1.0 - exp(-0.35 * foam * len));
 		trans *= exp(-(absorb + vec3(0.35 * foam)) * len);
 		liquid_len += len;

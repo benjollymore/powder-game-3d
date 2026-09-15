@@ -99,6 +99,21 @@ func _fill(data: PackedInt32Array, id: int, lo: Vector3i, edge: int) -> void:
 			for x in range(lo.x, lo.x + edge):
 				data[VoxelCodec.index(x, y, z)] = VoxelCodec.encode(id, (x * 7 + y * 3 + z * 13) % 256, Elements.default_amount(id))
 
+## Screen-space bounding box of a cube of cells, from the current camera.
+func _screen_box(lo: Vector3i, edge: int) -> Rect2:
+	var box := Rect2()
+	var first := true
+	for dz in [0, edge]:
+		for dy in [0, edge]:
+			for dx in [0, edge]:
+				var p := camera.unproject_position(_world(Vector3(lo + Vector3i(dx, dy, dz))))
+				if first:
+					box = Rect2(p, Vector2.ZERO)
+					first = false
+				else:
+					box = box.expand(p)
+	return box.intersection(Rect2(Vector2.ZERO, Vector2(root.size)))
+
 func _world(cell: Vector3) -> Vector3:
 	var size: float = sim.world_size()
 	return (cell / float(VoxelCodec.GRID) - Vector3.ONE * 0.5) * size
@@ -217,29 +232,33 @@ func _run() -> void:
 		var n := VoxelCodec.GRID
 		camera.position = _world(Vector3(64, 80, 165) * s)
 		camera.look_at(_world(Vector3(64, 34, 64) * s), Vector3.UP)
-		var lit_by_element := {}
-		for name in present:
-			var id: int = Elements.Id[name]
-			var bytes := _block_world(id, Vector3i(n / 2 - n / 16, n / 4, n / 2 - n / 16), n / 8)
-			sim.upload(bytes)
-			for i in 6:
-				await process_frame
-			var img := await _capture(1, has_thermal, has_thermal)
-			var lit_here := _lit(img)
-			lit_by_element[name] = lit_here
-			_check(img.save_png(out_dir + "/material-%s.png" % name.to_lower()) == OK, "%s capture saved" % name)
-			_check(lit_here > 400, "%s renders visibly as a block (%d lit pixels)" % [name, lit_here])
-			var after_one: PackedByteArray = await _read()
-			_check(after_one == bytes, "%s fixture physical bytes unchanged" % name)
-		# Wall floor alone gives the reference count; every element must add to it.
-		var floor_only := _block_world(Elements.Id.WALL, Vector3i(0, 0, 0), 0)
+		var block_lo := Vector3i(n / 2 - n / 16, n / 4, n / 2 - n / 16)
+		var block_edge := n / 8
+		# Slab alone first: every element capture is compared against it.
+		var floor_only := _block_world(Elements.Id.WALL, block_lo, 0)
 		sim.upload(floor_only)
 		for i in 6:
 			await process_frame
 		var floor_img := await _capture(1, has_thermal, has_thermal)
-		var floor_lit := _lit(floor_img)
+		_check(floor_img.save_png(out_dir + "/material-floor-only.png") == OK, "slab-only capture saved")
+		# The block's projected bounding box on screen; a cube covers at least a
+		# third of its own box from any angle, so that is the visibility gate.
+		var box := _screen_box(block_lo, block_edge)
+		var required := int(box.get_area() * 0.33)
+		print("block screen box %s area %d, required footprint %d px" % [box, int(box.get_area()), required])
+		_check(required > 400, "fixture block projects large enough to judge (%d px required)" % required)
 		for name in present:
-			_check(lit_by_element[name] > floor_lit + 200, "%s is visible above the floor slab (+%d px)" % [name, lit_by_element[name] - floor_lit])
+			var id: int = Elements.Id[name]
+			var bytes := _block_world(id, block_lo, block_edge)
+			sim.upload(bytes)
+			for i in 6:
+				await process_frame
+			var img := await _capture(1, has_thermal, has_thermal)
+			_check(img.save_png(out_dir + "/material-%s.png" % name.to_lower()) == OK, "%s capture saved" % name)
+			var footprint := _diff(floor_img, img)
+			_check(footprint >= required, "%s block footprint covers its screen box (%d of %d px)" % [name, footprint, required])
+			var after_one: PackedByteArray = await _read()
+			_check(after_one == bytes, "%s fixture physical bytes unchanged" % name)
 		# Group shot for side-by-side review.
 		var data := WorldBuilder.empty()
 		var k := 0
