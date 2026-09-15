@@ -1,0 +1,22 @@
+[
+  {
+    "name": "cadence128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 3.2,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/batch_cadence.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/cadence128"
+    ]
+  }
+]

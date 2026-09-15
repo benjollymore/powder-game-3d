@@ -1,0 +1,19 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: the fresh build has a thermal layer of the expected size
+ok: the editor accepts an explicit thermal layer with a build
+ok: explicit temperatures reach the GPU exactly
+ok: Build save writes both layers exactly as version 2
+ok: the saved build is clean and named
+ok: entering Test snapshots the authored temperatures
+ok: the live experiment has evolved
+ok: saving during Test stores the authored temperatures, not the live ones
+ok: Return restores the authored temperatures exactly
+ok: an authored stroke changed the build
+ok: Undo restores voxels and temperatures exactly
+ok: opening a version-2 file restores voxels and temperatures exactly
+ok: a version-1 file opens with default temperatures identical to a fresh build
+ok: default temperatures differ from the authored ones, so the previous check is meaningful
+ok: saving an opened version-1 world upgrades it to version 2 with its actual temperatures
+ARCHIVES_THERMAL_CHECKS 15 FAILURES 0

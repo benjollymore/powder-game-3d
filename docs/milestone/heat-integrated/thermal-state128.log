@@ -7,6 +7,7 @@ ok: Texture3DRD accepts R32G32_SFLOAT as FORMAT_RGF at grid extent (9, 128)
 ok: authoritative texture list names both layers
 ok: thermal readback has eight bytes per cell
 ok: upload without thermal bytes initialises each cell from its element's initial temperature
+ok: fire and lava start hot after an upload without thermal bytes (1200 K, 1500 K)
 ok: initialised latent progress is zero everywhere
 ok: uploaded thermal bytes read back exactly
 ok: thermal upload leaves voxel bytes exact
@@ -24,4 +25,4 @@ ok: restoring the same record again returns both layers to the captured state
 ok: probe under the hot grain reports Sand at 900 K ({ "pos": (64, 84, 64), "element": 2, "temperature": 900.0, "amount": 0, "flags": 0 })
 ok: probe reports water amount and temperature ({ "pos": (5, 5, 5), "element": 3, "temperature": 310.0, "amount": 150, "flags": 0 })
 ok: probe through empty air misses
-THERMAL_STATE_CHECKS 23 FAILURES 0
+THERMAL_STATE_CHECKS 24 FAILURES 0

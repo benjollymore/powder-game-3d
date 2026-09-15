@@ -1,0 +1,14 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: a full water cell reads name, Celsius and full
+ok: a half cell reads its percentage
+ok: an over-full cell reads compressed
+ok: the falling flag is spelled out
+ok: non-liquids show no amount
+ok: hot cells round to whole degrees
+ok: cold cells read negative Celsius
+ok: air is nothing to inspect
+ok: a miss reads empty
+ok: malformed or unknown records read empty
+ok: rounding is to the nearest degree
+Cell inspector CPU: 11 checks, 0 failures

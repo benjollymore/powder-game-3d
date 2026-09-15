@@ -3,7 +3,7 @@
     "name": "palette128",
     "pass": true,
     "exit": 0,
-    "seconds": 2.14,
+    "seconds": 4.81,
     "command": [
       "godot",
       "--path",

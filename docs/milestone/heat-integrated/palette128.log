@@ -41,7 +41,7 @@ ok: WAX capture saved
 ok: WAX block footprint covers its screen box (3782 of 1218 px)
 ok: WAX fixture physical bytes unchanged
 ok: MOLTEN_WAX capture saved
-ok: MOLTEN_WAX block footprint covers its screen box (2642 of 1218 px)
+ok: MOLTEN_WAX block footprint covers its screen box (2641 of 1218 px)
 ok: MOLTEN_WAX fixture physical bytes unchanged
 ok: GUNPOWDER capture saved
 ok: GUNPOWDER block footprint covers its screen box (3947 of 1218 px)
@@ -50,7 +50,7 @@ ok: GAS capture saved
 ok: GAS block footprint covers its screen box (3438 of 1218 px)
 ok: GAS fixture physical bytes unchanged
 ok: ACID capture saved
-ok: ACID block footprint covers its screen box (2642 of 1218 px)
+ok: ACID block footprint covers its screen box (2641 of 1218 px)
 ok: ACID fixture physical bytes unchanged
 ok: CLONE capture saved
 ok: CLONE block footprint covers its screen box (3717 of 1218 px)

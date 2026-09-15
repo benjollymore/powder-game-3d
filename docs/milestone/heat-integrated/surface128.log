@@ -12,7 +12,7 @@ ok: erase can target the retained section boundary
 ok: out-of-world ray is a miss
 ok: invalid zero-length ray is rejected
 ok: all preview picking leaves exact GPU material bytes unchanged
-surface two-ray transaction completion_us=6445 undo_bytes=18432
+surface two-ray transaction completion_us=3902 undo_bytes=18432
 ok: fast flat-face surface stroke is connected at radius zero
 ok: surface additive stroke preserves every underlying wall cell
 ok: surface undo captures local tiles, not the world (12 bytes per cell with thermal)

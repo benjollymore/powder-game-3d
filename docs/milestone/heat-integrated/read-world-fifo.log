@@ -1,0 +1,16 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: own read returns the voxels and temperatures of one job ([[1, 1]])
+ok: a foreign readback completion is dropped, not queued for the next reader
+ok: read_world after a foreign readback returns the current temperatures ([[1, 200]])
+ok: no reader is left waiting
+ok: back-to-back readers each get their own completion in order ([["a", 200], ["b", 7]])
+ok: an interleaved foreign request completes every reader once and leaves nothing queued ([["a", 7], ["b", 7]])
+ok: thermal brushes show once the simulator has HEAT/COOL modes
+ok: Heat selects as a tool, not a material
+ok: a Build heat stroke records one undoable thermal stroke of +40 K
+ok: a surface-targeted thermal stroke is refused with guidance instead of a material stroke
+ok: live cooling paints immediately at the pointer once per new cell ([[[(91, 64, 64)], 2, -40.0]])
+ok: choosing a material clears the thermal tool
+ok: a simulator without request_state_readback yields voxels and an empty thermal layer ([[1, 0]])
+Read world FIFO: 13 checks, 0 failures

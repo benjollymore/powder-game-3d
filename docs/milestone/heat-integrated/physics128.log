@@ -18,7 +18,7 @@ ok: water surface is level: column heights 10.21..10.22
 ok: bowl holds a real depth of water (min column 10.21)
 --- _test_steam_rises
 ok: steam count conserved: 8000 -> 8000
-ok: steam has risen: 2 of 8000 still under air
+ok: steam has risen: 8 of 8000 still under air
 ok: no steam left in the lower half (found 0)
 --- _test_brush_paints
 ok: brush painted a radius-5 sphere: 515 voxels (expected 515)
@@ -61,25 +61,25 @@ ok: quarter water density ~85 (got 85)
 ok: steam density 0 (got 0)
 --- _test_fire_burns_plant
 ok: test world has 8000 plant
-ok: fire consumed the plant block (8 of 8000 left)
+ok: fire consumed the plant block (5 of 8000 left)
 ok: fire burnt out afterwards (0 left)
 --- _test_water_boils_on_fire
-ok: some water boiled into steam (77)
-ok: water mass lost matches boiled cells (9283 units, 77 cells)
+ok: some water boiled into steam (80)
+ok: water mass lost matches boiled cells (9691 units, 80 cells)
 ok: fire was put out (0 left)
 --- _test_oil_floats
 ok: oil and water mass conserved
 ok: oil floats on water: 0 water voxels above oil
 --- _test_air_boundary
 ok: air velocity is exactly zero inside solids (max (0.0, 0.0, 0.0))
-ok: air rises above the fire (mean v_y 0.045)
+ok: air rises above the fire (mean v_y 0.605)
 ok: simulation is deterministic from the same upload
 --- _test_air_plume
 ok: steam count conserved in the plume (4096 -> 4096)
 ok: steam plume rose (centroid y 37.5 -> 124.5)
-ok: plume spread sideways (xz spread 6.5 -> 12.6)
-ok: updraft above the fire (mean v_y 0.196)
-ok: flow recirculates sideways somewhere (max |v_x| 0.474, |v_z| 0.469)
+ok: plume spread sideways (xz spread 6.5 -> 12.9)
+ok: updraft above the fire (mean v_y 1.221)
+ok: flow recirculates sideways somewhere (max |v_x| 1.544, |v_z| 1.544)
 --- _test_splats
 ok: falling sand emits splats (803)
 ok: a settled pile emits no splats (0)
@@ -90,7 +90,7 @@ ok: no fx particles without fire or impacts (0)
 ok: liquid that comes to rest carries the landed bits
 ok: falling water is frothy in fields.A (255)
 ok: calm water carries no froth (0)
-ok: fire feeds embers into the fx pool (318 alive)
+ok: fire feeds embers into the fx pool (319 alive)
 ok: no leaves without plant (0)
 --- _test_gas_ignites
 ok: test world has 5760 gas
@@ -98,24 +98,71 @@ ok: gas flashed into flame (0 of 5760 left)
 ok: wall untouched by the flash
 --- _test_gunpowder_flash
 ok: test world has 720 gunpowder
-ok: flash consumed the trail (0 of 720 left)
+ok: flash consumed the trail (1 of 720 left)
 --- _test_acid_dissolves_sand
 ok: test world has 10368 sand
 ok: acid dissolved over a tenth of the sand (0 of 10368 left)
-ok: acid thinned as it ate (800000 -> 388925 units)
+ok: acid thinned as it ate (800000 -> 388514 units)
 ok: wall is immune to acid
 ok: dissolved sand left smoke or cleared air
 --- _test_clone_emits
 ok: clone cells persist (800)
-ok: clone multiplied the seed water (80000 -> 657800 units)
+ok: clone multiplied the seed water (51200 -> 723000 units)
+ok: water was emitted from the underside of the plate (770 cells below)
 ok: clone emits only the material it was armed with (0 stray cells)
 --- _test_void_sinks
 ok: test world has 6400 water
 ok: void swallowed all the water (0 left)
 ok: void slab persists
 --- _test_wax_melts_on_fire
-ok: flame melted some wax (6649 of 6656 left)
-ok: wax mostly melted rather than vanished
+ok: flame melted some wax (6651 of 6656 left)
+ok: wax mostly melted rather than vanished (6651 wax + 5 molten of 6656)
+--- _test_fuse_deterministic
+ok: seed grains are still burning down their fuse after one tick (0 fire)
+ok: the fuse advanced into the block-shared neighbour only (4 lit)
+ok: twenty repeats of upload plus one tick are byte-identical
+ok: after eight ticks the fuse has run past the seed (3 lit beyond)
+ok: after eight ticks the seed grains have burnt (0 left)
+--- _test_stale_flags_cleared
+ok: the armed clone emitted gunpowder (1502 grains)
+ok: no grain lit itself from a stale flag (0 fire, 0 smoke)
+--- _test_heat_two_cell_exchange
+ok: fixture transfer (50.000 J) is below the half-equalising clamp
+ok: the pair exchanged heat within 4 ticks
+ok: one exchange equals the canonical transfer (385.71429 / 314.28571 K, expected 385.71429 / 314.28571)
+ok: insulating wall never changes temperature (0 wall cells changed)
+ok: conduction changes no voxel byte
+--- _test_heat_closed_box_equilibrium
+ok: box energy conserved over 1000 ticks (drift -0.00000305944648)
+ok: temperatures stay within the initial bounds (340.40..369.67)
+ok: water mass conserved under the hydro remap
+ok: box energy conserved over 4000 ticks (drift -0.00001351263752)
+ok: box reaches the capacity-weighted equilibrium 354.69 K (354.48..354.88)
+ok: energy did not leak through the wall
+--- _test_heat_falling_water_pool
+falling water pool energy drift 0.00001065204002 (8491565.761 -> 8491656.214 J)
+ok: water mass conserved
+ok: pool energy drift within the air-displacement bound (0.00001065204002)
+ok: no temperature outside the initial bounds (298.26..340.00)
+--- _test_ice_plateau
+ok: melting ice sat exactly at 273.15 K with latent progress
+ok: some ice melted (52 of 64 left)
+ok: melt water exists
+ok: nothing got hotter than the slab (max 299.996 K)
+--- _test_water_over_lava
+ok: water boiled into steam (406 cells)
+ok: lava crusted into stone (512 cells)
+ok: water mass lost matches boiled cells (82521 units, 406 cells)
+ok: basin intact
+--- _test_wood_ignites_by_conduction
+ok: the metal bar carried heat out of the chamber (1058 K at its end)
+ok: wood ignited by conduction alone (6 of 24 left)
+ok: a 400 K heat blob never exceeds 400 K (max 389.23)
+ok: warm but sub-ignition wood does not catch
+--- _test_heat_brush_roundtrip
+ok: heat brush leaves voxel bytes untouched
+ok: heat brush adds full strength at the centre with radial falloff (343.150 K)
+ok: an equal cool restores the thermal bytes exactly
 --- _test_large_grid_smoke
 skipped (grid 128)
-92 checks, 0 failures
+129 checks, 0 failures
