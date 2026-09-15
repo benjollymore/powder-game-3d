@@ -3,7 +3,7 @@
     "name": "liquid-render128",
     "pass": true,
     "exit": 0,
-    "seconds": 3.32,
+    "seconds": 3.25,
     "command": [
       "godot",
       "--path",

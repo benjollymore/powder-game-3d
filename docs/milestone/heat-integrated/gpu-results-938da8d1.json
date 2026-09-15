@@ -3,7 +3,7 @@
     "name": "ripple128",
     "pass": true,
     "exit": 0,
-    "seconds": 5.97,
+    "seconds": 5.85,
     "command": [
       "godot",
       "--path",

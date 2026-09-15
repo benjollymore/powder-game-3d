@@ -67,7 +67,7 @@
 		"box_area": 7872,
 		"caustic": 1.0,
 		"liquid": "lava",
-		"streaks": 144,
+		"streaks": 160,
 		"variant": "baseline",
 		"view": "front"
 	},
@@ -83,7 +83,7 @@
 		"box_area": 7872,
 		"caustic": 1.0,
 		"liquid": "lava",
-		"streaks": 161,
+		"streaks": 167,
 		"variant": "candidate",
 		"view": "front"
 	},
@@ -91,7 +91,7 @@
 		"box_area": 7872,
 		"caustic": 0.0,
 		"liquid": "lava",
-		"streaks": 161,
+		"streaks": 167,
 		"variant": "candidate",
 		"view": "front"
 	},
@@ -99,7 +99,7 @@
 		"box_area": 12298,
 		"caustic": 1.0,
 		"liquid": "lava",
-		"streaks": 154,
+		"streaks": 171,
 		"variant": "baseline",
 		"view": "oblique"
 	},
@@ -115,7 +115,7 @@
 		"box_area": 12298,
 		"caustic": 1.0,
 		"liquid": "lava",
-		"streaks": 141,
+		"streaks": 1834,
 		"variant": "candidate",
 		"view": "oblique"
 	},
@@ -123,7 +123,7 @@
 		"box_area": 12298,
 		"caustic": 0.0,
 		"liquid": "lava",
-		"streaks": 138,
+		"streaks": 1834,
 		"variant": "candidate",
 		"view": "oblique"
 	}

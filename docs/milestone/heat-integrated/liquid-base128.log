@@ -29,28 +29,28 @@ ok: water physical bytes unchanged across captures
 ok: lava block uploads exactly
 ok: lava block has no falling flags, so the droplet and thin-spray paths cannot apply
 ok: lava front baseline-caustic capture saved
-{"box_area":7872,"caustic":1.0,"liquid":"lava","streaks":144,"variant":"baseline","view":"front"}
+{"box_area":7872,"caustic":1.0,"liquid":"lava","streaks":160,"variant":"baseline","view":"front"}
 ok: lava front baseline-nocaustic capture saved
 {"box_area":7872,"caustic":0.0,"liquid":"lava","streaks":0,"variant":"baseline","view":"front"}
 ok: lava front candidate-caustic capture saved
-{"box_area":7872,"caustic":1.0,"liquid":"lava","streaks":161,"variant":"candidate","view":"front"}
+{"box_area":7872,"caustic":1.0,"liquid":"lava","streaks":167,"variant":"candidate","view":"front"}
 ok: lava front candidate-nocaustic capture saved
-{"box_area":7872,"caustic":0.0,"liquid":"lava","streaks":161,"variant":"candidate","view":"front"}
+{"box_area":7872,"caustic":0.0,"liquid":"lava","streaks":167,"variant":"candidate","view":"front"}
 {"liquid":"lava","self_noise_pixels":0,"self_noise_streaks":0,"view":"front"}
-ok: lava front baseline streaks come from caustics (144 with, 0 without)
-ok: lava front candidate is insensitive to caustic_strength (delta 0, noise 0, baseline delta 144)
+ok: lava front baseline streaks come from caustics (160 with, 0 without)
+ok: lava front candidate is insensitive to caustic_strength (delta 0, noise 0, baseline delta 160)
 ok: lava front candidate caustic toggle changes no more pixels than self-noise plus 1% of the block box
 ok: lava oblique baseline-caustic capture saved
-{"box_area":12298,"caustic":1.0,"liquid":"lava","streaks":154,"variant":"baseline","view":"oblique"}
+{"box_area":12298,"caustic":1.0,"liquid":"lava","streaks":171,"variant":"baseline","view":"oblique"}
 ok: lava oblique baseline-nocaustic capture saved
 {"box_area":12298,"caustic":0.0,"liquid":"lava","streaks":0,"variant":"baseline","view":"oblique"}
 ok: lava oblique candidate-caustic capture saved
-{"box_area":12298,"caustic":1.0,"liquid":"lava","streaks":141,"variant":"candidate","view":"oblique"}
+{"box_area":12298,"caustic":1.0,"liquid":"lava","streaks":1834,"variant":"candidate","view":"oblique"}
 ok: lava oblique candidate-nocaustic capture saved
-{"box_area":12298,"caustic":0.0,"liquid":"lava","streaks":138,"variant":"candidate","view":"oblique"}
+{"box_area":12298,"caustic":0.0,"liquid":"lava","streaks":1834,"variant":"candidate","view":"oblique"}
 {"liquid":"lava","self_noise_pixels":0,"self_noise_streaks":0,"view":"oblique"}
-ok: lava oblique baseline streaks come from caustics (154 with, 0 without)
-ok: lava oblique candidate is insensitive to caustic_strength (delta 3, noise 0, baseline delta 154)
+ok: lava oblique baseline streaks come from caustics (171 with, 0 without)
+ok: lava oblique candidate is insensitive to caustic_strength (delta 0, noise 0, baseline delta 171)
 ok: lava oblique candidate caustic toggle changes no more pixels than self-noise plus 1% of the block box
 ok: lava physical bytes unchanged across captures
 LIQUID_BASE_CHECKS 32 FAILURES 0

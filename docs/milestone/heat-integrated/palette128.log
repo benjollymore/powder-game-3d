@@ -20,7 +20,7 @@ ok: Forest fire physical bytes unchanged across captures
 ok: thermal bound (true) with thermal_glow=false renders byte-identically
 ok: thermal-off capture saved
 ok: thermal-on capture saved
-ok: thermal glow at 1400 K changes the picture (34533 pixels)
+ok: thermal glow at 1400 K changes the picture (34530 pixels)
 ok: thermal glow leaves physical bytes unchanged
 ok: slab-only capture saved
 block screen box [P: (131.9612, 111.0102), S: (56.0777, 65.84861)] area 3692, required footprint 1218 px
