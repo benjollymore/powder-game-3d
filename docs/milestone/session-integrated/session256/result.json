@@ -1,0 +1,1010 @@
+{
+  "aa": 1,
+  "baseline_memory": {
+    "godot_static_bytes": 217832032,
+    "history_bytes": 0,
+    "redo_entries": 0,
+    "renderer_video_bytes": 400277504,
+    "rss_kib": 655888,
+    "undo_entries": 0
+  },
+  "checks": 481,
+  "cycles": [
+    {
+      "achieved_ticks_per_second": 115.708004422617,
+      "active_frames": 32,
+      "active_mean_ms": 19.44509375,
+      "active_p95_ms": 27.09,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.622256,
+      "archive_roundtrip": false,
+      "cap_frames": 8,
+      "cycle": 1,
+      "cycle_s": 2.489504,
+      "elapsed_s": 2.489504,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487312876,
+        "history_bytes": 34816,
+        "redo_entries": 0,
+        "renderer_video_bytes": 400277504,
+        "rss_kib": 865648,
+        "undo_entries": 2
+      },
+      "retained_undo_entries": 2
+    },
+    {
+      "achieved_ticks_per_second": 119.889501842469,
+      "active_frames": 36,
+      "active_mean_ms": 16.6814444444444,
+      "active_p95_ms": 17.392,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.600553,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 2,
+      "cycle_s": 2.383351,
+      "elapsed_s": 4.879953,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487343716,
+        "history_bytes": 53248,
+        "redo_entries": 0,
+        "renderer_video_bytes": 400277504,
+        "rss_kib": 931360,
+        "undo_entries": 4
+      },
+      "retained_undo_entries": 4
+    },
+    {
+      "achieved_ticks_per_second": 121.762932441055,
+      "active_frames": 37,
+      "active_mean_ms": 16.6470540540541,
+      "active_p95_ms": 16.989,
+      "active_requested_ticks": 75,
+      "active_seconds": 0.615951,
+      "archive_roundtrip": false,
+      "cap_frames": 1,
+      "cycle": 3,
+      "cycle_s": 2.413437,
+      "elapsed_s": 7.304192,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487372068,
+        "history_bytes": 71680,
+        "redo_entries": 0,
+        "renderer_video_bytes": 400277504,
+        "rss_kib": 931376,
+        "undo_entries": 6
+      },
+      "retained_undo_entries": 6
+    },
+    {
+      "achieved_ticks_per_second": 119.842806185886,
+      "active_frames": 36,
+      "active_mean_ms": 16.6879166666667,
+      "active_p95_ms": 17.496,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.600787,
+      "archive_roundtrip": false,
+      "cap_frames": 1,
+      "cycle": 4,
+      "cycle_s": 2.400356,
+      "elapsed_s": 9.712586,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487402092,
+        "history_bytes": 90112,
+        "redo_entries": 0,
+        "renderer_video_bytes": 400277504,
+        "rss_kib": 931440,
+        "undo_entries": 8
+      },
+      "retained_undo_entries": 8
+    },
+    {
+      "achieved_ticks_per_second": 115.140479609444,
+      "active_frames": 34,
+      "active_mean_ms": 17.8805882352941,
+      "active_p95_ms": 25.217,
+      "active_requested_ticks": 70,
+      "active_seconds": 0.607953,
+      "archive_roundtrip": true,
+      "cap_frames": 3,
+      "cycle": 5,
+      "cycle_s": 8.012108,
+      "elapsed_s": 17.734988,
+      "file_phase": {
+        "cancel": true,
+        "discard": true,
+        "modifier": "ctrl",
+        "named_save": true,
+        "phase": 1,
+        "save_as": true,
+        "save_first": true
+      },
+      "memory": {
+        "godot_static_bytes": 487328208,
+        "history_bytes": 0,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 998464,
+        "undo_entries": 0
+      },
+      "retained_undo_entries": 0
+    },
+    {
+      "achieved_ticks_per_second": 114.966851224564,
+      "active_frames": 34,
+      "active_mean_ms": 17.6517941176471,
+      "active_p95_ms": 20.334,
+      "active_requested_ticks": 69,
+      "active_seconds": 0.600173,
+      "archive_roundtrip": false,
+      "cap_frames": 1,
+      "cycle": 6,
+      "cycle_s": 2.432654,
+      "elapsed_s": 20.175579,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487372824,
+        "history_bytes": 34816,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064080,
+        "undo_entries": 2
+      },
+      "retained_undo_entries": 2
+    },
+    {
+      "achieved_ticks_per_second": 121.611536103633,
+      "active_frames": 36,
+      "active_mean_ms": 16.6741666666667,
+      "active_p95_ms": 17.157,
+      "active_requested_ticks": 73,
+      "active_seconds": 0.600272,
+      "archive_roundtrip": false,
+      "cap_frames": 1,
+      "cycle": 7,
+      "cycle_s": 2.382551,
+      "elapsed_s": 22.567217,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487399924,
+        "history_bytes": 53248,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064112,
+        "undo_entries": 4
+      },
+      "retained_undo_entries": 4
+    },
+    {
+      "achieved_ticks_per_second": 121.428464495481,
+      "active_frames": 36,
+      "active_mean_ms": 16.69875,
+      "active_p95_ms": 17.161,
+      "active_requested_ticks": 73,
+      "active_seconds": 0.601177,
+      "archive_roundtrip": false,
+      "cap_frames": 1,
+      "cycle": 8,
+      "cycle_s": 2.418687,
+      "elapsed_s": 24.993434,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487429016,
+        "history_bytes": 71680,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064112,
+        "undo_entries": 6
+      },
+      "retained_undo_entries": 6
+    },
+    {
+      "achieved_ticks_per_second": 120.266145730064,
+      "active_frames": 37,
+      "active_mean_ms": 16.6295405405405,
+      "active_p95_ms": 17.408,
+      "active_requested_ticks": 74,
+      "active_seconds": 0.615302,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 9,
+      "cycle_s": 2.403891,
+      "elapsed_s": 27.405413,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487458776,
+        "history_bytes": 90112,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064128,
+        "undo_entries": 8
+      },
+      "retained_undo_entries": 8
+    },
+    {
+      "achieved_ticks_per_second": 113.008415032412,
+      "active_frames": 33,
+      "active_mean_ms": 18.5019090909091,
+      "active_p95_ms": 27.226,
+      "active_requested_ticks": 69,
+      "active_seconds": 0.610574,
+      "archive_roundtrip": true,
+      "cap_frames": 3,
+      "cycle": 10,
+      "cycle_s": 7.993688,
+      "elapsed_s": 35.408706,
+      "file_phase": {
+        "cancel": true,
+        "discard": true,
+        "modifier": "meta",
+        "named_save": true,
+        "phase": 2,
+        "save_as": true,
+        "save_first": true
+      },
+      "memory": {
+        "godot_static_bytes": 487340268,
+        "history_bytes": 0,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 998672,
+        "undo_entries": 0
+      },
+      "retained_undo_entries": 0
+    },
+    {
+      "achieved_ticks_per_second": 117.421616993517,
+      "active_frames": 35,
+      "active_mean_ms": 17.5189714285714,
+      "active_p95_ms": 20.476,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.613175,
+      "archive_roundtrip": false,
+      "cap_frames": 2,
+      "cycle": 11,
+      "cycle_s": 2.40816,
+      "elapsed_s": 37.824633,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487384900,
+        "history_bytes": 34816,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064208,
+        "undo_entries": 2
+      },
+      "retained_undo_entries": 2
+    },
+    {
+      "achieved_ticks_per_second": 121.896118502531,
+      "active_frames": 37,
+      "active_mean_ms": 16.6289189189189,
+      "active_p95_ms": 17.199,
+      "active_requested_ticks": 75,
+      "active_seconds": 0.615278,
+      "archive_roundtrip": false,
+      "cap_frames": 1,
+      "cycle": 12,
+      "cycle_s": 2.42621,
+      "elapsed_s": 40.260384,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487412636,
+        "history_bytes": 53248,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064240,
+        "undo_entries": 4
+      },
+      "retained_undo_entries": 4
+    },
+    {
+      "achieved_ticks_per_second": 120.025627093352,
+      "active_frames": 37,
+      "active_mean_ms": 16.6625945945946,
+      "active_p95_ms": 17.123,
+      "active_requested_ticks": 74,
+      "active_seconds": 0.616535,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 13,
+      "cycle_s": 2.366994,
+      "elapsed_s": 42.636758,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487441728,
+        "history_bytes": 71680,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064240,
+        "undo_entries": 6
+      },
+      "retained_undo_entries": 6
+    },
+    {
+      "achieved_ticks_per_second": 119.906872329158,
+      "active_frames": 36,
+      "active_mean_ms": 16.6790833333333,
+      "active_p95_ms": 17.62,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.600466,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 14,
+      "cycle_s": 2.379748,
+      "elapsed_s": 45.024384,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487470892,
+        "history_bytes": 90112,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064240,
+        "undo_entries": 8
+      },
+      "retained_undo_entries": 8
+    },
+    {
+      "achieved_ticks_per_second": 118.382889726338,
+      "active_frames": 36,
+      "active_mean_ms": 16.8940833333333,
+      "active_p95_ms": 17.492,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.608196,
+      "archive_roundtrip": true,
+      "cap_frames": 0,
+      "cycle": 15,
+      "cycle_s": 7.917574,
+      "elapsed_s": 52.949726,
+      "file_phase": {
+        "cancel": true,
+        "discard": true,
+        "modifier": "ctrl",
+        "named_save": true,
+        "phase": 3,
+        "save_as": true,
+        "save_first": true
+      },
+      "memory": {
+        "godot_static_bytes": 487352240,
+        "history_bytes": 0,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 998736,
+        "undo_entries": 0
+      },
+      "retained_undo_entries": 0
+    },
+    {
+      "achieved_ticks_per_second": 117.565019092237,
+      "active_frames": 33,
+      "active_mean_ms": 18.8156060606061,
+      "active_p95_ms": 27.397,
+      "active_requested_ticks": 73,
+      "active_seconds": 0.620933,
+      "archive_roundtrip": false,
+      "cap_frames": 7,
+      "cycle": 16,
+      "cycle_s": 2.433693,
+      "elapsed_s": 55.390981,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487396872,
+        "history_bytes": 34816,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064336,
+        "undo_entries": 2
+      },
+      "retained_undo_entries": 2
+    },
+    {
+      "achieved_ticks_per_second": 119.838218405153,
+      "active_frames": 36,
+      "active_mean_ms": 16.6886944444444,
+      "active_p95_ms": 17.696,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.60081,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 17,
+      "cycle_s": 2.376687,
+      "elapsed_s": 57.776751,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487424608,
+        "history_bytes": 53248,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064336,
+        "undo_entries": 4
+      },
+      "retained_undo_entries": 4
+    },
+    {
+      "achieved_ticks_per_second": 120.261845791811,
+      "active_frames": 37,
+      "active_mean_ms": 16.6298918918919,
+      "active_p95_ms": 17.183,
+      "active_requested_ticks": 74,
+      "active_seconds": 0.615324,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 18,
+      "cycle_s": 2.42016,
+      "elapsed_s": 60.206772,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487453700,
+        "history_bytes": 71680,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064336,
+        "undo_entries": 6
+      },
+      "retained_undo_entries": 6
+    },
+    {
+      "achieved_ticks_per_second": 119.995000208325,
+      "active_frames": 36,
+      "active_mean_ms": 16.6668055555556,
+      "active_p95_ms": 17.554,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.600025,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 19,
+      "cycle_s": 2.35735,
+      "elapsed_s": 62.572901,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487482720,
+        "history_bytes": 90112,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064352,
+        "undo_entries": 8
+      },
+      "retained_undo_entries": 8
+    },
+    {
+      "achieved_ticks_per_second": 115.877691912227,
+      "active_frames": 34,
+      "active_mean_ms": 18.0207352941176,
+      "active_p95_ms": 25.64,
+      "active_requested_ticks": 71,
+      "active_seconds": 0.612715,
+      "archive_roundtrip": true,
+      "cap_frames": 3,
+      "cycle": 20,
+      "cycle_s": 7.967879,
+      "elapsed_s": 70.549477,
+      "file_phase": {
+        "cancel": true,
+        "discard": true,
+        "modifier": "meta",
+        "named_save": true,
+        "phase": 4,
+        "save_as": true,
+        "save_first": true
+      },
+      "memory": {
+        "godot_static_bytes": 487364308,
+        "history_bytes": 0,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 998816,
+        "undo_entries": 0
+      },
+      "retained_undo_entries": 0
+    },
+    {
+      "achieved_ticks_per_second": 119.86136035985,
+      "active_frames": 36,
+      "active_mean_ms": 16.6854444444444,
+      "active_p95_ms": 17.602,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.600694,
+      "archive_roundtrip": false,
+      "cap_frames": 1,
+      "cycle": 21,
+      "cycle_s": 2.403659,
+      "elapsed_s": 72.96178,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487408940,
+        "history_bytes": 34816,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064352,
+        "undo_entries": 2
+      },
+      "retained_undo_entries": 2
+    },
+    {
+      "achieved_ticks_per_second": 119.878523096595,
+      "active_frames": 36,
+      "active_mean_ms": 16.6829722222222,
+      "active_p95_ms": 17.65,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.600608,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 22,
+      "cycle_s": 2.381185,
+      "elapsed_s": 75.355285,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487436676,
+        "history_bytes": 53248,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064352,
+        "undo_entries": 4
+      },
+      "retained_undo_entries": 4
+    },
+    {
+      "achieved_ticks_per_second": 120.083669107827,
+      "active_frames": 37,
+      "active_mean_ms": 16.6545135135135,
+      "active_p95_ms": 17.989,
+      "active_requested_ticks": 74,
+      "active_seconds": 0.616237,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 23,
+      "cycle_s": 2.420989,
+      "elapsed_s": 77.784318,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487465768,
+        "history_bytes": 71680,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064368,
+        "undo_entries": 6
+      },
+      "retained_undo_entries": 6
+    },
+    {
+      "achieved_ticks_per_second": 120.222769542699,
+      "active_frames": 37,
+      "active_mean_ms": 16.6355405405405,
+      "active_p95_ms": 17.424,
+      "active_requested_ticks": 74,
+      "active_seconds": 0.615524,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 24,
+      "cycle_s": 2.370362,
+      "elapsed_s": 80.167105,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487494788,
+        "history_bytes": 90112,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064368,
+        "undo_entries": 8
+      },
+      "retained_undo_entries": 8
+    },
+    {
+      "achieved_ticks_per_second": 111.535701123116,
+      "active_frames": 33,
+      "active_mean_ms": 18.7461515151515,
+      "active_p95_ms": 25.619,
+      "active_requested_ticks": 69,
+      "active_seconds": 0.618636,
+      "archive_roundtrip": true,
+      "cap_frames": 3,
+      "cycle": 25,
+      "cycle_s": 8.021601,
+      "elapsed_s": 88.195717,
+      "file_phase": {
+        "cancel": true,
+        "discard": true,
+        "modifier": "ctrl",
+        "named_save": true,
+        "phase": 5,
+        "save_as": true,
+        "save_first": true
+      },
+      "memory": {
+        "godot_static_bytes": 487376112,
+        "history_bytes": 0,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 998832,
+        "undo_entries": 0
+      },
+      "retained_undo_entries": 0
+    },
+    {
+      "achieved_ticks_per_second": 104.703439588532,
+      "active_frames": 28,
+      "active_mean_ms": 22.1713571428571,
+      "active_p95_ms": 33.524,
+      "active_requested_ticks": 65,
+      "active_seconds": 0.620801,
+      "archive_roundtrip": false,
+      "cap_frames": 9,
+      "cycle": 26,
+      "cycle_s": 2.417276,
+      "elapsed_s": 90.620895,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487420744,
+        "history_bytes": 34816,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064368,
+        "undo_entries": 2
+      },
+      "retained_undo_entries": 2
+    },
+    {
+      "achieved_ticks_per_second": 120.201483676151,
+      "active_frames": 37,
+      "active_mean_ms": 16.6386486486487,
+      "active_p95_ms": 17.066,
+      "active_requested_ticks": 74,
+      "active_seconds": 0.615633,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 27,
+      "cycle_s": 2.396102,
+      "elapsed_s": 93.026452,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487448480,
+        "history_bytes": 53248,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064368,
+        "undo_entries": 4
+      },
+      "retained_undo_entries": 4
+    },
+    {
+      "achieved_ticks_per_second": 120.144107986823,
+      "active_frames": 37,
+      "active_mean_ms": 16.6461891891892,
+      "active_p95_ms": 17.794,
+      "active_requested_ticks": 74,
+      "active_seconds": 0.615927,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 28,
+      "cycle_s": 2.383035,
+      "elapsed_s": 95.419266,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487477572,
+        "history_bytes": 71680,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064400,
+        "undo_entries": 6
+      },
+      "retained_undo_entries": 6
+    },
+    {
+      "achieved_ticks_per_second": 119.748727253979,
+      "active_frames": 36,
+      "active_mean_ms": 16.7010277777778,
+      "active_p95_ms": 17.301,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.601259,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 29,
+      "cycle_s": 2.377597,
+      "elapsed_s": 97.805253,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487506928,
+        "history_bytes": 90112,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064416,
+        "undo_entries": 8
+      },
+      "retained_undo_entries": 8
+    },
+    {
+      "achieved_ticks_per_second": 113.301608882846,
+      "active_frames": 33,
+      "active_mean_ms": 18.7215151515152,
+      "active_p95_ms": 25.239,
+      "active_requested_ticks": 70,
+      "active_seconds": 0.61782,
+      "archive_roundtrip": true,
+      "cap_frames": 4,
+      "cycle": 30,
+      "cycle_s": 7.975809,
+      "elapsed_s": 105.791485,
+      "file_phase": {
+        "cancel": true,
+        "discard": true,
+        "modifier": "meta",
+        "named_save": true,
+        "phase": 6,
+        "save_as": true,
+        "save_first": true
+      },
+      "memory": {
+        "godot_static_bytes": 487388324,
+        "history_bytes": 0,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 998896,
+        "undo_entries": 0
+      },
+      "retained_undo_entries": 0
+    },
+    {
+      "achieved_ticks_per_second": 115.7411128508,
+      "active_frames": 33,
+      "active_mean_ms": 18.8506060606061,
+      "active_p95_ms": 26.373,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.622078,
+      "archive_roundtrip": false,
+      "cap_frames": 6,
+      "cycle": 31,
+      "cycle_s": 2.424887,
+      "elapsed_s": 108.223932,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487432956,
+        "history_bytes": 34816,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064448,
+        "undo_entries": 2
+      },
+      "retained_undo_entries": 2
+    },
+    {
+      "achieved_ticks_per_second": 119.830240492635,
+      "active_frames": 36,
+      "active_mean_ms": 16.6897777777778,
+      "active_p95_ms": 17.035,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.60085,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 32,
+      "cycle_s": 2.380089,
+      "elapsed_s": 110.614735,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487460692,
+        "history_bytes": 53248,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064448,
+        "undo_entries": 4
+      },
+      "retained_undo_entries": 4
+    },
+    {
+      "achieved_ticks_per_second": 119.80312353366,
+      "active_frames": 36,
+      "active_mean_ms": 16.6935277777778,
+      "active_p95_ms": 17.456,
+      "active_requested_ticks": 72,
+      "active_seconds": 0.600986,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 33,
+      "cycle_s": 2.352585,
+      "elapsed_s": 112.978456,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487489784,
+        "history_bytes": 71680,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064448,
+        "undo_entries": 6
+      },
+      "retained_undo_entries": 6
+    },
+    {
+      "achieved_ticks_per_second": 120.137866319024,
+      "active_frames": 37,
+      "active_mean_ms": 16.646972972973,
+      "active_p95_ms": 17.296,
+      "active_requested_ticks": 74,
+      "active_seconds": 0.615959,
+      "archive_roundtrip": false,
+      "cap_frames": 0,
+      "cycle": 34,
+      "cycle_s": 2.405096,
+      "elapsed_s": 115.392716,
+      "file_phase": {
+
+      },
+      "memory": {
+        "godot_static_bytes": 487518804,
+        "history_bytes": 90112,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 1064464,
+        "undo_entries": 8
+      },
+      "retained_undo_entries": 8
+    },
+    {
+      "achieved_ticks_per_second": 114.751554802757,
+      "active_frames": 35,
+      "active_mean_ms": 17.6776857142857,
+      "active_p95_ms": 20.127,
+      "active_requested_ticks": 71,
+      "active_seconds": 0.618728,
+      "archive_roundtrip": true,
+      "cap_frames": 1,
+      "cycle": 35,
+      "cycle_s": 7.991359,
+      "elapsed_s": 123.393542,
+      "file_phase": {
+        "cancel": true,
+        "discard": true,
+        "modifier": "ctrl",
+        "named_save": true,
+        "phase": 7,
+        "save_as": true,
+        "save_first": true
+      },
+      "memory": {
+        "godot_static_bytes": 487400128,
+        "history_bytes": 0,
+        "redo_entries": 0,
+        "renderer_video_bytes": 408813568,
+        "rss_kib": 998944,
+        "undo_entries": 0
+      },
+      "retained_undo_entries": 0
+    }
+  ],
+  "duration_s": 120.0,
+  "engine": "4.6.3-stable (official)",
+  "failures": 0,
+  "file_phases": [
+    {
+      "cancel": true,
+      "discard": true,
+      "modifier": "ctrl",
+      "named_save": true,
+      "phase": 1,
+      "save_as": true,
+      "save_first": true
+    },
+    {
+      "cancel": true,
+      "discard": true,
+      "modifier": "meta",
+      "named_save": true,
+      "phase": 2,
+      "save_as": true,
+      "save_first": true
+    },
+    {
+      "cancel": true,
+      "discard": true,
+      "modifier": "ctrl",
+      "named_save": true,
+      "phase": 3,
+      "save_as": true,
+      "save_first": true
+    },
+    {
+      "cancel": true,
+      "discard": true,
+      "modifier": "meta",
+      "named_save": true,
+      "phase": 4,
+      "save_as": true,
+      "save_first": true
+    },
+    {
+      "cancel": true,
+      "discard": true,
+      "modifier": "ctrl",
+      "named_save": true,
+      "phase": 5,
+      "save_as": true,
+      "save_first": true
+    },
+    {
+      "cancel": true,
+      "discard": true,
+      "modifier": "meta",
+      "named_save": true,
+      "phase": 6,
+      "save_as": true,
+      "save_first": true
+    },
+    {
+      "cancel": true,
+      "discard": true,
+      "modifier": "ctrl",
+      "named_save": true,
+      "phase": 7,
+      "save_as": true,
+      "save_first": true
+    }
+  ],
+  "grid": 256,
+  "phase_every": 5,
+  "render_mode": 0,
+  "render_scale": 1.0,
+  "scheduler": {
+    "max_ticks_per_frame": 3,
+    "target_ticks_per_second": 120.0
+  },
+  "successful_saves": 22,
+  "viewport_size": "(1600, 900)",
+  "vsync": 1
+}
