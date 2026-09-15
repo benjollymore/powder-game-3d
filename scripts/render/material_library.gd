@@ -37,7 +37,11 @@ static func padded(values: Variant) -> Variant:
 	if values is PackedColorArray or values is PackedFloat32Array or values is PackedInt32Array:
 		if values.size() < SHADER_SLOTS:
 			var out = values.duplicate()
+			var first: int = out.size()
 			out.resize(SHADER_SLOTS)
+			# Resize fills colours with opaque black; unused ids must be fully zero.
+			for i in range(first, SHADER_SLOTS):
+				out[i] = Color(0, 0, 0, 0) if values is PackedColorArray else 0
 			return out
 	return values
 

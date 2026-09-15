@@ -1,0 +1,110 @@
+[
+	{
+		"allocation_counter": 16,
+		"capacity": 16,
+		"case": "small-grains",
+		"eligible": 100,
+		"fallback": true,
+		"physical_candidates": 100,
+		"voxel_sha256": "ef2e838b62b75f043abe04706848c1e68afd77c589afdf80da9601005b5a4c69"
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 100,
+		"case": "small-grains",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100,
+		"voxel_sha256": "ef2e838b62b75f043abe04706848c1e68afd77c589afdf80da9601005b5a4c69"
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 101,
+		"case": "small-grains",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100,
+		"voxel_sha256": "ef2e838b62b75f043abe04706848c1e68afd77c589afdf80da9601005b5a4c69"
+	},
+	{
+		"allocation_counter": 22,
+		"capacity": 16,
+		"case": "small-droplets",
+		"eligible": 100,
+		"fallback": true,
+		"physical_candidates": 100,
+		"voxel_sha256": "253ff4394dbb1dad06af7d6f7a07ce2d425dabb45375e506cb59f8823f8127bb"
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 100,
+		"case": "small-droplets",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100,
+		"voxel_sha256": "253ff4394dbb1dad06af7d6f7a07ce2d425dabb45375e506cb59f8823f8127bb"
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 101,
+		"case": "small-droplets",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100,
+		"voxel_sha256": "253ff4394dbb1dad06af7d6f7a07ce2d425dabb45375e506cb59f8823f8127bb"
+	},
+	{
+		"allocation_counter": 24,
+		"capacity": 16,
+		"case": "small-leaves",
+		"eligible": 100,
+		"fallback": true,
+		"physical_candidates": 100,
+		"voxel_sha256": "51d625d578da398cda83d1fe1fdac5c9e40b87ece529a9b8b47cbcde72cbce61"
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 100,
+		"case": "small-leaves",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100,
+		"voxel_sha256": "51d625d578da398cda83d1fe1fdac5c9e40b87ece529a9b8b47cbcde72cbce61"
+	},
+	{
+		"allocation_counter": 100,
+		"capacity": 101,
+		"case": "small-leaves",
+		"eligible": 100,
+		"fallback": false,
+		"physical_candidates": 100,
+		"voxel_sha256": "51d625d578da398cda83d1fe1fdac5c9e40b87ece529a9b8b47cbcde72cbce61"
+	},
+	{
+		"allocation_counter": 131172,
+		"capacity": 131072,
+		"case": "actual-grain-capacity",
+		"eligible": 131328,
+		"fallback": true,
+		"physical_candidates": 131328,
+		"voxel_sha256": "8c86522d1822648edd3d89a83a73956de99e5cdcc783073d349ca2a0dd523b4d"
+	},
+	{
+		"allocation_counter": 65550,
+		"capacity": 65536,
+		"case": "actual-droplet-capacity",
+		"eligible": 65792,
+		"fallback": true,
+		"physical_candidates": 65792,
+		"voxel_sha256": "5f3d1b6f972c1656236faf33545d3c83abd700c317a88cb699cb968af4dfa6c8"
+	},
+	{
+		"allocation_counter": 262208,
+		"capacity": 262144,
+		"case": "actual-leaf-capacity",
+		"eligible": 262400,
+		"fallback": true,
+		"physical_candidates": 262400,
+		"voxel_sha256": "a8cf30ac9e75585b110bc9884006287e77f5015f4f6ec132f181f814e124ce61"
+	}
+]

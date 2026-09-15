@@ -16,7 +16,7 @@ const FLAG_FLAMMABLE := 1 << 4
 const FLAG_LEAFY := 1 << 5
 
 ## Renderer palette slots; keep in sync with `palette[16]` in the shader.
-const PALETTE_SIZE := 16
+const PALETTE_SIZE := 32
 
 ## Nominal full amount of a liquid cell (byte z). Must match FULL in sim.glsl.
 const LIQUID_FULL := 200
@@ -161,6 +161,7 @@ static func extinction() -> PackedFloat32Array:
 static func palette() -> PackedColorArray:
 	var out := PackedColorArray()
 	out.resize(PALETTE_SIZE)
+	out.fill(Color(0, 0, 0, 0)) # unused ids stay fully transparent, not opaque black
 	for i in TABLE.size():
 		var c: Color = TABLE[i]["color"]
 		c.a = float(TABLE[i].get("emission", 0.0))

@@ -1,0 +1,21 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: element palette fits the shader slots
+ok: Demo baseline capture saved
+ok: Demo palette32 capture saved
+ok: Demo capture shows substantial content (67116 non-background pixels)
+ok: Demo renders byte-identically with palette 32
+ok: Demo physical bytes unchanged across captures
+ok: Dam break baseline capture saved
+ok: Dam break palette32 capture saved
+ok: Dam break capture shows substantial content (67500 non-background pixels)
+ok: Dam break renders byte-identically with palette 32
+ok: Dam break physical bytes unchanged across captures
+ok: Forest fire baseline capture saved
+ok: Forest fire palette32 capture saved
+ok: Forest fire capture shows substantial content (66758 non-background pixels)
+ok: Forest fire renders byte-identically with palette 32
+ok: Forest fire physical bytes unchanged across captures
+ok: padded palette has a zero tail
+PALETTE_CHECKS 17 FAILURES 0

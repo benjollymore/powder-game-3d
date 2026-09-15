@@ -189,6 +189,13 @@ func _rt_repeat(layer: int) -> void:
 func _rt_legacy_snapshot(layer: int) -> void:
 	var rd: RenderingDevice = sim._rd
 	var resources: Array[RID] = []
+	# The pinned baseline kernels declare the original 32-byte Elem record, so
+	# they read a copy of the live element buffer reduced to that prefix.
+	var live: PackedByteArray = rd.buffer_get_data(sim._elements_buffer)
+	var legacy_elems := PackedByteArray()
+	for i in range(0, live.size(), Elements.ELEM_BYTES):
+		legacy_elems.append_array(live.slice(i, i + 32))
+	var legacy_buffer := rd.storage_buffer_create(legacy_elems.size(), legacy_elems)
 	for name in ["splat_emit","fields"]:
 		var source := RDShaderSource.new()
 		source.source_compute = FileAccess.get_file_as_string("res://tests/milestone/fixtures/"+name+"_capacity_baseline.txt").replace("#[compute]","")
@@ -199,12 +206,12 @@ func _rt_legacy_snapshot(layer: int) -> void:
 		var uniforms: Array[RDUniform]
 		var push: PackedByteArray
 		if name=="splat_emit":
-			uniforms = [sim._image_uniform(0),sim._image_uniform(1,sim._occ_rid),sim._buffer_uniform(2,sim._elements_buffer),sim._buffer_uniform(3,sim._splat_counter),sim._buffer_uniform(4,sim._layer_buffer[0]),sim._buffer_uniform(5,sim._layer_buffer[1]),sim._buffer_uniform(6,sim._layer_buffer[2]),sim._buffer_uniform(7,sim._fx_spawns)]
+			uniforms = [sim._image_uniform(0),sim._image_uniform(1,sim._occ_rid),sim._buffer_uniform(2,legacy_buffer),sim._buffer_uniform(3,sim._splat_counter),sim._buffer_uniform(4,sim._layer_buffer[0]),sim._buffer_uniform(5,sim._layer_buffer[1]),sim._buffer_uniform(6,sim._layer_buffer[2]),sim._buffer_uniform(7,sim._fx_spawns)]
 			rd.buffer_clear(sim._splat_counter,0,sim.COUNTER_BYTES)
 			for i in 3: rd.buffer_clear(sim._layer_buffer[i],0,sim._layer_capacity[i]*64)
 			push = PackedInt32Array([sim._layer_capacity[0],sim._layer_capacity[1],sim._layer_capacity[2],0,sim._frame,Elements.Id.STEAM,0,0]).to_byte_array()
 		else:
-			uniforms = [sim._image_uniform(0),sim._image_uniform(1,sim._fields_views[0]),sim._buffer_uniform(2,sim._elements_buffer)]
+			uniforms = [sim._image_uniform(0),sim._image_uniform(1,sim._fields_views[0]),sim._buffer_uniform(2,legacy_buffer)]
 			push = PackedFloat32Array([0,0,0,0]).to_byte_array()
 		var uniform_set := rd.uniform_set_create(uniforms,shader,0)
 		var cl := rd.compute_list_begin()
@@ -216,6 +223,7 @@ func _rt_legacy_snapshot(layer: int) -> void:
 		resources.append_array([uniform_set,pipeline,shader])
 	_rt_snapshot(layer)
 	for rid in resources: rd.free_rid(rid)
+	rd.free_rid(legacy_buffer) # after the uniform sets that reference it
 
 func _check(ok: bool, message: String) -> void:
 	checks += 1

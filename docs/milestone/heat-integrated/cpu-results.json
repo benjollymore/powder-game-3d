@@ -1,0 +1,274 @@
+[
+  {
+    "name": "unit",
+    "pass": true,
+    "exit": 0,
+    "seconds": 1.64,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/unit/run_unit.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/unit"
+    ]
+  },
+  {
+    "name": "gestures",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.81,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/discovery/gesture_routing.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/gestures"
+    ]
+  },
+  {
+    "name": "editing-unit",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.31,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/editing_unit.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/editing-unit"
+    ]
+  },
+  {
+    "name": "paint-tools",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.39,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/paint_tools.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/paint-tools"
+    ]
+  },
+  {
+    "name": "time-controls",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.4,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/test_time_controls.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/time-controls"
+    ]
+  },
+  {
+    "name": "gpu-profile",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.3,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/gpu_profile.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/gpu-profile"
+    ]
+  },
+  {
+    "name": "editor-keyboard",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.41,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/editor_keyboard.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/editor-keyboard"
+    ]
+  },
+  {
+    "name": "history-guards",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.4,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/history_guards.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/history-guards"
+    ]
+  },
+  {
+    "name": "pending-gesture",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.3,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/pending_gesture.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/pending-gesture"
+    ]
+  },
+  {
+    "name": "surface-feedback",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.4,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/surface_feedback.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/surface-feedback"
+    ]
+  },
+  {
+    "name": "archive-format",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.3,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/world_archive.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/archive-format"
+    ]
+  },
+  {
+    "name": "archive-job",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.4,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/archive_job.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/archive-job"
+    ]
+  },
+  {
+    "name": "archive-panel",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.7,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/archive_panel.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/archive-panel"
+    ]
+  },
+  {
+    "name": "authored-document",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.3,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/authored_document.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/authored-document"
+    ]
+  },
+  {
+    "name": "file-shortcuts",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.5,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/file_shortcuts.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/file-shortcuts"
+    ]
+  },
+  {
+    "name": "guard-queue",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.4,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/heat",
+      "--headless",
+      "-s",
+      "res://tests/milestone/guard_queue.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/heat/docs/milestone/heat-integrated/guard-queue"
+    ]
+  }
+]

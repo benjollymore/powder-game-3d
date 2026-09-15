@@ -1,0 +1,258 @@
+[
+	{
+		"axis": 0,
+		"in_front": false,
+		"red_probe_pixels": 0,
+		"section": false,
+		"variant": "baseline",
+		"view": "axis-0"
+	},
+	{
+		"axis": 0,
+		"in_front": false,
+		"red_probe_pixels": 0,
+		"section": false,
+		"variant": "fixed",
+		"view": "axis-0"
+	},
+	{
+		"axis": 0,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": false,
+		"variant": "baseline",
+		"view": "axis-0"
+	},
+	{
+		"axis": 0,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": false,
+		"variant": "fixed",
+		"view": "axis-0"
+	},
+	{
+		"axis": 0,
+		"in_front": false,
+		"red_probe_pixels": 121,
+		"section": true,
+		"variant": "baseline",
+		"view": "axis-0"
+	},
+	{
+		"axis": 0,
+		"in_front": false,
+		"red_probe_pixels": 0,
+		"section": true,
+		"variant": "fixed",
+		"view": "axis-0"
+	},
+	{
+		"axis": 0,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": true,
+		"variant": "baseline",
+		"view": "axis-0"
+	},
+	{
+		"axis": 0,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": true,
+		"variant": "fixed",
+		"view": "axis-0"
+	},
+	{
+		"axis": 1,
+		"in_front": false,
+		"red_probe_pixels": 0,
+		"section": false,
+		"variant": "baseline",
+		"view": "axis-1"
+	},
+	{
+		"axis": 1,
+		"in_front": false,
+		"red_probe_pixels": 0,
+		"section": false,
+		"variant": "fixed",
+		"view": "axis-1"
+	},
+	{
+		"axis": 1,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": false,
+		"variant": "baseline",
+		"view": "axis-1"
+	},
+	{
+		"axis": 1,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": false,
+		"variant": "fixed",
+		"view": "axis-1"
+	},
+	{
+		"axis": 1,
+		"in_front": false,
+		"red_probe_pixels": 121,
+		"section": true,
+		"variant": "baseline",
+		"view": "axis-1"
+	},
+	{
+		"axis": 1,
+		"in_front": false,
+		"red_probe_pixels": 0,
+		"section": true,
+		"variant": "fixed",
+		"view": "axis-1"
+	},
+	{
+		"axis": 1,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": true,
+		"variant": "baseline",
+		"view": "axis-1"
+	},
+	{
+		"axis": 1,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": true,
+		"variant": "fixed",
+		"view": "axis-1"
+	},
+	{
+		"axis": 2,
+		"in_front": false,
+		"red_probe_pixels": 0,
+		"section": false,
+		"variant": "baseline",
+		"view": "axis-2"
+	},
+	{
+		"axis": 2,
+		"in_front": false,
+		"red_probe_pixels": 0,
+		"section": false,
+		"variant": "fixed",
+		"view": "axis-2"
+	},
+	{
+		"axis": 2,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": false,
+		"variant": "baseline",
+		"view": "axis-2"
+	},
+	{
+		"axis": 2,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": false,
+		"variant": "fixed",
+		"view": "axis-2"
+	},
+	{
+		"axis": 2,
+		"in_front": false,
+		"red_probe_pixels": 121,
+		"section": true,
+		"variant": "baseline",
+		"view": "axis-2"
+	},
+	{
+		"axis": 2,
+		"in_front": false,
+		"red_probe_pixels": 0,
+		"section": true,
+		"variant": "fixed",
+		"view": "axis-2"
+	},
+	{
+		"axis": 2,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": true,
+		"variant": "baseline",
+		"view": "axis-2"
+	},
+	{
+		"axis": 2,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": true,
+		"variant": "fixed",
+		"view": "axis-2"
+	},
+	{
+		"axis": 2,
+		"in_front": false,
+		"red_probe_pixels": 0,
+		"section": false,
+		"variant": "baseline",
+		"view": "axis-2-oblique"
+	},
+	{
+		"axis": 2,
+		"in_front": false,
+		"red_probe_pixels": 0,
+		"section": false,
+		"variant": "fixed",
+		"view": "axis-2-oblique"
+	},
+	{
+		"axis": 2,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": false,
+		"variant": "baseline",
+		"view": "axis-2-oblique"
+	},
+	{
+		"axis": 2,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": false,
+		"variant": "fixed",
+		"view": "axis-2-oblique"
+	},
+	{
+		"axis": 2,
+		"in_front": false,
+		"red_probe_pixels": 121,
+		"section": true,
+		"variant": "baseline",
+		"view": "axis-2-oblique"
+	},
+	{
+		"axis": 2,
+		"in_front": false,
+		"red_probe_pixels": 0,
+		"section": true,
+		"variant": "fixed",
+		"view": "axis-2-oblique"
+	},
+	{
+		"axis": 2,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": true,
+		"variant": "baseline",
+		"view": "axis-2-oblique"
+	},
+	{
+		"axis": 2,
+		"in_front": true,
+		"red_probe_pixels": 121,
+		"section": true,
+		"variant": "fixed",
+		"view": "axis-2-oblique"
+	}
+]
