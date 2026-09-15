@@ -224,8 +224,10 @@ void fragment() {
 	// with two drifting octaves of noise projected along the sun and tint it.
 	ivec3 above = ivec3(floor(ps + n_geo * 1.0));
 	if (!outside(above) && is_liquid(voxel_at(above).x)) {
-		// An opaque liquid (lava) casts no sunlit ripples onto what it covers.
-		float clarity = caustic_strength / max(liquid_opacity[int(voxel_at(above).x)], 1.0);
+		// An opaque liquid (lava) casts no sunlit ripples onto what it covers:
+		// the ripple strength falls off exponentially with opacity above water's
+		// 1.0 (exp(0) is exactly 1, so water keeps its bytes; 12 leaves 0.4%).
+		float clarity = caustic_strength * exp(-0.5 * (max(liquid_opacity[int(voxel_at(above).x)], 1.0) - 1.0));
 		vec3 q = ps - to_sun_model * (ps.y / max(abs(to_sun_model.y), 0.3));
 		float c1 = texture(grain_noise, vec3(q.xz / 9.0, sim_time * 0.35)).r;
 		float c2 = texture(grain_noise, vec3(q.xz / 6.5 + 3.7, 5.0 - sim_time * 0.27)).g;

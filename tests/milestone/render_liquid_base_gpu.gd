@@ -99,6 +99,15 @@ func _streaks(img: Image, box: Rect2) -> int:
 			count += 1
 	return count
 
+func _pixels_differing(a_img: Image, b_img: Image) -> int:
+	var a := a_img.get_data()
+	var b := b_img.get_data()
+	var changed := 0
+	for i in range(0, mini(a.size(), b.size()), 4):
+		if a[i] != b[i] or a[i + 1] != b[i + 1] or a[i + 2] != b[i + 2]:
+			changed += 1
+	return changed
+
 func _capture(baseline: bool, caustic: float) -> Image:
 	var mesh: ShaderMaterial = sim.get_node("Mesh").material_override
 	var volume: ShaderMaterial = sim.get_node("VolumeMesh").material_override
@@ -182,13 +191,25 @@ func _run() -> void:
 			var b_off: int = rows[rows.size() - 3].streaks
 			var c_on: int = rows[rows.size() - 2].streaks
 			var c_off: int = rows[rows.size() - 1].streaks
+			# Frame-to-frame self-noise of the metric: recapture the last variant.
+			var again := await _capture(false, 0.0)
+			var noise := absi(_streaks(again, box) - c_off)
+			var self_diff := _pixels_differing(images["candidate-nocaustic"], again)
+			print(JSON.stringify({"liquid": name, "view": view, "self_noise_streaks": noise, "self_noise_pixels": self_diff}))
 			if liquid == Elements.Id.WATER:
 				_check(images["baseline-caustic"].get_data() == images["candidate-caustic"].get_data(), "water %s renders byte-identically (opacity 1 keeps caustics)" % view)
 				_check(images["baseline-nocaustic"].get_data() == images["candidate-nocaustic"].get_data(), "water %s without caustics renders byte-identically" % view)
 			else:
-				_check(b_on >= 3 * maxi(b_off, 1) and b_on > 40, "lava %s baseline streaks come from caustics (%d with, %d without)" % [view, b_on, b_off])
-				_check(c_on <= maxi(int(1.5 * b_off), 20), "lava %s candidate keeps streaks at the no-caustic level with caustics on (%d vs %d)" % [view, c_on, b_off])
-				_check(absi(c_on - c_off) <= maxi(b_off, 20), "lava %s candidate is insensitive to caustic_strength (%d vs %d)" % [view, c_on, c_off])
+				# The streak count of an opaque block is dominated by its own base
+				# rim, so counts are compared only within one variant: what the
+				# caustic toggle changes. Baseline must be sensitive, the candidate
+				# insensitive within self-noise plus one part in twenty of the
+				# baseline's response.
+				var b_delta := absi(b_on - b_off)
+				var c_delta := absi(c_on - c_off)
+				_check(b_delta >= 40 and b_on >= 3 * maxi(b_off, 1), "lava %s baseline streaks come from caustics (%d with, %d without)" % [view, b_on, b_off])
+				_check(c_delta <= noise + maxi(b_delta / 20, 2), "lava %s candidate is insensitive to caustic_strength (delta %d, noise %d, baseline delta %d)" % [view, c_delta, noise, b_delta])
+				_check(_pixels_differing(images["candidate-caustic"], images["candidate-nocaustic"]) <= self_diff + maxi(int(box.get_area()) / 100, 8), "lava %s candidate caustic toggle changes no more pixels than self-noise plus 1%% of the block box" % view)
 		var after: PackedByteArray = await _read()
 		_check(after == bytes, "%s physical bytes unchanged across captures" % name)
 	var file := FileAccess.open(out_dir + "/liquid-base-metrics.json", FileAccess.WRITE)
