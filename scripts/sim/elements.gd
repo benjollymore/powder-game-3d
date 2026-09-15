@@ -142,7 +142,9 @@ const REACTIONS := [
 	# Heat milestone. `heat` is released into the pair once thermal lands; `cost`
 	# is liquid consumed (amount units) from a liquid input that survives unchanged.
 	[Id.FIRE, Id.GAS, Id.FIRE, Id.FIRE, 1.0, { "heat": 400.0 }],          # gas flashes
-	[Id.FIRE, Id.GUNPOWDER, Id.FIRE, Id.FIRE, 1.0, { "heat": 600.0 }],    # gunpowder goes off
+	# Gunpowder ignites through the fuse rule in sim.glsl (rule_special), not a
+	# pair rule: a pair rule turned the touched grain into fire that rose away
+	# before the next grain shared a block with it. Heat release ~600 K per cell.
 	[Id.FIRE, Id.WAX, Id.FIRE, Id.MOLTEN_WAX, 0.05],   # interim contact melt until rule_phase lands
 	[Id.FIRE, Id.MOLTEN_WAX, Id.FIRE, Id.FIRE, 0.02, { "heat": 120.0 }], # candle: molten wax feeds the flame
 	[Id.ACID, Id.SAND, Id.ACID, Id.SMOKE, 0.3, { "cost": 40 }],

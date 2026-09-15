@@ -60,9 +60,13 @@ const uint MIN_KEEP = 6u;      // cells below this donate everything to a neighb
 const uint FALLING = 1u;       // byte w flag: this liquid is falling (do not spray sideways)
 const uint AGE_SHIFT = 1u;     // byte w bits 1-2: powder moved age
 const uint CLONE_ARMED = 128u; // byte w bit 7 on a Clone cell: byte y holds the element it copies
+const uint FUSE_LIT = 64u;     // byte w bit 6 on Gunpowder: lit, becomes fire next tick
+const uint FIRE = 5u;
+const uint GUNPOWDER = 16u;
 const uint CLONE = 19u;
 const uint VOID = 20u;
 const float CLONE_RATE = 0.02; // per air partner per tick
+const ivec3 FACES[6] = ivec3[6](ivec3(1, 0, 0), ivec3(-1, 0, 0), ivec3(0, 1, 0), ivec3(0, -1, 0), ivec3(0, 0, 1), ivec3(0, 0, -1));
 
 // Per-invocation block state.
 ivec3 origin;
@@ -230,11 +234,19 @@ void rule_decay() {
 	}
 }
 
-// Clone and Void: immovable specials that act on their three block partners.
-// A Clone arms itself with the first ordinary material it touches (stored in
-// byte y, flagged in byte w so a fresh paint seed is never mistaken for an
-// id) and then emits that material into air partners at CLONE_RATE. A Void
-// swallows any partner that is not air, wall or another special.
+// Clone, Void and lit Gunpowder. Writes stay inside the block; detection reads
+// the six face neighbours through load() so a cell is not blind to what
+// touches it across this tick's partition boundary (the partition offset is
+// global per tick, so a falling sheet can otherwise leave before a clone
+// beside it ever shares a block with it).
+//
+// Clone arms itself with the first ordinary material on any face (id kept in
+// byte y, flagged in byte w so a paint seed is never mistaken for an id),
+// then emits that material into air partners at CLONE_RATE. Void swallows any
+// partner that is not air, wall or another special. Gunpowder touching fire
+// or lit gunpowder becomes lit; lit gunpowder turns into fire next tick, so a
+// fuse runs one cell per tick along the trail whether or not the flame
+// itself lingers.
 bool is_special(uint id) { return id == CLONE || id == VOID; }
 
 void rule_special() {
@@ -242,9 +254,8 @@ void rule_special() {
 		uint me = c[i].x;
 		if (me == CLONE) {
 			bool armed = (c[i].w & CLONE_ARMED) != 0u;
-			for (int axis = 0; axis < 3 && !armed; axis++) {
-				int j = i ^ (1 << axis);
-				uint other = c[j].x;
+			for (int f = 0; f < 6 && !armed; f++) {
+				uint other = load(pos[i] + FACES[f]).x;
 				if (other != AIR && other != WALL && !is_special(other)) {
 					c[i].y = other;
 					c[i].w |= CLONE_ARMED;
@@ -267,6 +278,18 @@ void rule_special() {
 				uint other = c[j].x;
 				if (other != AIR && other != WALL && !is_special(other)) {
 					c[j] = uvec4(AIR, c[j].y, 0u, 0u);
+				}
+			}
+		} else if (me == GUNPOWDER) {
+			if ((before[i].w & FUSE_LIT) != 0u) {
+				c[i] = uvec4(FIRE, c[i].y, 0u, 0u);
+				continue;
+			}
+			for (int f = 0; f < 6; f++) {
+				uvec4 n = load(pos[i] + FACES[f]);
+				if (n.x == FIRE || (n.x == GUNPOWDER && (n.w & FUSE_LIT) != 0u)) {
+					c[i].w |= FUSE_LIT;
+					break;
 				}
 			}
 		}
