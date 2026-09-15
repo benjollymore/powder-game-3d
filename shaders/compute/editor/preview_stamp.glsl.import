@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://bie6n50iria4l"
+path="res://.godot/imported/preview_stamp.glsl-1a28b6989df8b58301f0da0ee8208944.res"
+
+[deps]
+
+source_file="res://shaders/compute/editor/preview_stamp.glsl"
+dest_files=["res://.godot/imported/preview_stamp.glsl-1a28b6989df8b58301f0da0ee8208944.res"]
+
+[params]
+

@@ -1,0 +1,19 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: editor starts in paint mode with both tool buttons up
+ok: L enters line mode and presses its button
+ok: K switches to box mode and releases the line button
+ok: K again returns to paint mode
+ok: the Line button enters line mode
+ok: first click anchors without recording
+ok: an invalid target does not disturb the anchor
+ok: second click opens one transaction, records exactly one stroke and clears the anchor
+ok: the line stroke follows the face-connected path with the frozen radius, material, cube shape and plane axis
+ok: line mode stays active after a commit and the transaction is closed
+ok: a commit while the previous edit is still capturing keeps the anchor and explains
+ok: box commit records the half-open box between the two corners with the current material as its own transaction
+ok: the box tool records no brush stroke
+ok: switching tools drops the pending anchor
+ok: choosing a material keeps the tool and its anchor
+ok: Test mode refuses two-click tools with a message
+Placement tools CPU: 16 checks, 0 failures
