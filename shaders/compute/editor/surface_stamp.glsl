@@ -21,6 +21,9 @@ uint hash(uint x) {
 void main() {
     if (pick.target.w == 0) { return; }
     ivec3 delta = ivec3(gl_GlobalInvocationID) - ivec3(pc.brush.y);
+    // The dispatch is rounded up to whole 8-thread groups; bound every shape to
+    // [target - r, target + r], the box the undo capture covers.
+    if (any(greaterThan(abs(delta), ivec3(pc.brush.y)))) { return; }
     // Brush shape (docs/milestone/placement-brief.md contract 5): the cube is the
     // whole dispatch box; the disc is one cell thick along the dominant axis of
     // the hit-face normal, so it lies flat on the surface that was picked.

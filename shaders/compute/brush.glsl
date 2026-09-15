@@ -64,8 +64,14 @@ void main() {
 		int r = pc.center_radius.w;
 		d2 = d.x * d.x + d.y * d.y + d.z * d.z; // dot() is float-only in GLSL
 		int shape = (mode == MODE_HEAT || mode == MODE_COOL) ? SHAPE_SPHERE : pc.box_hi.x;
+		// The dispatch is rounded up to whole 8-thread groups, so every shape
+		// must bound itself to [c - r, c + r]; the undo capture covers exactly
+		// that box (EditGPU.capture_stroke) and nothing may write outside it.
+		if (any(greaterThan(abs(d), ivec3(r)))) {
+			return;
+		}
 		if (shape == SHAPE_CUBE) {
-			// The dispatch already covers exactly [c - r, c + r]^3.
+			// Everything inside the bound box.
 		} else if (shape == SHAPE_DISC) {
 			int axis = clamp(pc.box_hi.y, 0, 2);
 			if (d[axis] != 0) {
