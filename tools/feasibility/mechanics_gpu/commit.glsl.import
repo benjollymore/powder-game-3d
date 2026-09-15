@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://bnwk353ha352m"
+path="res://.godot/imported/commit.glsl-7d1ca3ca042dc1ac9086539a5cd9458f.res"
+
+[deps]
+
+source_file="res://tools/feasibility/mechanics_gpu/commit.glsl"
+dest_files=["res://.godot/imported/commit.glsl-7d1ca3ca042dc1ac9086539a5cd9458f.res"]
+
+[params]
+

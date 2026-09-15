@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://bc73pcc8nhxqc"
+path="res://.godot/imported/snapshot_grid.glsl-492ff8b9c5bb66d58217daa725eee185.res"
+
+[deps]
+
+source_file="res://tools/feasibility/mechanics_gpu/snapshot_grid.glsl"
+dest_files=["res://.godot/imported/snapshot_grid.glsl-492ff8b9c5bb66d58217daa725eee185.res"]
+
+[params]
+

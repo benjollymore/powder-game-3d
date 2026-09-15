@@ -1,0 +1,167 @@
+=== admission.gd exit 0
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+MECHANICS_ADMISSION checks=12 failures=0
+
+=== forcefree.gd exit 0
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: translation_pic initial complete support admitted
+ok: translation_pic attempted1 actual GPU acceptance status
+ok: translation_pic attempted1 particle mass bytes unchanged
+ok: translation_pic attempted10 actual GPU acceptance status
+ok: translation_pic attempted10 particle mass bytes unchanged
+ok: translation_pic attempted100 actual GPU acceptance status
+ok: translation_pic attempted100 particle mass bytes unchanged
+ok: rotation_pic initial complete support admitted
+ok: rotation_pic attempted1 actual GPU acceptance status
+ok: rotation_pic attempted1 particle mass bytes unchanged
+ok: rotation_pic attempted10 actual GPU acceptance status
+ok: rotation_pic attempted10 particle mass bytes unchanged
+ok: rotation_pic attempted100 actual GPU acceptance status
+ok: rotation_pic attempted100 particle mass bytes unchanged
+ok: nonaffine_pic initial complete support admitted
+ok: nonaffine_pic attempted1 actual GPU acceptance status
+ok: nonaffine_pic attempted1 particle mass bytes unchanged
+ok: nonaffine_pic attempted10 actual GPU acceptance status
+ok: nonaffine_pic attempted10 particle mass bytes unchanged
+ok: nonaffine_pic attempted100 actual GPU acceptance status
+ok: nonaffine_pic attempted100 particle mass bytes unchanged
+ok: translation_apic initial complete support admitted
+ok: translation_apic attempted1 actual GPU acceptance status
+ok: translation_apic attempted1 particle mass bytes unchanged
+ok: translation_apic attempted10 actual GPU acceptance status
+ok: translation_apic attempted10 particle mass bytes unchanged
+ok: translation_apic attempted100 actual GPU acceptance status
+ok: translation_apic attempted100 particle mass bytes unchanged
+ok: invalid initial support is rejected on GPU
+ok: valid run to invalid reset clears the previous grid
+ok: invalid initial support remains frozen through queued steps
+ok: invalid initial support cannot resurrect old grid data
+ok: rotation_apic initial complete support admitted
+ok: rotation_apic attempted1 actual GPU acceptance status
+ok: rotation_apic attempted1 particle mass bytes unchanged
+ok: rotation_apic attempted10 actual GPU acceptance status
+ok: rotation_apic attempted10 particle mass bytes unchanged
+ok: rotation_apic attempted100 actual GPU acceptance status
+ok: rotation_apic attempted100 particle mass bytes unchanged
+ok: nonaffine_apic initial complete support admitted
+ok: nonaffine_apic attempted1 actual GPU acceptance status
+ok: nonaffine_apic attempted1 particle mass bytes unchanged
+ok: nonaffine_apic attempted10 actual GPU acceptance status
+ok: nonaffine_apic attempted10 particle mass bytes unchanged
+ok: nonaffine_apic attempted100 actual GPU acceptance status
+ok: nonaffine_apic attempted100 particle mass bytes unchanged
+ok: nonaffine_apic batches[1] preserve particle and status bytes
+ok: nonaffine_apic batches[3] preserve particle and status bytes
+ok: nonaffine_apic batches[7, 2, 5, 1, 9] preserve particle and status bytes
+ok: nonaffine_apic invalid timestep does not mutate state
+ok: nonaffine_apic invalid timestep does not mutate state
+ok: nonaffine_apic invalid timestep does not mutate state
+ok: nonaffine_apic invalid timestep does not mutate state
+ok: nonaffine_apic invalid timestep does not mutate state
+ok: nonaffine_apic invalid timestep does not mutate state
+ok: affine_apic initial complete support admitted
+ok: affine_apic attempted1 actual GPU acceptance status
+ok: affine_apic attempted1 particle mass bytes unchanged
+ok: affine_apic attempted10 actual GPU acceptance status
+ok: affine_apic attempted10 particle mass bytes unchanged
+ok: affine_apic attempted100 actual GPU acceptance status
+ok: affine_apic attempted100 particle mass bytes unchanged
+ok: boundary_atomic_apic initial complete support admitted
+ok: boundary_atomic_apic attempted1 actual GPU acceptance status
+ok: boundary_atomic_apic attempted1 particle mass bytes unchanged
+ok: boundary_atomic_apic attempted2 actual GPU acceptance status
+ok: boundary_atomic_apic attempted2 particle mass bytes unchanged
+ok: boundary_atomic_apic attempted3 actual GPU acceptance status
+ok: boundary_atomic_apic attempted3 particle mass bytes unchanged
+ok: boundary_atomic_apic rejects whole step without moving any particle
+ok: boundary_atomic_apic rejected advection retains the grid of last authoritative particles
+ok: boundary_atomic_apic attempted5 actual GPU acceptance status
+ok: boundary_atomic_apic attempted5 particle mass bytes unchanged
+ok: boundary_atomic_apic rejects whole step without moving any particle
+ok: boundary_atomic_apic rejected advection retains the grid of last authoritative particles
+ok: boundary_atomic_apic batches[1] preserve particle and status bytes
+ok: boundary_atomic_apic batches[3] preserve particle and status bytes
+ok: boundary_atomic_apic batches[7, 2, 5, 1, 9] preserve particle and status bytes
+ok: boundary_atomic_apic invalid timestep does not mutate state
+ok: boundary_atomic_apic invalid timestep does not mutate state
+ok: boundary_atomic_apic invalid timestep does not mutate state
+ok: boundary_atomic_apic invalid timestep does not mutate state
+ok: boundary_atomic_apic invalid timestep does not mutate state
+ok: boundary_atomic_apic invalid timestep does not mutate state
+MOMENTUM_MOTION_GPU checks=84 failures=0
+
+=== run.gd exit 0
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: gravity_pic initial state admitted
+ok: gravity_pic attempted1 GPU acceptance
+ok: gravity_pic particle mass bytes unchanged
+ok: gravity_pic attempted10 GPU acceptance
+ok: gravity_pic particle mass bytes unchanged
+ok: gravity_pic attempted100 GPU acceptance
+ok: gravity_pic particle mass bytes unchanged
+ok: gravity_pic batches[1] preserve particle/ledger/attempt bytes
+ok: gravity_pic batches[3] preserve particle/ledger/attempt bytes
+ok: gravity_pic batches[7, 2, 5, 1, 9] preserve particle/ledger/attempt bytes
+ok: plane_pic initial state admitted
+ok: plane_pic attempted1 GPU acceptance
+ok: plane_pic particle mass bytes unchanged
+ok: plane_pic attempted5 GPU acceptance
+ok: plane_pic particle mass bytes unchanged
+ok: plane_pic attempted20 GPU acceptance
+ok: plane_pic particle mass bytes unchanged
+ok: plane_pic batches[1] preserve particle/ledger/attempt bytes
+ok: plane_pic batches[3] preserve particle/ledger/attempt bytes
+ok: plane_pic batches[7, 2, 5, 1, 9] preserve particle/ledger/attempt bytes
+ok: gravity_apic initial state admitted
+ok: gravity_apic attempted1 GPU acceptance
+ok: gravity_apic particle mass bytes unchanged
+ok: gravity_apic attempted10 GPU acceptance
+ok: gravity_apic particle mass bytes unchanged
+ok: gravity_apic attempted100 GPU acceptance
+ok: gravity_apic particle mass bytes unchanged
+ok: gravity_apic batches[1] preserve particle/ledger/attempt bytes
+ok: gravity_apic batches[3] preserve particle/ledger/attempt bytes
+ok: gravity_apic batches[7, 2, 5, 1, 9] preserve particle/ledger/attempt bytes
+ok: plane_apic initial state admitted
+ok: plane_apic attempted1 GPU acceptance
+ok: plane_apic particle mass bytes unchanged
+ok: plane_apic attempted5 GPU acceptance
+ok: plane_apic particle mass bytes unchanged
+ok: plane_apic attempted20 GPU acceptance
+ok: plane_apic particle mass bytes unchanged
+ok: plane_apic batches[1] preserve particle/ledger/attempt bytes
+ok: plane_apic batches[3] preserve particle/ledger/attempt bytes
+ok: plane_apic batches[7, 2, 5, 1, 9] preserve particle/ledger/attempt bytes
+ok: invalid initial half-space is rejected
+ok: invalid reset clears previous grid and all mechanics ledgers
+ok: invalid reset remains frozen through queued forced steps
+ok: rejected_plane_apic initial state admitted
+ok: rejected_plane_apic attempted1 GPU acceptance
+ok: rejected_plane_apic particle mass bytes unchanged
+ok: rejected mechanics commits neither particles nor external ledger
+ok: rejected mechanics snapshot rebuilds authoritative grid without candidate forces
+ok: plane crossing has explicit rejection status
+ok: rejected attempt actually computed nonzero wall impulse
+ok: rejected_plane_apic attempted3 GPU acceptance
+ok: rejected_plane_apic particle mass bytes unchanged
+ok: rejected mechanics commits neither particles nor external ledger
+ok: rejected mechanics snapshot rebuilds authoritative grid without candidate forces
+ok: plane crossing has explicit rejection status
+ok: rejected attempt actually computed nonzero wall impulse
+ok: rejected_plane_apic batches[1] preserve particle/ledger/attempt bytes
+ok: rejected_plane_apic batches[3] preserve particle/ledger/attempt bytes
+ok: rejected_plane_apic batches[7, 2, 5, 1, 9] preserve particle/ledger/attempt bytes
+MECHANICS_GPU checks=59 failures=0
+
+=== evaluate exit 0
+_identity_residual_J": 7.948786446762557e-10, "energy_vs_binary64_J": 8.188236614789512e-09, "final_energy_J": 0.007591817394516521, "gravity_applied_vs_analytic": 0.0, "gravity_applied_vs_requested": 0.0, "gravity_torque_applied_vs_requested": 0.0, "gravity_work_J": 0.0, "grid_angular_transfer_error": 5.299437327884082e-10, "grid_linear_transfer_error": 4.64537406961579e-09, "grid_mass_relative_error": 3.811650398209793e-08, "initial_energy_J": 0.012813750114981082, "ledger_impulse_vs_binary64": 1.691923098151582e-09, "ledger_torque_vs_binary64": 2.043957412052632e-10, "ledger_work_vs_binary64": 1.1406447922800676e-08, "linear_balance_residual": 5.116543038872254e-08, "linear_bound": 2.2383001267212833e-06, "method": "apic", "name": "plane_apic", "node_exact_violations": 0, "node_gravity_velocity_error_m_s": 0.0, "node_impulse_error": 4.3819661094124385e-10, "node_work_error_J": 1.6978563650502099e-10, "position_error_m": 9.560791548830692e-08, "rejected_candidate_min_y_minus_plane": 0.0, "selected_node_records": 15, "ticks": 20, "transfer_loss_in_J": -0.000278776045888662, "transfer_loss_out_J": -0.000872326549142599, "velocity_error_m_s": 7.383081889686385e-07, "wall_applied_vs_requested": 0.0, "wall_torque_applied_vs_requested": 0.0, "wall_work_J": -0.00389275676570833}
+METRIC {"affine_error_s_inv": 0.0, "angular_balance_residual": 0.0, "angular_bound": 3.556908522297648e-07, "angular_residual_vs_binary64": 0.0, "angular_retained": 1.0, "applied_gravity_impulse": [0.0, 0.0, 0.0], "applied_gravity_torque": [0.0, 0.0, 0.0], "applied_wall_impulse": [0.0, 0.0, 0.0], "applied_wall_torque": [0.0, 0.0, 0.0], "binary64_angular_residual": 0.0, "binary64_final_energy_J": 0.012813750000000002, "com_trajectory_error_m": 0.0, "energy_bound": 6.416875057490541e-07, "energy_identity_residual_J": 0.0, "energy_vs_binary64_J": 1.149810802125728e-10, "final_energy_J": 0.012813750114981082, "gravity_applied_vs_analytic": 0.0, "gravity_applied_vs_requested": 0.0, "gravity_torque_applied_vs_requested": 0.0, "gravity_work_J": 0.0, "grid_angular_transfer_error": 6.8881413219346e-10, "grid_linear_transfer_error": 3.0930373857478376e-09, "grid_mass_relative_error": 3.966743177838463e-08, "initial_energy_J": 0.012813750114981082, "ledger_impulse_vs_binary64": 0.0, "ledger_torque_vs_binary64": 0.0, "ledger_work_vs_binary64": 0.0, "linear_balance_residual": 0.0, "linear_bound": 1.6373630992371055e-06, "method": "apic", "name": "rejected_plane_apic", "node_exact_violations": 0, "node_gravity_velocity_error_m_s": 0.0, "node_impulse_error": 4.3819661094124385e-10, "node_work_error_J": 1.6978563650502099e-10, "position_error_m": 1.911070292441895e-08, "rejected_candidate_min_y_minus_plane": -0.014040392637253013, "selected_node_records": 24, "ticks": 0, "transfer_loss_in_J": 0.0, "transfer_loss_out_J": 0.0, "velocity_error_m_s": 6.664001433975246e-09, "wall_applied_vs_requested": 0.0, "wall_torque_applied_vs_requested": 0.0, "wall_work_J": 0.0}
+MECHANICS_NUMERICS failures=0
+
+MECHANICS_INTEGRATED_DONE

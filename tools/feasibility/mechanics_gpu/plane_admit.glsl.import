@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://b72x1tb8ly174"
+path="res://.godot/imported/plane_admit.glsl-a7ef61ee91181eec392d93b8c495c00a.res"
+
+[deps]
+
+source_file="res://tools/feasibility/mechanics_gpu/plane_admit.glsl"
+dest_files=["res://.godot/imported/plane_admit.glsl-a7ef61ee91181eec392d93b8c495c00a.res"]
+
+[params]
+

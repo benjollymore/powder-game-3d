@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://dm5aujgif1a8f"
+path="res://.godot/imported/validate.glsl-82510ea52117150b1cda6c756733a847.res"
+
+[deps]
+
+source_file="res://tools/feasibility/mechanics_gpu/validate.glsl"
+dest_files=["res://.godot/imported/validate.glsl-82510ea52117150b1cda6c756733a847.res"]
+
+[params]
+
