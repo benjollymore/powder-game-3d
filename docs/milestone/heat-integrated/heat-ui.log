@@ -12,11 +12,26 @@ ERROR: fallback map places oil, wood, plant, steam and smoke in their categories
        [0] check (res://tests/milestone/heat_ui.gd:13)
        [1] run (res://tests/milestone/heat_ui.gd:29)
 FAIL: fallback map places oil, wood, plant, steam and smoke in their categories
-ok: explicit category keys override the fallback and admit new ids
+ERROR: explicit category keys override the fallback and admit new ids
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] check (res://tests/milestone/heat_ui.gd:13)
+       [1] run (res://tests/milestone/heat_ui.gd:40)
+FAIL: explicit category keys override the fallback and admit new ids
 ok: unknown ids without a category key land in Special
 ok: first row is Sand, Water, Wall
-ok: heat row shows Fire and hides thermal brushes while the simulator has no HEAT/COOL modes
-ok: one tab per remaining category, every non-air material has a button
+ERROR: heat row shows Fire and hides thermal brushes while the simulator has no HEAT/COOL modes
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] check (res://tests/milestone/heat_ui.gd:13)
+       [1] run (res://tests/milestone/heat_ui.gd:49)
+FAIL: heat row shows Fire and hides thermal brushes while the simulator has no HEAT/COOL modes
+ERROR: one tab per remaining category, every non-air material has a button
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] check (res://tests/milestone/heat_ui.gd:13)
+       [1] run (res://tests/milestone/heat_ui.gd:51)
+FAIL: one tab per remaining category, every non-air material has a button
 ERROR: tooltips fall back to the material name and tab contents start hidden
    at: push_error (core/variant/variant_utility.cpp:1024)
    GDScript backtrace (most recent call first):
@@ -40,4 +55,4 @@ ok: the guard continuation replaces the build with the example's exact bytes as 
 ok: an example chosen mid-capture waits like other editor actions
 ok: the waiting example request resumes after the capture
 ok: unknown example names are ignored
-Heat UI CPU: 25 checks, 3 failures
+Heat UI CPU: 25 checks, 6 failures

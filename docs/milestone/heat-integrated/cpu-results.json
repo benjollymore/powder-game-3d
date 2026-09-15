@@ -3,7 +3,7 @@
     "name": "unit",
     "pass": true,
     "exit": 0,
-    "seconds": 1.69,
+    "seconds": 2.06,
     "command": [
       "godot",
       "--path",
@@ -20,7 +20,7 @@
     "name": "gestures",
     "pass": true,
     "exit": 0,
-    "seconds": 0.82,
+    "seconds": 0.8,
     "command": [
       "godot",
       "--path",
@@ -37,7 +37,7 @@
     "name": "editing-unit",
     "pass": true,
     "exit": 0,
-    "seconds": 0.31,
+    "seconds": 0.3,
     "command": [
       "godot",
       "--path",
@@ -54,7 +54,7 @@
     "name": "paint-tools",
     "pass": true,
     "exit": 0,
-    "seconds": 0.39,
+    "seconds": 0.4,
     "command": [
       "godot",
       "--path",
@@ -71,7 +71,7 @@
     "name": "time-controls",
     "pass": true,
     "exit": 0,
-    "seconds": 0.39,
+    "seconds": 0.4,
     "command": [
       "godot",
       "--path",
@@ -105,7 +105,7 @@
     "name": "editor-keyboard",
     "pass": true,
     "exit": 0,
-    "seconds": 0.39,
+    "seconds": 0.4,
     "command": [
       "godot",
       "--path",
@@ -122,7 +122,7 @@
     "name": "history-guards",
     "pass": true,
     "exit": 0,
-    "seconds": 0.4,
+    "seconds": 0.41,
     "command": [
       "godot",
       "--path",
@@ -173,7 +173,7 @@
     "name": "archive-format",
     "pass": true,
     "exit": 0,
-    "seconds": 0.3,
+    "seconds": 0.31,
     "command": [
       "godot",
       "--path",
@@ -224,7 +224,7 @@
     "name": "authored-document",
     "pass": true,
     "exit": 0,
-    "seconds": 0.29,
+    "seconds": 0.3,
     "command": [
       "godot",
       "--path",
@@ -241,7 +241,7 @@
     "name": "file-shortcuts",
     "pass": true,
     "exit": 0,
-    "seconds": 0.51,
+    "seconds": 0.5,
     "command": [
       "godot",
       "--path",
@@ -258,7 +258,7 @@
     "name": "heat-ui",
     "pass": false,
     "exit": 1,
-    "seconds": 0.8,
+    "seconds": 0.79,
     "command": [
       "godot",
       "--path",

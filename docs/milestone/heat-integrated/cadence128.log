@@ -3,38 +3,48 @@ Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
 
 STATE scenario=Forest fire schedule=[1] ticks=96 voxel_sha256=778af915db3661327141084ef73082eca26c1c22d9f7f15a94cfee9db4bfb908 air_sha256=228685216847e09d5a2eb2ee2976d05cff7cff00aecb34a014da7d5613cc833c
 ok: full voxel readback completed
+ok: full thermal readback completed
 ok: full air readback completed
 ok: all seven air solver textures read back
 STATE scenario=Forest fire schedule=[3] ticks=96 voxel_sha256=778af915db3661327141084ef73082eca26c1c22d9f7f15a94cfee9db4bfb908 air_sha256=228685216847e09d5a2eb2ee2976d05cff7cff00aecb34a014da7d5613cc833c
 ok: full voxel readback completed
+ok: full thermal readback completed
 ok: full air readback completed
 ok: all seven air solver textures read back
 ok: Forest fire voxel bytes equal for [3]
+ok: Forest fire thermal bytes equal for [3]
 ok: Forest fire velocity/heat bytes equal for [3]
 ok: Forest fire all air solver textures equal for [3]
 STATE scenario=Forest fire schedule=[7, 2, 5, 1, 9] ticks=96 voxel_sha256=778af915db3661327141084ef73082eca26c1c22d9f7f15a94cfee9db4bfb908 air_sha256=228685216847e09d5a2eb2ee2976d05cff7cff00aecb34a014da7d5613cc833c
 ok: full voxel readback completed
+ok: full thermal readback completed
 ok: full air readback completed
 ok: all seven air solver textures read back
 ok: Forest fire voxel bytes equal for [7, 2, 5, 1, 9]
+ok: Forest fire thermal bytes equal for [7, 2, 5, 1, 9]
 ok: Forest fire velocity/heat bytes equal for [7, 2, 5, 1, 9]
 ok: Forest fire all air solver textures equal for [7, 2, 5, 1, 9]
 STATE scenario=Steam vent schedule=[1] ticks=96 voxel_sha256=a52ea764728efedf67a8c0681c89ac13575b3a2080633cc23280539aad520cc9 air_sha256=d617ee3dbf9121a7d116ddd833d46f723f67b4eefd4550adf7b61c52d0f2d8c9
 ok: full voxel readback completed
+ok: full thermal readback completed
 ok: full air readback completed
 ok: all seven air solver textures read back
 STATE scenario=Steam vent schedule=[3] ticks=96 voxel_sha256=a52ea764728efedf67a8c0681c89ac13575b3a2080633cc23280539aad520cc9 air_sha256=d617ee3dbf9121a7d116ddd833d46f723f67b4eefd4550adf7b61c52d0f2d8c9
 ok: full voxel readback completed
+ok: full thermal readback completed
 ok: full air readback completed
 ok: all seven air solver textures read back
 ok: Steam vent voxel bytes equal for [3]
+ok: Steam vent thermal bytes equal for [3]
 ok: Steam vent velocity/heat bytes equal for [3]
 ok: Steam vent all air solver textures equal for [3]
 STATE scenario=Steam vent schedule=[7, 2, 5, 1, 9] ticks=96 voxel_sha256=a52ea764728efedf67a8c0681c89ac13575b3a2080633cc23280539aad520cc9 air_sha256=d617ee3dbf9121a7d116ddd833d46f723f67b4eefd4550adf7b61c52d0f2d8c9
 ok: full voxel readback completed
+ok: full thermal readback completed
 ok: full air readback completed
 ok: all seven air solver textures read back
 ok: Steam vent voxel bytes equal for [7, 2, 5, 1, 9]
+ok: Steam vent thermal bytes equal for [7, 2, 5, 1, 9]
 ok: Steam vent velocity/heat bytes equal for [7, 2, 5, 1, 9]
 ok: Steam vent all air solver textures equal for [7, 2, 5, 1, 9]
-BATCH_CADENCE grid=128 checks=30 failures=0
+BATCH_CADENCE grid=128 checks=40 failures=0
