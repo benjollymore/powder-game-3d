@@ -103,10 +103,13 @@ static func default_thermal(bytes: PackedByteArray, ambient: float = 293.15) -> 
 	for id in Elements.count():
 		initial[id] = Elements.thermal(id, "initial_temp")
 	initial[0] = ambient
+	# A per-cell scan in script (voxels are interleaved, so no fill applies);
+	# callers run it on the archive worker thread, never on a frame.
 	var values := PackedFloat32Array()
 	values.resize(cells * 2)
+	var ids := bytes.to_int32_array()
 	for i in cells:
-		values[i * 2] = initial[bytes[i * VOXEL_BYTES]]
+		values[i * 2] = initial[ids[i] & 255]
 	return values.to_byte_array()
 
 

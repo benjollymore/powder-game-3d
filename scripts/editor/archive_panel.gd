@@ -154,7 +154,8 @@ func save_to_path(path: String) -> void:
 
 func _start_save(bytes: PackedByteArray, thermal: PackedByteArray = PackedByteArray()) -> void:
 	job = Job.new()
-	var err: Error = job.save_authored(selected_path, bytes, VoxelCodec.GRID, thermal)
+	var ambient: Variant = editor.sim.get("ambient_temp")
+	var err: Error = job.save_authored(selected_path, bytes, VoxelCodec.GRID, thermal, ambient if ambient is float else 293.15)
 	if err != OK:
 		operation = ""
 		job = null

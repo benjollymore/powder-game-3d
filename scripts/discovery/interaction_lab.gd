@@ -11,8 +11,10 @@ const PalettePanel := preload("res://scripts/editor/palette_panel.gd")
 const KeepResult := preload("res://scripts/editor/keep_result.gd")
 const CellInspector := preload("res://scripts/editor/cell_inspector.gd")
 var build_thermal := PackedByteArray()
-var _thermal_waiters: Array[Dictionary] = []
-var _thermal_results: Array[PackedByteArray] = []
+var _state_waiters: Array[Callable] = []
+## Kelvin added (Heat) or removed (Cool) per brush stamp.
+var thermal_strength := 40.0
+var _last_thermal_center := Vector3i(-1, -1, -1)
 var probe_pending := false
 var probe_text := ""
 var ambient_input: SpinBox
@@ -224,31 +226,32 @@ func replace_authored(bytes: PackedByteArray, thermal: PackedByteArray = PackedB
 ## before any later edit. `callback(voxels, thermal)`; thermal is empty when
 ## the simulator has no thermal layer. Requests never share a completion.
 func read_world(callback: Callable) -> void:
-	var thermal_supported: bool = sim.has_method("request_thermal_readback")
-	# Bound methods only: a lambda queued behind a device readback would hold
-	# its script alive into display teardown at process exit.
-	sim.request_readback(_receive_world_voxels.bind(callback, thermal_supported))
-	if thermal_supported:
-		if not sim.thermal_ready.is_connected(_on_thermal_ready):
-			sim.thermal_ready.connect(_on_thermal_ready)
-		sim.request_thermal_readback()
+	if not sim.has_method("request_state_readback"):
+		# Bound methods only: a lambda queued behind a device readback would
+		# hold its script alive into display teardown at process exit.
+		sim.request_readback(_receive_world_voxels.bind(callback))
+		return
+	# Both layers come from one render-thread job, so they are never paired
+	# across ticks. Every reader takes exactly one completion, in request
+	# order; a completion nobody is waiting for is dropped rather than queued,
+	# so a foreign request_state_readback (a test, a tool) cannot leave a
+	# stale layer for the next reader. The editor only reads while paused.
+	if not sim.state_ready.is_connected(_on_state_ready):
+		sim.state_ready.connect(_on_state_ready)
+	_state_waiters.append(callback)
+	sim.request_state_readback()
 
 
-func _receive_world_voxels(bytes: PackedByteArray, callback: Callable, thermal_supported: bool) -> void:
-	if not thermal_supported:
-		callback.call(bytes, PackedByteArray())
-	elif not _thermal_results.is_empty():
-		callback.call(bytes, _thermal_results.pop_front())
-	else:
-		_thermal_waiters.append({"callback": callback, "voxels": bytes})
+func _receive_world_voxels(bytes: PackedByteArray, callback: Callable) -> void:
+	callback.call(bytes, PackedByteArray())
 
 
-func _on_thermal_ready(thermal: PackedByteArray) -> void:
-	if _thermal_waiters.is_empty():
-		_thermal_results.append(thermal)
-	else:
-		var waiter: Dictionary = _thermal_waiters.pop_front()
-		waiter.callback.call(waiter.voxels, thermal)
+func _on_state_ready(voxels: PackedByteArray, thermal: PackedByteArray) -> void:
+	if _state_waiters.is_empty():
+		return
+	var callback: Callable = _state_waiters.pop_front()
+	if callback.is_valid():
+		callback.call(voxels, thermal)
 
 
 func _overlay_material(color: Color) -> StandardMaterial3D:
@@ -546,12 +549,14 @@ func _choose_thermal(tool: String) -> void:
 	_refresh_palette()
 
 
-## Brush mode for frozen stroke metadata. Thermal brushes only exist once the
-## simulator exposes HEAT/COOL; until then they are hidden and never requested.
-func _brush_mode(thermal: String, erase_flag: bool) -> int:
-	if thermal != "" and PalettePanel.thermal_brushes_available(sim):
-		return sim.BrushMode[thermal.to_upper()]
+## Material brush mode for frozen stroke metadata. Thermal strokes never use
+## it: they go through record_thermal_stroke / paint_thermal_stroke.
+func _brush_mode(erase_flag: bool) -> int:
 	return sim.BrushMode.ERASE if erase_flag else sim.BrushMode.ONLY_AIR
+
+
+func _thermal_kelvin(tool: String) -> float:
+	return thermal_strength if tool == "heat" else -thermal_strength
 
 
 func _set_speed_step(step: float) -> void:
@@ -703,6 +708,8 @@ func _keep_diff(live: PackedByteArray, live_thermal: PackedByteArray, epoch: int
 		# Too much changed for one undoable edit: keep it as a new unsaved build.
 		testing = false
 		play_button.text = "Run experiment · Space"
+		if not WorldArchive._thermal_finite(live_thermal):
+			live_thermal = PackedByteArray() # fall back to element defaults rather than upload NaN
 		replace_authored(live, live_thermal)
 		document.changed({})
 		_keep_finish("Kept as a new build: too much changed to undo in one step.")
@@ -1310,7 +1317,7 @@ func _resume_pending_paint() -> void:
 	stroke_thermal = gesture.metadata.get("thermal", "")
 	stroke_view = gesture.metadata.view
 	_begin_authored_edit(gesture.warning)
-	var mode: int = _brush_mode(stroke_thermal, stroke_erase)
+	var mode: int = _brush_mode(stroke_erase)
 	if stroke_target_mode == TargetMode.SURFACE:
 		sim.record_surface_stroke(active_transaction, gesture.samples, stroke_radius, stroke_element, mode, active_transaction)
 		surface_connect = gesture.connect_next
@@ -1573,6 +1580,7 @@ func _end_stroke(completed: bool = false) -> void:
 		active_transaction = -1
 	painting = false
 	previous = Vector3i(-1, -1, -1)
+	_last_thermal_center = Vector3i(-1, -1, -1)
 	surface_connect = false
 
 
@@ -1602,7 +1610,17 @@ func _set_live_source(mouse: Vector2) -> void:
 	if surface.is_empty() and center.x < 0:
 		_stop_live_emitter()
 		return
-	var mode: int = _brush_mode(stroke_thermal, stroke_erase)
+	if stroke_thermal != "":
+		# Heat and cool apply immediately at the pointer; there is no matter to meter.
+		if not surface.is_empty() or center.x < 0:
+			_stop_live_emitter()
+			return
+		if center != _last_thermal_center and sim.has_method("paint_thermal_stroke"):
+			_last_thermal_center = center
+			var centers: Array[Vector3i] = [center]
+			sim.paint_thermal_stroke(centers, stroke_radius, _thermal_kelvin(stroke_thermal))
+		return
+	var mode: int = _brush_mode(stroke_erase)
 	var signature := hash([center, stroke_radius, stroke_element, mode, surface])
 	if signature != live_emitter_signature:
 		live_emitter_signature = signature
@@ -1616,12 +1634,22 @@ func _flush() -> void:
 		pending.clear()
 		return
 	if not pending_surface.is_empty() and sim != null:
-		var mode: int = _brush_mode(stroke_thermal, stroke_erase)
+		if stroke_thermal != "":
+			# No surface-ray thermal kernel yet: heat and cool need the workplane.
+			pending_surface.clear()
+			edit_message = "Heat and Cool paint on the workplane; switch Paint on to Workplane."
+			return
+		var mode: int = _brush_mode(stroke_erase)
 		if active_transaction >= 0:
 			sim.record_surface_stroke(active_transaction, pending_surface, stroke_radius, stroke_element, mode, active_transaction)
 		pending_surface.clear()
 	if not pending.is_empty() and sim != null:
-		var mode: int = _brush_mode(stroke_thermal, stroke_erase)
+		if stroke_thermal != "":
+			if active_transaction >= 0 and sim.has_method("record_thermal_stroke"):
+				sim.record_thermal_stroke(active_transaction, pending, stroke_radius, _thermal_kelvin(stroke_thermal))
+			pending.clear()
+			return
+		var mode: int = _brush_mode(stroke_erase)
 		if active_transaction >= 0:
 			sim.record_stroke(active_transaction, pending, stroke_radius, stroke_element, mode, active_transaction)
 		pending.clear()

@@ -88,8 +88,8 @@ func run() -> void:
 	check(lab.element == Elements.Id.STEAM and lab.material_buttons[Elements.Id.STEAM].button_pressed, "materials inside a tab select like the fixed rows")
 	lab._choose_thermal("heat")
 	check(lab.thermal_tool == "" and lab.element == Elements.Id.STEAM, "thermal brushes cannot be selected while the simulator lacks them")
-	check(lab._brush_mode("heat", false) == lab.sim.BrushMode.ONLY_AIR and lab._brush_mode("", true) == lab.sim.BrushMode.ERASE,
-		"brush mode ignores an unavailable thermal tool and keeps erase/add semantics")
+	check(lab._brush_mode(false) == lab.sim.BrushMode.ONLY_AIR and lab._brush_mode(true) == lab.sim.BrushMode.ERASE,
+		"material brush mode keeps erase/add semantics")
 	for pair in [[KEY_1, Elements.Id.SAND], [KEY_2, Elements.Id.WATER], [KEY_3, Elements.Id.WALL]]:
 		key(pair[0])
 	check(lab.element == Elements.Id.WALL, "number keys follow the first row order")

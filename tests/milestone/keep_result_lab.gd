@@ -3,13 +3,13 @@ extends "res://scripts/discovery/interaction_lab.gd"
 class KeepStub extends Node3D:
 	const EditGPU := preload("res://scripts/sim/voxel_edit_gpu.gd")
 	enum BrushMode { NORMAL, ONLY_AIR, ERASE }
-	signal thermal_ready(bytes: PackedByteArray)
+	signal state_ready(voxels: PackedByteArray, thermal: PackedByteArray)
 	var world := PackedByteArray()
 	var thermal := PackedByteArray()
 	var uploads: Array[PackedByteArray] = []
 	var thermal_uploads: Array[PackedByteArray] = []
-	func request_thermal_readback() -> void:
-		thermal_ready.emit.call_deferred(thermal.duplicate())
+	func request_state_readback() -> void:
+		state_ready.emit.call_deferred(world.duplicate(), thermal.duplicate())
 	var restored: Array = []
 	var edit_epoch := 0
 	var edit_revision := 0
