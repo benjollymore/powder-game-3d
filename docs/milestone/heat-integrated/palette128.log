@@ -22,6 +22,107 @@ ok: thermal-off capture saved
 ok: thermal-on capture saved
 ok: thermal glow at 1400 K changes the picture (34533 pixels)
 ok: thermal glow leaves physical bytes unchanged
-note: no heat-milestone element rows present; material fixture skipped
+ok: ICE capture saved
+ok: ICE renders visibly as a block (63138 lit pixels)
+ok: ICE fixture physical bytes unchanged
+ok: LAVA capture saved
+ok: LAVA renders visibly as a block (63142 lit pixels)
+ok: LAVA fixture physical bytes unchanged
+ok: STONE capture saved
+ok: STONE renders visibly as a block (63138 lit pixels)
+ok: STONE fixture physical bytes unchanged
+ok: METAL capture saved
+ok: METAL renders visibly as a block (63142 lit pixels)
+ok: METAL fixture physical bytes unchanged
+ok: WAX capture saved
+ok: WAX renders visibly as a block (63125 lit pixels)
+ok: WAX fixture physical bytes unchanged
+ok: MOLTEN_WAX capture saved
+ok: MOLTEN_WAX renders visibly as a block (63142 lit pixels)
+ok: MOLTEN_WAX fixture physical bytes unchanged
+ok: GUNPOWDER capture saved
+ok: GUNPOWDER renders visibly as a block (63140 lit pixels)
+ok: GUNPOWDER fixture physical bytes unchanged
+ok: GAS capture saved
+ok: GAS renders visibly as a block (63156 lit pixels)
+ok: GAS fixture physical bytes unchanged
+ok: ACID capture saved
+ok: ACID renders visibly as a block (63142 lit pixels)
+ok: ACID fixture physical bytes unchanged
+ok: CLONE capture saved
+ok: CLONE renders visibly as a block (63142 lit pixels)
+ok: CLONE fixture physical bytes unchanged
+ok: VOID capture saved
+ok: VOID renders visibly as a block (63142 lit pixels)
+ok: VOID fixture physical bytes unchanged
+ERROR: FAIL: ICE is visible above the floor slab (+112 px)
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/palette_capture_gpu.gd:40)
+       [1] _run (res://tests/milestone/palette_capture_gpu.gd:242)
+       [2] _capture (res://tests/milestone/palette_capture_gpu.gd:79)
+ERROR: FAIL: LAVA is visible above the floor slab (+116 px)
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/palette_capture_gpu.gd:40)
+       [1] _run (res://tests/milestone/palette_capture_gpu.gd:242)
+       [2] _capture (res://tests/milestone/palette_capture_gpu.gd:79)
+ERROR: FAIL: STONE is visible above the floor slab (+112 px)
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/palette_capture_gpu.gd:40)
+       [1] _run (res://tests/milestone/palette_capture_gpu.gd:242)
+       [2] _capture (res://tests/milestone/palette_capture_gpu.gd:79)
+ERROR: FAIL: METAL is visible above the floor slab (+116 px)
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/palette_capture_gpu.gd:40)
+       [1] _run (res://tests/milestone/palette_capture_gpu.gd:242)
+       [2] _capture (res://tests/milestone/palette_capture_gpu.gd:79)
+ERROR: FAIL: WAX is visible above the floor slab (+99 px)
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/palette_capture_gpu.gd:40)
+       [1] _run (res://tests/milestone/palette_capture_gpu.gd:242)
+       [2] _capture (res://tests/milestone/palette_capture_gpu.gd:79)
+ERROR: FAIL: MOLTEN_WAX is visible above the floor slab (+116 px)
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/palette_capture_gpu.gd:40)
+       [1] _run (res://tests/milestone/palette_capture_gpu.gd:242)
+       [2] _capture (res://tests/milestone/palette_capture_gpu.gd:79)
+ERROR: FAIL: GUNPOWDER is visible above the floor slab (+114 px)
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/palette_capture_gpu.gd:40)
+       [1] _run (res://tests/milestone/palette_capture_gpu.gd:242)
+       [2] _capture (res://tests/milestone/palette_capture_gpu.gd:79)
+ERROR: FAIL: GAS is visible above the floor slab (+130 px)
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/palette_capture_gpu.gd:40)
+       [1] _run (res://tests/milestone/palette_capture_gpu.gd:242)
+       [2] _capture (res://tests/milestone/palette_capture_gpu.gd:79)
+ERROR: FAIL: ACID is visible above the floor slab (+116 px)
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/palette_capture_gpu.gd:40)
+       [1] _run (res://tests/milestone/palette_capture_gpu.gd:242)
+       [2] _capture (res://tests/milestone/palette_capture_gpu.gd:79)
+ERROR: FAIL: CLONE is visible above the floor slab (+116 px)
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/palette_capture_gpu.gd:40)
+       [1] _run (res://tests/milestone/palette_capture_gpu.gd:242)
+       [2] _capture (res://tests/milestone/palette_capture_gpu.gd:79)
+ERROR: FAIL: VOID is visible above the floor slab (+116 px)
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://tests/milestone/palette_capture_gpu.gd:40)
+       [1] _run (res://tests/milestone/palette_capture_gpu.gd:242)
+       [2] _capture (res://tests/milestone/palette_capture_gpu.gd:79)
+ok: group capture saved for ICE, LAVA, STONE, METAL, WAX, MOLTEN_WAX, GUNPOWDER, GAS, ACID, CLONE, VOID
+ok: group capture shows substantial content
+ok: group fixture physical bytes unchanged
 ok: padded palette has a zero tail
-PALETTE_CHECKS 22 FAILURES 0
+PALETTE_CHECKS 69 FAILURES 11

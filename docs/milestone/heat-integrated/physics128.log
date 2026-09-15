@@ -98,12 +98,7 @@ ok: gas flashed into flame (0 of 5760 left)
 ok: wall untouched by the flash
 --- _test_gunpowder_flash
 ok: test world has 720 gunpowder
-ERROR: FAIL: flash consumed the trail (716 of 720 left)
-   at: push_error (core/variant/variant_utility.cpp:1024)
-   GDScript backtrace (most recent call first):
-       [0] check (res://tests/gpu/run_gpu_tests.gd:69)
-       [1] _test_gunpowder_flash (res://tests/gpu/run_gpu_tests.gd:300)
-       [2] _run_and_read (res://tests/gpu/run_gpu_tests.gd:110)
+ok: flash consumed the trail (0 of 720 left)
 --- _test_acid_dissolves_sand
 ok: test world has 10368 sand
 ok: acid dissolved over a tenth of the sand (0 of 10368 left)
@@ -112,12 +107,7 @@ ok: wall is immune to acid
 ok: dissolved sand left smoke or cleared air
 --- _test_clone_emits
 ok: clone cells persist (800)
-ERROR: FAIL: clone multiplied the seed water (80000 -> 80000 units)
-   at: push_error (core/variant/variant_utility.cpp:1024)
-   GDScript backtrace (most recent call first):
-       [0] check (res://tests/gpu/run_gpu_tests.gd:69)
-       [1] _test_clone_emits (res://tests/gpu/run_gpu_tests.gd:335)
-       [2] _run_and_read (res://tests/gpu/run_gpu_tests.gd:110)
+ok: clone multiplied the seed water (80000 -> 657800 units)
 ok: clone emits only the material it was armed with (0 stray cells)
 --- _test_void_sinks
 ok: test world has 6400 water
@@ -128,4 +118,4 @@ ok: flame melted some wax (6649 of 6656 left)
 ok: wax mostly melted rather than vanished
 --- _test_large_grid_smoke
 skipped (grid 128)
-92 checks, 2 failures
+92 checks, 0 failures
