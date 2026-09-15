@@ -11,7 +11,7 @@ const PalettePanel := preload("res://scripts/editor/palette_panel.gd")
 const KeepResult := preload("res://scripts/editor/keep_result.gd")
 const CellInspector := preload("res://scripts/editor/cell_inspector.gd")
 var build_thermal := PackedByteArray()
-var _thermal_waiters: Array[Callable] = []
+var _thermal_waiters: Array[Dictionary] = []
 var _thermal_results: Array[PackedByteArray] = []
 var probe_pending := false
 var probe_text := ""
@@ -225,24 +225,30 @@ func replace_authored(bytes: PackedByteArray, thermal: PackedByteArray = PackedB
 ## the simulator has no thermal layer. Requests never share a completion.
 func read_world(callback: Callable) -> void:
 	var thermal_supported: bool = sim.has_method("request_thermal_readback")
-	sim.request_readback(func(bytes: PackedByteArray):
-		if not thermal_supported:
-			callback.call(bytes, PackedByteArray())
-		elif not _thermal_results.is_empty():
-			callback.call(bytes, _thermal_results.pop_front())
-		else:
-			_thermal_waiters.append(func(thermal: PackedByteArray): callback.call(bytes, thermal)))
+	# Bound methods only: a lambda queued behind a device readback would hold
+	# its script alive into display teardown at process exit.
+	sim.request_readback(_receive_world_voxels.bind(callback, thermal_supported))
 	if thermal_supported:
 		if not sim.thermal_ready.is_connected(_on_thermal_ready):
 			sim.thermal_ready.connect(_on_thermal_ready)
 		sim.request_thermal_readback()
 
 
+func _receive_world_voxels(bytes: PackedByteArray, callback: Callable, thermal_supported: bool) -> void:
+	if not thermal_supported:
+		callback.call(bytes, PackedByteArray())
+	elif not _thermal_results.is_empty():
+		callback.call(bytes, _thermal_results.pop_front())
+	else:
+		_thermal_waiters.append({"callback": callback, "voxels": bytes})
+
+
 func _on_thermal_ready(thermal: PackedByteArray) -> void:
 	if _thermal_waiters.is_empty():
 		_thermal_results.append(thermal)
 	else:
-		_thermal_waiters.pop_front().call(thermal)
+		var waiter: Dictionary = _thermal_waiters.pop_front()
+		waiter.callback.call(waiter.voxels, thermal)
 
 
 func _overlay_material(color: Color) -> StandardMaterial3D:
@@ -680,8 +686,7 @@ func keep_result() -> void:
 	edit_message = "Keeping the experiment result…"
 	TimeController.paused = true
 	_refresh_test_controls()
-	var epoch: int = sim.edit_epoch
-	read_world(func(live: PackedByteArray, live_thermal: PackedByteArray): _keep_diff(live, live_thermal, epoch))
+	read_world(_keep_diff.bind(sim.edit_epoch))
 
 
 func _keep_diff(live: PackedByteArray, live_thermal: PackedByteArray, epoch: int) -> void:
@@ -1451,18 +1456,21 @@ func _set_testing(desired: bool) -> void:
 		_capture_accepts_pending = false
 		var epoch: int = sim.edit_epoch
 		var revision: int = sim.edit_revision
-		read_world(func(bytes: PackedByteArray, thermal: PackedByteArray):
-			capturing = false
-			if sim.edit_epoch != epoch or sim.edit_revision != revision:
-				edit_message = "The build changed while preparing the experiment; run it again."
-				return
-			build_snapshot = bytes
-			build_thermal = thermal
-			edit_message = ""
-			testing = true
-			TimeController.time_scale = speed_scale
-			TimeController.paused = false
-			play_button.text = "Return to build (restore) · Space")
+		read_world(_begin_test.bind(epoch, revision))
+
+
+func _begin_test(bytes: PackedByteArray, thermal: PackedByteArray, epoch: int, revision: int) -> void:
+	capturing = false
+	if sim.edit_epoch != epoch or sim.edit_revision != revision:
+		edit_message = "The build changed while preparing the experiment; run it again."
+		return
+	build_snapshot = bytes
+	build_thermal = thermal
+	edit_message = ""
+	testing = true
+	TimeController.time_scale = speed_scale
+	TimeController.paused = false
+	play_button.text = "Return to build (restore) · Space"
 
 
 func _target_at(mouse: Vector2) -> Vector3i:
@@ -1495,7 +1503,7 @@ func _request_preview(mouse: Vector2) -> void:
 	pick_pending = true
 	last_pick_ms = Time.get_ticks_msec()
 	var intent := pick_intent
-	sim.request_surface_pick(ray, radius, erase, func(result: Dictionary): _receive_pick(result, intent))
+	sim.request_surface_pick(ray, radius, erase, _receive_pick.bind(intent))
 
 
 func _receive_pick(result: Dictionary, intent: int) -> void:

@@ -881,15 +881,19 @@ static func _float_bits(value: float) -> int:
 ## record, never a full readback.
 func request_cell_probe(origin: Vector3, direction: Vector3, callback: Callable) -> void:
 	var mask := ((1 << Elements.count()) - 1) & ~1
-	request_surface_pick({"origin": origin, "direction": direction, "mask": mask}, 0, true,
-		func(result: Dictionary):
-			if not callback.is_valid():
-				return # the requester (an editor hovering every frame) may be gone by now
-			if result.get("valid", false):
-				callback.call({"pos": result.hit, "element": result.element, "temperature": result.temperature,
-					"amount": result.amount, "flags": result.flags})
-			else:
-				callback.call({"pos": Vector3i(-1, -1, -1), "element": 0, "temperature": 0.0, "amount": 0, "flags": 0}))
+	# A bound method, never a lambda: the callable can sit in a rendering
+	# device frame until that frame is stalled, which may be process exit.
+	request_surface_pick({"origin": origin, "direction": direction, "mask": mask}, 0, true, _deliver_probe.bind(callback))
+
+
+func _deliver_probe(result: Dictionary, callback: Callable) -> void:
+	if not callback.is_valid():
+		return # the requester (an editor hovering every frame) may be gone by now
+	if result.get("valid", false):
+		callback.call({"pos": result.hit, "element": result.element, "temperature": result.temperature,
+			"amount": result.amount, "flags": result.flags})
+	else:
+		callback.call({"pos": Vector3i(-1, -1, -1), "element": 0, "temperature": 0.0, "amount": 0, "flags": 0})
 
 
 ## Liquid heat capacity floor in amount units; keep in sync with CAP_FLOOR in

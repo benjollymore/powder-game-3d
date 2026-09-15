@@ -299,6 +299,11 @@ func _dispatch(cl: int, lo: Vector3i, hi: Vector3i, offset: int, restore_mode: b
 
 func free_resources() -> void:
 	disposed = true
+	if not pending_buffers.is_empty():
+		# Deliver and clear every queued asynchronous download now, while the
+		# scripts that own their callables are still alive. Otherwise the device
+		# releases them during display teardown, after script finalisation.
+		rd.buffer_get_data(pending_buffers.keys()[0], 0, 4)
 	for buffer in pending_buffers:
 		rd.free_rid(pending_buffers[buffer])
 		rd.free_rid(buffer)
