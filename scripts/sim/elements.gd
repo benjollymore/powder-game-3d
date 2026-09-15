@@ -77,7 +77,9 @@ const CATEGORIES := ["common", "heat", "powders", "liquids", "gases", "solids", 
 ## like a convecting gas. Thermal seconds per tick are VoxelSim.thermal_speed
 ## times the tick length.
 const THERMAL := {
-	Id.AIR:   { "heat_capacity": 0.05, "conductivity": 0.02,  "initial_temp": 293.15 },
+	# Air's capacity is its physical value (1.2 mg per cell x 1 kJ/kg K): the
+	# energy a liquid drops when it displaces air is then negligible.
+	Id.AIR:   { "heat_capacity": 0.001, "conductivity": 0.02,  "initial_temp": 293.15 },
 	Id.WALL:  { "heat_capacity": 2.1,  "conductivity": 0.0,   "initial_temp": 293.15 },
 	Id.SAND:  { "heat_capacity": 1.5,  "conductivity": 0.3,   "initial_temp": 293.15 },
 	Id.WATER: { "heat_capacity": 4.18, "conductivity": 0.6,   "initial_temp": 293.15, "hot_at": 373.15, "hot_to": Id.STEAM, "latent": 540.0, "cold_at": 273.15, "cold_to": Id.ICE },
@@ -90,7 +92,7 @@ const THERMAL := {
 	# Tranche A.
 	Id.ICE:   { "heat_capacity": 2.1,  "conductivity": 2.2,   "initial_temp": 263.15, "hot_at": 273.15, "hot_to": Id.WATER, "latent": 80.0 },
 	Id.LAVA:  { "heat_capacity": 3.0,  "conductivity": 1.2,   "initial_temp": 1500.0, "cold_at": 1000.0, "cold_to": Id.STONE },
-	Id.STONE: { "heat_capacity": 2.1,  "conductivity": 1.5,   "initial_temp": 293.15, "hot_at": 1300.0, "hot_to": Id.LAVA, "latent": 300.0 },
+	Id.STONE: { "heat_capacity": 2.1,  "conductivity": 1.5,   "initial_temp": 293.15, "hot_at": 1300.0, "hot_to": Id.LAVA, "latent": 200.0 },
 	Id.METAL: { "heat_capacity": 3.5,  "conductivity": 50.0,  "initial_temp": 293.15 },
 	# Tranche B.
 	Id.WAX:        { "heat_capacity": 1.8, "conductivity": 0.25, "initial_temp": 293.15, "hot_at": 330.0, "hot_to": Id.MOLTEN_WAX, "latent": 50.0 },

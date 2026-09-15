@@ -19,7 +19,7 @@ func _initialize() -> void:
 	sim = load("res://scenes/sim_volume.tscn").instantiate()
 	sim.listen_to_time_controller = false
 	sim.current_scenario = "Empty"
-	sim.rule_flags = 3 | 8 # movement only: no reactions, decay or thermal physics (plumbing test)
+	sim.rule_flags = 3 | sim.RULE_NO_THERMAL # movement only: no reactions, decay or thermal physics (plumbing test)
 	sim.air_enabled = false
 	sim.hydro_enabled = false
 	root.add_child(sim)
@@ -104,6 +104,8 @@ func _run() -> void:
 	WorldBuilder.fill_box(data, Vector3i(8, 8, 8), Vector3i(24, 12, 24), Elements.Id.WALL)
 	WorldBuilder.fill_box(data, Vector3i(10, 12, 10), Vector3i(14, 16, 14), Elements.Id.SAND)
 	WorldBuilder.fill_box(data, Vector3i(16, 12, 16), Vector3i(20, 14, 20), Elements.Id.WATER, 200)
+	WorldBuilder.fill_box(data, Vector3i(30, 30, 30), Vector3i(31, 31, 31), Elements.Id.FIRE)
+	WorldBuilder.fill_box(data, Vector3i(32, 30, 30), Vector3i(33, 31, 31), Elements.Id.LAVA, 200)
 	var voxels := data.to_byte_array()
 	sim.upload(voxels)
 	var thermal := await read_thermal()
@@ -112,6 +114,9 @@ func _run() -> void:
 	var expected_water := float(Elements.TABLE[Elements.Id.WATER].get("initial_temp", sim.ambient_temp))
 	check(is_equal_approx(temp_at(thermal, Vector3i(9, 9, 9)), expected_wall) and is_equal_approx(temp_at(thermal, Vector3i(17, 12, 17)), expected_water)
 		and is_equal_approx(temp_at(thermal, Vector3i(60, 60, 60)), sim.ambient_temp), "upload without thermal bytes initialises each cell from its element's initial temperature")
+	check(is_equal_approx(temp_at(thermal, Vector3i(30, 30, 30)), Elements.thermal(Elements.Id.FIRE, "initial_temp"))
+		and is_equal_approx(temp_at(thermal, Vector3i(32, 30, 30)), Elements.thermal(Elements.Id.LAVA, "initial_temp")),
+		"fire and lava start hot after an upload without thermal bytes (%.0f K, %.0f K)" % [temp_at(thermal, Vector3i(30, 30, 30)), temp_at(thermal, Vector3i(32, 30, 30))])
 	var values := thermal.to_float32_array()
 	var latent_zero := true
 	for i in n * n * n:

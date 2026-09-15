@@ -896,13 +896,13 @@ func _deliver_probe(result: Dictionary, callback: Callable) -> void:
 		callback.call({"pos": Vector3i(-1, -1, -1), "element": 0, "temperature": 0.0, "amount": 0, "flags": 0})
 
 
-## Liquid heat capacity floor in amount units; keep in sync with CAP_FLOOR in
-## sim.glsl and hydro.glsl.
-const CAPACITY_FLOOR_UNITS := 4
+## Liquid heat capacity is linear in amount with this floor in units (one:
+## a liquid cell always holds at least one unit). Any larger floor breaks the
+## proportional transfer contract. Keep in sync with CAP_FLOOR in sim.glsl and hydro.glsl.
+const CAPACITY_FLOOR_UNITS := 1
 
 ## Heat capacity of one cell in J/K: the element's capacity, scaled for
-## liquids by amount / LIQUID_FULL with a floor of CAPACITY_FLOOR_UNITS units
-## (compressed liquid holds more).
+## liquids by amount / LIQUID_FULL (compressed liquid holds more).
 static func cell_capacity(id: int, amount: int) -> float:
 	var c := Elements.thermal(id, "heat_capacity")
 	if Elements.is_liquid(id):
@@ -1778,7 +1778,7 @@ func _rt_thermal_init() -> void:
 	var cl := _rd.compute_list_begin()
 	_rd.compute_list_bind_compute_pipeline(cl, _thermal_init_pipeline)
 	_rd.compute_list_bind_uniform_set(cl, _thermal_init_set, 0)
-	var push := PackedFloat32Array([ambient_temp, 0.0, 0.0, 0.0]).to_byte_array()
+	var push := PackedFloat32Array([ambient_temp, float(Elements.PALETTE_SIZE), 0.0, 0.0]).to_byte_array()
 	_rd.compute_list_set_push_constant(cl, push, push.size())
 	var groups := ceili(GRID / 8.0)
 	_rd.compute_list_dispatch(cl, groups, groups, groups)

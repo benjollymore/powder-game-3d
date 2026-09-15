@@ -48,10 +48,11 @@ const uint RULE_NO_AIR = 4u;
 const uint RULE_NO_SPECIALS = 8u; // clone, void and the gunpowder fuse
 const uint RULE_NO_THERMAL = 16u;   // no conduction, phase change or ignition (plumbing tests)
 const float DX = 0.01;              // metres per voxel (VoxelSim.METRES_PER_VOXEL)
-// Liquid heat capacity scales with amount, floored so a film cannot carry an
-// absurd temperature from a tiny energy. Keep in sync with hydro.glsl and
-// VoxelSim.energy_total.
-const uint CAP_FLOOR = 4u;
+// Liquid heat capacity is exactly linear in amount (at least one unit): the
+// transfer contract moves energy proportionally to units, so any floor would
+// make a small receiver read colder than its donors. Keep in sync with
+// hydro.glsl and VoxelSim.energy_total.
+const uint CAP_FLOOR = 1u;
 
 layout(constant_id = 0) const int GRID = 128;
 const uint AIR = 0u;
@@ -554,31 +555,70 @@ void spread_row(bool top_row, bool allow_air) {
 	int n = into_air ? n_all : n_liq;
 	uint share = total / uint(n);
 	uint rem = total % uint(n);
-	// Pooled liquid mixes fully (documented closure: a 2x2 row has no parcel
-	// order): the group's energy is shared over its new capacities.
-	float energy = 0.0;
-	float capacity = 0.0;
+	// Heat follows the amounts with the "retain local material" closure: each
+	// cell keeps min(old, new) units at its own energy per unit, and surplus
+	// donors feed deficit cells in block order. Full mixing was tried first and
+	// smeared latent progress across a pool so nothing could ever boil.
+	uint old_a[4];
+	uint new_a[4];
+	uint surplus[4];
+	float e_unit[4];
+	float e_new[4];
+	float e_surplus[4];
+	bool elig[4];
 	int k_out = 0;
 	for (int k = 0; k < 4; k++) {
 		int i = cells[k];
 		uint id = c[i].x;
-		bool eligible = (id == L) || (into_air && id == AIR);
-		if (!eligible) {
+		elig[k] = (id == L) || (into_air && id == AIR);
+		old_a[k] = (elig[k] && id == L) ? c[i].z : 0u;
+		float E = (elig[k] && id == L) ? capacity_of(i) * ct[i].x + ct[i].y : 0.0;
+		e_unit[k] = (old_a[k] > 0u) ? E / float(old_a[k]) : 0.0;
+		new_a[k] = 0u;
+		e_new[k] = 0.0;
+		surplus[k] = 0u;
+		e_surplus[k] = 0.0;
+		if (!elig[k]) {
 			continue;
 		}
-		energy += capacity_of(i) * ct[i].x + ct[i].y;
 		uint amount = share + ((uint(k_out) < rem) ? 1u : 0u);
 		k_out++;
-		set_liquid(i, L, amount);
-		capacity += capacity_of(i);
+		new_a[k] = amount;
+		uint kept = min(old_a[k], amount);
+		e_new[k] = e_unit[k] * float(kept);
+		if (old_a[k] > amount) {
+			surplus[k] = old_a[k] - amount;
+			e_surplus[k] = E - e_new[k];
+		}
 	}
-	float mixed = energy / capacity;
+	int d = 0;
+	for (int r = 0; r < 4; r++) {
+		if (!elig[r] || new_a[r] <= old_a[r]) {
+			continue;
+		}
+		uint need = new_a[r] - old_a[r];
+		while (need > 0u) {
+			while (d < 4 && surplus[d] == 0u) { d++; }
+			if (d >= 4) { break; }
+			uint units = min(surplus[d], need);
+			float q = (units == surplus[d]) ? e_surplus[d] : e_unit[d] * float(units);
+			e_new[r] += q;
+			e_surplus[d] -= q;
+			surplus[d] -= units;
+			need -= units;
+		}
+	}
 	for (int k = 0; k < 4; k++) {
+		if (!elig[k]) {
+			continue;
+		}
 		int i = cells[k];
-		uint id = c[i].x;
-		bool eligible = (id == L) || (into_air && id == AIR);
-		if (eligible) {
-			ct[i] = vec2(mixed, 0.0);
+		set_liquid(i, L, new_a[k]);
+		if (new_a[k] == 0u) {
+			ct[i].y = 0.0; // the air left behind keeps the temperature
+		} else {
+			float C = capacity_of(i);
+			ct[i] = settle(vec2(e_new[k] / C, 0.0), C, ELEM_HOT_AT(elems[L]), ELEM_COLD_AT(elems[L]));
 		}
 	}
 	// Remnants: tiny amounts join the fullest neighbour rather than lingering.
@@ -597,11 +637,12 @@ void spread_row(bool top_row, bool allow_air) {
 			}
 		}
 		if (best >= 0) {
-			float Ci = capacity_of(i), Cb = capacity_of(best);
-			ct[best] = vec2((Cb * ct[best].x + Ci * ct[i].x) / (Cb + Ci), ct[best].y + ct[i].y);
+			float E = capacity_of(best) * ct[best].x + ct[best].y + capacity_of(i) * ct[i].x + ct[i].y;
 			ct[i].y = 0.0;
 			set_liquid(best, L, c[best].z + c[i].z);
 			set_liquid(i, L, 0u);
+			float C = capacity_of(best);
+			ct[best] = settle(vec2(E / C, 0.0), C, ELEM_HOT_AT(elems[L]), ELEM_COLD_AT(elems[L]));
 		}
 	}
 }
@@ -667,10 +708,14 @@ void rule_thermal() {
 			float k_hi = i_low ? kj : ki;
 			float C_lo = capacity_of(lo);
 			float C_hi = capacity_of(hi);
+			// A flame is pinned to its temperature, so for the overshoot clamp it
+			// is an unbounded reservoir, not a 0.05 J/K wisp of gas.
+			if (ELEM_FIRE_TEMP(elems[c[lo].x]) > 0.0) { C_lo = 1.0e6; }
+			if (ELEM_FIRE_TEMP(elems[c[hi].x]) > 0.0) { C_hi = 1.0e6; }
 			float q = canonical_transfer(k_lo, k_hi, ct[lo].x, ct[hi].x, DX, dt);
 			float q_eq = (ct[hi].x - ct[lo].x) * C_lo * C_hi / (C_lo + C_hi);
 			q = sign(q_eq) * min(abs(q), 0.5 * abs(q_eq));
-			ct[lo].x += q / C_lo;
+			ct[lo].x += q / C_lo; // a flame's share is negligible and repinned below
 			ct[hi].x -= q / C_hi;
 		}
 	}
@@ -693,9 +738,27 @@ void rule_phase() {
 		if (hot > 0.0 || cold > 0.0) {
 			float C = capacity_of(i);
 			float fill = fill_of(i);
-			ct[i] = settle(ct[i], C, hot, cold);
 			uint hot_to = ELEM_HOT_TO(elems[id]);
 			uint cold_to = ELEM_COLD_TO(elems[id]);
+			// A cell already past its plateau by more than the transition's
+			// latent energy (painted cold lava, water dropped into a furnace)
+			// changes phase at its own temperature: pinning it to the plateau
+			// first would make it a heat source of energy it never had.
+			if (hot > 0.0 && hot_to != 0u && ct[i].y <= 0.0
+					&& C * (ct[i].x - hot) >= ELEM_LATENT(elems[id]) * ELEM_HEAT_CAPACITY(elems[id]) * fill) {
+				float keep = ct[i].x;
+				set_element(i, hot_to);
+				if (ELEM_FIRE_TEMP(elems[c[i].x]) <= 0.0) { ct[i] = vec2(keep, 0.0); }
+				continue;
+			}
+			if (cold > 0.0 && cold_to != 0u && ct[i].y >= 0.0
+					&& C * (cold - ct[i].x) >= ELEM_LATENT(elems[cold_to]) * ELEM_HEAT_CAPACITY(elems[cold_to]) * fill) {
+				float keep = ct[i].x;
+				set_element(i, cold_to);
+				ct[i] = vec2(keep, 0.0);
+				continue;
+			}
+			ct[i] = settle(ct[i], C, hot, cold);
 			if (hot > 0.0 && hot_to != 0u && ct[i].y > 0.0
 					&& ct[i].y >= ELEM_LATENT(elems[id]) * ELEM_HEAT_CAPACITY(elems[id]) * fill) {
 				set_element(i, hot_to);

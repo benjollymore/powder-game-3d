@@ -14,7 +14,7 @@ layout(rg32f, set = 0, binding = 1) uniform writeonly image3D thermal;
 layout(std430, set = 0, binding = 2) restrict readonly buffer Initial { float initial_temp[]; };
 
 layout(push_constant, std430) uniform Params {
-	vec4 ambient; // x = ambient temperature for ids beyond the table, rest unused
+	vec4 ambient; // x = ambient temperature for ids beyond the table, y = table entry count
 } pc;
 
 layout(constant_id = 0) const int GRID = 128;
@@ -25,6 +25,8 @@ void main() {
 		return;
 	}
 	uint id = uint(imageLoad(grid, p).r * 255.0 + 0.5);
-	float t = id < uint(initial_temp.length()) ? initial_temp[id] : pc.ambient.x;
+	// The entry count comes from the push constant: a runtime array's
+	// length() is not available on the Metal backend and reads as zero.
+	float t = id < uint(pc.ambient.y) ? initial_temp[id] : pc.ambient.x;
 	imageStore(thermal, p, vec4(t, 0.0, 0.0, 0.0));
 }

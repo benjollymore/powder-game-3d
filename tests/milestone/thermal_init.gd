@@ -28,9 +28,9 @@ func run() -> void:
 	var hot: PackedFloat32Array = Sim.initial_temperatures(350.0)
 	check(is_equal_approx(hot[Elements.Id.AIR], 350.0) and is_equal_approx(hot[Elements.Id.WATER], Elements.thermal(Elements.Id.WATER, "initial_temp")), "a changed ambient moves air only")
 	check(is_equal_approx(Sim.cell_capacity(Elements.Id.WATER, 200), 4.18) and is_equal_approx(Sim.cell_capacity(Elements.Id.WATER, 100), 2.09)
-		and is_equal_approx(Sim.cell_capacity(Elements.Id.WATER, 1), 4.18 * 4.0 / 200.0), "liquid capacity scales with amount and floors at four units")
+		and is_equal_approx(Sim.cell_capacity(Elements.Id.WATER, 1), 4.18 / 200.0), "liquid capacity is linear in amount down to one unit")
 	check(is_equal_approx(Sim.cell_capacity(Elements.Id.WATER, 250), 4.18 * 1.25), "compressed liquid holds more heat")
-	check(is_equal_approx(Sim.cell_capacity(Elements.Id.METAL, 0), 3.5) and is_equal_approx(Sim.cell_capacity(Elements.Id.AIR, 0), 0.05), "solids and air use their table capacity")
+	check(is_equal_approx(Sim.cell_capacity(Elements.Id.METAL, 0), 3.5) and is_equal_approx(Sim.cell_capacity(Elements.Id.AIR, 0), 0.001), "solids and air use their table capacity")
 
 	# Energy of a tiny world: all air except one full water cell at 300 K and
 	# one steam cell at 380 K carrying 10 J of latent progress.
@@ -46,11 +46,11 @@ func run() -> void:
 	thermal[VoxelCodec.index(5, 5, 5) * 2] = 300.0
 	thermal[VoxelCodec.index(7, 5, 5) * 2] = 380.0
 	thermal[VoxelCodec.index(7, 5, 5) * 2 + 1] = 10.0
-	var expected := float(n * n * n - 2) * 0.05 * ambient + 4.18 * 300.0 + 0.05 * 380.0 + 10.0
+	var expected := float(n * n * n - 2) * 0.001 * ambient + 4.18 * 300.0 + 0.05 * 380.0 + 10.0
 	var total: float = Sim.energy_total(voxels, thermal.to_byte_array())
 	check(absf(total - expected) <= 1e-6 * expected, "energy total sums capacity x temperature plus latent (%.3f vs %.3f)" % [total, expected])
 	var region: float = Sim.energy_total(voxels, thermal.to_byte_array(), Vector3i(5, 5, 5), Vector3i(8, 6, 6))
-	check(absf(region - (4.18 * 300.0 + 0.05 * ambient + 0.05 * 380.0 + 10.0)) < 1e-6, "energy total over a region counts only that region")
+	check(absf(region - (4.18 * 300.0 + 0.001 * ambient + 0.05 * 380.0 + 10.0)) < 1e-6, "energy total over a region counts only that region")
 
 	var Brush := load("res://scripts/sim/brush.gd")
 	check(Brush.Mode.HEAT == Sim.BrushMode.HEAT and Brush.Mode.COOL == Sim.BrushMode.COOL and Brush.Mode.ERASE == Sim.BrushMode.ERASE, "brush Mode mirrors VoxelSim.BrushMode")

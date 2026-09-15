@@ -50,10 +50,10 @@ const uint MAX_AMOUNT = 255u;
 const uint COMP = 2u;
 const uint FLAG_GAS = 1u << 3;
 const uint FALLING = 1u;
-// Liquid heat capacity scales with amount, floored so a film cannot carry an
-// absurd temperature from a tiny energy. Keep in sync with sim.glsl and
-// VoxelSim.energy_total.
-const uint CAP_FLOOR = 4u;
+// Liquid heat capacity is exactly linear in amount (at least one unit); the
+// remap moves energy proportionally to units, so a floor would cool small
+// receivers. Keep in sync with sim.glsl and VoxelSim.energy_total.
+const uint CAP_FLOOR = 1u;
 const int RING = 24;
 
 shared vec2 ring[64 * RING];

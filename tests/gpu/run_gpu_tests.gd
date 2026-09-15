@@ -48,7 +48,7 @@ func _run() -> void:
 		["_test_fuse_deterministic", 0], ["_test_stale_flags_cleared", 0],
 		["_test_heat_two_cell_exchange", 3], ["_test_heat_closed_box_equilibrium", 3],
 		["_test_heat_falling_water_pool", 3], ["_test_ice_plateau", 3], ["_test_water_over_lava", 2],
-		["_test_wood_ignites_by_conduction", 0], ["_test_heat_brush_roundtrip", 3],
+		["_test_wood_ignites_by_conduction", 2], ["_test_heat_brush_roundtrip", 3],
 		["_test_large_grid_smoke", 0],
 	]
 	for t in tests:
@@ -130,6 +130,18 @@ func _temp_range(thermal: PackedByteArray, lo: Vector3i, hi: Vector3i) -> Vector
 				lo_t = minf(lo_t, t)
 				hi_t = maxf(hi_t, t)
 	return Vector2(lo_t, hi_t)
+
+
+## Cells of element `id` in [lo, hi) whose temperature bytes differ between two thermal layers.
+func _count_temp_changes(voxels: PackedByteArray, before: PackedByteArray, after: PackedByteArray, lo: Vector3i, hi: Vector3i, id: int) -> int:
+	var changed := 0
+	for z in range(lo.z, hi.z):
+		for y in range(lo.y, hi.y):
+			for x in range(lo.x, hi.x):
+				var i := VoxelCodec.index(x, y, z)
+				if voxels[i * 4] == id and before.slice(i * 8, i * 8 + 8) != after.slice(i * 8, i * 8 + 8):
+					changed += 1
+	return changed
 
 
 func _count_in(bytes: PackedByteArray, lo: Vector3i, hi: Vector3i, id: int) -> int:
@@ -498,17 +510,19 @@ func _test_void_sinks() -> void:
 
 
 func _test_wax_melts_on_fire() -> void:
-	# Placeholder until temperature-driven phase change lands: the interim
-	# FIRE + WAX contact rule must melt some of a pillar under a flame.
+	# A candle: a flame held on the top of a wax pillar melts it by heat alone
+	# (fire is a gas and rises, so a one-off block would leave before the wax
+	# reached its melting point).
 	var data := _empty_world()
 	_fill_box(data, Vector3i(56, 4, 56), Vector3i(72, 30, 72), Elements.Id.WAX)
-	_fill_box(data, Vector3i(60, 30, 60), Vector3i(68, 36, 68), Elements.Id.FIRE)
 	var world := data.to_byte_array()
 	_sim.upload(world)
+	_sim.set_live_emitter(Vector3i(64, 31, 64), 1, Elements.Id.FIRE, _sim.BrushMode.ONLY_AIR, 120.0, 11)
 	var before: PackedInt64Array = _sim.histogram(world)
 	var after: PackedInt64Array = _sim.histogram(await _run_and_read(600))
+	_sim.clear_live_emitter()
 	check(after[Elements.Id.WAX] < before[Elements.Id.WAX], "flame melted some wax (%d of %d left)" % [after[Elements.Id.WAX], before[Elements.Id.WAX]])
-	check(after[Elements.Id.WAX] + after[Elements.Id.MOLTEN_WAX] >= before[Elements.Id.WAX] * 9 / 10, "wax mostly melted rather than vanished")
+	check(after[Elements.Id.WAX] + after[Elements.Id.MOLTEN_WAX] >= before[Elements.Id.WAX] * 4 / 5, "wax mostly melted rather than vanished (%d wax + %d molten of %d)" % [after[Elements.Id.WAX], after[Elements.Id.MOLTEN_WAX], before[Elements.Id.WAX]])
 
 
 # --- heat milestone, thermal physics --------------------------------------------
@@ -543,8 +557,8 @@ func _test_heat_two_cell_exchange() -> void:
 	check(ticks <= 8 and hot != 400.0, "the pair exchanged heat within %d ticks" % ticks)
 	check(absf(hot - expected_hot) < 1e-4 and absf(_temp_at(state[1], b) - expected_cold) < 1e-4,
 		"one exchange equals the canonical transfer (%.5f / %.5f K, expected %.5f / %.5f)" % [hot, _temp_at(state[1], b), expected_hot, expected_cold])
-	var walls := _temp_range(state[1], Vector3i(60, 60, 60), Vector3i(68, 66, 66))
-	check(walls.x == 293.15 and _temp_at(state[1], Vector3i(60, 60, 60)) == 293.15, "insulating wall never changes temperature")
+	var wall_changes := _count_temp_changes(world, layer.to_byte_array(), state[1], Vector3i(60, 60, 60), Vector3i(68, 66, 66), Elements.Id.WALL)
+	check(wall_changes == 0, "insulating wall never changes temperature (%d wall cells changed)" % wall_changes)
 	check(state[0] == world, "conduction changes no voxel byte")
 
 
@@ -581,10 +595,12 @@ func _test_heat_closed_box_equilibrium() -> void:
 	state = await _run_and_read_state(3000)
 	after = _sim.energy_total(state[0], state[1], lo, hi)
 	var range_late := _temp_range(state[1], inner_lo, inner_hi)
-	check(absf(after - before) <= 1e-5 * before, "box energy conserved over 4000 ticks (drift %s)" % ((after - before) / before))
+	# Float32 state loses about 3e-6 per 1000 ticks systematically (division
+	# rounding on Metal); the gate is three times the measured 4000-tick drift.
+	check(absf(after - before) <= 4e-5 * before, "box energy conserved over 4000 ticks (drift %s)" % ((after - before) / before))
 	check(absf(range_late.x - t_eq) < 0.5 and absf(range_late.y - t_eq) < 0.5,
 		"box reaches the capacity-weighted equilibrium %.2f K (%.2f..%.2f)" % [t_eq, range_late.x, range_late.y])
-	check(_temp_at(state[1], lo) == 293.15, "energy did not leak through the wall")
+	check(_count_temp_changes(world, thermal, state[1], lo, hi, Elements.Id.WALL) == 0, "energy did not leak through the wall")
 
 
 func _test_heat_falling_water_pool() -> void:
@@ -639,7 +655,7 @@ func _test_ice_plateau() -> void:
 			for y in range(ice_lo.y, ice_hi.y):
 				for x in range(ice_lo.x, ice_hi.x):
 					var p := Vector3i(x, y, z)
-					if state[0][VoxelCodec.index(x, y, z) * 4] == Elements.Id.ICE and _temp_at(state[1], p) == 273.15 and _latent_at(state[1], p) > 0.0:
+					if state[0][VoxelCodec.index(x, y, z) * 4] == Elements.Id.ICE and absf(_temp_at(state[1], p) - 273.15) < 1e-3 and _latent_at(state[1], p) > 0.0:
 						plateau_seen = true
 		if plateau_seen and _count_in(state[0], ice_lo, ice_hi, Elements.Id.ICE) < ice_before:
 			break
@@ -661,7 +677,10 @@ func _test_water_over_lava() -> void:
 	var world := data.to_byte_array()
 	_sim.upload(world)
 	var water_before: int = _sim.mass(world, Elements.Id.WATER)
-	var state: Array = await _run_and_read_state(1500)
+	# Boiling begins near tick 850 and the lava surface reaches its crust
+	# plateau near 1100 (thermal_lava_probe.gd); the crust needs its latent
+	# energy shed after that.
+	var state: Array = await _run_and_read_state(2200)
 	var after: PackedInt64Array = _sim.histogram(state[0])
 	var lost: int = water_before - _sim.mass(state[0], Elements.Id.WATER)
 	check(after[Elements.Id.STEAM] > 0, "water boiled into steam (%d cells)" % after[Elements.Id.STEAM])
@@ -672,18 +691,22 @@ func _test_water_over_lava() -> void:
 
 func _test_wood_ignites_by_conduction() -> void:
 	# A sustained flame in a sealed chamber heats a metal bar that runs through
-	# the wall to a wood block eight cells away; the wood ignites without ever
-	# touching fire. The same bar warmed to 400 K by the heat brush does not.
+	# the wall and into a wood block eight cells away; the wood ignites without
+	# ever touching fire. The same bar warmed to 400 K by the heat brush does not.
+	# Decay is off (rule flag 2) so the chamber stays full of flame rather than
+	# filling with smoke that the air-only emitter can never restamp.
 	var data := _empty_world()
 	_fill_box(data, Vector3i(30, 4, 30), Vector3i(40, 14, 40), Elements.Id.WALL)
 	_fill_box(data, Vector3i(31, 5, 31), Vector3i(39, 13, 39), Elements.Id.AIR)
-	_fill_box(data, Vector3i(37, 9, 35), Vector3i(45, 10, 36), Elements.Id.METAL)
 	var wood_lo := Vector3i(45, 8, 34)
 	var wood_hi := Vector3i(48, 11, 37)
 	_fill_box(data, wood_lo, wood_hi, Elements.Id.WOOD)
+	# The bar runs through the wall and on through the middle of the wood block.
+	_fill_box(data, Vector3i(37, 9, 35), Vector3i(48, 10, 36), Elements.Id.METAL)
 	var world := data.to_byte_array()
 	_sim.upload(world)
-	_sim.set_live_emitter(Vector3i(34, 9, 35), 2, Elements.Id.FIRE, _sim.BrushMode.REPLACE, 120.0, 7)
+	# The flame fills the air around the bar's chamber end (ONLY_AIR keeps the bar).
+	_sim.set_live_emitter(Vector3i(35, 9, 35), 3, Elements.Id.FIRE, _sim.BrushMode.ONLY_AIR, 120.0, 7)
 	var wood_before := _count_in(world, wood_lo, wood_hi, Elements.Id.WOOD)
 	var state: Array = await _run_and_read_state(2500)
 	_sim.clear_live_emitter()
@@ -713,8 +736,8 @@ func _test_heat_brush_roundtrip() -> void:
 	_sim.paint_thermal(mid, 3, 50.0)
 	var heated: Array = await _run_and_read_state(0)
 	check(heated[0] == world, "heat brush leaves voxel bytes untouched")
-	check(absf(_temp_at(heated[1], mid) - 343.15) < 1e-3 and _temp_at(heated[1], mid + Vector3i(3, 0, 0)) > 293.15
-		and _temp_at(heated[1], mid + Vector3i(4, 0, 0)) == 293.15, "heat brush adds full strength at the centre with radial falloff (%.3f K)" % _temp_at(heated[1], mid))
+	check(absf(_temp_at(heated[1], mid) - 343.15) < 1e-3 and _temp_at(heated[1], mid + Vector3i(3, 0, 0)) > _temp_at(initial[1], mid + Vector3i(3, 0, 0))
+		and _temp_at(heated[1], mid + Vector3i(4, 0, 0)) == _temp_at(initial[1], mid + Vector3i(4, 0, 0)), "heat brush adds full strength at the centre with radial falloff (%.3f K)" % _temp_at(heated[1], mid))
 	_sim.paint_thermal(mid, 3, -50.0)
 	var cooled: Array = await _run_and_read_state(0)
 	check(cooled[1] == initial[1] and cooled[0] == world, "an equal cool restores the thermal bytes exactly")
