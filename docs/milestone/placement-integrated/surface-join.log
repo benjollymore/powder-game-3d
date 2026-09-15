@@ -1,0 +1,12 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: erase across a step breaks the segment instead of boring through the block ([])
+ok: add across a step keeps every centre out of the block ([])
+ok: top face to underside breaks instead of boring through the slab core ([])
+ok: convex corner cell appears exactly once (1)
+ok: the previous target is not re-stamped
+ok: every centre carries the face axis of its leg
+ok: disc axis is the previous face's on the first leg and the new face's on the second
+ok: same-plane join is the straight line after the previous target
+ok: erase joins never bridge different faces
+Surface join: 9 checks, 0 failures
