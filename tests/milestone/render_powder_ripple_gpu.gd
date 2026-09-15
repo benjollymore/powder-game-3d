@@ -18,7 +18,7 @@ func _initialize() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("output_dir="):
 			out_dir = argument.trim_prefix("output_dir=")
-	create_timer(110).timeout.connect(func(): push_error("Powder ripple timeout"); quit(2))
+	create_timer(170).timeout.connect(func(): push_error("Powder ripple timeout"); quit(2))
 	call_deferred("_run")
 
 func _run() -> void:
@@ -120,6 +120,55 @@ func _run() -> void:
 			_check(absf(f.mean_luminance - b.mean_luminance) < 0.08 * b.mean_luminance, c.name + " mean brightness preserved within 8%")
 		var after: PackedByteArray = await _read()
 		_check(after == bytes, c.name + " GPU physical bytes unchanged across all captures")
+	# Reviewer concern 1: the level-2 stencil reaches four cells, so sand near a
+	# vertical wall face could take a systematic tilt. A sand slope piled against
+	# a full-height wall; normals sampled by distance from the wall face.
+	var against := _wedge_against_wall(0.6)
+	sim.upload(against)
+	camera.position = _world(Vector3(150.0 * s, 96.0 * s, 150.0 * s))
+	camera.look_at(_world(Vector3(64.0 * s, 30.0 * s, 64.0 * s)), Vector3.UP)
+	var tilt := {}
+	for variant in ["baseline", "fixed"]:
+		var mat: ShaderMaterial = sim.get_node("Mesh").material_override
+		mat.shader = BASELINE if variant == "baseline" else FIXED
+		sim.set_param("debug_mode", 8)
+		for i in 12:
+			await process_frame
+		await RenderingServer.frame_post_draw
+		var img := root.get_texture().get_image()
+		_check(img.save_png(out_dir + "/sand-against-wall-" + variant + "-normals.png") == OK, "capture wall-adjacent " + variant)
+		tilt[variant] = _wall_tilt(img, 0.6)
+		print(JSON.stringify({"case": "sand-against-wall", "variant": variant, "tilt_by_distance": tilt[variant]}))
+	rows.append({"case": "sand-against-wall", "baseline": tilt.baseline, "fixed": tilt.fixed})
+	var worst := 0.0
+	for bin in tilt.fixed:
+		worst = maxf(worst, absf(tilt.fixed[bin].mean_signed_deg - tilt.baseline[bin].mean_signed_deg))
+	rows.append({"case": "sand-against-wall-summary", "max_mean_tilt_change_deg": worst})
+	print(JSON.stringify(rows[-1]))
+	_check(await _read() == against, "wall-adjacent sand GPU physical bytes unchanged")
+	# Reviewer concern 2: wood and plant are smoothed too. Matched before/after
+	# captures with pixel statistics; no ripple gate, only exact bytes.
+	for spec in [{"name": "wood-plank", "bytes": _plank()}, {"name": "plant-sphere", "bytes": _plant()}]:
+		sim.upload(spec.bytes)
+		camera.position = _world(Vector3(120.0 * s, 70.0 * s, 130.0 * s))
+		camera.look_at(_world(Vector3(64.0 * s, 20.0 * s, 64.0 * s)), Vector3.UP)
+		var shots := {}
+		for variant in ["baseline", "fixed"]:
+			var mat: ShaderMaterial = sim.get_node("Mesh").material_override
+			mat.shader = BASELINE if variant == "baseline" else FIXED
+			for mode in [0, 8]:
+				sim.set_param("debug_mode", mode)
+				for i in 12:
+					await process_frame
+				await RenderingServer.frame_post_draw
+				var img := root.get_texture().get_image()
+				shots[variant + str(mode)] = img
+				_check(img.save_png(out_dir + "/%s-%s-%s.png" % [spec.name, variant, "lit" if mode == 0 else "normals"]) == OK, "capture " + spec.name + " " + variant)
+		var stat := _material_diff(shots["baseline0"], shots["fixed0"], shots["baseline8"], shots["fixed8"])
+		stat["case"] = spec.name
+		rows.append(stat)
+		print(JSON.stringify(stat))
+		_check(await _read() == spec.bytes, spec.name + " GPU physical bytes unchanged")
 	# Visual reference: a heap cone, captured only (no ripple gate: radial lines cross ridges).
 	var cone := _cone()
 	sim.upload(cone)
@@ -237,6 +286,100 @@ func _measure(lit: Image, normals: Image, slope: float) -> Dictionary:
 	return {"samples": samples, "lines": lines, "window_cells": window * STEP, "mean_luminance": mean,
 		"luminance_ripple_rms": lum_rms / maxf(mean, 1e-6), "luminance_ripple_peak_to_peak": lum_p2p / maxf(mean, 1e-6),
 		"normal_ripple_rms_deg": sqrt(ang_ripple_sq / maxf(lines, 1)), "normal_ripple_peak_to_peak_deg": ang_p2p}
+
+func _wedge_against_wall(slope: float) -> PackedByteArray:
+	var s := float(VoxelCodec.GRID) / 128.0
+	var d := WorldBuilder.empty()
+	var n := VoxelCodec.GRID
+	# Full-height wall slab at x in [8, 12); sand slope descends from the wall face at x = 12.
+	WorldBuilder.fill_box(d, Vector3i(int(8 * s), 0, int(8 * s)), Vector3i(int(12 * s), n, int(120 * s)), Elements.Id.WALL)
+	for z in range(int(8 * s), int(120 * s)):
+		for x in range(int(12 * s), int(120 * s)):
+			var h := int(floor(60.0 * s - slope * (x - 12.0 * s)))
+			for y in range(0, mini(h, n)):
+				d[VoxelCodec.index(x, y, z)] = VoxelCodec.encode(Elements.Id.SAND, WorldBuilder.seed_at(x, y, z))
+	return d.to_byte_array()
+
+func _wall_tilt(normals: Image, slope: float) -> Dictionary:
+	var s := float(VoxelCodec.GRID) / 128.0
+	var ideal := Vector3(slope, 1.0, 0.0).normalized()
+	var bins := {}
+	for z in [28.0, 48.0, 64.0, 80.0, 100.0]:
+		for i in 180:
+			var dist := i * 0.05 # cells from the wall face, 0..9
+			var x := 12.0 * s + dist
+			var p := Vector3(x, 60.0 * s - slope * (x - 12.0 * s), z * s)
+			var pos := camera.unproject_position(_world(p))
+			var pixel := Vector2i(pos.floor())
+			if pixel.x < 2 or pixel.y < 2 or pixel.x >= normals.get_width() - 2 or pixel.y >= normals.get_height() - 2:
+				continue
+			var nc := normals.get_pixelv(pixel).srgb_to_linear()
+			if maxf(nc.r, maxf(nc.g, nc.b)) < 0.1:
+				continue
+			var nv := (Vector3(nc.r, nc.g, nc.b) * 2.0 - Vector3.ONE).normalized()
+			var key := str(int(floor(dist)))
+			if not bins.has(key):
+				bins[key] = {"count": 0, "sum_signed": 0.0, "sum_abs": 0.0, "max_abs": 0.0}
+			var signed := rad_to_deg(atan2(nv.x, nv.y) - atan2(ideal.x, ideal.y))
+			bins[key].count += 1
+			bins[key].sum_signed += signed
+			bins[key].sum_abs += absf(signed)
+			bins[key].max_abs = maxf(bins[key].max_abs, absf(signed))
+	var out := {}
+	for key in bins:
+		var b: Dictionary = bins[key]
+		out[key] = {"samples": b.count, "mean_signed_deg": b.sum_signed / maxf(b.count, 1), "mean_abs_deg": b.sum_abs / maxf(b.count, 1), "max_abs_deg": b.max_abs}
+	return out
+
+func _plank() -> PackedByteArray:
+	var s := float(VoxelCodec.GRID) / 128.0
+	var d := WorldBuilder.empty()
+	WorldBuilder.fill_box(d, Vector3i(0, 0, 0), Vector3i(VoxelCodec.GRID, int(4 * s), VoxelCodec.GRID), Elements.Id.WALL)
+	# Two-cell-thick plank on posts, plus a one-cell-thick plank alongside.
+	WorldBuilder.fill_box(d, Vector3i(int(24 * s), int(20 * s), int(40 * s)), Vector3i(int(104 * s), int(22 * s), int(60 * s)), Elements.Id.WOOD)
+	WorldBuilder.fill_box(d, Vector3i(int(24 * s), int(20 * s), int(70 * s)), Vector3i(int(104 * s), int(21 * s), int(90 * s)), Elements.Id.WOOD)
+	for x in [int(28 * s), int(100 * s)]:
+		for z in [int(44 * s), int(56 * s), int(74 * s), int(86 * s)]:
+			WorldBuilder.fill_box(d, Vector3i(x, int(4 * s), z), Vector3i(x + 1, int(20 * s), z + 1), Elements.Id.WOOD)
+	return d.to_byte_array()
+
+func _plant() -> PackedByteArray:
+	var s := float(VoxelCodec.GRID) / 128.0
+	var d := WorldBuilder.empty()
+	WorldBuilder.fill_box(d, Vector3i(0, 0, 0), Vector3i(VoxelCodec.GRID, int(4 * s), VoxelCodec.GRID), Elements.Id.WALL)
+	WorldBuilder.fill_sphere(d, Vector3(64, 22, 64) * s, 14 * s, Elements.Id.PLANT)
+	return d.to_byte_array()
+
+func _material_diff(lit_a: Image, lit_b: Image, n_a: Image, n_b: Image) -> Dictionary:
+	var da := lit_a.get_data()
+	var db := lit_b.get_data()
+	var changed := 0
+	var max_delta := 0
+	var sum_a := 0.0
+	var sum_b := 0.0
+	for i in mini(da.size(), db.size()):
+		var delta := absi(da[i] - db[i])
+		if delta != 0:
+			changed += 1
+		max_delta = maxi(max_delta, delta)
+		sum_a += da[i]
+		sum_b += db[i]
+	var ang_sum := 0.0
+	var ang_max := 0.0
+	var count := 0
+	for y in range(0, n_a.get_height(), 2):
+		for x in range(0, n_a.get_width(), 2):
+			var ca := n_a.get_pixel(x, y).srgb_to_linear()
+			var cb := n_b.get_pixel(x, y).srgb_to_linear()
+			if maxf(ca.r, maxf(ca.g, ca.b)) < 0.1 or maxf(cb.r, maxf(cb.g, cb.b)) < 0.1:
+				continue
+			var va := (Vector3(ca.r, ca.g, ca.b) * 2.0 - Vector3.ONE).normalized()
+			var vb := (Vector3(cb.r, cb.g, cb.b) * 2.0 - Vector3.ONE).normalized()
+			var ang := rad_to_deg(acos(clampf(va.dot(vb), -1.0, 1.0)))
+			ang_sum += ang
+			ang_max = maxf(ang_max, ang)
+			count += 1
+	return {"lit_changed_bytes": changed, "lit_max_delta": max_delta, "lit_mean_byte_baseline": sum_a / maxf(da.size(), 1), "lit_mean_byte_fixed": sum_b / maxf(db.size(), 1), "normal_pixels": count, "normal_mean_change_deg": ang_sum / maxf(count, 1), "normal_max_change_deg": ang_max}
 
 func _diff(a: Image, b: Image) -> Dictionary:
 	var da := a.get_data()

@@ -3,6 +3,8 @@ extends SceneTree
 ## godot --path . --always-on-top --disable-vsync -s res://tests/milestone/render_surface_gpu.gd -- grid=128
 const BASELINE := preload("res://tests/milestone/fixtures/voxel_opaque_baseline.gdshader")
 const FIXED := preload("res://shaders/spatial/voxel_opaque.gdshader")
+## The ripple change at d0df9a3 left the cap/camera-inside overrides on a normal shading no longer read.
+const CAP_REGRESSION := preload("res://tests/milestone/fixtures/voxel_opaque_cap_regression.gdshader")
 var sim: Node3D
 var camera: Camera3D
 var stage: Node3D
@@ -53,7 +55,14 @@ func _run() -> void:
 		{"name": "single-cell-sheet", "lo": Vector3i(8,32,8), "hi": Vector3i(120,33,120), "axis": 1, "plane": 33, "section": false, "camera": Vector3(0.72,0.50,0.80)},
 		{"name": "section-x", "lo": Vector3i(20,16,20), "hi": Vector3i(108,100,108), "axis": 0, "plane": 64, "section": true, "camera": Vector3(1.00,0.50,0.70)},
 		{"name": "section-y", "lo": Vector3i(20,16,20), "hi": Vector3i(108,100,108), "axis": 1, "plane": 64, "section": true, "camera": Vector3(0.70,1.00,0.50)},
-		{"name": "section-z", "lo": Vector3i(20,16,20), "hi": Vector3i(108,100,108), "axis": 2, "plane": 64, "section": true, "camera": Vector3(0.70,0.50,1.00)}
+		{"name": "section-z", "lo": Vector3i(20,16,20), "hi": Vector3i(108,100,108), "axis": 2, "plane": 64, "section": true, "camera": Vector3(0.70,0.50,1.00)},
+		# Smoothed material: inside a heap the field is uniform, so a cap or an
+		# embedded camera must take the override normal, not a vanishing gradient.
+		{"name": "sand-section-x", "id": Elements.Id.SAND, "lo": Vector3i(20,16,20), "hi": Vector3i(108,100,108), "axis": 0, "plane": 64, "section": true, "camera": Vector3(1.00,0.50,0.70)},
+		{"name": "sand-section-y", "id": Elements.Id.SAND, "lo": Vector3i(20,16,20), "hi": Vector3i(108,100,108), "axis": 1, "plane": 64, "section": true, "camera": Vector3(0.70,1.00,0.50)},
+		{"name": "sand-section-z", "id": Elements.Id.SAND, "lo": Vector3i(20,16,20), "hi": Vector3i(108,100,108), "axis": 2, "plane": 64, "section": true, "camera": Vector3(0.70,0.50,1.00)},
+		{"name": "sand-camera-inside", "id": Elements.Id.SAND, "lo": Vector3i.ZERO, "hi": Vector3i(128,128,128), "axis": 2, "plane": 0, "section": false, "camera": Vector3.ZERO, "inside": true},
+		{"name": "plant-section-z", "id": Elements.Id.PLANT, "lo": Vector3i(20,16,20), "hi": Vector3i(108,100,108), "axis": 2, "plane": 64, "section": true, "camera": Vector3(0.70,0.50,1.00)}
 	]
 	for c in cases:
 		var bytes := _world(c)
@@ -66,9 +75,12 @@ func _run() -> void:
 		target[c.axis] = (float(c.plane) / 128.0 - 0.5) * sim.world_size()
 		camera.look_at(target, Vector3.UP)
 		var results: Array[Dictionary] = []
-		for baseline in [true, false]:
+		var smoothed: bool = c.has("id")
+		var variants: Array = ["baseline", "fixed"] if not smoothed else ["cap-regression", "fixed"]
+		for variant in variants:
+			var baseline: bool = variant != "fixed"
 			var mat: ShaderMaterial = sim.get_node("Mesh").material_override
-			mat.shader = BASELINE if baseline else FIXED
+			mat.shader = FIXED if variant == "fixed" else (CAP_REGRESSION if variant == "cap-regression" else BASELINE)
 			sim.set_param("debug_mode", 8)
 			sim.set_param("detail_strength", 0.0)
 			for i in 20:
@@ -76,7 +88,7 @@ func _run() -> void:
 			await RenderingServer.frame_post_draw
 			var img := root.get_texture().get_image()
 			var row := _measure(img, c)
-			row["variant"] = "baseline" if baseline else "fixed"
+			row["variant"] = variant
 			row["case"] = c.name
 			rows.append(row)
 			results.append(row)
@@ -88,6 +100,8 @@ func _run() -> void:
 				_check(row.wrong_normals == 0, c.name + " has constant correct flat-surface normals")
 		if c.name == "floor-oblique" or c.name.begins_with("section-"):
 			_check(results[0].wrong_normals > 0, c.name + " baseline reproduces the diagnosed defect")
+		if smoothed and not c.get("inside", false):
+			_check(results[0].wrong_normals > 0, c.name + " cap-regression fixture reproduces the constant-diagonal cap normal")
 		var after: PackedByteArray = await _read()
 		_check(after == bytes, c.name + " GPU physical bytes unchanged across both views")
 	var report := FileAccess.open(out_dir + "/surface-metrics.json", FileAccess.WRITE)
@@ -101,7 +115,7 @@ func _cell(ref: int) -> int:
 
 func _world(c: Dictionary) -> PackedByteArray:
 	var d := WorldBuilder.empty()
-	WorldBuilder.fill_box(d, Vector3i(c.lo) * VoxelCodec.GRID / 128, Vector3i(c.hi) * VoxelCodec.GRID / 128, Elements.Id.WALL)
+	WorldBuilder.fill_box(d, Vector3i(c.lo) * VoxelCodec.GRID / 128, Vector3i(c.hi) * VoxelCodec.GRID / 128, c.get("id", Elements.Id.WALL))
 	return d.to_byte_array()
 
 func _measure(img: Image, c: Dictionary) -> Dictionary:

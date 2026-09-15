@@ -1,0 +1,129 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+{"case":"camera-inside","max_normal_error":0.0124840848147869,"missing":0,"samples":3996,"variant":"baseline","wrong_normals":0}
+ok: capture camera-inside baseline
+{"case":"camera-inside","max_normal_error":0.0124840848147869,"missing":0,"samples":3996,"variant":"fixed","wrong_normals":0}
+ok: capture camera-inside fixed
+ok: camera-inside has a substantial visible analytic surface sample
+ok: camera-inside has complete interior surface coverage
+ok: camera-inside has constant correct flat-surface normals
+ok: readback completes within 15 seconds
+ok: camera-inside GPU physical bytes unchanged across both views
+{"case":"floor-oblique","max_normal_error":1.41014921665192,"missing":0,"samples":9216,"variant":"baseline","wrong_normals":61}
+ok: capture floor-oblique baseline
+{"case":"floor-oblique","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture floor-oblique fixed
+ok: floor-oblique has a substantial visible analytic surface sample
+ok: floor-oblique has complete interior surface coverage
+ok: floor-oblique has constant correct flat-surface normals
+ok: floor-oblique baseline reproduces the diagnosed defect
+ok: readback completes within 15 seconds
+ok: floor-oblique GPU physical bytes unchanged across both views
+{"case":"floor-reverse","max_normal_error":1.41014921665192,"missing":0,"samples":9216,"variant":"baseline","wrong_normals":56}
+ok: capture floor-reverse baseline
+{"case":"floor-reverse","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture floor-reverse fixed
+ok: floor-reverse has a substantial visible analytic surface sample
+ok: floor-reverse has complete interior surface coverage
+ok: floor-reverse has constant correct flat-surface normals
+ok: readback completes within 15 seconds
+ok: floor-reverse GPU physical bytes unchanged across both views
+{"case":"floor-grazing","max_normal_error":1.41014921665192,"missing":0,"samples":9216,"variant":"baseline","wrong_normals":194}
+ok: capture floor-grazing baseline
+{"case":"floor-grazing","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture floor-grazing fixed
+ok: floor-grazing has a substantial visible analytic surface sample
+ok: floor-grazing has complete interior surface coverage
+ok: floor-grazing has constant correct flat-surface normals
+ok: readback completes within 15 seconds
+ok: floor-grazing GPU physical bytes unchanged across both views
+{"case":"single-cell-sheet","max_normal_error":1.41014921665192,"missing":0,"samples":9216,"variant":"baseline","wrong_normals":72}
+ok: capture single-cell-sheet baseline
+{"case":"single-cell-sheet","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture single-cell-sheet fixed
+ok: single-cell-sheet has a substantial visible analytic surface sample
+ok: single-cell-sheet has complete interior surface coverage
+ok: single-cell-sheet has constant correct flat-surface normals
+ok: readback completes within 15 seconds
+ok: single-cell-sheet GPU physical bytes unchanged across both views
+{"case":"section-x","max_normal_error":0.884232699871063,"missing":0,"samples":9216,"variant":"baseline","wrong_normals":9216}
+ok: capture section-x baseline
+{"case":"section-x","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture section-x fixed
+ok: section-x has a substantial visible analytic surface sample
+ok: section-x has complete interior surface coverage
+ok: section-x has constant correct flat-surface normals
+ok: section-x baseline reproduces the diagnosed defect
+ok: readback completes within 15 seconds
+ok: section-x GPU physical bytes unchanged across both views
+{"case":"section-y","max_normal_error":0.875694811344147,"missing":0,"samples":9216,"variant":"baseline","wrong_normals":9216}
+ok: capture section-y baseline
+{"case":"section-y","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture section-y fixed
+ok: section-y has a substantial visible analytic surface sample
+ok: section-y has complete interior surface coverage
+ok: section-y has constant correct flat-surface normals
+ok: section-y baseline reproduces the diagnosed defect
+ok: readback completes within 15 seconds
+ok: section-y GPU physical bytes unchanged across both views
+{"case":"section-z","max_normal_error":0.884232699871063,"missing":0,"samples":9216,"variant":"baseline","wrong_normals":9216}
+ok: capture section-z baseline
+{"case":"section-z","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture section-z fixed
+ok: section-z has a substantial visible analytic surface sample
+ok: section-z has complete interior surface coverage
+ok: section-z has constant correct flat-surface normals
+ok: section-z baseline reproduces the diagnosed defect
+ok: readback completes within 15 seconds
+ok: section-z GPU physical bytes unchanged across both views
+{"case":"sand-section-x","max_normal_error":1.77336144447327,"missing":0,"samples":9216,"variant":"cap-regression","wrong_normals":9216}
+ok: capture sand-section-x cap-regression
+{"case":"sand-section-x","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture sand-section-x fixed
+ok: sand-section-x has a substantial visible analytic surface sample
+ok: sand-section-x has complete interior surface coverage
+ok: sand-section-x has constant correct flat-surface normals
+ok: sand-section-x cap-regression fixture reproduces the constant-diagonal cap normal
+ok: readback completes within 15 seconds
+ok: sand-section-x GPU physical bytes unchanged across both views
+{"case":"sand-section-y","max_normal_error":1.77336144447327,"missing":0,"samples":9216,"variant":"cap-regression","wrong_normals":9216}
+ok: capture sand-section-y cap-regression
+{"case":"sand-section-y","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture sand-section-y fixed
+ok: sand-section-y has a substantial visible analytic surface sample
+ok: sand-section-y has complete interior surface coverage
+ok: sand-section-y has constant correct flat-surface normals
+ok: sand-section-y cap-regression fixture reproduces the constant-diagonal cap normal
+ok: readback completes within 15 seconds
+ok: sand-section-y GPU physical bytes unchanged across both views
+{"case":"sand-section-z","max_normal_error":1.77336144447327,"missing":0,"samples":9216,"variant":"cap-regression","wrong_normals":9216}
+ok: capture sand-section-z cap-regression
+{"case":"sand-section-z","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture sand-section-z fixed
+ok: sand-section-z has a substantial visible analytic surface sample
+ok: sand-section-z has complete interior surface coverage
+ok: sand-section-z has constant correct flat-surface normals
+ok: sand-section-z cap-regression fixture reproduces the constant-diagonal cap normal
+ok: readback completes within 15 seconds
+ok: sand-section-z GPU physical bytes unchanged across both views
+{"case":"sand-camera-inside","max_normal_error":1.977991938591,"missing":0,"samples":3996,"variant":"cap-regression","wrong_normals":3996}
+ok: capture sand-camera-inside cap-regression
+{"case":"sand-camera-inside","max_normal_error":0.0124840848147869,"missing":0,"samples":3996,"variant":"fixed","wrong_normals":0}
+ok: capture sand-camera-inside fixed
+ok: sand-camera-inside has a substantial visible analytic surface sample
+ok: sand-camera-inside has complete interior surface coverage
+ok: sand-camera-inside has constant correct flat-surface normals
+ok: readback completes within 15 seconds
+ok: sand-camera-inside GPU physical bytes unchanged across both views
+{"case":"plant-section-z","max_normal_error":1.34145188331604,"missing":0,"samples":9216,"variant":"cap-regression","wrong_normals":9216}
+ok: capture plant-section-z cap-regression
+{"case":"plant-section-z","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture plant-section-z fixed
+ok: plant-section-z has a substantial visible analytic surface sample
+ok: plant-section-z has complete interior surface coverage
+ok: plant-section-z has constant correct flat-surface normals
+ok: plant-section-z cap-regression fixture reproduces the constant-diagonal cap normal
+ok: readback completes within 15 seconds
+ok: plant-section-z GPU physical bytes unchanged across both views
+SURFACE_CHECKS 99 FAILURES 0

@@ -1,0 +1,60 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+{"center":-0.02,"clipped_side_pixels":12168,"kept_side_pixels":20852,"role":"splat","variant":"baseline"}
+ok: capture splat-inside-baseline
+ok: splat-inside-baseline reproduces center-clipping defect
+{"center":-0.02,"clipped_side_pixels":0,"kept_side_pixels":20852,"role":"splat","variant":"fixed"}
+ok: capture splat-inside-fixed
+ok: splat-inside-fixed geometry does not protrude across section
+ok: splat-inside-fixed preserves geometry on retained side
+{"center":0.02,"clipped_side_pixels":0,"kept_side_pixels":0,"role":"splat","variant":"baseline"}
+ok: capture splat-outside-baseline
+ok: splat-outside-baseline reproduces center-clipping defect
+{"center":0.02,"clipped_side_pixels":0,"kept_side_pixels":12370,"role":"splat","variant":"fixed"}
+ok: capture splat-outside-fixed
+ok: splat-outside-fixed geometry does not protrude across section
+ok: splat-outside-fixed preserves geometry on retained side
+{"center":-0.02,"clipped_side_pixels":12168,"kept_side_pixels":20852,"role":"droplet","variant":"baseline"}
+ok: capture droplet-inside-baseline
+ok: droplet-inside-baseline reproduces center-clipping defect
+{"center":-0.02,"clipped_side_pixels":0,"kept_side_pixels":20852,"role":"droplet","variant":"fixed"}
+ok: capture droplet-inside-fixed
+ok: droplet-inside-fixed geometry does not protrude across section
+ok: droplet-inside-fixed preserves geometry on retained side
+{"center":0.02,"clipped_side_pixels":0,"kept_side_pixels":0,"role":"droplet","variant":"baseline"}
+ok: capture droplet-outside-baseline
+ok: droplet-outside-baseline reproduces center-clipping defect
+{"center":0.02,"clipped_side_pixels":0,"kept_side_pixels":12370,"role":"droplet","variant":"fixed"}
+ok: capture droplet-outside-fixed
+ok: droplet-outside-fixed geometry does not protrude across section
+ok: droplet-outside-fixed preserves geometry on retained side
+{"center":-0.02,"clipped_side_pixels":10407,"kept_side_pixels":18895,"role":"leaf","variant":"baseline"}
+ok: capture leaf-inside-baseline
+ok: leaf-inside-baseline reproduces center-clipping defect
+{"center":-0.02,"clipped_side_pixels":0,"kept_side_pixels":18895,"role":"leaf","variant":"fixed"}
+ok: capture leaf-inside-fixed
+ok: leaf-inside-fixed geometry does not protrude across section
+ok: leaf-inside-fixed preserves geometry on retained side
+{"center":0.02,"clipped_side_pixels":0,"kept_side_pixels":0,"role":"leaf","variant":"baseline"}
+ok: capture leaf-outside-baseline
+ok: leaf-outside-baseline reproduces center-clipping defect
+{"center":0.02,"clipped_side_pixels":0,"kept_side_pixels":10598,"role":"leaf","variant":"fixed"}
+ok: capture leaf-outside-fixed
+ok: leaf-outside-fixed geometry does not protrude across section
+ok: leaf-outside-fixed preserves geometry on retained side
+{"center":-0.02,"clipped_side_pixels":10518,"kept_side_pixels":18696,"role":"fx","variant":"baseline"}
+ok: capture fx-inside-baseline
+ok: fx-inside-baseline reproduces center-clipping defect
+{"center":-0.02,"clipped_side_pixels":0,"kept_side_pixels":18696,"role":"fx","variant":"fixed"}
+ok: capture fx-inside-fixed
+ok: fx-inside-fixed geometry does not protrude across section
+ok: fx-inside-fixed preserves geometry on retained side
+{"center":0.02,"clipped_side_pixels":0,"kept_side_pixels":0,"role":"fx","variant":"baseline"}
+ok: capture fx-outside-baseline
+ok: fx-outside-baseline reproduces center-clipping defect
+{"center":0.02,"clipped_side_pixels":0,"kept_side_pixels":10708,"role":"fx","variant":"fixed"}
+ok: capture fx-outside-fixed
+ok: fx-outside-fixed geometry does not protrude across section
+ok: fx-outside-fixed preserves geometry on retained side
+SPRITE_SECTION_CHECKS 40 FAILURES 0

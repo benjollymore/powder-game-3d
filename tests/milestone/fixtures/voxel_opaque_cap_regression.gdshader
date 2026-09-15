@@ -1,3 +1,4 @@
+// Immutable copy of voxel_opaque.gdshader at d0df9a3: the ripple change with the cap/camera-inside override regression. Do not edit.
 // Opaque pass: solids and powders as the 0.5 isosurface of the smoothed
 // field, shaded with triplanar textures, grain, cone-traced AO and curvature.
 // A lit material: Godot adds sky ambient, specular, SSAO, fog, DOF and glow;
@@ -159,7 +160,6 @@ void fragment() {
 		face_model = vec3(0.0);
 		face_model[r.axis] = -float(r.step_dir[r.axis]);
 		n_model = face_model;
-		n_smooth = face_model;
 	}
 	if (t_hit == 0.0) {
 		// Entering a clipped volume creates an axis-aligned cap. Ray-facing
@@ -172,11 +172,7 @@ void fragment() {
 			// there is no entry face between the camera and the sample.
 			face_model = -r.dir;
 		}
-		// Both overrides must also replace the smoothed shading normal: inside
-		// a heap the field is uniform, its coarse gradients vanish, and the
-		// normalized epsilon would light every cap as one constant diagonal.
 		n_model = face_model;
-		n_smooth = face_model;
 	}
 
 	mat3 model_basis = mat3(MODEL_MATRIX);

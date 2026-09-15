@@ -131,7 +131,8 @@ func _run() -> void:
 		for y in falling_image.get_height():
 			for x in falling_image.get_width():
 				if falling_image.get_pixel(x,y).r>0.0: falling_pixels += 1
-		_check(falling_pixels==0,"documented limitation: falling non-spray partial sheet has no volume-pass representation")
+		# Recorded diagnostic only: zero pixels documents the limitation and must not become a requirement.
+		print("DIAGNOSTIC falling non-spray partial sheet volume-pass pixels=%d (limitation, not a gate)"%falling_pixels)
 		_check(falling_image.save_png(destination+"/falling-sheet-50-front-length.png")==OK,"save falling sheet negative control")
 		sim.get_node("Droplets").visible = true
 		results.append({"case":"falling-non-spray-sheet-negative-control","amount":50,"physical_cells":sheet.size(),"liquid_pixels":falling_pixels,"droplets":falling_state.droplets,"eligible":falling_state.eligible,"picked":str(falling_pick.hit),"voxel_sha256":_sha256(falling_bytes),"limitation":"falling flag excluded from thin rescue; only corner cells (<=2 wet neighbours) become droplet sprites"})
