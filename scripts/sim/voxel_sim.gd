@@ -971,17 +971,15 @@ func _deliver_probe(result: Dictionary, callback: Callable) -> void:
 		callback.call({"pos": Vector3i(-1, -1, -1), "element": 0, "temperature": 0.0, "amount": 0, "flags": 0})
 
 
-## Liquid heat capacity is linear in amount with this floor in units (one:
-## a liquid cell always holds at least one unit). Any larger floor breaks the
-## proportional transfer contract. Keep in sync with CAP_FLOOR in sim.glsl and hydro.glsl.
-const CAPACITY_FLOOR_UNITS := 1
-
-## Heat capacity of one cell in J/K: the element's capacity, scaled for
-## liquids by amount / LIQUID_FULL (compressed liquid holds more).
+## Heat capacity of one cell in J/K: the element's capacity, scaled by
+## amount / LIQUID_FULL whenever the amount byte is set (liquids always; ice,
+## steam and smoke that carry the mass of the liquid they came from). A cell
+## with no amount is a full cell. Keep in sync with cell_capacity in sim.glsl
+## and hydro.glsl.
 static func cell_capacity(id: int, amount: int) -> float:
 	var c := Elements.thermal(id, "heat_capacity")
-	if Elements.is_liquid(id):
-		c *= float(maxi(amount, CAPACITY_FLOOR_UNITS)) / float(Elements.LIQUID_FULL)
+	if amount > 0:
+		c *= float(amount) / float(Elements.LIQUID_FULL)
 	return c
 
 
@@ -995,12 +993,9 @@ static func energy_total(voxels: PackedByteArray, thermal: PackedByteArray, lo :
 	if hi.x < 0:
 		hi = Vector3i(n, n, n)
 	var capacity := PackedFloat64Array()
-	var liquid := PackedByteArray()
 	capacity.resize(Elements.count())
-	liquid.resize(Elements.count())
 	for id in Elements.count():
 		capacity[id] = Elements.thermal(id, "heat_capacity")
-		liquid[id] = 1 if Elements.is_liquid(id) else 0
 	var values := thermal.to_float32_array()
 	var total := 0.0
 	for z in range(lo.z, hi.z):
@@ -1009,8 +1004,9 @@ static func energy_total(voxels: PackedByteArray, thermal: PackedByteArray, lo :
 				var i := VoxelCodec.index(x, y, z)
 				var id := voxels[i * 4]
 				var c := capacity[id]
-				if liquid[id] == 1:
-					c *= float(maxi(voxels[i * 4 + 2], CAPACITY_FLOOR_UNITS)) / float(Elements.LIQUID_FULL)
+				var amount := voxels[i * 4 + 2]
+				if amount > 0:
+					c *= float(amount) / float(Elements.LIQUID_FULL)
 				total += c * values[i * 2] + values[i * 2 + 1]
 	return total
 

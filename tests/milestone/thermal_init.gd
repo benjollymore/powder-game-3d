@@ -31,6 +31,7 @@ func run() -> void:
 		and is_equal_approx(Sim.cell_capacity(Elements.Id.WATER, 1), 4.18 / 200.0), "liquid capacity is linear in amount down to one unit")
 	check(is_equal_approx(Sim.cell_capacity(Elements.Id.WATER, 250), 4.18 * 1.25), "compressed liquid holds more heat")
 	check(is_equal_approx(Sim.cell_capacity(Elements.Id.METAL, 0), 3.5) and is_equal_approx(Sim.cell_capacity(Elements.Id.AIR, 0), 0.001), "solids and air use their table capacity")
+	check(is_equal_approx(Sim.cell_capacity(Elements.Id.ICE, 20), 2.1 * 0.1) and is_equal_approx(Sim.cell_capacity(Elements.Id.STEAM, 200), 0.05), "ice and steam carrying a liquid's amount scale their capacity by it")
 
 	# Energy of a tiny world: all air except one full water cell at 300 K and
 	# one steam cell at 380 K carrying 10 J of latent progress.

@@ -48,11 +48,11 @@ const uint RULE_NO_AIR = 4u;
 const uint RULE_NO_SPECIALS = 8u; // clone, void and the gunpowder fuse
 const uint RULE_NO_THERMAL = 16u;   // no conduction, phase change or ignition (plumbing tests)
 const float DX = 0.01;              // metres per voxel (VoxelSim.METRES_PER_VOXEL)
-// Liquid heat capacity is exactly linear in amount (at least one unit): the
-// transfer contract moves energy proportionally to units, so any floor would
-// make a small receiver read colder than its donors. Keep in sync with
+// Heat capacity is exactly linear in the amount byte whenever it is set: for
+// liquids always, and for a solid or gas that carries the amount of the
+// liquid it changed from (mass survives freezing, melting, boiling and
+// condensing). A cell with no amount is a full cell. Keep in sync with
 // hydro.glsl and VoxelSim.energy_total.
-const uint CAP_FLOOR = 1u;
 
 layout(constant_id = 0) const int GRID = 128;
 const uint AIR = 0u;
@@ -156,28 +156,49 @@ void swap_cells(int i, int j) {
 
 float cell_capacity(uint id, uint amount) {
 	float cap = ELEM_HEAT_CAPACITY(elems[id]);
-	if (is_liquid(id)) {
-		cap *= float(max(amount, CAP_FLOOR)) / float(FULL);
+	if (amount > 0u) {
+		cap *= float(amount) / float(FULL);
 	}
 	return cap;
 }
 float capacity_of(int i) { return cell_capacity(c[i].x, c[i].z); }
 // Fraction of a cell that counts toward a phase transition's latent energy.
-float fill_of(int i) { return is_liquid(c[i].x) ? float(max(c[i].z, CAP_FLOOR)) / float(FULL) : 1.0; }
+float fill_of(int i) { return (c[i].z > 0u) ? float(c[i].z) / float(FULL) : 1.0; }
 
-// Turn cell i into element id with that element's default amount, keeping its
-// seed and temperature (a transmutation is not a heat source); stored latent
-// progress belongs to the old phase and is dropped. Fire is pinned to its
-// flame temperature.
-// Byte w bits 3..7 are element-specific (clone armed, fuse timer) and must
-// not survive a transmutation; bits 0..2 are movement flags.
-void set_element(int i, uint id) {
+// Shared tail of every transmutation: keep the seed and temperature (a
+// transmutation is not a heat source), drop latent progress that belonged to
+// the old phase, clear byte w bits 3..7 (element-specific: clone armed, fuse
+// timer; bits 0..2 are movement flags), pin flames.
+void _transmuted(int i, uint id) {
 	c[i].x = id;
-	c[i].z = is_liquid(id) ? FULL : 0u;
 	c[i].w &= 7u;
 	ct[i].y = 0.0;
 	float flame = ELEM_FIRE_TEMP(elems[id]);
 	if (flame > 0.0) { ct[i].x = flame; }
+}
+
+// Turn cell i into element id for a reaction, decay or special rule. Mass is
+// carried when it is meaningful: a liquid or gas that came from a liquid or
+// gas keeps its amount (boiling by fire, steam condensing by decay, hot
+// smoke), so no route through a gas creates or destroys liquid. Solids from
+// reactions and air carry none; a liquid with no known amount starts full.
+void set_element(int i, uint id) {
+	uint old = c[i].x;
+	uint amount = c[i].z;
+	bool carry = amount > 0u && (is_liquid(id) || is_gas(id)) && (is_liquid(old) || is_gas(old));
+	_transmuted(i, id);
+	if (id == AIR) { c[i].z = 0u; }
+	else if (carry) { c[i].z = amount; }
+	else { c[i].z = is_liquid(id) ? FULL : 0u; }
+}
+
+// Phase change keeps the cell's mass in the amount byte whatever the new
+// phase is: a 20-unit film freezes to ice carrying 20 and thaws back to 20.
+// A painted solid or gas with no amount becomes a full liquid.
+void transmute_phase(int i, uint id) {
+	uint amount = c[i].z;
+	_transmuted(i, id);
+	c[i].z = (id == AIR) ? 0u : (amount > 0u ? amount : (is_liquid(id) ? FULL : 0u));
 }
 
 // Material created from nothing (clone emission) starts at its own initial
@@ -190,7 +211,9 @@ void set_element_fresh(int i, uint id) {
 // Heat carried by `m` amount units of liquid L moving from cell `from` to
 // cell `to` (amounts are written by the caller). A whole parcel entering an
 // empty cell exchanges thermal state with the air it displaces; otherwise
-// the receiver mixes by capacity-weighted mean and the donor is unchanged.
+// the moved units take their share of the donor's energy, latent progress
+// included, so the donor keeps its temperature and plateau position and the
+// receiver re-settles on the combined energy.
 void move_heat(int from, int to, uint L, uint m, uint from_old, uint to_old, uint from_new) {
 	if (m == 0u) {
 		return;
@@ -199,9 +222,13 @@ void move_heat(int from, int to, uint L, uint m, uint from_old, uint to_old, uin
 		vec2 t = ct[from]; ct[from] = ct[to]; ct[to] = t;
 		return;
 	}
-	float Cm = ELEM_HEAT_CAPACITY(elems[L]) * float(m) / float(FULL);
+	float share = float(m) / float(from_old);
+	float moved = (cell_capacity(L, from_old) * ct[from].x + ct[from].y) * share;
+	ct[from].y *= 1.0 - share;
 	float Cr = cell_capacity(to_old == 0u ? AIR : L, to_old);
-	ct[to].x = (Cr * ct[to].x + Cm * ct[from].x) / (Cr + Cm);
+	float E = Cr * ct[to].x + ct[to].y + moved;
+	float C = cell_capacity(L, to_old + m);
+	ct[to] = settle(vec2(E / C, 0.0), C, ELEM_HOT_AT(elems[L]), ELEM_COLD_AT(elems[L]));
 }
 
 // Set cell i to hold `amount` of liquid L (0 makes it air), keeping its seed.
@@ -747,27 +774,27 @@ void rule_phase() {
 			if (hot > 0.0 && hot_to != 0u && ct[i].y <= 0.0
 					&& C * (ct[i].x - hot) >= ELEM_LATENT(elems[id]) * ELEM_HEAT_CAPACITY(elems[id]) * fill) {
 				float keep = ct[i].x;
-				set_element(i, hot_to);
+				transmute_phase(i, hot_to);
 				if (ELEM_FIRE_TEMP(elems[c[i].x]) <= 0.0) { ct[i] = vec2(keep, 0.0); }
 				continue;
 			}
 			if (cold > 0.0 && cold_to != 0u && ct[i].y >= 0.0
 					&& C * (cold - ct[i].x) >= ELEM_LATENT(elems[cold_to]) * ELEM_HEAT_CAPACITY(elems[cold_to]) * fill) {
 				float keep = ct[i].x;
-				set_element(i, cold_to);
+				transmute_phase(i, cold_to);
 				ct[i] = vec2(keep, 0.0);
 				continue;
 			}
 			ct[i] = settle(ct[i], C, hot, cold);
 			if (hot > 0.0 && hot_to != 0u && ct[i].y > 0.0
 					&& ct[i].y >= ELEM_LATENT(elems[id]) * ELEM_HEAT_CAPACITY(elems[id]) * fill) {
-				set_element(i, hot_to);
+				transmute_phase(i, hot_to);
 				ct[i] = vec2(hot, 0.0);
 				continue;
 			}
 			if (cold > 0.0 && cold_to != 0u && ct[i].y < 0.0
 					&& -ct[i].y >= ELEM_LATENT(elems[cold_to]) * ELEM_HEAT_CAPACITY(elems[cold_to]) * fill) {
-				set_element(i, cold_to);
+				transmute_phase(i, cold_to);
 				ct[i] = vec2(cold, 0.0);
 				continue;
 			}
@@ -834,10 +861,11 @@ void main() {
 	rule_gas_spread();
 
 	for (int i = 0; i < 8; i++) {
-		// Normalise: liquids never sit at zero amount, non-liquids carry none.
+		// Normalise: liquids never sit at zero amount; air carries none. Other
+		// solids and gases keep the amount of the liquid they changed from.
 		if (is_liquid(c[i].x) && c[i].z == 0u) {
 			c[i].x = AIR;
-		} else if (!is_liquid(c[i].x)) {
+		} else if (c[i].x == AIR) {
 			c[i].z = 0u;
 		}
 		if (is_powder(c[i].x)) {

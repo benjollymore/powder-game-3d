@@ -1,17 +1,16 @@
 extends SceneTree
 ## CPU oracle for the hydro thermal remap (shaders/compute/hydro.glsl).
 ##
-## Ports the kernel's streaming two-cursor walk, including the shared-memory
-## ring for cells rewritten before the donor cursor reaches them, and checks
-## it against a plain segment-list remap (the monotone policy of
-## tools/feasibility/enthalpy_remap.py) on fixtures that include the
-## top-heavy runs where the donor cursor lags the receiver cursor. When
-## python3 is available the Python oracle itself is run on the same fixtures.
+## Ports the kernel's three-sweep two-cursor walk and checks it against a
+## plain segment-list remap (the monotone policy of
+## tools/feasibility/enthalpy_remap.py) on fixtures that include top-heavy
+## runs up to a full 128-cell pipe, where the donor cursor lags far behind
+## the receiver cursor. When python3 is available the Python oracle itself is
+## run on the same fixtures.
 ##   godot --headless --path . -s res://tests/milestone/thermal_remap.gd
 const FULL := 200
 const MAX_AMOUNT := 255
 const COMP := 2
-const RING := 24
 const CAP := 200.0 # capacity per full cell: energy is amount x temperature
 
 var checks := 0
@@ -96,42 +95,32 @@ static func reference_remap(old_amounts: Array, energies: Array, target: Array) 
 			incoming[receiver_index] += q
 	return incoming
 
-## Port of the streaming walk in hydro.glsl (remap_begin / remap_cell), with
-## its ring capacity. Returns [energies, ok].
+## Port of the three-sweep walk in hydro.glsl (remap_fold / remap_receive /
+## remap_finish): donors are read only from data the walk never writes, so it
+## is exact for any run length. Returns [energies, ok].
 static func streamed_remap(old_amounts: Array, energies: Array, target: Array) -> Array:
 	var n := old_amounts.size()
-	var ring := []
+	var r_channel := energies.duplicate() # sweep 0: energy per cell
+	var g_channel := []
+	for i in n:
+		g_channel.append(0.0)
 	var rd := -1
 	var rd_amount := 0
 	var rd_rem := 0
 	var rd_energy := 0.0
 	var rd_sent := 0.0
 	var ok := true
-	var out := []
-	for k in n:
-		var old_amount: int = old_amounts[k]
-		var e_old: float = energies[k]
+	for k in n: # sweep 1
 		var need: int = target[k]
 		var e_new := 0.0
-		while need > 0 and ok:
+		while need > 0:
 			if rd_rem == 0:
 				rd += 1
 				if rd >= n:
 					ok = false
 					break
-				if rd > k:
-					rd_amount = old_amounts[rd]
-					rd_energy = energies[rd]
-				elif rd == k:
-					rd_amount = old_amount
-					rd_energy = e_old
-				else:
-					if ring.is_empty():
-						ok = false
-						break
-					var o: Array = ring.pop_front()
-					rd_amount = o[0]
-					rd_energy = o[1]
+				rd_amount = old_amounts[rd]
+				rd_energy = r_channel[rd]
 				rd_rem = rd_amount
 				rd_sent = 0.0
 				if rd_rem == 0:
@@ -142,12 +131,10 @@ static func streamed_remap(old_amounts: Array, energies: Array, target: Array) -
 			rd_sent += q
 			rd_rem -= units
 			need -= units
-		if rd < k:
-			if ring.size() >= RING:
-				ok = false
-			else:
-				ring.append([old_amount, e_old])
-		out.append(e_new if target[k] > 0 else 0.0)
+		g_channel[k] = e_new
+	var out := []
+	for k in n: # sweep 2
+		out.append(g_channel[k] if target[k] > 0 else 0.0)
 	return [out, ok]
 
 func energies_at(amounts: Array, temps: Array) -> Array:
@@ -167,7 +154,7 @@ func compare(name: String, amounts: Array, temps: Array, target: Array, expect_o
 		worst = maxf(worst, absf(float(streamed[0][i]) - float(reference[i])))
 		total_before += energies[i]
 		total_after += float(streamed[0][i])
-	check(streamed[1] == expect_ok, "%s: streamed walk %s" % [name, "completes within the ring" if expect_ok else "reports its ring limit"])
+	check(streamed[1] == expect_ok, "%s: streamed walk %s" % [name, "completes" if expect_ok else "reports a mass mismatch"])
 	if expect_ok:
 		check(worst <= 1e-9 * maxf(1.0, total_before), "%s: streamed energies match the segment remap (worst %s)" % [name, worst])
 		check(absf(total_after - total_before) <= 1e-9 * maxf(1.0, total_before), "%s: energy conserved (%.6f -> %.6f)" % [name, total_before, total_after])
@@ -221,18 +208,49 @@ func run() -> void:
 			relaxed[i] += 1
 			drift += 1
 	compare("row relax", row, [310.0, 300.0, 320.0, 305.0], relaxed)
-	# Ring limit: a run whose lag exceeds the ring must report rather than corrupt.
-	var huge := []
-	var huge_t := []
-	for i in 120:
-		huge.append(255)
-		huge_t.append(400.0)
-	for i in 60:
-		huge.append(1)
-		huge_t.append(300.0)
-	var streamed: Array = streamed_remap(huge, energies_at(huge, huge_t), column_target(huge))
-	print("ring limit on a 180-cell top-heavy run: ok=%s" % streamed[1])
-	check(true, "ring limit case ran (fallback keeps previous temperatures when ok is false)")
+	# Long runs (the reviewer's overflow cases): half a 128 pipe and a full one,
+	# top-heavy so the donor cursor lags far behind the receivers.
+	var pipe64 := []
+	var pipe64_t := []
+	for i in 40:
+		pipe64.append(255)
+		pipe64_t.append(400.0 - float(i))
+	for i in 24:
+		pipe64.append(3)
+		pipe64_t.append(300.0)
+	compare("64-cell top-heavy pipe", pipe64, pipe64_t, column_target(pipe64))
+	var pipe128 := []
+	var pipe128_t := []
+	for i in 96:
+		pipe128.append(255)
+		pipe128_t.append(450.0 - float(i))
+	for i in 32:
+		pipe128.append(1)
+		pipe128_t.append(300.0)
+	compare("128-cell top-heavy pipe", pipe128, pipe128_t, column_target(pipe128))
+	var row128 := []
+	var row128_t := []
+	for i in 128:
+		row128.append(255 if i % 3 == 0 else 60)
+		row128_t.append(300.0 + float(i % 7))
+	var mean128 := 0.0
+	for a in row128:
+		mean128 += float(a)
+	mean128 /= 128.0
+	var relaxed128 := []
+	for a in row128:
+		relaxed128.append(clampi(int(a) + int(round(0.5 * (mean128 - float(a)))), 1, MAX_AMOUNT))
+	var drift128 := 0
+	for i in row128.size():
+		drift128 += relaxed128[i] - row128[i]
+	for i in row128.size():
+		if drift128 > 0 and relaxed128[i] > 1:
+			relaxed128[i] -= 1
+			drift128 -= 1
+		elif drift128 < 0 and relaxed128[i] < MAX_AMOUNT:
+			relaxed128[i] += 1
+			drift128 += 1
+	compare("128-cell row relax", row128, row128_t, relaxed128)
 
 	# Python oracle parity on the same fixtures, when python3 is present.
 	var script := """
@@ -250,7 +268,7 @@ for amounts, temps in cases:
 print(json.dumps(out))
 """
 	var cases := [[[200, 200, 200, 200], [350.0, 330.0, 310.0, 300.0]], [[60, 200, 200, 200, 90], [340.0, 330.0, 320.0, 310.0, 300.0]],
-		[top_heavy, [400.0, 380.0, 360.0, 340.0, 320.0, 300.0, 290.0]], [deep, deep_t]]
+		[top_heavy, [400.0, 380.0, 360.0, 340.0, 320.0, 300.0, 290.0]], [deep, deep_t], [pipe64, pipe64_t], [pipe128, pipe128_t]]
 	var output := []
 	var script_path := "/tmp/thermal_remap_oracle.py"
 	var file := FileAccess.open(script_path, FileAccess.WRITE)

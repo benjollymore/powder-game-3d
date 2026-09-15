@@ -50,6 +50,7 @@ func _run() -> void:
 		["_test_heat_falling_water_pool", 3], ["_test_ice_plateau", 3], ["_test_water_over_lava", 2],
 		["_test_wood_ignites_by_conduction", 2], ["_test_heat_brush_roundtrip", 3],
 		["_test_scenario_volcano", 0], ["_test_scenario_ice_cave", 0], ["_test_scenario_boiler", 0], ["_test_scenario_foundry", 0],
+		["_test_wood_ignites_by_conduction", 2], ["_test_heat_brush_roundtrip", 3], ["_test_phase_keeps_mass", 3],
 		["_test_large_grid_smoke", 0],
 	]
 	for t in tests:
@@ -723,6 +724,82 @@ func _test_wood_ignites_by_conduction() -> void:
 	var control := _temp_range(state[1], Vector3i.ZERO, Vector3i(GRID, GRID, GRID))
 	check(control.y <= 400.15 + 1e-3, "a 400 K heat blob never exceeds 400 K (max %.2f)" % control.y)
 	check(_count_in(state[0], wood_lo, wood_hi, Elements.Id.WOOD) == wood_before, "warm but sub-ignition wood does not catch")
+
+
+## Liquid mass in [lo, hi) counting every element that carries an amount byte.
+func _carried_mass(bytes: PackedByteArray, lo: Vector3i, hi: Vector3i) -> int:
+	var total := 0
+	for z in range(lo.z, hi.z):
+		for y in range(lo.y, hi.y):
+			for x in range(lo.x, hi.x):
+				total += bytes[VoxelCodec.index(x, y, z) * 4 + 2]
+	return total
+
+
+func _test_phase_keeps_mass() -> void:
+	# A 20-unit water film sealed in a wall box: cooled to ice it must carry 20
+	# units, warmed back it must be 20 units of water. Then a partially filled
+	# pool: total carried mass is unchanged through a freeze/thaw cycle.
+	var data := _empty_world()
+	_fill_box(data, Vector3i(60, 60, 60), Vector3i(66, 66, 66), Elements.Id.WALL)
+	_fill_box(data, Vector3i(61, 61, 61), Vector3i(65, 65, 65), Elements.Id.AIR)
+	var cell := Vector3i(62, 61, 62)
+	_fill_box(data, cell, cell + Vector3i.ONE, Elements.Id.WATER, 20)
+	var world := data.to_byte_array()
+	_sim.upload(world)
+	var box_lo := Vector3i(61, 61, 61)
+	var box_hi := Vector3i(65, 65, 65)
+	var state: Array = await _run_and_read_state(4)
+	var frozen := false
+	for attempt in 12:
+		_sim.paint_thermal(cell, 1, -400.0)
+		state = await _run_and_read_state(2)
+		if _count_in(state[0], box_lo, box_hi, Elements.Id.ICE) > 0:
+			frozen = true
+			break
+	check(frozen, "the cool brush froze the film")
+	check(state[0][VoxelCodec.index(cell.x, cell.y, cell.z) * 4] == Elements.Id.ICE and state[0][VoxelCodec.index(cell.x, cell.y, cell.z) * 4 + 2] == 20,
+		"the ice record carries the film's 20 units (id %d, amount %d)" % [state[0][VoxelCodec.index(cell.x, cell.y, cell.z) * 4], state[0][VoxelCodec.index(cell.x, cell.y, cell.z) * 4 + 2]])
+	var thawed := false
+	for attempt in 12:
+		_sim.paint_thermal(cell, 1, 700.0)
+		state = await _run_and_read_state(2)
+		if _count_in(state[0], box_lo, box_hi, Elements.Id.ICE) == 0:
+			thawed = true
+			break
+	check(thawed and _sim.mass(state[0], Elements.Id.WATER) == 20 and _count_in(state[0], box_lo, box_hi, Elements.Id.STEAM) == 0,
+		"the heat brush thawed it back to 20 units of water (water %d units, steam %d)" % [_sim.mass(state[0], Elements.Id.WATER), _count_in(state[0], box_lo, box_hi, Elements.Id.STEAM)])
+	# Partially filled pool.
+	data = _empty_world()
+	var lo := Vector3i(40, 20, 40)
+	var hi := Vector3i(52, 28, 52)
+	_fill_box(data, lo, hi, Elements.Id.WALL)
+	_fill_box(data, lo + Vector3i(2, 2, 2), hi - Vector3i(2, 2, 2), Elements.Id.AIR)
+	_fill_box(data, lo + Vector3i(2, 2, 2), Vector3i(hi.x - 2, lo.y + 4, hi.z - 2), Elements.Id.WATER, 100)
+	world = data.to_byte_array()
+	_sim.upload(world)
+	state = await _run_and_read_state(200)
+	var mass_before := _carried_mass(state[0], lo, hi)
+	check(mass_before == _sim.mass(world, Elements.Id.WATER), "pool mass settled exactly (%d units)" % mass_before)
+	var centre := Vector3i(46, 23, 46)
+	var all_ice := false
+	for attempt in 20:
+		_sim.paint_thermal(centre, 6, -400.0)
+		state = await _run_and_read_state(2)
+		if _count_in(state[0], lo, hi, Elements.Id.WATER) == 0:
+			all_ice = true
+			break
+	check(all_ice, "the whole pool froze (%d water cells left)" % _count_in(state[0], lo, hi, Elements.Id.WATER))
+	check(_carried_mass(state[0], lo, hi) == mass_before, "frozen pool carries the same mass (%d vs %d units)" % [_carried_mass(state[0], lo, hi), mass_before])
+	var all_water := false
+	for attempt in 20:
+		_sim.paint_thermal(centre, 6, 700.0)
+		state = await _run_and_read_state(2)
+		if _count_in(state[0], lo, hi, Elements.Id.ICE) == 0:
+			all_water = true
+			break
+	check(all_water and _count_in(state[0], lo, hi, Elements.Id.STEAM) == 0, "the whole pool thawed without boiling (%d ice, %d steam)" % [_count_in(state[0], lo, hi, Elements.Id.ICE), _count_in(state[0], lo, hi, Elements.Id.STEAM)])
+	check(_sim.mass(state[0], Elements.Id.WATER) == mass_before, "thawed pool has its original water mass (%d vs %d units)" % [_sim.mass(state[0], Elements.Id.WATER), mass_before])
 
 
 func _test_heat_brush_roundtrip() -> void:
