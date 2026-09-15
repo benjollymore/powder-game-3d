@@ -77,4 +77,53 @@ ok: section-z has constant correct flat-surface normals
 ok: section-z baseline reproduces the diagnosed defect
 ok: readback completes within 15 seconds
 ok: section-z GPU physical bytes unchanged across both views
-SURFACE_CHECKS 60 FAILURES 0
+{"case":"sand-section-x","max_normal_error":1.77336144447327,"missing":0,"samples":9216,"variant":"cap-regression","wrong_normals":9216}
+ok: capture sand-section-x cap-regression
+{"case":"sand-section-x","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture sand-section-x fixed
+ok: sand-section-x has a substantial visible analytic surface sample
+ok: sand-section-x has complete interior surface coverage
+ok: sand-section-x has constant correct flat-surface normals
+ok: sand-section-x cap-regression fixture reproduces the constant-diagonal cap normal
+ok: readback completes within 15 seconds
+ok: sand-section-x GPU physical bytes unchanged across both views
+{"case":"sand-section-y","max_normal_error":1.77336144447327,"missing":0,"samples":9216,"variant":"cap-regression","wrong_normals":9216}
+ok: capture sand-section-y cap-regression
+{"case":"sand-section-y","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture sand-section-y fixed
+ok: sand-section-y has a substantial visible analytic surface sample
+ok: sand-section-y has complete interior surface coverage
+ok: sand-section-y has constant correct flat-surface normals
+ok: sand-section-y cap-regression fixture reproduces the constant-diagonal cap normal
+ok: readback completes within 15 seconds
+ok: sand-section-y GPU physical bytes unchanged across both views
+{"case":"sand-section-z","max_normal_error":1.77336144447327,"missing":0,"samples":9216,"variant":"cap-regression","wrong_normals":9216}
+ok: capture sand-section-z cap-regression
+{"case":"sand-section-z","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture sand-section-z fixed
+ok: sand-section-z has a substantial visible analytic surface sample
+ok: sand-section-z has complete interior surface coverage
+ok: sand-section-z has constant correct flat-surface normals
+ok: sand-section-z cap-regression fixture reproduces the constant-diagonal cap normal
+ok: readback completes within 15 seconds
+ok: sand-section-z GPU physical bytes unchanged across both views
+{"case":"sand-camera-inside","max_normal_error":1.977991938591,"missing":0,"samples":3996,"variant":"cap-regression","wrong_normals":3996}
+ok: capture sand-camera-inside cap-regression
+{"case":"sand-camera-inside","max_normal_error":0.0124840848147869,"missing":0,"samples":3996,"variant":"fixed","wrong_normals":0}
+ok: capture sand-camera-inside fixed
+ok: sand-camera-inside has a substantial visible analytic surface sample
+ok: sand-camera-inside has complete interior surface coverage
+ok: sand-camera-inside has constant correct flat-surface normals
+ok: readback completes within 15 seconds
+ok: sand-camera-inside GPU physical bytes unchanged across both views
+{"case":"plant-section-z","max_normal_error":1.34145188331604,"missing":0,"samples":9216,"variant":"cap-regression","wrong_normals":9216}
+ok: capture plant-section-z cap-regression
+{"case":"plant-section-z","max_normal_error":0.00816418137401342,"missing":0,"samples":9216,"variant":"fixed","wrong_normals":0}
+ok: capture plant-section-z fixed
+ok: plant-section-z has a substantial visible analytic surface sample
+ok: plant-section-z has complete interior surface coverage
+ok: plant-section-z has constant correct flat-surface normals
+ok: plant-section-z cap-regression fixture reproduces the constant-diagonal cap normal
+ok: readback completes within 15 seconds
+ok: plant-section-z GPU physical bytes unchanged across both views
+SURFACE_CHECKS 99 FAILURES 0

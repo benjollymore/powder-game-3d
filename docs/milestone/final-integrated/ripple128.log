@@ -39,8 +39,29 @@ ok: wall-repose normal control image is byte-identical
 ok: wall-repose lit control differs by at most one 8-bit step in no more pixels than self-noise allows
 ok: readback completes within 15 seconds
 ok: wall-repose GPU physical bytes unchanged across all captures
+ok: capture wall-adjacent baseline
+{"case":"sand-against-wall","tilt_by_distance":{"0":{"max_abs_deg":58.7054798195369,"mean_abs_deg":34.7459551303638,"mean_signed_deg":34.7459551303638,"samples":100},"1":{"max_abs_deg":16.661991325547,"mean_abs_deg":12.6120516108943,"mean_signed_deg":12.6120516108943,"samples":100},"2":{"max_abs_deg":10.102288286323,"mean_abs_deg":5.80326089212858,"mean_signed_deg":5.80326089212858,"samples":100},"3":{"max_abs_deg":3.50070813604549,"mean_abs_deg":1.02545567340459,"mean_signed_deg":0.255863058495601,"samples":100},"4":{"max_abs_deg":6.7977839281416,"mean_abs_deg":4.25668573548515,"mean_signed_deg":4.25668573548515,"samples":100},"5":{"max_abs_deg":8.20117347604462,"mean_abs_deg":7.35640859537451,"mean_signed_deg":7.35640859537451,"samples":100},"6":{"max_abs_deg":8.20117347604462,"mean_abs_deg":7.59283217426989,"mean_signed_deg":7.59283217426989,"samples":100},"7":{"max_abs_deg":7.50431314895863,"mean_abs_deg":6.2087420539894,"mean_signed_deg":6.2087420539894,"samples":100},"8":{"max_abs_deg":4.78470334063631,"mean_abs_deg":3.56278033678939,"mean_signed_deg":3.56278033678939,"samples":100}},"variant":"baseline"}
+ok: capture wall-adjacent fixed
+{"case":"sand-against-wall","tilt_by_distance":{"0":{"max_abs_deg":58.7054798195369,"mean_abs_deg":31.2566710312165,"mean_signed_deg":31.2566710312165,"samples":100},"1":{"max_abs_deg":12.7448181168384,"mean_abs_deg":11.891993399549,"mean_signed_deg":11.891993399549,"samples":100},"2":{"max_abs_deg":12.0830466201924,"mean_abs_deg":10.3278206025484,"mean_signed_deg":10.3278206025484,"samples":100},"3":{"max_abs_deg":8.20117347604462,"mean_abs_deg":6.41562798558643,"mean_signed_deg":6.41562798558643,"samples":100},"4":{"max_abs_deg":6.218058840711,"mean_abs_deg":5.51190782604725,"mean_signed_deg":5.51190782604725,"samples":100},"5":{"max_abs_deg":6.218058840711,"mean_abs_deg":4.22912697675498,"mean_signed_deg":4.22912697675498,"samples":100},"6":{"max_abs_deg":3.50070813604549,"mean_abs_deg":2.52582791887769,"mean_signed_deg":2.52582791887769,"samples":100},"7":{"max_abs_deg":4.22594450209575,"mean_abs_deg":3.07856650749719,"mean_signed_deg":3.07856650749719,"samples":100},"8":{"max_abs_deg":6.218058840711,"mean_abs_deg":5.14730825223473,"mean_signed_deg":5.14730825223473,"samples":100}},"variant":"fixed"}
+{"case":"sand-against-wall-summary","max_mean_tilt_change_deg":6.15976492709083}
+ok: readback completes within 15 seconds
+ok: wall-adjacent sand GPU physical bytes unchanged
+ok: capture wood-plank baseline
+ok: capture wood-plank baseline
+ok: capture wood-plank fixed
+ok: capture wood-plank fixed
+{"case":"wood-plank","lit_changed_bytes":0,"lit_max_delta":0,"lit_mean_byte_baseline":84.1338675925926,"lit_mean_byte_fixed":84.1338675925926,"normal_max_change_deg":0.0279764551182933,"normal_mean_change_deg":0.0279764551182956,"normal_pixels":151868}
+ok: readback completes within 15 seconds
+ok: wood-plank GPU physical bytes unchanged
+ok: capture plant-sphere baseline
+ok: capture plant-sphere baseline
+ok: capture plant-sphere fixed
+ok: capture plant-sphere fixed
+{"case":"plant-sphere","lit_changed_bytes":18904,"lit_max_delta":23,"lit_mean_byte_baseline":89.1721160493827,"lit_mean_byte_fixed":89.1568969135802,"normal_max_change_deg":5.99953132061946,"normal_mean_change_deg":0.0509511863714779,"normal_pixels":152317}
+ok: readback completes within 15 seconds
+ok: plant-sphere GPU physical bytes unchanged
 ok: capture cone baseline
 ok: capture cone fixed
 ok: readback completes within 15 seconds
 ok: cone GPU physical bytes unchanged
-POWDER_RIPPLE_CHECKS 35 FAILURES 0
+POWDER_RIPPLE_CHECKS 51 FAILURES 0

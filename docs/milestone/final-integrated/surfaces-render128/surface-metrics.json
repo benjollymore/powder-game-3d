@@ -126,5 +126,85 @@
 		"samples": 9216,
 		"variant": "fixed",
 		"wrong_normals": 0
+	},
+	{
+		"case": "sand-section-x",
+		"max_normal_error": 1.77336144447327,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "cap-regression",
+		"wrong_normals": 9216
+	},
+	{
+		"case": "sand-section-x",
+		"max_normal_error": 0.00816418137401342,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "fixed",
+		"wrong_normals": 0
+	},
+	{
+		"case": "sand-section-y",
+		"max_normal_error": 1.77336144447327,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "cap-regression",
+		"wrong_normals": 9216
+	},
+	{
+		"case": "sand-section-y",
+		"max_normal_error": 0.00816418137401342,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "fixed",
+		"wrong_normals": 0
+	},
+	{
+		"case": "sand-section-z",
+		"max_normal_error": 1.77336144447327,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "cap-regression",
+		"wrong_normals": 9216
+	},
+	{
+		"case": "sand-section-z",
+		"max_normal_error": 0.00816418137401342,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "fixed",
+		"wrong_normals": 0
+	},
+	{
+		"case": "sand-camera-inside",
+		"max_normal_error": 1.977991938591,
+		"missing": 0,
+		"samples": 3996,
+		"variant": "cap-regression",
+		"wrong_normals": 3996
+	},
+	{
+		"case": "sand-camera-inside",
+		"max_normal_error": 0.0124840848147869,
+		"missing": 0,
+		"samples": 3996,
+		"variant": "fixed",
+		"wrong_normals": 0
+	},
+	{
+		"case": "plant-section-z",
+		"max_normal_error": 1.34145188331604,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "cap-regression",
+		"wrong_normals": 9216
+	},
+	{
+		"case": "plant-section-z",
+		"max_normal_error": 0.00816418137401342,
+		"missing": 0,
+		"samples": 9216,
+		"variant": "fixed",
+		"wrong_normals": 0
 	}
 ]
