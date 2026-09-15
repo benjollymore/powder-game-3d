@@ -49,6 +49,8 @@ func run() -> void:
 	second = first + Vector3i(0, -5, 0)
 	third = first + Vector3i(0, -10, 0)
 	editor.radius_input.value = 0
+	editor._choose_material(Elements.Id.SAND) # The editor defaults to Water; the parent fixture chooses Sand only in prepare_dirty().
+	await frames(2)
 	var file := output_dir.path_join("named.p3d")
 	var alternative := output_dir.path_join("save-as.p3d")
 	var authored := await draw(first)
@@ -72,7 +74,9 @@ func run() -> void:
 	check(editor.capturing and panel.queued_dialog == "save_current", "Save shortcut issued immediately after release waits for real asynchronous history")
 	await saved()
 	authored = await read()
-	check(id_at(authored, third) == Elements.Id.SAND and WorldArchive.load_authored(file, n).bytes == authored and not editor.document.is_dirty(), "queued named Save includes the just-finished stroke and its exact checkpoint")
+	check(id_at(authored, third) == Elements.Id.SAND, "stroke released immediately before the Save shortcut still lands as the chosen material")
+	check(WorldArchive.load_authored(file, n).bytes == authored, "queued named Save includes the just-finished stroke")
+	check(not editor.document.is_dirty(), "queued named Save establishes the exact checkpoint of the finished stroke")
 	var history_size: int = editor.undo_history.size()
 	var text: LineEdit = editor.radius_input.get_line_edit()
 	text.grab_focus()
