@@ -1,0 +1,18 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: Ctrl+S claims both edges from focused GUI and suppresses repeats without activating it
+ok: named Save uses existing path once without opening a chooser
+ok: Cmd+Shift+S chooses Save As even for a named construction
+ok: Cmd+S on an untitled build asks for a path
+ok: Ctrl+O requests normal Open without clearing dirty state
+ok: file Save works from numeric text focus without changing text or tools
+ok: focused numeric text retains its own Undo and Redo
+ok: unrelated modified commands neither trigger plain sandbox actions nor end a held stroke
+ok: Alt+command and unassigned Shift+Open combinations do not leak into editor actions
+ok: unmodified pause, step and erase still work normally
+ok: named shortcut waits for outstanding authored history capture
+ok: named shortcut saves after the outstanding edit finishes
+ok: modal/native ownership blocks file shortcuts and clears pre-modal held-key ownership
+ok: file shortcuts resume after modal ownership returns
+ok: focus loss terminates shortcut key ownership
+File shortcuts CPU: 15 checks, 0 failures

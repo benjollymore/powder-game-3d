@@ -1,0 +1,62 @@
+[
+  {
+    "name": "archives128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 7.0,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/archive_editor_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/shortcuts-liquid-integrated/archives128"
+    ]
+  },
+  {
+    "name": "document-protection128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 4.11,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/document_protection_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/shortcuts-liquid-integrated/document-protection128"
+    ]
+  },
+  {
+    "name": "file-shortcuts128",
+    "pass": false,
+    "exit": 1,
+    "seconds": 2.37,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/file_shortcuts_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/shortcuts-liquid-integrated/file-shortcuts128"
+    ]
+  }
+]

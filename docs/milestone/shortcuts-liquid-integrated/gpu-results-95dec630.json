@@ -1,0 +1,22 @@
+[
+  {
+    "name": "document-protection256",
+    "pass": false,
+    "exit": 124,
+    "seconds": 120.03,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/document_protection_gpu.gd",
+      "--",
+      "grid=256",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/shortcuts-liquid-integrated/document-protection256"
+    ]
+  }
+]

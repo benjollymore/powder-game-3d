@@ -30,6 +30,7 @@ CPU = [
     ("archive-job", "tests/milestone/archive_job.gd", 128),
     ("archive-panel", "tests/milestone/archive_panel.gd", 128),
     ("authored-document", "tests/milestone/authored_document.gd", 128),
+    ("file-shortcuts", "tests/milestone/file_shortcuts.gd", 128),
 ]
 GPU = [
     ("physics128", "tests/gpu/run_gpu_tests.gd", 128),
@@ -43,6 +44,8 @@ GPU = [
     ("archives128", "tests/milestone/archive_editor_gpu.gd", 128),
     ("document-protection128", "tests/milestone/document_protection_gpu.gd", 128),
     ("document-protection256", "tests/milestone/document_protection_gpu.gd", 256),
+    ("file-shortcuts128", "tests/milestone/file_shortcuts_gpu.gd", 128),
+    ("file-shortcuts256", "tests/milestone/file_shortcuts_gpu.gd", 256),
     ("actions128", "tests/milestone/editor_actions_gpu.gd", 128),
     ("editor128", "tests/discovery/interaction_gpu.gd", 128),
     ("trackpad128", "tests/discovery/trackpad_gpu.gd", 128),
@@ -65,6 +68,9 @@ GPU = [
     ("sprites-render128", "tests/milestone/render_section_sprites_gpu.gd", 128),
     ("liquid-render128", "tests/milestone/render_liquid_section_gpu.gd", 128),
     ("liquid-edges128", "tests/milestone/render_liquid_edges_gpu.gd", 128),
+    ("ordinary-geometry128", "tests/milestone/ordinary_liquid_geometry_gpu.gd", 128),
+    ("ordinary-interface128", "tests/milestone/ordinary_liquid_interface_gpu.gd", 128),
+    ("ordinary-controls128", "tests/milestone/ordinary_liquid_controls_gpu.gd", 128),
 ]
 
 

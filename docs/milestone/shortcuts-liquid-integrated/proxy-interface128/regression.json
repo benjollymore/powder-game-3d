@@ -1,0 +1,134 @@
+[
+	{
+		"case": "front",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "front",
+		"expected_entries": 1.0,
+		"measured_entries": 1.0006331205368,
+		"reflection": true
+	},
+	{
+		"case": "inside",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "inside",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "section-cap",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "section-cap",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "section-cap-x",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "section-cap-x",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "section-cap-y",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "section-cap-y",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "partial-inside-section",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "partial-inside-section",
+		"expected_entries": 1.0,
+		"measured_entries": 1.0006331205368,
+		"reflection": true
+	},
+	{
+		"case": "touching",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "touching",
+		"expected_entries": 1.0,
+		"measured_entries": 1.0006331205368,
+		"reflection": true
+	},
+	{
+		"case": "ordinary-liquid-join",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "ordinary-liquid-join",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "separated",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "separated",
+		"expected_entries": 2.0,
+		"measured_entries": 2.01154589653015,
+		"reflection": true
+	},
+	{
+		"case": "opaque-blocker",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "opaque-blocker",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	},
+	{
+		"case": "removed",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": false
+	},
+	{
+		"case": "removed",
+		"expected_entries": 0.0,
+		"measured_entries": 0.0,
+		"reflection": true
+	}
+]

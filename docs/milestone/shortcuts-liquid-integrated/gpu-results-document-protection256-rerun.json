@@ -1,0 +1,22 @@
+[
+  {
+    "name": "document-protection256",
+    "pass": true,
+    "exit": 0,
+    "seconds": 17.36,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/milestone/document_protection_gpu.gd",
+      "--",
+      "grid=256",
+      "output_dir=/private/tmp/claude-501/-Users-benjo--superset-projects-powder-game-3d/7864acf0-5d8b-4af2-9d54-53bac54c0a02/scratchpad/dp256-rerun/document-protection256"
+    ]
+  }
+]

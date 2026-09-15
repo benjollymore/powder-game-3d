@@ -6,6 +6,8 @@ User clarification: four hours is **not a hard cap**; overtime is authorized. Co
 
 Latest user instruction: **keep going until the user comes back and checks in**. After the first milestone, continue useful review, iteration and bounded next experiments rather than stopping merely because the initial four-hour estimate elapsed.
 
+Continuation, 2026-09-15: the coordinating session was interrupted after commit `7fee5fa`. A new coordinator session resumed from the saved transcript. Worker branches were fully cherry-picked into `milestone/fundamentals`, so each worker worktree now resets onto the integration branch before new work. The user's own Godot session runs in `powder-game-3d-discovery/review`; it must not be killed and its presence means frame-time measurements taken during this continuation are not on an idle GPU.
+
 ## Outcome
 
 One dependable paint-and-sim loop: construct a container, fill it without damaging its walls, inspect the interior, run, paint into the live experiment, and return to the authored construction. WorldPainter remains the simple paint-first reference; advanced controls are optional. Preserve working Mac gestures and Option-drag fallbacks. Physical ambition remains richer interactions, momentum, heat, destruction and machinery; this milestone must not silently redefine that ambition as the current cellular model.

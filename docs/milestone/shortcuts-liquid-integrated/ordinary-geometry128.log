@@ -1,0 +1,46 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+{"amount":1,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"front","wrong":0}
+{"amount":1,"max_error_cells":0.000728942453861237,"samples":6084,"tolerance_cells":0.035,"view":"oblique","wrong":0}
+{"amount":1,"max_error_cells":0.00639520213007927,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":0}
+{"amount":1,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"cap-x","wrong":0}
+{"amount":1,"max_error_cells":0.000276831910014153,"samples":6084,"tolerance_cells":0.035,"view":"cap-y","wrong":0}
+{"amount":1,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"cap-z","wrong":0}
+{"amount":1,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+{"amount":50,"max_error_cells":0.00775913894176483,"samples":6084,"tolerance_cells":0.035,"view":"front","wrong":0}
+{"amount":50,"max_error_cells":0.00742979347705841,"samples":6083,"tolerance_cells":0.035,"view":"oblique","wrong":0}
+{"amount":50,"max_error_cells":0.00681480951607227,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":0}
+{"amount":50,"max_error_cells":0.00907962024211884,"samples":6084,"tolerance_cells":0.035,"view":"cap-x","wrong":0}
+{"amount":50,"max_error_cells":0.00354444235563278,"samples":6084,"tolerance_cells":0.035,"view":"cap-y","wrong":0}
+{"amount":50,"max_error_cells":0.00907962024211884,"samples":6084,"tolerance_cells":0.035,"view":"cap-z","wrong":0}
+{"amount":50,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+{"amount":100,"max_error_cells":0.00812333822250366,"samples":6084,"tolerance_cells":0.035,"view":"front","wrong":0}
+{"amount":100,"max_error_cells":0.00941069424152374,"samples":6083,"tolerance_cells":0.035,"view":"oblique","wrong":0}
+{"amount":100,"max_error_cells":0.00681480951607227,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":0}
+{"amount":100,"max_error_cells":0.00911929458379745,"samples":6084,"tolerance_cells":0.035,"view":"cap-x","wrong":0}
+{"amount":100,"max_error_cells":0.00578921288251877,"samples":6084,"tolerance_cells":0.035,"view":"cap-y","wrong":0}
+{"amount":100,"max_error_cells":0.00911929458379745,"samples":6084,"tolerance_cells":0.035,"view":"cap-z","wrong":0}
+{"amount":100,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+{"amount":150,"max_error_cells":0.00814997404813766,"samples":6084,"tolerance_cells":0.035,"view":"front","wrong":0}
+{"amount":150,"max_error_cells":0.00929982960224152,"samples":6083,"tolerance_cells":0.035,"view":"oblique","wrong":0}
+{"amount":150,"max_error_cells":0.00681480951607227,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":0}
+{"amount":150,"max_error_cells":0.00929228216409683,"samples":6084,"tolerance_cells":0.035,"view":"cap-x","wrong":0}
+{"amount":150,"max_error_cells":0.00701618194580078,"samples":6084,"tolerance_cells":0.035,"view":"cap-y","wrong":0}
+{"amount":150,"max_error_cells":0.00929339975118637,"samples":6084,"tolerance_cells":0.035,"view":"cap-z","wrong":0}
+{"amount":150,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+{"amount":200,"max_error_cells":0.00814997404813766,"samples":6084,"tolerance_cells":0.035,"view":"front","wrong":0}
+{"amount":200,"max_error_cells":0.00972586870193481,"samples":6081,"tolerance_cells":0.035,"view":"oblique","wrong":0}
+{"amount":200,"max_error_cells":0.00681480951607227,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":0}
+{"amount":200,"max_error_cells":0.00929339975118637,"samples":6084,"tolerance_cells":0.035,"view":"cap-x","wrong":0}
+{"amount":200,"max_error_cells":0.00929451733827591,"samples":6084,"tolerance_cells":0.035,"view":"cap-y","wrong":0}
+{"amount":200,"max_error_cells":0.00929339975118637,"samples":6084,"tolerance_cells":0.035,"view":"cap-z","wrong":0}
+{"amount":200,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+{"amount":255,"max_error_cells":0.00994260516017675,"samples":6084,"tolerance_cells":0.035,"view":"front","wrong":0}
+{"amount":255,"max_error_cells":0.0107566388323903,"samples":6081,"tolerance_cells":0.035,"view":"oblique","wrong":0}
+{"amount":255,"max_error_cells":0.00790526228956878,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":0}
+{"amount":255,"max_error_cells":0.0112483100965619,"samples":6084,"tolerance_cells":0.035,"view":"cap-x","wrong":0}
+{"amount":255,"max_error_cells":0.0112483100965619,"samples":6084,"tolerance_cells":0.035,"view":"cap-y","wrong":0}
+{"amount":255,"max_error_cells":0.0112483100965619,"samples":6084,"tolerance_cells":0.035,"view":"cap-z","wrong":0}
+{"amount":255,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+ORDINARY_GEOMETRY_CHECKS 138 FAILURES 0
