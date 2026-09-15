@@ -1,0 +1,37 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: successful baseline Save establishes an exact clean checkpoint and filename
+ok: no-op fixture targets an actual container wall
+ok: ONLY_AIR paint over a wall remains clean and creates no false document checkpoint
+ok: parsed authored paint marks current construction unsaved
+ok: successful Save stores exact painted bytes and clears dirty state
+ok: Undo away from the saved file is visibly unsaved
+ok: Redo back to the saved file restores clean identity and exact bytes
+ok: Undo a newer stroke returns to the saved checkpoint without prompting
+ok: running physics does not dirty the authored build or prompt
+ok: Save during Test stores the authored checkpoint, independent of live evolution
+ok: Return restores exact saved construction and remains clean
+DOCUMENT_DIALOG embedded=true state=prompt dirty=true
+ok: actual Reset button preserves dirty GPU state and displays Save/Discard/Cancel
+ok: parsed Escape cancels Reset and preserves every authored byte
+ok: parsed Cancel button preserves dirty work after Empty
+ok: explicit parsed Discard permits Empty and resets document/history together
+ok: invalid Open reports failure without a discard prompt or authored mutation
+ok: valid dirty Open waits for discard permission after loading
+ok: canceling dirty Open preserves exact construction and history
+ok: explicit Open Discard applies the validated file and clean filename
+ok: Open same file then Save reloads the new saved bytes instead of applying a stale cached file
+ok: Save choice writes exact dirty bytes before resetting the container
+ok: untitled destructive Save requests a native file selection
+ok: native picker cancellation signal preserves unsaved construction
+ok: Save As during dirty Open saves current work separately and still opens the originally selected file
+ok: real disk Save failure cannot execute the pending Empty action
+ok: parsed newer paint after Save capture cancels destructive continuation
+ok: saved file contains the older snapshot, never falsely claims to include the newer stroke
+ok: stale asynchronous Open is rejected before a discard dialog can authorize old state
+ok: normal root window-close signal is intercepted for dirty authored work
+ok: canceling window close preserves exact authored bytes and restores editor input
+ok: close confirmation and current unsaved filename remain visible at laptop resolution
+ok: explicit Discard completes the normal close route exactly once
+Document protection GPU: 32 checks, 0 failures

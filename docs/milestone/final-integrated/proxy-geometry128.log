@@ -1,0 +1,39 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+{"amount":1,"max_error_cells":0.00183477252721786,"samples":6084,"tolerance_cells":0.035,"view":"front","wrong":0}
+{"amount":1,"max_error_cells":0.00290758907794952,"samples":6078,"tolerance_cells":0.035,"view":"oblique","wrong":0}
+{"amount":1,"max_error_cells":0.0030413034837693,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":0}
+{"amount":1,"max_error_cells":0.00183477252721786,"samples":6084,"tolerance_cells":0.035,"view":"cap-x","wrong":0}
+{"amount":1,"max_error_cells":0.00183477252721786,"samples":6084,"tolerance_cells":0.035,"view":"cap-y","wrong":0}
+{"amount":1,"max_error_cells":0.00183477252721786,"samples":6084,"tolerance_cells":0.035,"view":"cap-z","wrong":0}
+{"amount":1,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+{"amount":50,"max_error_cells":0.00588160008192062,"samples":6084,"tolerance_cells":0.035,"view":"front","wrong":0}
+{"amount":50,"max_error_cells":0.00694097578525543,"samples":6066,"tolerance_cells":0.035,"view":"oblique","wrong":0}
+{"amount":50,"max_error_cells":0.00535548385232687,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":0}
+{"amount":50,"max_error_cells":0.00588160008192062,"samples":6084,"tolerance_cells":0.035,"view":"cap-x","wrong":0}
+{"amount":50,"max_error_cells":0.00588160008192062,"samples":6084,"tolerance_cells":0.035,"view":"cap-y","wrong":0}
+{"amount":50,"max_error_cells":0.00588160008192062,"samples":6084,"tolerance_cells":0.035,"view":"cap-z","wrong":0}
+{"amount":50,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+{"amount":100,"max_error_cells":0.0070221871137619,"samples":6084,"tolerance_cells":0.035,"view":"front","wrong":0}
+{"amount":100,"max_error_cells":0.0079118013381958,"samples":6055,"tolerance_cells":0.035,"view":"oblique","wrong":0}
+{"amount":100,"max_error_cells":0.00611666589975357,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":0}
+{"amount":100,"max_error_cells":0.0070221871137619,"samples":6084,"tolerance_cells":0.035,"view":"cap-x","wrong":0}
+{"amount":100,"max_error_cells":0.0070221871137619,"samples":6084,"tolerance_cells":0.035,"view":"cap-y","wrong":0}
+{"amount":100,"max_error_cells":0.0070221871137619,"samples":6084,"tolerance_cells":0.035,"view":"cap-z","wrong":0}
+{"amount":100,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+{"amount":200,"max_error_cells":0.00814997404813766,"samples":6007,"tolerance_cells":0.035,"view":"front","wrong":0}
+{"amount":200,"max_error_cells":0.00972586870193481,"samples":6038,"tolerance_cells":0.035,"view":"oblique","wrong":0}
+{"amount":200,"max_error_cells":0.00681480951607227,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":0}
+{"amount":200,"max_error_cells":0.00929339975118637,"samples":6007,"tolerance_cells":0.035,"view":"cap-x","wrong":0}
+{"amount":200,"max_error_cells":0.00929451733827591,"samples":6007,"tolerance_cells":0.035,"view":"cap-y","wrong":0}
+{"amount":200,"max_error_cells":0.00929339975118637,"samples":6007,"tolerance_cells":0.035,"view":"cap-z","wrong":0}
+{"amount":200,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+{"amount":255,"max_error_cells":0.00994260516017675,"samples":6007,"tolerance_cells":0.035,"view":"front","wrong":0}
+{"amount":255,"max_error_cells":0.0107566388323903,"samples":6045,"tolerance_cells":0.035,"view":"oblique","wrong":0}
+{"amount":255,"max_error_cells":0.00790526228956878,"samples":6084,"tolerance_cells":0.035,"view":"inside","wrong":0}
+{"amount":255,"max_error_cells":0.0112483100965619,"samples":6007,"tolerance_cells":0.035,"view":"cap-x","wrong":0}
+{"amount":255,"max_error_cells":0.0112483100965619,"samples":6007,"tolerance_cells":0.035,"view":"cap-y","wrong":0}
+{"amount":255,"max_error_cells":0.0112483100965619,"samples":6007,"tolerance_cells":0.035,"view":"cap-z","wrong":0}
+{"amount":255,"max_error_cells":0.0,"samples":6084,"tolerance_cells":0.035,"view":"removed","wrong":0}
+PROXY_GEOMETRY_CHECKS 145 FAILURES 0

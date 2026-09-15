@@ -1,0 +1,24 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: parsed Cmd+S on dirty Untitled requests a path without discarding work
+ok: untitled shortcut writes exact authored bytes and establishes named clean state
+ok: focused GUI Ctrl+S overwrites the named file exactly once without a chooser or Run activation
+ok: Save shortcut issued immediately after release waits for real asynchronous history
+ok: stroke released immediately before the Save shortcut still lands as the chosen material
+ok: queued named Save includes the just-finished stroke
+ok: queued named Save establishes the exact checkpoint of the finished stroke
+ok: empty numeric text history cannot leak Cmd/Ctrl Undo or Redo into authored history
+ok: Ctrl+Shift+S from numeric focus always requests Save As
+ok: Save As shortcut changes the active filename while preserving the original file
+ok: Cmd+S during running Test saves the authored construction rather than live material
+ok: modified P/N/X/B cannot unpause, step, erase or select in the real Test loop
+ok: unrelated command shortcut does not terminate a live held source
+ok: Return after shortcut tests preserves exact authored checkpoint
+ok: Cmd+O enters the existing Open chooser workflow
+ok: shortcut Open cannot bypass dirty-build discard protection
+ok: Cancel after shortcut Open preserves the complete dirty construction
+ok: Ctrl+O plus explicit Discard opens the intended file and restores clean state
+ok: native/modal ownership prevents global file shortcuts from launching another operation
+ok: visible named Save button follows the same no-chooser path as Cmd/Ctrl+S
+File shortcuts GPU: 20 checks, 0 failures

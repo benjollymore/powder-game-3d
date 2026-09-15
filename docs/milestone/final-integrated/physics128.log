@@ -1,0 +1,101 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+--- _test_sand_settles
+ok: pile is stable: identical after 300 more ticks
+ok: test world has 4096 sand
+ok: sand count conserved: 4096 -> 4096
+ok: air count conserved
+ok: no unknown element ids after ticking
+ok: no sand floating over air (found 0)
+ok: no sand left at the drop height (found 0)
+--- _test_water_levels
+ok: water mass conserved: 2764800 -> 2764800
+ok: wall count conserved
+ok: all water ended inside the bowl (found 0 outside)
+ok: no water hanging over air (found 0)
+ok: water surface is level: column heights 10.21..10.22
+ok: bowl holds a real depth of water (min column 10.21)
+--- _test_steam_rises
+ok: steam count conserved: 8000 -> 8000
+ok: steam has risen: 2 of 8000 still under air
+ok: no steam left in the lower half (found 0)
+--- _test_brush_paints
+ok: brush painted a radius-5 sphere: 515 voxels (expected 515)
+ok: erase mode removed the sphere
+--- _test_occupancy
+ok: occupancy readback is 16384 bytes (RGBA)
+ok: no fluid bricks flagged for a wall sphere (0)
+ok: water sphere flags the fluid channel only (0, 255)
+ok: occupancy marks exactly the 8 bricks around the sphere (8 set, 0 wrong)
+--- _test_liquid_mass
+ok: liquid mass conserved with mixed fills: 2283520 -> 2283520
+ok: sand count conserved through water
+ok: non-liquids carry no amount (found 0)
+ok: no water cell at zero amount (found 0)
+ok: few tiny remnants (0 of 11960)
+--- _test_u_bend
+ok: u-bend mass conserved
+ok: u-bend arms level out: left 9.07, right 9.04
+ok: water actually crossed to the right arm (9.04)
+--- _test_pressure_pipe
+ok: pressure pipe mass conserved
+amounts: (40,6)=244 (41,6)=244 (42,6)=244 (43,6)=244 (44,6)=244 (45,6)=244 (46,6)=244 (47,6)=244 (48,6)=244 (48,6)=244 (48,7)=242 (48,8)=240 (48,9)=238 (48,10)=236 (48,11)=234 (48,12)=232 (48,13)=230 tank bottom (30,6)=244 top (30,28)=200
+ok: pressure pushes water up the pipe to the tank level: pipe 23.00 vs tank 23.41
+--- _test_density_pass
+ok: fields readback holds at least mip 0 (9586688 bytes)
+ok: wall and sand interior are opaque in the smoothed field (255, 255)
+ok: air beside a wall stays 0 in the smoothed field (walls do not smooth)
+ok: air beside sand gets a partial smoothed value (29)
+ok: sand surface cell is partially smoothed (226)
+ok: readback includes mip 1
+ok: mip 1 sand interior is opaque (255)
+ok: mip 1 air is empty (0)
+ok: mip 1 wall interior is opaque (255)
+ok: air density 0 (got 0)
+ok: wall density 255 (got 255)
+ok: sand density 255 (got 255)
+ok: full water density 255 (got 255)
+ok: half water density ~128 (got 128)
+ok: quarter water density ~85 (got 85)
+ok: steam density 0 (got 0)
+--- _test_fire_burns_plant
+ok: test world has 8000 plant
+ok: fire consumed the plant block (8 of 8000 left)
+ok: fire burnt out afterwards (0 left)
+--- _test_water_boils_on_fire
+ok: some water boiled into steam (77)
+ok: water mass lost matches boiled cells (9283 units, 77 cells)
+ok: fire was put out (0 left)
+--- _test_oil_floats
+ok: oil and water mass conserved
+ok: oil floats on water: 0 water voxels above oil
+--- _test_air_boundary
+ok: air velocity is exactly zero inside solids (max (0.0, 0.0, 0.0))
+ok: air rises above the fire (mean v_y 0.045)
+ok: simulation is deterministic from the same upload
+--- _test_air_plume
+ok: steam count conserved in the plume (4096 -> 4096)
+ok: steam plume rose (centroid y 37.5 -> 124.5)
+ok: plume spread sideways (xz spread 6.5 -> 12.6)
+ok: updraft above the fire (mean v_y 0.196)
+ok: flow recirculates sideways somewhere (max |v_x| 0.474, |v_z| 0.469)
+--- _test_splats
+ok: falling sand emits splats (803)
+ok: a settled pile emits no splats (0)
+--- _test_sprites
+ok: exposed plant grows leaf cards (978)
+ok: a thin falling stream is drawn as droplets (41)
+ok: no fx particles without fire or impacts (0)
+ok: liquid that comes to rest carries the landed bits
+ok: falling water is frothy in fields.A (255)
+ok: calm water carries no froth (0)
+ok: fire feeds embers into the fx pool (318 alive)
+ok: no leaves without plant (0)
+--- _test_large_grid_smoke
+skipped (grid 128)
+74 checks, 0 failures
+
+EXIT 0
+SECONDS 20.3
+PHYSICS_DONE

@@ -1,0 +1,22 @@
+[
+  {
+    "name": "physics128",
+    "pass": false,
+    "exit": 124,
+    "seconds": 120.03,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/gpu/run_gpu_tests.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/fundamentals/docs/milestone/final-integrated/physics128"
+    ]
+  }
+]
