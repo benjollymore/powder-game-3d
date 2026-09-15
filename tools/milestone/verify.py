@@ -17,6 +17,7 @@ import time
 ROOT = Path(__file__).resolve().parents[2]
 CPU = [
     ("unit", "tests/unit/run_unit.gd", 128),
+    ("unit256", "tests/unit/run_unit.gd", 256),
     ("gestures", "tests/discovery/gesture_routing.gd", 128),
     ("editing-unit", "tests/milestone/editing_unit.gd", 128),
     ("paint-tools", "tests/milestone/paint_tools.gd", 128),

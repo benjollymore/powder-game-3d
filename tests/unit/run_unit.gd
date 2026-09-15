@@ -119,12 +119,12 @@ const SCENARIO_ORACLE := {
 	128: {
 		"Candle": "fbf188db49f6bc9bba9b252aa9e505509b38a1240d37127bc088fb37734fa124",
 		"Powder keg": "c3de548bba4ae045e24005a10eac72f6ec499f8d13e020244f2133b526ed71d1",
-		"Acid rain": "d02f96db653f2cc1b23ae03952343b35cd5abb07d09c8bd461e104f9fd717d73",
+		"Acid rain": "c3722de0e6b0b506bfcf107b801c1518d6935a1395aca263d79e308386636a3c",
 	},
 	256: {
 		"Candle": "c888f8470cc38e43dc5336ef52fa12d2d0931e0b6f2c1a59a0b94c76fb62528b",
 		"Powder keg": "43e70f2930bc577ff97e23dc3c0b37cae58d5ab46b49bd745bdcef1b3dd2520a",
-		"Acid rain": "d4aaf79b33bd357b0e816718a22abf70a6ec1d058042a157baad70dde921e45b",
+		"Acid rain": "a51a82f7b95ea106f20a6991cbac0948b5520a9f29a218ae6a6e9c2fb190be5e",
 	},
 }
 

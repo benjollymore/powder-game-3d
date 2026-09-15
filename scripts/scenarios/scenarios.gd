@@ -166,7 +166,8 @@ static func _powder_keg(data: PackedInt32Array) -> void:
 	_box(data, Vector3i(6, 4, 58), Vector3i(10, 8, 66), FIRE)              # spark
 
 
-## A clone tray drips acid onto a layered pile; a void floor drains the runoff.
+## A clone tray, armed by acid resting on it, rains acid onto a layered pile;
+## a void floor drains the runoff.
 static func _acid_rain(data: PackedInt32Array) -> void:
 	_floor(data)
 	_box(data, Vector3i(6, 4, 6), Vector3i(REF - 6, 5, REF - 6), VOID)     # drain
@@ -174,9 +175,8 @@ static func _acid_rain(data: PackedInt32Array) -> void:
 	_box(data, Vector3i(42, 8, 42), Vector3i(86, 20, 86), SAND)
 	_box(data, Vector3i(42, 20, 42), Vector3i(86, 30, 86), WOOD)
 	_box(data, Vector3i(42, 30, 42), Vector3i(86, 40, 86), SAND)
-	_box(data, Vector3i(52, 102, 52), Vector3i(76, 104, 76), WALL)         # cap
 	_box(data, Vector3i(52, 100, 52), Vector3i(76, 102, 76), CLONE)        # tray
-	_box(data, Vector3i(52, 99, 52), Vector3i(76, 100, 76), ACID)          # seed
+	_box(data, Vector3i(54, 102, 54), Vector3i(74, 103, 74), ACID)         # seed rests on the tray
 
 
 ## Wood trunk with a canopy of overlapping plant spheres; face-connected so

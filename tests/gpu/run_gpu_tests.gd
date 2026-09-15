@@ -45,6 +45,7 @@ func _run() -> void:
 		["_test_air_boundary", 3], ["_test_air_plume", 2], ["_test_splats", 3], ["_test_sprites", 3],
 		["_test_gas_ignites", 0], ["_test_gunpowder_flash", 0], ["_test_acid_dissolves_sand", 0],
 		["_test_clone_emits", 0], ["_test_void_sinks", 0], ["_test_wax_melts_on_fire", 0],
+		["_test_fuse_deterministic", 0], ["_test_stale_flags_cleared", 0],
 		["_test_large_grid_smoke", 0],
 	]
 	for t in tests:
@@ -321,11 +322,12 @@ func _test_acid_dissolves_sand() -> void:
 
 
 func _test_clone_emits() -> void:
-	# A capped clone tray seeded with water underneath keeps producing water.
+	# A two-deep clone plate with water resting on top: the top layer arms from
+	# the water, the bottom layer arms from the top layer, and water rains out
+	# of the underside.
 	var data := _empty_world()
-	_fill_box(data, Vector3i(50, 60, 50), Vector3i(70, 62, 70), Elements.Id.WALL)
 	_fill_box(data, Vector3i(50, 58, 50), Vector3i(70, 60, 70), Elements.Id.CLONE)
-	_fill_box(data, Vector3i(50, 57, 50), Vector3i(70, 58, 70), Elements.Id.WATER)
+	_fill_box(data, Vector3i(52, 60, 52), Vector3i(68, 61, 68), Elements.Id.WATER)
 	var world := data.to_byte_array()
 	_sim.upload(world)
 	var before: PackedInt64Array = _sim.histogram(world)
@@ -333,11 +335,80 @@ func _test_clone_emits() -> void:
 	var after: PackedInt64Array = _sim.histogram(bytes)
 	check(after[Elements.Id.CLONE] == before[Elements.Id.CLONE], "clone cells persist (%d)" % after[Elements.Id.CLONE])
 	check(_sim.mass(bytes, Elements.Id.WATER) > _sim.mass(world, Elements.Id.WATER) * 2, "clone multiplied the seed water (%d -> %d units)" % [_sim.mass(world, Elements.Id.WATER), _sim.mass(bytes, Elements.Id.WATER)])
+	var below := 0
+	for z in range(50, 70):
+		for x in range(50, 70):
+			for y in range(0, 58):
+				if bytes[VoxelCodec.index(x, y, z) * 4] == Elements.Id.WATER:
+					below += 1
+	check(below > 0, "water was emitted from the underside of the plate (%d cells below)" % below)
 	var stray := 0
 	for id in Elements.count():
 		if id != Elements.Id.AIR and id != Elements.Id.WALL and id != Elements.Id.CLONE and id != Elements.Id.WATER:
 			stray += after[id]
 	check(stray == 0, "clone emits only the material it was armed with (%d stray cells)" % stray)
+
+
+## Same lit trail, one tick, twenty times: the fuse must advance identically
+## every time. Detection reads only the thread's own block, so scheduling
+## between blocks cannot change how far it runs. Then eight ticks: the fuse
+## has run past the seed and the seed grains have burnt.
+func _test_fuse_deterministic() -> void:
+	var data := _empty_world()
+	_fill_box(data, Vector3i(10, 0, 64), Vector3i(100, 1, 65), Elements.Id.GUNPOWDER)
+	for x in range(10, 14):
+		data[VoxelCodec.index(x, 0, 64)] = VoxelCodec.encode(Elements.Id.GUNPOWDER, WorldBuilder.seed_at(x, 0, 64), 0) | (7 << 4 << 24)
+	var world := data.to_byte_array()
+	var first := PackedByteArray()
+	var identical := true
+	var lit := 0
+	var fire := 0
+	for repeat in 20:
+		_sim.upload(world)
+		var bytes: PackedByteArray = await _run_and_read(1)
+		if repeat == 0:
+			first = bytes
+			fire = _sim.histogram(bytes)[Elements.Id.FIRE]
+			for x in range(10, 100):
+				var base := VoxelCodec.index(x, 0, 64) * 4
+				if bytes[base] == Elements.Id.GUNPOWDER and (bytes[base + 3] & (7 << 4)) != 0:
+					lit += 1
+		elif bytes != first:
+			identical = false
+	check(fire == 0, "seed grains are still burning down their fuse after one tick (%d fire)" % fire)
+	check(lit >= 4 and lit <= 5, "the fuse advanced into the block-shared neighbour only (%d lit)" % lit)
+	check(identical, "twenty repeats of upload plus one tick are byte-identical")
+	_sim.upload(world)
+	var later: PackedByteArray = await _run_and_read(8)
+	var lit_beyond := 0
+	for x in range(14, 100):
+		var base := VoxelCodec.index(x, 0, 64) * 4
+		if later[base] == Elements.Id.GUNPOWDER and (later[base + 3] & (7 << 4)) != 0:
+			lit_beyond += 1
+	var seed_left := 0
+	for x in range(10, 14):
+		if later[VoxelCodec.index(x, 0, 64) * 4] == Elements.Id.GUNPOWDER:
+			seed_left += 1
+	check(lit_beyond >= 1, "after eight ticks the fuse has run past the seed (%d lit beyond)" % lit_beyond)
+	check(seed_left == 0, "after eight ticks the seed grains have burnt (%d left)" % seed_left)
+
+
+## Stale element flags must not survive transmutation: air carrying a fuse bit
+## beside a gunpowder-armed clone must yield unlit gunpowder, never fire.
+func _test_stale_flags_cleared() -> void:
+	var data := _empty_world()
+	_fill_box(data, Vector3i(50, 40, 50), Vector3i(70, 42, 70), Elements.Id.CLONE)
+	for z in range(50, 70):
+		for x in range(50, 70):
+			for y in range(40, 42):
+				data[VoxelCodec.index(x, y, z)] = VoxelCodec.encode(Elements.Id.CLONE, Elements.Id.GUNPOWDER, 0) | (128 << 24)
+			for y in range(30, 40):
+				data[VoxelCodec.index(x, y, z)] = VoxelCodec.encode(Elements.Id.AIR, 0, 0) | (7 << 4 << 24)
+	var world := data.to_byte_array()
+	_sim.upload(world)
+	var after: PackedInt64Array = _sim.histogram(await _run_and_read(200))
+	check(after[Elements.Id.GUNPOWDER] > 0, "the armed clone emitted gunpowder (%d grains)" % after[Elements.Id.GUNPOWDER])
+	check(after[Elements.Id.FIRE] == 0 and after[Elements.Id.SMOKE] == 0, "no grain lit itself from a stale flag (%d fire, %d smoke)" % [after[Elements.Id.FIRE], after[Elements.Id.SMOKE]])
 
 
 func _test_void_sinks() -> void:

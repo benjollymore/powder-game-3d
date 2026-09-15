@@ -71,6 +71,7 @@ const AIR_SUB := 4
 var AIR_GRID: int = GRID / AIR_SUB
 var AIR_GROUPS: int = AIR_GRID / 4
 const RULE_NO_AIR := 4
+const RULE_NO_SPECIALS := 8 # clone, void and the gunpowder fuse
 const OCCUPANCY_SHADER_PATH := "res://shaders/compute/occupancy.glsl"
 const SUNVIS_SHADER_PATH := "res://shaders/compute/sunvis.glsl"
 const SPLAT_SHADER_PATH := "res://shaders/compute/splat_emit.glsl"
