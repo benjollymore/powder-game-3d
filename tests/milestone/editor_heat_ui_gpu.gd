@@ -80,6 +80,19 @@ func run() -> void:
 	await frames(2)
 	var undo_before: int = editor.undo_history.size()
 	var live_thermal: PackedByteArray = await read_thermal()
+	# Bounded wait for the Test row so an intermittent late refresh fails here
+	# with the editor's state on record instead of quitting inside click().
+	var waited := 0
+	while not editor.keep_button.is_visible_in_tree() and waited < 30:
+		await process_frame
+		waited += 1
+	check(editor.testing and editor.test_time_controls.visible and editor.keep_button.is_visible_in_tree(),
+		"Test controls stay visible after the experiment ran (testing=%s, controls=%s, waited=%d, epoch=%d, queued='%s', guard='%s', message='%s')" % [editor.testing, editor.test_time_controls.visible, waited, sim.edit_epoch, editor._queued_editor_action, guard.state, editor.edit_message])
+	if not editor.keep_button.is_visible_in_tree():
+		_restore_input()
+		print("EDITOR_HEAT_UI_CHECKS %d FAILURES %d" % [checks, failures])
+		quit(1)
+		return
 	await click(editor.keep_button)
 	await kept()
 	var kept_bytes: PackedByteArray = await read()
