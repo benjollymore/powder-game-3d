@@ -120,6 +120,38 @@ func pick_sync(ray: Dictionary, radius: int, erase: bool) -> Dictionary:
 	# undo. This fence downloads 64 bytes, never the voxel texture.
 	return decode_pick(rd.buffer_get_data(surface_buffer))
 
+## Synchronous batch pick for Build strokes: every ray in `rays` is resolved
+## against the current GPU state in one dispatch per MAX_BATCH_RAYS and one
+## 64-byte-per-ray fence, results in ray order. Never downloads the voxel texture.
+func pick_sync_batch(rays: Array, radius: int, erase: bool) -> Array:
+	ensure_surface()
+	var results: Array = []
+	var start := 0
+	while start < rays.size():
+		var count := mini(rays.size() - start, MAX_BATCH_RAYS)
+		var records := PackedByteArray()
+		for i in count:
+			records.append_array(_encode_ray(rays[start + i], radius, erase, 0))
+		var out := rd.storage_buffer_create(64 * count)
+		var ray_buffer := rd.storage_buffer_create(records.size(), records)
+		var uniforms := _uniforms(out, pick_shader, true, false, ray_buffer)
+		var cl := rd.compute_list_begin()
+		rd.compute_list_bind_compute_pipeline(cl, pick_pipeline)
+		rd.compute_list_bind_uniform_set(cl, uniforms, 0)
+		var push := _encode_ray(rays[start], radius, erase, count)
+		rd.compute_list_set_push_constant(cl, push, push.size())
+		rd.compute_list_dispatch(cl, count, 1, 1)
+		rd.compute_list_add_barrier(cl)
+		rd.compute_list_end()
+		var bytes := rd.buffer_get_data(out)
+		for i in count:
+			results.append(decode_pick(bytes.slice(i * 64, (i + 1) * 64)))
+		rd.free_rid(uniforms)
+		rd.free_rid(ray_buffer)
+		rd.free_rid(out)
+		start += count
+	return results
+
 ## Bytes 52..63 of the pick record carry the hit cell's probe payload:
 ## temperature (float bits), liquid amount and flag byte. See surface_pick.glsl.
 static func decode_pick(bytes: PackedByteArray) -> Dictionary:

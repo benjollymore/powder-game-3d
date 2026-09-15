@@ -52,6 +52,28 @@ func run() -> void:
 	lab._sample(Vector2(730, 400))
 	lab._notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
 	check(lab.sim.cancelled == 1 and lab.sim.finished == 1, "focus loss cancels instead of adding a pending click")
+	# Build strokes accept every motion event; a burst above 64 in one frame is
+	# thinned evenly, and the accepted samples still form a face-connected line.
+	lab.testing = false
+	lab.painting = true
+	lab.stroke_target_mode = lab.TargetMode.PLANE
+	lab.active_transaction = 11
+	lab.previous = Vector3i(-1, -1, -1)
+	lab.pending.clear()
+	lab.sim.records.clear()
+	lab._flush()
+	for i in 300:
+		lab._sample(Vector2(500 + i, 400))
+	var connected: bool = not lab.pending.is_empty()
+	for i in range(1, lab.pending.size()):
+		var step: Vector3i = (lab.pending[i] as Vector3i - lab.pending[i - 1] as Vector3i).abs()
+		connected = connected and step.x + step.y + step.z == 1
+	check(lab._frame_samples == 300 and connected, "300 motion events in one frame are thinned yet leave a face-connected pending line (%d cells)" % lab.pending.size())
+	var line_cells: int = lab.pending.size()
+	lab._flush()
+	check(lab.sim.records.size() == 1 and lab.sim.records[0][1].size() == line_cells and lab.pending.is_empty() and lab._frame_samples == 0, "flush records the whole line once and resets the per-frame sample count")
+	lab.painting = false
+	lab.active_transaction = -1
 	lab.queue_free()
 	await process_frame
 	print("Paint tools: %d checks, %d failures" % [checks, failures])

@@ -70,22 +70,54 @@ func _run() -> void:
 		sim.upload(world.to_byte_array())
 		start()
 		for frame in 24:
-			var end := point(Vector3i(n / 2 + frame % 7, n * 3 / 4, n / 2))
+			var end := point(Vector3i(n / 2, n * 3 / 4, n / 2))
 			for sample in samples:
-				# More events traverse extra subframe positions but have exactly
-				# the same source position before the next authoritative tick.
-				var mouse := end + Vector2(20 * float(samples - sample - 1) / samples, 0)
+				# More events land on the same cell (sub-pixel jitter); a still
+				# brush is a source metered by ticks, never by pointer events.
+				var mouse := end + Vector2(0.5 * float(samples - sample - 1) / samples, 0)
 				lab._sample(mouse)
 				lab._flush()
 			await tick(5)
 		release()
 		var bytes := await read()
-		check(count(bytes) == 24, "%d samples/frame adds exactly 24 grains over 120 ticks (got %d)" % [samples, count(bytes)])
+		check(count(bytes) == 24, "%d samples/frame at a still pointer adds exactly 24 grains over 120 ticks (got %d)" % [samples, count(bytes)])
 		check(lab.pending.is_empty() and lab.pending_surface.is_empty(), "live drag leaves no immediate geometry queue")
 		if baseline.is_empty():
 			baseline = bytes
 		else:
 			check(bytes == baseline, "actual packed material state is identical with 1 or 16 pointer samples/frame")
+	# A moving brush lays a connected line: every cell it crosses gets a stamp
+	# inside the next tick, in addition to the source's own rate. A wall shelf
+	# under the path keeps each grain where it landed.
+	var path_y := n * 3 / 4
+	var shelf := world.duplicate()
+	WorldBuilder.fill_box(shelf, Vector3i(n / 4, path_y - 1, n / 2 - 2), Vector3i(3 * n / 4, path_y, n / 2 + 3), Elements.Id.WALL)
+	var moving := PackedByteArray()
+	for samples in [1, 16]:
+		sim.upload(shelf.to_byte_array())
+		start()
+		var x0 := n / 2 - 20
+		for frame in 8:
+			for sample in samples:
+				var t: float = (float(frame) + float(sample + 1) / float(samples)) / 8.0
+				var cell := Vector3i(x0 + int(round(40.0 * t)), path_y, n / 2)
+				lab._sample(point(cell))
+				lab._flush()
+			await tick(5)
+		release()
+		await tick(1)
+		var bytes := await read()
+		var covered := true
+		var missing := 0
+		for x in range(x0, x0 + 41):
+			if bytes[VoxelCodec.index(x, path_y, n / 2) * 4] != Elements.Id.SAND:
+				covered = false
+				missing += 1
+		check(covered, "%d samples/frame moving brush deposits on every crossed cell (%d missing)" % [samples, missing])
+		if moving.is_empty():
+			moving = bytes
+		else:
+			check(bytes == moving, "a straight moving path deposits the same cells with 1 or 16 samples/frame")
 	# Press/release before any tick still emits exactly once at the next tick.
 	sim.upload(world.to_byte_array())
 	start()

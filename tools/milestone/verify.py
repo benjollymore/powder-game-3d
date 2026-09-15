@@ -56,6 +56,7 @@ GPU = [
     ("brush-shape128", "tests/milestone/brush_shape_gpu.gd", 128),
     ("preview-pick128", "tests/milestone/preview_pick_gpu.gd", 128),
     ("live-input128", "tests/milestone/live_paint_input_gpu.gd", 128),
+    ("surface-stroke128", "tests/milestone/surface_stroke_gpu.gd", 128),
     ("archives128", "tests/milestone/archive_editor_gpu.gd", 128),
     ("document-protection128", "tests/milestone/document_protection_gpu.gd", 128),
     ("document-protection256", "tests/milestone/document_protection_gpu.gd", 256),

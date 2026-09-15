@@ -198,6 +198,14 @@ const MAX_PENDING_LIVE_CLICKS := 32
 const MAX_LIVE_CLICKS_PER_TICK := 4
 var _rt_pending_live_clicks: Array[Dictionary] = []
 var _rt_live_click_stamps := 0
+## Cells or rays a moving live brush crossed between samples: each is stamped
+## once inside the next tick so a fast drag lays a connected line. Bounded so a
+## stalled frame cannot replay an unbounded backlog.
+const MAX_LIVE_PATH_STAMPS := 512
+var _rt_pending_live_path: Array[Dictionary] = []
+var _rt_pending_live_surface: Array[Dictionary] = []
+var _rt_live_surface_previous: Dictionary = {}
+var _rt_live_path_stamps := 0
 var _rt_defer_render_preparation := false
 var _rt_derived_dirty := false
 var _rt_preparing_render := false
@@ -498,6 +506,45 @@ func finish_live_emitter() -> void:
 		RenderingServer.call_on_render_thread(_rt_finish_live_emitter)
 
 
+## Workplane cells the live pointer crossed since its last sample. Each gets one
+## stamp inside the next authoritative tick (ONLY_AIR or ERASE), independent of
+## the held source's rate, so a drag leaves a connected line. Out-of-grid cells
+## are dropped; the queue is bounded by MAX_LIVE_PATH_STAMPS.
+func queue_live_path(centers: Array[Vector3i], radius: int, element: int,
+		mode: BrushMode = BrushMode.ONLY_AIR, seed: int = 1,
+		shape: BrushShape = BrushShape.SPHERE, axis: int = 1) -> void:
+	if not _rt_ready or centers.is_empty() or element < 0 or element >= Elements.count():
+		return
+	if radius < 0 or radius > 12 or mode not in [BrushMode.ONLY_AIR, BrushMode.ERASE]:
+		return
+	var valid: Array[Vector3i] = []
+	for center in centers:
+		if center.x >= 0 and center.y >= 0 and center.z >= 0 and center.x < GRID and center.y < GRID and center.z < GRID:
+			valid.append(center)
+	if valid.is_empty():
+		return
+	edit_revision += 1
+	RenderingServer.call_on_render_thread(_rt_queue_live_path.bind({"centers": valid, "radius": radius,
+		"element": element, "mode": mode, "seed": seed & 0x7FFFFFFF, "shape": shape, "axis": clampi(axis, 0, 2)}))
+
+
+## Surface rays sampled by the live pointer. Consecutive connected rays are
+## subdivided on the render thread so their GPU-picked stamps land on adjacent
+## cells; each subdivided ray is picked and stamped atomically inside the tick.
+func queue_live_surface_path(rays: Array, radius: int, element: int,
+		mode: BrushMode = BrushMode.ONLY_AIR, seed: int = 1, shape: BrushShape = BrushShape.SPHERE) -> void:
+	if not _rt_ready or element < 0 or element >= Elements.count() or radius < 0 or radius > 12:
+		return
+	if mode not in [BrushMode.ONLY_AIR, BrushMode.ERASE]:
+		return
+	var checked := _checked_rays(rays)
+	if checked.is_empty():
+		return
+	edit_revision += 1
+	RenderingServer.call_on_render_thread(_rt_queue_live_surface_path.bind({"rays": checked, "radius": radius,
+		"element": element, "mode": mode, "seed": seed & 0x7FFFFFFF, "shape": shape}))
+
+
 ## Paint a sphere of `element` (voxel units). Runs this frame, before any ticks
 ## queued after it, so painting works while time is frozen.
 func paint(center: Vector3i, radius: int, element: int, mode: BrushMode = BrushMode.REPLACE,
@@ -675,10 +722,15 @@ func _rt_record_surface_stroke(id: int, rays: Array, radius: int, element: int, 
 		return
 	var tx: Dictionary = editor.transactions[id]
 	var mutated := false
-	for ray in rays:
+	# A frame's samples are picked together against the state they were aimed
+	# at (one 64-byte fence per batch of 32 rays instead of one per ray); the
+	# stamps are then applied in pointer order.
+	var picks: Array = editor.pick_sync_batch(rays, radius, mode == BrushMode.ERASE)
+	for i in rays.size():
+		var ray: Dictionary = rays[i]
 		if not ray.connect:
 			tx.erase("surface_previous")
-		var picked: Dictionary = editor.pick_sync(ray, radius, mode == BrushMode.ERASE)
+		var picked: Dictionary = picks[i]
 		if not picked.valid:
 			tx.erase("surface_previous")
 			continue
@@ -686,9 +738,7 @@ func _rt_record_surface_stroke(id: int, rays: Array, radius: int, element: int, 
 		var normal: Vector3i = picked.normal
 		var axis := normal.abs().max_axis_index()
 		if tx.has("surface_previous"):
-			var previous: Dictionary = tx.surface_previous
-			if normal != Vector3i.ZERO and previous.normal == normal and previous.target[axis] == picked.target[axis]:
-				centers = EditGeometry.stroke(previous.target, picked.target)
+			centers = _surface_join(tx.surface_previous, picked)
 		if not editor.capture_stroke(id, centers, radius):
 			break
 		var cl := _rd.compute_list_begin()
@@ -702,6 +752,31 @@ func _rt_record_surface_stroke(id: int, rays: Array, radius: int, element: int, 
 		mutated = true
 	if mutated:
 		_rt_occupancy_update()
+
+
+## Join two consecutive surface targets. On the same face plane the join is the
+## straight face-connected line. Across a corner (different normal) or a step
+## (same normal, different plane) the line goes through the projection of the
+## new target onto the previous face plane, so it follows the edge instead of
+## cutting through space; ONLY_AIR keeps any solid it crosses intact.
+static func _surface_join(previous: Dictionary, picked: Dictionary) -> Array[Vector3i]:
+	var normal: Vector3i = picked.normal
+	var from: Vector3i = previous.target
+	var to: Vector3i = picked.target
+	if normal == Vector3i.ZERO or previous.normal == Vector3i.ZERO:
+		return [to]
+	var axis: int = normal.abs().max_axis_index()
+	if previous.normal == normal and from[axis] == to[axis]:
+		return EditGeometry.stroke(from, to)
+	var previous_axis: int = (previous.normal as Vector3i).abs().max_axis_index()
+	var corner := to
+	corner[previous_axis] = from[previous_axis]
+	var centers := EditGeometry.stroke(from, corner)
+	if corner != to:
+		var second := EditGeometry.stroke(corner, to)
+		second.remove_at(0)
+		centers.append_array(second)
+	return centers
 
 
 func _rt_paint_surface_stroke(rays: Array, radius: int, element: int, mode: int, seed: int, shape: int = BrushShape.SPHERE) -> void:
@@ -1676,10 +1751,15 @@ func _rt_set_live_emitter(command: Dictionary) -> void:
 		_rt_live_emitter_stamps = 0
 
 
-func _rt_clear_live_emitter() -> void:
+## Cancel: the held source and any crossed-but-unstamped path are dropped.
+func _rt_clear_live_emitter(keep_path: bool = false) -> void:
 	_rt_live_emitter = {}
 	_rt_live_emitter_phase = 0.0
 	_rt_live_emitter_initial = false
+	_rt_live_surface_previous = {}
+	if not keep_path:
+		_rt_pending_live_path.clear()
+		_rt_pending_live_surface.clear()
 
 
 func _rt_finish_live_emitter() -> void:
@@ -1690,7 +1770,76 @@ func _rt_finish_live_emitter() -> void:
 			# Explicit overflow policy: preserve the first 32 intended clicks,
 			# reject the newest; never replay an unbounded stalled-input backlog.
 			push_warning("Live click queue full (32); newest click rejected until simulation advances")
-	_rt_clear_live_emitter()
+	# An intentional release keeps the path the pointer already crossed.
+	_rt_clear_live_emitter(true)
+
+
+func _rt_queue_live_path(command: Dictionary) -> void:
+	for center in command["centers"]:
+		if _rt_pending_live_path.size() >= MAX_LIVE_PATH_STAMPS:
+			push_warning("Live path queue full (%d); newest cells dropped until simulation advances" % MAX_LIVE_PATH_STAMPS)
+			return
+		_rt_pending_live_path.append({"center": center, "radius": command["radius"], "element": command["element"],
+			"mode": command["mode"], "seed": command["seed"], "shape": command["shape"], "axis": command["axis"]})
+
+
+func _rt_queue_live_surface_path(command: Dictionary) -> void:
+	for ray in command["rays"]:
+		if _rt_pending_live_surface.size() >= MAX_LIVE_PATH_STAMPS:
+			push_warning("Live surface path queue full (%d); newest rays dropped until simulation advances" % MAX_LIVE_PATH_STAMPS)
+			return
+		_rt_pending_live_surface.append({"ray": ray, "radius": command["radius"], "element": command["element"],
+			"mode": command["mode"], "seed": command["seed"], "shape": command["shape"]})
+
+
+## Consecutive pointer rays are subdivided so their GPU-picked stamps land on
+## adjacent cells. The hit point moves by about |delta direction| times the
+## distance to the surface, bounded here by three model units (the camera never
+## sits farther from the far corner of the unit cube in the editor).
+func _rt_interpolate_rays(a: Dictionary, b: Dictionary) -> Array:
+	var span: float = (b.direction - a.direction).length() * 3.0 * GRID + (b.origin - a.origin).length() * GRID
+	var steps := clampi(ceili(span), 1, 64)
+	var result: Array = []
+	for i in range(1, steps + 1):
+		var t := float(i) / steps
+		var ray: Dictionary = b.duplicate(true)
+		ray.origin = a.origin.lerp(b.origin, t)
+		ray.direction = a.direction.lerp(b.direction, t).normalized()
+		result.append(ray)
+	return result
+
+
+## Stamp the crossed path once per cell, before the held source's own stamp.
+func _rt_live_path_step(cl: int) -> void:
+	if not _rt_pending_live_path.is_empty():
+		_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
+		_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
+		for stamp in _rt_pending_live_path:
+			var seed := (int(stamp["seed"]) + _rt_live_path_stamps * 7919) & 0x7FFFFFFF
+			_rt_brush_sphere(cl, stamp["center"], stamp["radius"], stamp["element"], stamp["mode"], seed, Elements.default_amount(stamp["element"]), 0, stamp["shape"], stamp["axis"])
+			_rt_live_path_stamps += 1
+		_rt_pending_live_path.clear()
+	if _rt_pending_live_surface.is_empty():
+		return
+	if not has_method("_rt_surface_emitter_stamp"):
+		_rt_pending_live_surface.clear()
+		return
+	call("_rt_prepare_surface_emitter")
+	var stamps := 0
+	for entry in _rt_pending_live_surface:
+		var ray: Dictionary = entry["ray"]
+		var steps: Array = [ray]
+		if ray.get("connect", false) and not _rt_live_surface_previous.is_empty():
+			steps = _rt_interpolate_rays(_rt_live_surface_previous, ray)
+		for step in steps:
+			if stamps >= MAX_LIVE_PATH_STAMPS:
+				break
+			var seed := (int(entry["seed"]) + _rt_live_path_stamps * 7919) & 0x7FFFFFFF
+			call("_rt_surface_emitter_stamp", cl, step, entry["radius"], entry["element"], entry["mode"], seed, entry["shape"])
+			_rt_live_path_stamps += 1
+			stamps += 1
+		_rt_live_surface_previous = ray
+	_rt_pending_live_surface.clear()
 
 
 ## Record at most four queued clicks plus one held-source stamp in a tick.
@@ -1702,6 +1851,7 @@ func _rt_live_emitter_step(cl: int) -> void:
 		var click: Dictionary = _rt_pending_live_clicks.pop_front()
 		if _rt_emit_source(cl, click, 0):
 			_rt_live_click_stamps += 1
+	_rt_live_path_step(cl)
 	# Older released clicks retain priority over a newer held source.
 	if not _rt_pending_live_clicks.is_empty():
 		return

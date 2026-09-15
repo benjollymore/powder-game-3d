@@ -126,6 +126,12 @@ var gesture_owner := -1 # -1: no sequence, 0: tools, 1: scene
 var last_gesture_ms := -1
 var gesture_trace := false
 var _space_owned := false
+## Every pointer motion event is a sample; above this many in one frame the
+## stream is thinned evenly so a stalled frame cannot queue an unbounded backlog.
+const MAX_SAMPLES_PER_FRAME := 64
+var _frame_samples := 0
+var _live_previous := Vector3i(-1, -1, -1)
+var _live_surface_previous: Dictionary = {}
 var _file_keys_owned := {}
 
 
@@ -323,6 +329,7 @@ func _build_ui() -> void:
 	_refresh_shape_button()
 	play_button = Button.new()
 	play_button.text = "Run experiment · Space"
+	play_button.tooltip_text = "Run the experiment. While it runs, a held still brush keeps pouring; drag to lay a line."
 	play_button.pressed.connect(run_or_restore)
 	column.add_child(play_button)
 	var speed_row := HBoxContainer.new()
@@ -1573,7 +1580,22 @@ func _receive_pick(result: Dictionary, id: int, intent: int) -> void:
 	pick_cache = result
 
 
+## Accept every motion event up to MAX_SAMPLES_PER_FRAME per frame, then every
+## second, fourth, ... so the accepted stream stays evenly spread. Consecutive
+## accepted samples are still joined by the face-connected DDA.
+func _accept_sample() -> bool:
+	_frame_samples += 1
+	if _frame_samples <= MAX_SAMPLES_PER_FRAME:
+		return true
+	var stride := 1
+	while _frame_samples > MAX_SAMPLES_PER_FRAME * stride:
+		stride *= 2
+	return _frame_samples % stride == 0
+
+
 func _sample(mouse: Vector2) -> void:
+	if not _accept_sample():
+		return
 	if testing:
 		# Live input changes a source; only authoritative ticks may inject matter.
 		_set_live_source(mouse)
@@ -1581,12 +1603,13 @@ func _sample(mouse: Vector2) -> void:
 	if stroke_target_mode == TargetMode.SURFACE:
 		var ray := _ray_at(mouse, stroke_view)
 		ray["connect"] = surface_connect
-		# Retain the first and latest pointer sample per frame. GPU-resolved points
-		# on the same face are joined; depth/normal discontinuities break the line.
-		if pending_surface.size() >= 2:
-			pending_surface[1] = ray
-		else:
+		# Every accepted pointer sample is kept; the GPU resolves each in order and
+		# joins consecutive targets (same face by a straight line, corners via the
+		# edge). Toolbar crossings and misses break the line.
+		if pending_surface.size() < MAX_SAMPLES_PER_FRAME:
 			pending_surface.append(ray)
+		else:
+			pending_surface[-1] = ray
 		surface_connect = true
 		return
 	var cell := _target_at(mouse)
@@ -1635,12 +1658,16 @@ func _end_stroke(completed: bool = false) -> void:
 	previous = Vector3i(-1, -1, -1)
 	_last_thermal_center = Vector3i(-1, -1, -1)
 	surface_connect = false
+	_live_previous = Vector3i(-1, -1, -1)
+	_live_surface_previous = {}
 
 
 func _stop_live_emitter() -> void:
 	if live_emitter_signature != 0 and sim != null and sim.has_method("clear_live_emitter"):
 		sim.clear_live_emitter()
 	live_emitter_signature = 0
+	_live_previous = Vector3i(-1, -1, -1)
+	_live_surface_previous = {}
 
 
 func _update_live_emitter(over_ui: bool) -> void:
@@ -1681,13 +1708,35 @@ func _set_live_source(mouse: Vector2) -> void:
 			sim.paint_thermal_stroke(picked.centers, stroke_radius, _thermal_kelvin(stroke_thermal))
 		return
 	var mode: int = _brush_mode(stroke_erase)
+	_queue_live_path(center, surface, stroke_radius, stroke_element, mode)
 	var signature := hash([center, stroke_radius, stroke_element, mode, surface, stroke_shape])
 	if signature != live_emitter_signature:
 		live_emitter_signature = signature
 		sim.set_live_emitter(center, stroke_radius, stroke_element, mode, Emission.RATE, 1, surface, stroke_shape, _stroke_axis())
 
 
+## A moving live brush lays a connected line: every cell the pointer crossed
+## since its last sample gets one stamp inside the next authoritative tick, in
+## addition to the held source's rate (a still brush keeps pouring by design).
+func _queue_live_path(center: Vector3i, surface: Dictionary, brush_radius: int, material: int, mode: int) -> void:
+	if surface.is_empty():
+		_live_surface_previous = {}
+		if _live_previous.x >= 0 and center != _live_previous and sim.has_method("queue_live_path"):
+			var path := Geometry.stroke(_live_previous, center)
+			path.remove_at(0)
+			sim.queue_live_path(path, brush_radius, material, mode, 1, stroke_shape, _stroke_axis())
+		_live_previous = center
+		return
+	_live_previous = Vector3i(-1, -1, -1)
+	if sim.has_method("queue_live_surface_path"):
+		var ray := surface.duplicate(true)
+		ray["connect"] = not _live_surface_previous.is_empty()
+		sim.queue_live_surface_path([ray], brush_radius, material, mode, 1, stroke_shape)
+	_live_surface_previous = surface
+
+
 func _flush() -> void:
+	_frame_samples = 0
 	# A stroke without an authored transaction must never bypass tick cadence.
 	if testing or active_transaction < 0:
 		pending_surface.clear()
