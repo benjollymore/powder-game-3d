@@ -6,6 +6,12 @@ extends RefCounted
 
 const SIZE := 256
 const LAYERS := 5  # 0 stone, 1 sand, 2 plant, 3 generic, 4 wood
+## Per-element-id uniform array length in every spatial shader (`palette[32]`,
+## `extinction[32]`, `mat_*[32]`). Elements.PALETTE_SIZE may lag behind; the
+## unused tail uploads as zero either way.
+const SHADER_SLOTS := 32
+## Names of shader uniforms indexed by element id.
+const PER_ID_UNIFORMS := ["palette", "extinction", "mat_layer", "mat_smooth", "mat_grain", "mat_rough"]
 
 static var _albedo: Texture2DArray
 static var _normal: Texture2DArray
@@ -18,11 +24,22 @@ static func apply(material: ShaderMaterial) -> void:
 	material.set_shader_parameter("albedo_maps", _albedo)
 	material.set_shader_parameter("normal_maps", _normal)
 	material.set_shader_parameter("grain_noise", _grain)
-	material.set_shader_parameter("mat_layer", Elements.material_layers())
-	material.set_shader_parameter("mat_smooth", Elements.floats("smooth"))
-	material.set_shader_parameter("mat_grain", Elements.floats("grain"))
-	material.set_shader_parameter("mat_rough", Elements.floats("rough", 0.8))
+	material.set_shader_parameter("mat_layer", padded(Elements.material_layers()))
+	material.set_shader_parameter("mat_smooth", padded(Elements.floats("smooth")))
+	material.set_shader_parameter("mat_grain", padded(Elements.floats("grain")))
+	material.set_shader_parameter("mat_rough", padded(Elements.floats("rough", 0.8)))
 	material.set_shader_parameter("texture_size", float(SIZE))
+
+
+## Extend a per-id array to SHADER_SLOTS entries; new entries are zero. A
+## longer array is returned unchanged (the shader ignores the excess).
+static func padded(values: Variant) -> Variant:
+	if values is PackedColorArray or values is PackedFloat32Array or values is PackedInt32Array:
+		if values.size() < SHADER_SLOTS:
+			var out = values.duplicate()
+			out.resize(SHADER_SLOTS)
+			return out
+	return values
 
 
 static func _build() -> void:

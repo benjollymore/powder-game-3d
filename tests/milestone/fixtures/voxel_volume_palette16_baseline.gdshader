@@ -7,11 +7,11 @@
 shader_type spatial;
 render_mode cull_front, unshaded, blend_premul_alpha, depth_draw_always;
 
-#include "res://shaders/spatial/voxel_dda.gdshaderinc"
+#include "res://tests/milestone/fixtures/voxel_dda_palette16.gdshaderinc"
 
 uniform sampler2D depth_tex : hint_depth_texture, filter_nearest;
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
-uniform float extinction[32];
+uniform float extinction[16];
 // One derived texel. No capacity decisions or atomic winner masks in physical state.
 uniform sampler3D physical_overflow : filter_nearest, repeat_disable;
 

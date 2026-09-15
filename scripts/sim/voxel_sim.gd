@@ -272,7 +272,7 @@ func _ready() -> void:
 	set_param("palette", Elements.palette())
 	set_param("liquid_mask", Elements.liquid_mask())
 	set_param("gas_mask", Elements.gas_mask())
-	_volume_material.set_shader_parameter("extinction", Elements.extinction())
+	_volume_material.set_shader_parameter("extinction", MaterialLibrary.padded(Elements.extinction()))
 	_volume_material.set_shader_parameter("liquid_full", float(Elements.LIQUID_FULL))
 	set_param("fields", _density_texture)
 	set_param("physical_overflow", _physical_overflow_texture)
@@ -303,6 +303,8 @@ func _ready() -> void:
 
 ## Set a shader parameter on both raymarch materials.
 func set_param(name: String, value: Variant) -> void:
+	if name in MaterialLibrary.PER_ID_UNIFORMS:
+		value = MaterialLibrary.padded(value)
 	for m in _materials:
 		m.set_shader_parameter(name, value)
 

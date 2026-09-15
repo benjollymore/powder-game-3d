@@ -9,7 +9,7 @@ uniform sampler3D voxels : filter_nearest, repeat_disable;
 uniform sampler3D occupancy : filter_nearest, repeat_disable;
 uniform sampler3D fields : filter_linear_mipmap, repeat_disable;
 uniform sampler3D sunvis : filter_linear, repeat_disable;
-uniform vec4 palette[32];
+uniform vec4 palette[16];
 uniform int grid_size = 128;
 uniform int brick_size = 8;
 uniform int liquid_mask = 0;

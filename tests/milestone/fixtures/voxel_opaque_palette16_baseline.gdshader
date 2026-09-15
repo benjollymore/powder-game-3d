@@ -5,12 +5,12 @@
 shader_type spatial;
 render_mode cull_front, depth_draw_opaque;
 
-#include "res://shaders/spatial/voxel_dda.gdshaderinc"
+#include "res://tests/milestone/fixtures/voxel_dda_palette16.gdshaderinc"
 
 uniform sampler2DArray albedo_maps : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2DArray normal_maps : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler3D grain_noise : filter_linear, repeat_enable;
-uniform int mat_layer[32];
+uniform int mat_layer[16];
 uniform sampler3D physical_overflow : filter_nearest, repeat_disable;
 uniform int powder_mask = 0;
 uniform int leafy_mask = 0;
@@ -23,9 +23,9 @@ bool coarse_physical(ivec3 cell, uvec4 value, bvec2 fallback) {
 	}
 	return false;
 }
-uniform float mat_smooth[32];
-uniform float mat_grain[32];
-uniform float mat_rough[32];
+uniform float mat_smooth[16];
+uniform float mat_grain[16];
+uniform float mat_rough[16];
 uniform float texture_tile = 16.0;
 uniform float texture_size = 256.0;
 uniform float ao_strength = 1.0;

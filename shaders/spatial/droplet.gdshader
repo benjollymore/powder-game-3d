@@ -5,7 +5,7 @@
 shader_type spatial;
 render_mode world_vertex_coords, cull_disabled, blend_mix, depth_draw_always;
 
-uniform vec4 palette[16];
+uniform vec4 palette[32];
 uniform sampler3D sunvis : filter_linear, repeat_disable;
 uniform vec3 box_center = vec3(0.0);
 uniform float box_half = 0.5;

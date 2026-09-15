@@ -1,16 +1,15 @@
-// Camera-facing grain splat drawn from MultiMesh instances that a compute pass
-// fills every frame (see splat_emit.glsl). Each instance's transform holds
-// the grain's model-space position and size; custom data holds element id,
-// seed and age. Shaded as a tiny sphere, lit by Godot, alpha-scissored so it
-// stays in the opaque pass and needs no sorting.
+// Camera-facing water droplet for thin falling spray (see splat_emit.glsl).
+// The instance transform holds position and size; custom data holds element
+// id, seed and fill. Drawn after the liquid volume pass, blended, shaded as a
+// glossy bead with a Fresnel rim so it reads as water against any backdrop.
 shader_type spatial;
-render_mode world_vertex_coords, cull_disabled;
+render_mode world_vertex_coords, cull_disabled, blend_mix, depth_draw_always;
 
-uniform vec4 palette[32];
+uniform vec4 palette[16];
 uniform sampler3D sunvis : filter_linear, repeat_disable;
 uniform vec3 box_center = vec3(0.0);
 uniform float box_half = 0.5;
-uniform vec3 light_dir = vec3(0.4, 1.0, 0.3); // toward the sun, world space
+uniform vec3 light_dir = vec3(0.4, 1.0, 0.3);
 
 varying vec2 v_uv;
 varying flat vec4 v_custom;
@@ -24,8 +23,6 @@ uniform int section_cell = 127;
 uniform int grid_size = 128;
 
 void vertex() {
-	// With world_vertex_coords VERTEX arrives in world space, so the quad's
-	// local corner comes from UV instead.
 	vec3 origin = MODEL_MATRIX[3].xyz;
 	float size = length(MODEL_MATRIX[0].xyz);
 	v_uv = UV - 0.5;
@@ -43,18 +40,25 @@ void fragment() {
 	if (section_enabled && v_section_cell >= float(section_cell + 1)) { discard; }
 	vec2 d = v_uv * 2.0;
 	float r2 = dot(d, d);
-	ALPHA = (r2 < 1.0) ? 1.0 : 0.0;
-	ALPHA_SCISSOR_THRESHOLD = 0.5;
-	// Fake sphere normal in view space.
-	vec3 n = vec3(d, sqrt(max(1.0 - r2, 0.0)));
-	NORMAL = normalize(n);
+	if (r2 > 1.0) {
+		discard;
+	}
+	vec3 n = normalize(vec3(d, sqrt(max(1.0 - r2, 0.0))));
+	NORMAL = n;
 	int id = int(v_custom.x + 0.5);
-	vec3 col = palette[id].rgb * (0.9 + 0.2 * v_custom.y);
-	ALBEDO = col;
-	ROUGHNESS = 0.9;
+	vec3 tint = palette[id].rgb;
+	float fresnel = pow(1.0 - n.z, 2.5);
+	ALBEDO = mix(tint * 0.6, vec3(0.9, 0.95, 1.0), fresnel);
+	ALPHA = clamp(0.35 + 0.55 * fresnel + 0.15 * (1.0 - v_custom.z), 0.0, 0.95);
+	ROUGHNESS = 0.08;
+	SPECULAR = 0.6;
 }
 
 void light() {
 	float vis = LIGHT_IS_DIRECTIONAL ? v_vis : 1.0;
-	DIFFUSE_LIGHT += clamp(dot(NORMAL, LIGHT), 0.0, 1.0) * ATTENUATION * LIGHT_COLOR * vis;
+	float nl = clamp(dot(NORMAL, LIGHT), 0.0, 1.0);
+	DIFFUSE_LIGHT += nl * ATTENUATION * LIGHT_COLOR * vis * 0.6;
+	vec3 h = normalize(LIGHT + VIEW);
+	float spec = pow(clamp(dot(NORMAL, h), 0.0, 1.0), 90.0) * 1.2;
+	SPECULAR_LIGHT += spec * ATTENUATION * LIGHT_COLOR * vis;
 }
