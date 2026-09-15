@@ -9,6 +9,11 @@ extends Node3D
 
 signal changed
 
+## Brush modes, mirroring VoxelSim.BrushMode (docs/milestone/heat-brief.md
+## contract 5). HEAT and COOL change only the thermal layer by a strength in
+## kelvin with radial falloff; voxel bytes are untouched.
+enum Mode { REPLACE, ONLY_AIR, ERASE, BOX, BOX_ONLY_AIR, HEAT, COOL }
+
 var GRID: int = VoxelCodec.GRID
 const MIN_RADIUS := 1
 const MAX_RADIUS := 12

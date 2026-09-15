@@ -12,6 +12,7 @@ const COPY_PATH := "res://shaders/compute/editor/region_copy.glsl"
 var rd: RenderingDevice
 var grid: RID
 var thermal: RID
+var elements: RID
 var size: int
 var shader := RID()
 var pipeline := RID()
@@ -27,10 +28,11 @@ var surface_buffer := RID()
 var surface_pick_set := RID()
 var surface_stamp_set := RID()
 
-func _init(device: RenderingDevice, texture: RID, thermal_texture: RID, grid_size: int, compile: Callable) -> void:
+func _init(device: RenderingDevice, texture: RID, thermal_texture: RID, elements_buffer: RID, grid_size: int, compile: Callable) -> void:
 	rd = device
 	grid = texture
 	thermal = thermal_texture
+	elements = elements_buffer
 	size = grid_size
 	compile_shader = compile
 	shader = rd.shader_create_from_spirv(compile.call(COPY_PATH, false))
@@ -45,7 +47,7 @@ func ensure_surface() -> void:
 	stamp_pipeline = rd.compute_pipeline_create(stamp_shader)
 	surface_buffer = rd.storage_buffer_create(64)
 	surface_pick_set = _uniforms(surface_buffer, pick_shader)
-	surface_stamp_set = _uniforms(surface_buffer, stamp_shader, false)
+	surface_stamp_set = _uniforms(surface_buffer, stamp_shader, true, true)
 
 func request_pick(ray: Dictionary, radius: int, erase: bool, metadata: Dictionary, callback: Callable) -> void:
 	ensure_surface()
@@ -262,7 +264,7 @@ func restore(regions: Array) -> void:
 		rd.free_rid(uniforms)
 		rd.free_rid(buffer)
 
-func _uniforms(buffer: RID, for_shader: RID = RID(), with_thermal := true) -> RID:
+func _uniforms(buffer: RID, for_shader: RID = RID(), with_thermal := true, with_elements := false) -> RID:
 	var image := RDUniform.new()
 	image.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
 	image.binding = 0
@@ -273,13 +275,19 @@ func _uniforms(buffer: RID, for_shader: RID = RID(), with_thermal := true) -> RI
 	data.add_id(buffer)
 	var uniforms: Array[RDUniform] = [image, data]
 	if with_thermal:
-		# Region copy and pick read/write the thermal layer; the stamp kernel
-		# does not declare it yet, and a set must match its shader's bindings.
+		# Region copy, pick and stamp all read or write the thermal layer; the
+		# stamp also needs element initial temperatures.
 		var heat := RDUniform.new()
 		heat.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
 		heat.binding = 2
 		heat.add_id(thermal)
 		uniforms.append(heat)
+	if with_elements:
+		var elems := RDUniform.new()
+		elems.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+		elems.binding = 3
+		elems.add_id(elements)
+		uniforms.append(elems)
 	return rd.uniform_set_create(uniforms, for_shader if for_shader.is_valid() else shader, 0)
 
 func _dispatch(cl: int, lo: Vector3i, hi: Vector3i, offset: int, restore_mode: bool) -> void:

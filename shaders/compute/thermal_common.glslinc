@@ -1,4 +1,4 @@
-// Conservative face heat-transfer arithmetic shared by production kernels.
+// Thermal arithmetic shared by the production kernels (sim, hydro).
 //
 // Ported from tools/feasibility/thermal_gpu/fused_common.glslinc, which the
 // thermal feasibility work validated to 1e-4 K over 1000 FP32 steps: the same
@@ -7,9 +7,10 @@
 // face) and `precise` arithmetic, so the two owners of a face compute a
 // bit-identical transfer and energy is conserved by construction.
 //
-// Not called yet: the plumbing unit only carries temperature with material.
-// The conduction rule (rule_thermal) will use canonical_transfer inside the
-// Margolus block.
+// State per cell (docs/milestone/thermal-physics.md): T = temperature in
+// kelvin, G = latent progress in joules. Energy E = C * T + G where C is the
+// cell's heat capacity in J/K. `settle` keeps that invariant while moving
+// energy between T and G at a phase plateau.
 
 // Conductance through one face between full cells of side dx with
 // conductivities ki and kj: dx * 2 ki kj / (ki + kj)  [W/K].
@@ -19,10 +20,41 @@ float thermal_conductance(float ki, float kj, float dx) {
 	return g;
 }
 
-// Energy moved from the lower-index cell to the higher-index cell over dt
+// Energy moved from the higher-index cell to the lower-index cell over dt
 // seconds [J]. Positive when the higher cell is hotter. Call with the lower
 // grid index first for BOTH neighbours.
 float canonical_transfer(float k_low, float k_high, float t_low, float t_high, float dx, float dt) {
 	precise float q = dt * thermal_conductance(k_low, k_high, dx) * (t_high - t_low);
 	return q;
+}
+
+// Move energy between T and G so that a cell sits exactly on its plateau
+// while latent progress accumulates: above hot_at the excess C*(T-hot_at)
+// goes into G (>= 0); below cold_at the deficit goes into G (<= 0). Stored
+// latent drains back into T before the cell may leave the plateau. C*T + G
+// is unchanged. Thresholds of 0 mean "no transition on that side".
+vec2 settle(vec2 tg, float C, float hot_at, float cold_at) {
+	float T = tg.x;
+	float G = tg.y;
+	if (hot_at > 0.0) {
+		if (T > hot_at) {
+			G += C * (T - hot_at);
+			T = hot_at;
+		} else if (G > 0.0 && T < hot_at) {
+			G -= C * (hot_at - T);
+			T = hot_at;
+			if (G < 0.0) { T = hot_at + G / C; G = 0.0; }
+		}
+	}
+	if (cold_at > 0.0) {
+		if (T < cold_at) {
+			G -= C * (cold_at - T);
+			T = cold_at;
+		} else if (G < 0.0 && T > cold_at) {
+			G += C * (T - cold_at);
+			T = cold_at;
+			if (G > 0.0) { T = cold_at + G / C; G = 0.0; }
+		}
+	}
+	return vec2(T, G);
 }

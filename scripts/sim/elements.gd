@@ -69,20 +69,27 @@ const CATEGORIES := ["common", "heat", "powders", "liquids", "gases", "solids", 
 ## (water 1 g × 4.18 J/(g·K); stone 2.6 g × 0.8; wood 0.6 g × 1.7; gases use
 ## a floor of 0.05 so a cell can never carry zero capacity). The thermal
 ## worker owns tuning them; the schema and defaults are owned here.
+## Tuning notes (thermal worker): a transition's latent energy is always the
+## lower phase's `latent` x its capacity (x fill for liquids), so boiling and
+## condensing, melting and freezing move the same energy. Conductivities are
+## gameplay values: Wall is a perfect insulator so a box keeps its heat, still
+## Air barely conducts (hot gases carry heat by moving), a flame conducts
+## like a convecting gas. Thermal seconds per tick are VoxelSim.thermal_speed
+## times the tick length.
 const THERMAL := {
-	Id.AIR:   { "heat_capacity": 0.05, "conductivity": 0.026, "initial_temp": 293.15 },
-	Id.WALL:  { "heat_capacity": 2.1,  "conductivity": 1.5,   "initial_temp": 293.15 },
+	Id.AIR:   { "heat_capacity": 0.05, "conductivity": 0.02,  "initial_temp": 293.15 },
+	Id.WALL:  { "heat_capacity": 2.1,  "conductivity": 0.0,   "initial_temp": 293.15 },
 	Id.SAND:  { "heat_capacity": 1.5,  "conductivity": 0.3,   "initial_temp": 293.15 },
-	Id.WATER: { "heat_capacity": 4.18, "conductivity": 0.6,   "initial_temp": 293.15, "hot_at": 373.15, "hot_to": Id.STEAM, "latent": 540.0 },
+	Id.WATER: { "heat_capacity": 4.18, "conductivity": 0.6,   "initial_temp": 293.15, "hot_at": 373.15, "hot_to": Id.STEAM, "latent": 540.0, "cold_at": 273.15, "cold_to": Id.ICE },
 	Id.STEAM: { "heat_capacity": 0.05, "conductivity": 0.03,  "initial_temp": 380.0,  "cold_at": 373.15, "cold_to": Id.WATER },
-	Id.FIRE:  { "heat_capacity": 0.05, "conductivity": 0.1,   "initial_temp": 1200.0, "fire_temp": 1200.0 },
+	Id.FIRE:  { "heat_capacity": 0.05, "conductivity": 1.0,   "initial_temp": 1200.0, "fire_temp": 1200.0 },
 	Id.PLANT: { "heat_capacity": 2.0,  "conductivity": 0.4,   "initial_temp": 293.15, "ignition_temp": 520.0, "burn_to": Id.FIRE },
 	Id.OIL:   { "heat_capacity": 1.6,  "conductivity": 0.15,  "initial_temp": 293.15, "ignition_temp": 500.0, "burn_to": Id.FIRE },
 	Id.SMOKE: { "heat_capacity": 0.05, "conductivity": 0.03,  "initial_temp": 400.0 },
 	Id.WOOD:  { "heat_capacity": 1.0,  "conductivity": 0.15,  "initial_temp": 293.15, "ignition_temp": 570.0, "burn_to": Id.FIRE },
-	# Tranche A provisional values; the thermal worker owns tuning these.
+	# Tranche A.
 	Id.ICE:   { "heat_capacity": 2.1,  "conductivity": 2.2,   "initial_temp": 263.15, "hot_at": 273.15, "hot_to": Id.WATER, "latent": 80.0 },
-	Id.LAVA:  { "heat_capacity": 3.0,  "conductivity": 1.5,   "initial_temp": 1500.0, "cold_at": 1000.0, "cold_to": Id.STONE, "latent": 300.0 },
+	Id.LAVA:  { "heat_capacity": 3.0,  "conductivity": 1.2,   "initial_temp": 1500.0, "cold_at": 1000.0, "cold_to": Id.STONE },
 	Id.STONE: { "heat_capacity": 2.1,  "conductivity": 1.5,   "initial_temp": 293.15, "hot_at": 1300.0, "hot_to": Id.LAVA, "latent": 300.0 },
 	Id.METAL: { "heat_capacity": 3.5,  "conductivity": 50.0,  "initial_temp": 293.15 },
 	# Tranche B.
@@ -137,7 +144,7 @@ const REACTIONS := [
 	[Id.FIRE, Id.PLANT, Id.FIRE, Id.FIRE, 0.5],   # plant catches fire
 	[Id.FIRE, Id.OIL, Id.FIRE, Id.FIRE, 0.5],     # oil ignites
 	[Id.FIRE, Id.WOOD, Id.FIRE, Id.FIRE, 0.08],   # wood burns, slowly
-	[Id.FIRE, Id.WATER, Id.AIR, Id.STEAM, 1.0],   # water puts fire out and boils
+	[Id.FIRE, Id.WATER, Id.AIR, Id.STEAM, 1.0, { "heat": 90.0 }],   # water puts fire out and boils; the steam leaves hot
 	[Id.PLANT, Id.WATER, Id.PLANT, Id.PLANT, 0.0015], # plant drinks water and grows (slowly)
 	# Heat milestone. `heat` is released into the pair once thermal lands; `cost`
 	# is liquid consumed (amount units) from a liquid input that survives unchanged.
@@ -145,7 +152,6 @@ const REACTIONS := [
 	# Gunpowder ignites through the fuse rule in sim.glsl (rule_special), not a
 	# pair rule: a pair rule turned the touched grain into fire that rose away
 	# before the next grain shared a block with it. Heat release ~600 K per cell.
-	[Id.FIRE, Id.WAX, Id.FIRE, Id.MOLTEN_WAX, 0.05],   # interim contact melt until rule_phase lands
 	[Id.FIRE, Id.MOLTEN_WAX, Id.FIRE, Id.FIRE, 0.02, { "heat": 120.0 }], # candle: molten wax feeds the flame
 	[Id.ACID, Id.SAND, Id.ACID, Id.SMOKE, 0.3, { "cost": 40 }],
 	[Id.ACID, Id.PLANT, Id.ACID, Id.SMOKE, 0.3, { "cost": 40 }],

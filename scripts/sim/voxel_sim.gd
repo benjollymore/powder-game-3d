@@ -26,6 +26,9 @@ extends Node3D
 signal readback_ready(bytes: PackedByteArray)
 ## Thermal layer readback: GRID^3 cells x 8 bytes (two float32 per cell, x fastest).
 signal thermal_ready(bytes: PackedByteArray)
+## Both authoritative layers read in one render-thread job, so they belong to
+## the same tick (request_state_readback).
+signal state_ready(voxels: PackedByteArray, thermal: PackedByteArray)
 signal occupancy_ready(bytes: PackedByteArray)
 signal density_ready(bytes: PackedByteArray)
 signal scenario_changed(name: String)
@@ -94,12 +97,16 @@ const SUNVIS_GAS_EXTINCTION := 0.12
 const BRICK := 8
 var OCCUPANCY_GRID: int = GRID / BRICK
 
-enum BrushMode { REPLACE, ONLY_AIR, ERASE, BOX, BOX_ONLY_AIR }
+## HEAT and COOL change only the thermal layer (strength in kelvin, radial
+## falloff); see scripts/sim/brush.gd Mode, which mirrors this enum.
+enum BrushMode { REPLACE, ONLY_AIR, ERASE, BOX, BOX_ONLY_AIR, HEAT, COOL }
 ## 2x2x2 blocks with a partition offset straddle the edge: GRID/2 + 1 blocks
 ## per axis, 4x4x4 threads per workgroup.
 var DISPATCH_GROUPS: int = ceili((GRID / 2 + 1) / 4.0)
-## Push constants: uvec4 a (tick, seed, reserved, flags) + uvec4 b (offset xyz, 0).
-const PUSH_CONSTANT_INTS := 8
+## Push constants: uvec4 a (tick, seed, reserved, flags) + uvec4 b (offset xyz,
+## reaction count) + uvec4 c (thermal dt, ambient, ignition chance as float bits, 0).
+const PUSH_CONSTANT_INTS := 12
+const RULE_NO_THERMAL := 16 # bit 8 is RULE_NO_SPECIALS
 ## Brush push constants: ivec4 center/lo + radius, uvec4 element/mode/seed/amount, ivec4 box hi.
 const BRUSH_PUSH_INTS := 12
 
@@ -142,9 +149,18 @@ var volume_debug := 0
 ## Sim seconds per tick, for FX particles and leaf sway; taken from
 ## TimeController when it drives the sim.
 @export var seconds_per_tick := 1.0 / 120.0
-## Temperature (K) of air and of any element without an `initial_temp` table
-## entry; the thermal layer is initialised to it on every whole-world replacement.
-@export var ambient_temp := 293.15
+## Temperature (K) of air on every whole-world replacement and the reference
+## the air solver measures buoyancy against.
+@export var ambient_temp := 293.15:
+	set(value):
+		ambient_temp = value
+		if _rt_ready:
+			RenderingServer.call_on_render_thread(_rt_update_initial_temps)
+## Thermal seconds simulated per tick, as a multiple of the tick length:
+## conduction at centimetre scale is far too slow to watch in real time.
+@export var thermal_speed := 120.0
+## Per-tick chance that a flammable cell at or above its ignition temperature catches.
+@export var ignite_chance := 0.05
 
 var tick := 0
 ## Absolute simulated tick used by presentation seeds, never rebuild count.
@@ -746,7 +762,7 @@ func restore_edit_transaction(result: Dictionary) -> bool:
 
 func _rt_edit_gpu() -> RefCounted:
 	if _editor_gpu == null:
-		_editor_gpu = EditGPU.new(_rd, _grid_rid, _thermal_rid, GRID, _rt_compile)
+		_editor_gpu = EditGPU.new(_rd, _grid_rid, _thermal_rid, _elements_buffer, GRID, _rt_compile)
 	return _editor_gpu
 
 
@@ -820,6 +836,44 @@ func request_thermal_readback() -> void:
 	RenderingServer.call_on_render_thread(_rt_thermal_readback)
 
 
+## Copy both authoritative layers back in one render-thread job so they come
+## from the same tick; `state_ready(voxels, thermal)` fires on the main thread.
+func request_state_readback() -> void:
+	RenderingServer.call_on_render_thread(_rt_state_readback)
+
+
+## Heat (positive kelvin) or cool (negative) a sphere in the thermal layer;
+## voxel bytes are untouched. Falloff is radial, full strength at the centre.
+func paint_thermal(center: Vector3i, radius: int, kelvin: float) -> void:
+	paint_thermal_stroke([center], radius, kelvin)
+
+
+func paint_thermal_stroke(centers: Array[Vector3i], radius: int, kelvin: float) -> void:
+	if centers.is_empty() or radius < 0 or radius > 12 or not is_finite(kelvin):
+		return
+	edit_revision += 1
+	RenderingServer.call_on_render_thread(_rt_paint_thermal_stroke.bind(centers, radius, kelvin))
+
+
+## Heat or cool as part of an undoable transaction (history records carry the
+## thermal layer, so undo restores the previous temperatures exactly).
+func record_thermal_stroke(id: int, centers: Array[Vector3i], radius: int, kelvin: float) -> void:
+	if _edit_epochs.get(id, -1) != edit_epoch or centers.is_empty() or radius < 0 or radius > 12 or not is_finite(kelvin):
+		return
+	var valid: Array[Vector3i] = []
+	for center in centers:
+		if VoxelCodec.in_bounds(center):
+			valid.append(center)
+	if valid.is_empty():
+		return
+	edit_revision += 1
+	RenderingServer.call_on_render_thread(_rt_record_thermal_stroke.bind(id, valid, radius, kelvin))
+
+
+static func _float_bits(value: float) -> int:
+	return PackedFloat32Array([value]).to_byte_array().decode_s32(0)
+
+
 ## One authoritative cell under a ray, for the hover inspector (heat-brief
 ## contract 4). `origin` and `direction` are in this node's model space (the
 ## unit box), as for request_surface_pick. `callback` receives {pos, element,
@@ -838,29 +892,47 @@ func request_cell_probe(origin: Vector3, direction: Vector3, callback: Callable)
 				callback.call({"pos": Vector3i(-1, -1, -1), "element": 0, "temperature": 0.0, "amount": 0, "flags": 0}))
 
 
-## Total thermal energy of a world in capacity units: sum over cells of
-## heat_capacity(id) * temperature + latent, with liquid capacity scaled by
-## amount / LIQUID_FULL (no clamp, so compressed liquid holds more). Elements
-## without a `heat_capacity` entry count as 1 per full cell. CPU loop over
-## every cell: tests at 128 only.
-static func energy_total(voxels: PackedByteArray, thermal: PackedByteArray) -> float:
+## Liquid heat capacity floor in amount units; keep in sync with CAP_FLOOR in
+## sim.glsl and hydro.glsl.
+const CAPACITY_FLOOR_UNITS := 4
+
+## Heat capacity of one cell in J/K: the element's capacity, scaled for
+## liquids by amount / LIQUID_FULL with a floor of CAPACITY_FLOOR_UNITS units
+## (compressed liquid holds more).
+static func cell_capacity(id: int, amount: int) -> float:
+	var c := Elements.thermal(id, "heat_capacity")
+	if Elements.is_liquid(id):
+		c *= float(maxi(amount, CAPACITY_FLOOR_UNITS)) / float(Elements.LIQUID_FULL)
+	return c
+
+
+## Total thermal energy in joules over cells [lo, hi) of a world (the whole
+## world by default): sum of cell_capacity * temperature + latent. CPU loop
+## over every cell: tests at 128 only.
+static func energy_total(voxels: PackedByteArray, thermal: PackedByteArray, lo := Vector3i.ZERO, hi := Vector3i(-1, -1, -1)) -> float:
+	var n := VoxelCodec.GRID
 	var cells := voxels.size() / 4
 	assert(thermal.size() == cells * THERMAL_BYTES_PER_CELL)
+	if hi.x < 0:
+		hi = Vector3i(n, n, n)
 	var capacity := PackedFloat64Array()
 	var liquid := PackedByteArray()
 	capacity.resize(Elements.count())
 	liquid.resize(Elements.count())
 	for id in Elements.count():
-		capacity[id] = float(Elements.TABLE[id].get("heat_capacity", 1.0))
+		capacity[id] = Elements.thermal(id, "heat_capacity")
 		liquid[id] = 1 if Elements.is_liquid(id) else 0
 	var values := thermal.to_float32_array()
 	var total := 0.0
-	for i in cells:
-		var id := voxels[i * 4]
-		var c := capacity[id]
-		if liquid[id] == 1:
-			c *= float(voxels[i * 4 + 2]) / float(Elements.LIQUID_FULL)
-		total += c * values[i * 2] + values[i * 2 + 1]
+	for z in range(lo.z, hi.z):
+		for y in range(lo.y, hi.y):
+			for x in range(lo.x, hi.x):
+				var i := VoxelCodec.index(x, y, z)
+				var id := voxels[i * 4]
+				var c := capacity[id]
+				if liquid[id] == 1:
+					c *= float(maxi(voxels[i * 4 + 2], CAPACITY_FLOOR_UNITS)) / float(Elements.LIQUID_FULL)
+				total += c * values[i * 2] + values[i * 2 + 1]
 	return total
 
 
@@ -967,10 +1039,7 @@ func _rt_init() -> void:
 	thermal_fmt.usage_bits = fmt.usage_bits
 	_thermal_rid = _rd.texture_create(thermal_fmt, RDTextureView.new())
 	_rd.texture_clear(_thermal_rid, Color(ambient_temp, 0, 0, 0), 0, 1, 0, 1)
-	# Per-element initial temperatures for the thermal initialiser. Read through
-	# the table so the elements worker's `initial_temp` key applies as soon as it
-	# lands; rows without one start at ambient.
-	var initial := Elements.floats("initial_temp", ambient_temp).to_byte_array()
+	var initial := initial_temperatures(ambient_temp).to_byte_array()
 	_thermal_init_buffer = _rd.storage_buffer_create(initial.size(), initial)
 
 	var props := Elements.property_bytes()
@@ -1197,7 +1266,8 @@ func _rt_build_pipelines(from_source: bool) -> void:
 		_air_shaders[k] = _rd.shader_create_from_spirv(air_spirv[k])
 		_air_pipelines[k] = _rd.compute_pipeline_create(_air_shaders[k], _spec([AIR_GRID, AIR_SUB]))
 	_air_sets["air_downsample"] = _rd.uniform_set_create(
-		[_image_uniform(0), _image_uniform(1, _air_occ), _image_uniform(2, _air_src), _buffer_uniform(3, _elements_buffer)],
+		[_image_uniform(0), _image_uniform(1, _air_occ), _image_uniform(2, _air_src), _buffer_uniform(3, _elements_buffer),
+		_image_uniform(4, _thermal_rid)],
 		_air_shaders["air_downsample"], 0)
 	_air_sets["air_advect"] = _rd.uniform_set_create(
 		[_sampler_uniform(0, _air_vel[0]), _image_uniform(1, _air_occ), _image_uniform(2, _air_src), _image_uniform(3, _air_vel[1])],
@@ -1215,11 +1285,13 @@ func _rt_build_pipelines(from_source: bool) -> void:
 
 	_brush_shader = _rd.shader_create_from_spirv(brush_spirv)
 	_brush_pipeline = _rd.compute_pipeline_create(_brush_shader, _spec([GRID]))
-	_brush_set = _rd.uniform_set_create([_image_uniform(0)], _brush_shader, 0)
+	_brush_set = _rd.uniform_set_create(
+		[_image_uniform(0), _image_uniform(1, _thermal_rid), _buffer_uniform(2, _elements_buffer)], _brush_shader, 0)
 
 	_hydro_shader = _rd.shader_create_from_spirv(hydro_spirv)
 	_hydro_pipeline = _rd.compute_pipeline_create(_hydro_shader, _spec([GRID]))
-	_hydro_set = _rd.uniform_set_create([_image_uniform(0), _buffer_uniform(1, _elements_buffer)], _hydro_shader, 0)
+	_hydro_set = _rd.uniform_set_create(
+		[_image_uniform(0), _buffer_uniform(1, _elements_buffer), _image_uniform(2, _thermal_rid)], _hydro_shader, 0)
 
 	_density_shader = _rd.shader_create_from_spirv(density_spirv)
 	_density_pipeline = _rd.compute_pipeline_create(_density_shader, _spec([GRID]))
@@ -1401,6 +1473,10 @@ func _rt_tick(first_tick: int, count: int) -> void:
 		push[5] = offset.y
 		push[6] = offset.z
 		push[7] = Elements.REACTIONS.size()
+		push[8] = _float_bits(seconds_per_tick * thermal_speed)
+		push[9] = _float_bits(ambient_temp)
+		push[10] = _float_bits(ignite_chance)
+		push[11] = 0
 		var bytes := push.to_byte_array()
 		_rd.compute_list_bind_compute_pipeline(cl, _sim_pipeline)
 		_rd.compute_list_bind_uniform_set(cl, _sim_set, 0)
@@ -1515,7 +1591,7 @@ func _rt_air_step(cl: int, dt: int, tick_now: int) -> void:
 	if not _air_pipelines.has("air_project"):
 		return
 	var params := PackedFloat32Array([float(dt), air_buoyancy, air_drag, air_max_speed]).to_byte_array()
-	params.append_array(PackedInt32Array([tick_now, 0, 0, 0]).to_byte_array())
+	params.append_array(PackedInt32Array([tick_now, _float_bits(ambient_temp), 0, 0]).to_byte_array())
 	var iters := jacobi_iterations + (jacobi_iterations & 1) # even, so the result is in pres0
 	var order: Array = ["air_downsample", "air_advect", "air_divergence"]
 	for i in iters:
@@ -1601,9 +1677,9 @@ func _rt_paint_stroke(centers: Array[Vector3i], radius: int, element: int, mode:
 	_rt_occupancy_update()
 
 
-func _rt_brush_sphere(cl: int, center: Vector3i, radius: int, element: int, mode: int, seed: int, amount: int) -> void:
+func _rt_brush_sphere(cl: int, center: Vector3i, radius: int, element: int, mode: int, seed: int, amount: int, strength_bits: int = 0) -> void:
 	var groups := ceili(float(2 * radius + 1) / BRUSH_LOCAL_SIZE)
-	var push := PackedInt32Array([center.x, center.y, center.z, radius, element, mode, seed, amount, 0, 0, 0, 0])
+	var push := PackedInt32Array([center.x, center.y, center.z, radius, element, mode, seed, amount, 0, 0, 0, strength_bits])
 	var bytes := push.to_byte_array()
 	_rd.compute_list_set_push_constant(cl, bytes, bytes.size())
 	_rd.compute_list_dispatch(cl, groups, groups, groups)
@@ -1619,6 +1695,24 @@ func _rt_brush_box(cl: int, lo: Vector3i, hi: Vector3i, element: int, seed: int,
 	_rd.compute_list_set_push_constant(cl, bytes, bytes.size())
 	_rd.compute_list_dispatch(cl, ceili(size.x / float(BRUSH_LOCAL_SIZE)), ceili(size.y / float(BRUSH_LOCAL_SIZE)), ceili(size.z / float(BRUSH_LOCAL_SIZE)))
 	_rd.compute_list_add_barrier(cl)
+
+
+func _rt_paint_thermal_stroke(centers: Array[Vector3i], radius: int, kelvin: float) -> void:
+	if not _brush_pipeline.is_valid():
+		return
+	var mode := BrushMode.HEAT if kelvin >= 0.0 else BrushMode.COOL
+	var strength := _float_bits(absf(kelvin))
+	var cl := _rd.compute_list_begin()
+	_rd.compute_list_bind_compute_pipeline(cl, _brush_pipeline)
+	_rd.compute_list_bind_uniform_set(cl, _brush_set, 0)
+	for center in centers:
+		_rt_brush_sphere(cl, center, radius, 0, mode, 0, 0, strength)
+	_rd.compute_list_end()
+
+
+func _rt_record_thermal_stroke(id: int, centers: Array[Vector3i], radius: int, kelvin: float) -> void:
+	if _rt_edit_gpu().capture_stroke(id, centers, radius):
+		_rt_paint_thermal_stroke(centers, radius, kelvin)
 
 
 func _rt_paint_region(lo: Vector3i, hi: Vector3i, element: int) -> void:
@@ -1652,6 +1746,24 @@ func _rt_run_ops(ops: Array) -> void:
 	_rd.compute_list_end()
 	_rt_thermal_init()
 	_rt_occupancy_update()
+
+
+## Per-element initial temperatures (PALETTE_SIZE entries) for the thermal
+## initialiser and painting: `Elements.thermal(id, "initial_temp")`, with air
+## at the ambient temperature and unused ids at ambient too.
+static func initial_temperatures(ambient: float) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	out.resize(Elements.PALETTE_SIZE)
+	out.fill(ambient)
+	for id in Elements.count():
+		out[id] = ambient if id == Elements.Id.AIR else Elements.thermal(id, "initial_temp")
+	return out
+
+
+func _rt_update_initial_temps() -> void:
+	if _thermal_init_buffer.is_valid():
+		var bytes := initial_temperatures(ambient_temp).to_byte_array()
+		_rd.buffer_update(_thermal_init_buffer, 0, bytes.size(), bytes)
 
 
 ## Set every cell's temperature from its element (thermal_init.glsl). Only for
@@ -1875,6 +1987,13 @@ func _rt_readback(callback: Callable) -> void:
 func _rt_thermal_readback() -> void:
 	_rt_flush_render_preparation()
 	thermal_ready.emit.call_deferred(_rd.texture_get_data(_thermal_rid, 0))
+
+
+func _rt_state_readback() -> void:
+	_rt_flush_render_preparation()
+	var voxels := _rd.texture_get_data(_grid_rid, 0)
+	var thermal := _rd.texture_get_data(_thermal_rid, 0)
+	state_ready.emit.call_deferred(voxels, thermal)
 
 
 # --- debug / test data -----------------------------------------------------------

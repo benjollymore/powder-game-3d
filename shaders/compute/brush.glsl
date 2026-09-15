@@ -1,21 +1,32 @@
 #[compute]
 #version 450
 
-// Paints a sphere (modes 0-2) or an axis-aligned box (mode 3) of one element
-// into the voxel world. Dispatched over the bounding box; one thread per voxel.
-// Box mode is how scenarios are built on the GPU.
+// Paints a sphere (modes 0-2) or an axis-aligned box (mode 3, 4) of one
+// element into the voxel world, or heats / cools a sphere (modes 5, 6) in the
+// thermal layer without touching voxel bytes. Dispatched over the bounding
+// box; one thread per voxel. Box mode is how scenarios are built on the GPU.
+//
+// Painted material starts at its element's initial temperature with no latent
+// progress (an external source, docs/milestone/heat-brief.md contract 5);
+// erased cells keep their temperature, as the air left behind inherits it.
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
 layout(rgba8, set = 0, binding = 0) uniform restrict image3D grid;
+layout(rg32f, set = 0, binding = 1) uniform restrict image3D thermal;
+#include "elem.glslinc"
+layout(std430, set = 0, binding = 2) restrict readonly buffer Elems { Elem elems[]; };
 
 layout(push_constant, std430) uniform Params {
 	ivec4 center_radius;      // sphere: cx, cy, cz, radius (voxels); box: lo xyz, unused
-	uvec4 element_mode_seed;  // element id, mode (0 replace, 1 only into air, 2 erase, 3 box), seed, liquid amount
-	ivec4 box_hi;             // box: exclusive upper corner
+	uvec4 element_mode_seed;  // element id, mode (0 replace, 1 only into air, 2 erase, 3 box, 4 box only air, 5 heat, 6 cool), seed, liquid amount
+	ivec4 box_hi;             // box: exclusive upper corner; heat/cool: w = strength in kelvin (float bits)
 } pc;
 
 layout(constant_id = 0) const int GRID = 128;
+const uint MODE_ERASE = 2u;
+const uint MODE_HEAT = 5u;
+const uint MODE_COOL = 6u;
 
 uint hash(uint x) {
 	x ^= x >> 16;
@@ -28,24 +39,40 @@ uint hash(uint x) {
 
 void main() {
 	uint mode = pc.element_mode_seed.y;
-	ivec3 lo = (mode >= 3u) ? pc.center_radius.xyz : pc.center_radius.xyz - ivec3(pc.center_radius.w);
+	bool box = (mode == 3u || mode == 4u);
+	ivec3 lo = box ? pc.center_radius.xyz : pc.center_radius.xyz - ivec3(pc.center_radius.w);
 	ivec3 p = lo + ivec3(gl_GlobalInvocationID);
 	if (any(lessThan(p, ivec3(0))) || any(greaterThanEqual(p, ivec3(GRID)))) {
 		return;
 	}
-	if (mode >= 3u) {
+	int d2 = 0;
+	if (box) {
 		if (any(greaterThanEqual(p, pc.box_hi.xyz))) {
 			return;
 		}
 	} else {
 		ivec3 d = p - pc.center_radius.xyz;
 		int r = pc.center_radius.w;
-		if (dot(d, d) > r * r) {
+		d2 = dot(d, d);
+		if (d2 > r * r) {
 			return;
 		}
 	}
+	if (mode == MODE_HEAT || mode == MODE_COOL) {
+		// Radial falloff (R^2 - d^2) / R^2 with R = radius + 1, so the centre
+		// gets the full strength and the rim about a third of it. The
+		// division is exact whenever R^2 is a power of two, so heat followed
+		// by an equal cool restores the previous bytes exactly at radius 3.
+		int R = pc.center_radius.w + 1;
+		float weight = float(R * R - d2) / float(R * R);
+		float strength = intBitsToFloat(pc.box_hi.w) * weight;
+		vec2 tg = imageLoad(thermal, p).rg;
+		tg.x = (mode == MODE_HEAT) ? tg.x + strength : max(tg.x - strength, 1.0);
+		imageStore(thermal, p, vec4(tg, 0.0, 0.0));
+		return;
+	}
 	uint id = pc.element_mode_seed.x;
-	if (mode == 2u) {
+	if (mode == MODE_ERASE) {
 		id = 0u;
 	} else if (mode == 1u || mode == 4u) {
 		uvec4 cur = uvec4(imageLoad(grid, p) * 255.0 + 0.5);
@@ -55,6 +82,12 @@ void main() {
 	}
 	uint seed = hash(uint(p.x) * 73856093u ^ uint(p.y) * 19349663u ^ uint(p.z) * 83492791u
 			^ pc.element_mode_seed.z) & 0xFFu;
-	uint amount = (mode == 2u) ? 0u : pc.element_mode_seed.w;
+	uint amount = (mode == MODE_ERASE) ? 0u : pc.element_mode_seed.w;
 	imageStore(grid, p, vec4(uvec4(id, seed, amount, 0u)) / 255.0);
+	if (mode == MODE_ERASE) {
+		vec2 tg = imageLoad(thermal, p).rg;
+		imageStore(thermal, p, vec4(tg.x, 0.0, 0.0, 0.0));
+	} else {
+		imageStore(thermal, p, vec4(ELEM_INITIAL_TEMP(elems[id]), 0.0, 0.0, 0.0));
+	}
 }

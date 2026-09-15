@@ -19,7 +19,7 @@ func _initialize() -> void:
 	sim = load("res://scenes/sim_volume.tscn").instantiate()
 	sim.listen_to_time_controller = false
 	sim.current_scenario = "Empty"
-	sim.rule_flags = 3 # movement only: no reactions, no decay
+	sim.rule_flags = 3 | 8 # movement only: no reactions, decay or thermal physics (plumbing test)
 	sim.air_enabled = false
 	sim.hydro_enabled = false
 	root.add_child(sim)

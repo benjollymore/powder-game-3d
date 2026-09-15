@@ -36,6 +36,8 @@ CPU = [
     ("keep-result", "tests/milestone/keep_result.gd", 128),
     ("cell-inspector", "tests/milestone/cell_inspector.gd", 128),
     ("guard-queue", "tests/milestone/guard_queue.gd", 128),
+    ("thermal-init", "tests/milestone/thermal_init.gd", 128),
+    ("thermal-remap", "tests/milestone/thermal_remap.gd", 128),
 ]
 GPU = [
     ("physics128", "tests/gpu/run_gpu_tests.gd", 128),

@@ -18,15 +18,19 @@
 layout(local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
 
 layout(rgba8, set = 0, binding = 0) uniform restrict image3D grid;
-// Authoritative thermal layer: R temperature (K), G latent progress. Carried
-// with material through every swap so heat belongs to the cell's contents,
-// never to the grid location. No rule reads it yet (conduction lands next).
+// Authoritative thermal layer: R temperature (K), G latent progress in
+// joules. Carried with material through every swap so heat belongs to the
+// cell's contents, never to the grid location. Conduction, phase change and
+// ignition read it (docs/milestone/thermal-physics.md).
 layout(rg32f, set = 0, binding = 4) uniform restrict image3D thermal;
 
 #include "elem.glslinc"
+#include "thermal_common.glslinc"
 layout(std430, set = 0, binding = 1) restrict readonly buffer Elems { Elem elems[]; };
 
-// x = a | b << 8 | out_a << 16 | out_b << 24, y = probability * 65535.
+// x = a | b << 8 | out_a << 16 | out_b << 24, y = probability * 65535 | cost << 16,
+// z = minimum temperature to react (float bits, 0 = none), w = heat released
+// into each non-fire output in kelvin (float bits).
 layout(std430, set = 0, binding = 2) restrict readonly buffer Reacts { uvec4 reacts[]; };
 
 // Coarse air velocity field (xyz in voxels per tick, w = heat), linear sampled.
@@ -35,12 +39,19 @@ layout(set = 0, binding = 3) uniform sampler3D air_vel;
 layout(push_constant, std430) uniform Params {
 	uvec4 a; // tick, seed, reserved (zero), rule flags
 	uvec4 b; // partition offset x, y, z, reaction count
+	uvec4 c; // thermal seconds per tick, ambient K, ignition chance per tick (float bits), unused
 } pc;
 
 const uint RULE_NO_REACTIONS = 1u;
 const uint RULE_NO_DECAY = 2u;
 const uint RULE_NO_AIR = 4u;
 const uint RULE_NO_SPECIALS = 8u; // clone, void and the gunpowder fuse
+const uint RULE_NO_THERMAL = 16u;   // no conduction, phase change or ignition (plumbing tests)
+const float DX = 0.01;              // metres per voxel (VoxelSim.METRES_PER_VOXEL)
+// Liquid heat capacity scales with amount, floored so a film cannot carry an
+// absurd temperature from a tiny energy. Keep in sync with hydro.glsl and
+// VoxelSim.energy_total.
+const uint CAP_FLOOR = 4u;
 
 layout(constant_id = 0) const int GRID = 128;
 const uint AIR = 0u;
@@ -142,13 +153,54 @@ void swap_cells(int i, int j) {
 	vec2 tt = ct[i]; ct[i] = ct[j]; ct[j] = tt;
 }
 
+float cell_capacity(uint id, uint amount) {
+	float cap = ELEM_HEAT_CAPACITY(elems[id]);
+	if (is_liquid(id)) {
+		cap *= float(max(amount, CAP_FLOOR)) / float(FULL);
+	}
+	return cap;
+}
+float capacity_of(int i) { return cell_capacity(c[i].x, c[i].z); }
+// Fraction of a cell that counts toward a phase transition's latent energy.
+float fill_of(int i) { return is_liquid(c[i].x) ? float(max(c[i].z, CAP_FLOOR)) / float(FULL) : 1.0; }
+
 // Turn cell i into element id with that element's default amount, keeping its
-// seed. Byte w bits 3..7 are element-specific (clone armed, fuse lit) and
-// must not survive a transmutation; bits 0..2 are movement flags.
+// seed and temperature (a transmutation is not a heat source); stored latent
+// progress belongs to the old phase and is dropped. Fire is pinned to its
+// flame temperature.
+// Byte w bits 3..7 are element-specific (clone armed, fuse timer) and must
+// not survive a transmutation; bits 0..2 are movement flags.
 void set_element(int i, uint id) {
 	c[i].x = id;
 	c[i].z = is_liquid(id) ? FULL : 0u;
 	c[i].w &= 7u;
+	ct[i].y = 0.0;
+	float flame = ELEM_FIRE_TEMP(elems[id]);
+	if (flame > 0.0) { ct[i].x = flame; }
+}
+
+// Material created from nothing (clone emission) starts at its own initial
+// temperature rather than inheriting the air's.
+void set_element_fresh(int i, uint id) {
+	set_element(i, id);
+	ct[i] = vec2(ELEM_INITIAL_TEMP(elems[id]), 0.0);
+}
+
+// Heat carried by `m` amount units of liquid L moving from cell `from` to
+// cell `to` (amounts are written by the caller). A whole parcel entering an
+// empty cell exchanges thermal state with the air it displaces; otherwise
+// the receiver mixes by capacity-weighted mean and the donor is unchanged.
+void move_heat(int from, int to, uint L, uint m, uint from_old, uint to_old, uint from_new) {
+	if (m == 0u) {
+		return;
+	}
+	if (to_old == 0u && from_new == 0u) {
+		vec2 t = ct[from]; ct[from] = ct[to]; ct[to] = t;
+		return;
+	}
+	float Cm = ELEM_HEAT_CAPACITY(elems[L]) * float(m) / float(FULL);
+	float Cr = cell_capacity(to_old == 0u ? AIR : L, to_old);
+	ct[to].x = (Cr * ct[to].x + Cm * ct[from].x) / (Cr + Cm);
 }
 
 // Set cell i to hold `amount` of liquid L (0 makes it air), keeping its seed.
@@ -217,6 +269,10 @@ void rule_reactions() {
 				if (rnd() > p) {
 					break;
 				}
+				float min_t = uintBitsToFloat(re.z);
+				if (min_t > 0.0 && max(ct[i].x, ct[j].x) < min_t) {
+					break; // too cold for this rule; one rule per pair
+				}
 				uint new_a = fwd ? out_a : out_b;
 				uint new_b = fwd ? out_b : out_a;
 				// An input that survives as itself keeps its amount, minus the
@@ -225,6 +281,12 @@ void rule_reactions() {
 				else { set_element(i, new_a); }
 				if (new_b == b) { if (is_liquid(b)) { set_liquid(j, b, c[j].z > cost ? c[j].z - cost : 0u); } }
 				else { set_element(j, new_b); }
+				// Heat of reaction goes into the outputs that are not already flames.
+				float heat = uintBitsToFloat(re.w);
+				if (heat != 0.0) {
+					if (ELEM_FIRE_TEMP(elems[c[i].x]) <= 0.0) { ct[i].x += heat; }
+					if (ELEM_FIRE_TEMP(elems[c[j].x]) <= 0.0) { ct[j].x += heat; }
+				}
 				break;
 			}
 		}
@@ -286,7 +348,7 @@ void rule_special() {
 			for (int axis = 0; axis < 3; axis++) {
 				int j = i ^ (1 << axis);
 				if (c[j].x == AIR && rnd() < CLONE_RATE) {
-					set_element(j, copy);
+					set_element_fresh(j, copy);
 				}
 			}
 		} else if (me == VOID) {
@@ -338,10 +400,17 @@ bool liquid_column(int b, int t) {
 		return false;
 	}
 	uint L = tl ? top : bot;
-	uint S = c[t].z + c[b].z;
+	uint zb = c[b].z, zt = c[t].z;
+	uint S = zt + zb;
 	uint nb = min(stable_bottom(S), MAX_AMOUNT);
+	uint nt = S - nb;
+	if (nb > zb) {
+		move_heat(t, b, L, nb - zb, zt, zb, nt);
+	} else if (nb < zb) {
+		move_heat(b, t, L, zb - nb, zb, zt, nb);
+	}
 	set_liquid(b, L, nb);
-	set_liquid(t, L, S - nb);
+	set_liquid(t, L, nt);
 	return true;
 }
 
@@ -485,6 +554,10 @@ void spread_row(bool top_row, bool allow_air) {
 	int n = into_air ? n_all : n_liq;
 	uint share = total / uint(n);
 	uint rem = total % uint(n);
+	// Pooled liquid mixes fully (documented closure: a 2x2 row has no parcel
+	// order): the group's energy is shared over its new capacities.
+	float energy = 0.0;
+	float capacity = 0.0;
 	int k_out = 0;
 	for (int k = 0; k < 4; k++) {
 		int i = cells[k];
@@ -493,9 +566,20 @@ void spread_row(bool top_row, bool allow_air) {
 		if (!eligible) {
 			continue;
 		}
+		energy += capacity_of(i) * ct[i].x + ct[i].y;
 		uint amount = share + ((uint(k_out) < rem) ? 1u : 0u);
 		k_out++;
 		set_liquid(i, L, amount);
+		capacity += capacity_of(i);
+	}
+	float mixed = energy / capacity;
+	for (int k = 0; k < 4; k++) {
+		int i = cells[k];
+		uint id = c[i].x;
+		bool eligible = (id == L) || (into_air && id == AIR);
+		if (eligible) {
+			ct[i] = vec2(mixed, 0.0);
+		}
 	}
 	// Remnants: tiny amounts join the fullest neighbour rather than lingering.
 	for (int k = 0; k < 4; k++) {
@@ -513,6 +597,9 @@ void spread_row(bool top_row, bool allow_air) {
 			}
 		}
 		if (best >= 0) {
+			float Ci = capacity_of(i), Cb = capacity_of(best);
+			ct[best] = vec2((Cb * ct[best].x + Ci * ct[i].x) / (Cb + Ci), ct[best].y + ct[i].y);
+			ct[i].y = 0.0;
 			set_liquid(best, L, c[best].z + c[i].z);
 			set_liquid(i, L, 0u);
 		}
@@ -540,6 +627,94 @@ void rule_gas_spread() {
 		uint other = c[j].x;
 		if (other != me && is_gas(other) && !immovable(other)) {
 			swap_cells(i, j);
+		}
+	}
+}
+
+// --- heat --------------------------------------------------------------------
+
+// Flames are heat sources: they hold their flame temperature no matter what
+// they touch, for as long as they live.
+void pin_fire() {
+	for (int i = 0; i < 8; i++) {
+		float flame = ELEM_FIRE_TEMP(elems[c[i].x]);
+		if (flame > 0.0) { ct[i].x = flame; }
+	}
+}
+
+// Conduction across the block's twelve faces. Each face moves the canonical
+// transfer (thermal_common.glslinc), clamped to half the amount that would
+// equalise the pair so a large step can never overshoot; pairs are applied in
+// sequence so the update is unconditionally stable. Faces to cells outside
+// the box and to materials with zero conductivity carry nothing.
+void rule_thermal() {
+	float dt = uintBitsToFloat(pc.c.x);
+	pin_fire();
+	for (int i = 0; i < 8; i++) {
+		if (!in_bounds(pos[i])) { continue; }
+		for (int axis = 0; axis < 3; axis++) {
+			int bit = 1 << axis;
+			if ((i & bit) != 0) { continue; }
+			int j = i | bit;
+			if (!in_bounds(pos[j])) { continue; }
+			float ki = ELEM_CONDUCTIVITY(elems[c[i].x]);
+			float kj = ELEM_CONDUCTIVITY(elems[c[j].x]);
+			if (ki <= 0.0 || kj <= 0.0) { continue; }
+			bool i_low = (pos[i].x + GRID * (pos[i].y + GRID * pos[i].z)) < (pos[j].x + GRID * (pos[j].y + GRID * pos[j].z));
+			int lo = i_low ? i : j;
+			int hi = i_low ? j : i;
+			float k_lo = i_low ? ki : kj;
+			float k_hi = i_low ? kj : ki;
+			float C_lo = capacity_of(lo);
+			float C_hi = capacity_of(hi);
+			float q = canonical_transfer(k_lo, k_hi, ct[lo].x, ct[hi].x, DX, dt);
+			float q_eq = (ct[hi].x - ct[lo].x) * C_lo * C_hi / (C_lo + C_hi);
+			q = sign(q_eq) * min(abs(q), 0.5 * abs(q_eq));
+			ct[lo].x += q / C_lo;
+			ct[hi].x -= q / C_hi;
+		}
+	}
+	pin_fire();
+}
+
+// Phase change through the latent plateau and ignition by temperature. A
+// cell above hot_at accumulates latent progress while staying at hot_at, and
+// becomes hot_to once that progress reaches the lower phase's latent energy
+// (latent K x capacity, scaled by fill); cooling below cold_at mirrors this
+// with the same energy, released on transition. Flammables at or above their
+// ignition temperature catch with a per-tick chance.
+void rule_phase() {
+	float ignite = uintBitsToFloat(pc.c.z);
+	for (int i = 0; i < 8; i++) {
+		uint id = c[i].x;
+		if (id == AIR) { continue; }
+		float hot = ELEM_HOT_AT(elems[id]);
+		float cold = ELEM_COLD_AT(elems[id]);
+		if (hot > 0.0 || cold > 0.0) {
+			float C = capacity_of(i);
+			float fill = fill_of(i);
+			ct[i] = settle(ct[i], C, hot, cold);
+			uint hot_to = ELEM_HOT_TO(elems[id]);
+			uint cold_to = ELEM_COLD_TO(elems[id]);
+			if (hot > 0.0 && hot_to != 0u && ct[i].y > 0.0
+					&& ct[i].y >= ELEM_LATENT(elems[id]) * ELEM_HEAT_CAPACITY(elems[id]) * fill) {
+				set_element(i, hot_to);
+				ct[i] = vec2(hot, 0.0);
+				continue;
+			}
+			if (cold > 0.0 && cold_to != 0u && ct[i].y < 0.0
+					&& -ct[i].y >= ELEM_LATENT(elems[cold_to]) * ELEM_HEAT_CAPACITY(elems[cold_to]) * fill) {
+				set_element(i, cold_to);
+				ct[i] = vec2(cold, 0.0);
+				continue;
+			}
+		}
+		float ignition = ELEM_IGNITION_TEMP(elems[id]);
+		if (ignition > 0.0 && (flags_of(id) & FLAG_FLAMMABLE) != 0u && ct[i].x >= ignition) {
+			uint burn = ELEM_BURN_TO(elems[id]);
+			if (burn != 0u && rnd() < ignite) {
+				set_element(i, burn);
+			}
 		}
 	}
 }
@@ -573,6 +748,10 @@ void main() {
 		before_t[i] = ct[i];
 	}
 
+	if ((pc.a.w & RULE_NO_THERMAL) == 0u) {
+		rule_thermal();
+		rule_phase();
+	}
 	if ((pc.a.w & RULE_NO_SPECIALS) == 0u) {
 		rule_special();
 	}

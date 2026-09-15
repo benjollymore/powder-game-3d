@@ -5,6 +5,11 @@ layout(rgba8, set = 0, binding = 0) uniform restrict image3D grid;
 layout(std430, set = 0, binding = 1) readonly buffer Result {
     ivec4 hit; ivec4 normal; ivec4 target; ivec4 stats;
 } pick;
+// Painted material starts at its element's initial temperature; an erased
+// cell keeps its temperature (the air left behind inherits it).
+layout(rg32f, set = 0, binding = 2) uniform restrict image3D thermal;
+#include "../elem.glslinc"
+layout(std430, set = 0, binding = 3) restrict readonly buffer Elems { Elem elems[]; };
 layout(push_constant, std430) uniform Params {
     ivec4 brush; // grid size, radius, element, mode (ONLY_AIR/ERASE)
     ivec4 material; // seed, initial liquid amount, unused, unused
@@ -25,4 +30,9 @@ void main() {
     uint amount = pc.brush.w == 2 ? 0u : uint(pc.material.y);
     uint seed = hash(uint(p.x) * 73856093u ^ uint(p.y) * 19349663u ^ uint(p.z) * 83492791u ^ uint(pc.material.x)) & 255u;
     imageStore(grid, p, vec4(uvec4(id, seed, amount, 0u)) / 255.0);
+    if (pc.brush.w == 2) {
+        imageStore(thermal, p, vec4(imageLoad(thermal, p).r, 0.0, 0.0, 0.0));
+    } else {
+        imageStore(thermal, p, vec4(ELEM_INITIAL_TEMP(elems[id]), 0.0, 0.0, 0.0));
+    }
 }
