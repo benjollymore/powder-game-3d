@@ -9,4 +9,6 @@ ok: live pointer samples never dispatch authored or immediate geometry
 ok: live source retains frozen stroke metadata
 ok: viewport primary release finishes a tick-owned source
 ok: focus loss cancels instead of adding a pending click
-Paint tools: 9 checks, 0 failures
+ok: 300 motion events in one frame are thinned yet leave a face-connected pending line (91 cells)
+ok: flush records the whole line once and resets the per-frame sample count
+Paint tools: 11 checks, 0 failures

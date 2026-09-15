@@ -22,7 +22,7 @@ ok: GUI step consumes the completed paused click exactly once
 ok: live held source survives the production per-frame Input guard
 ok: active-frame held source adds multiple real grains while simulation runs
 ok: live painting leaves authored snapshot/history separate
-WORKFLOW_MATERIAL sand_before_click=587 sand_after_step=588 sand_after_live_hold=597
+WORKFLOW_MATERIAL sand_before_click=587 sand_after_step=588 sand_after_live_hold=605
 ok: GUI Return restores exact authored construction after live input
 ok: GUI Undo after Return removes only the last authored sand stroke
 ok: workflow restores the original OS cursor position

@@ -1,0 +1,18 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: sixteen rays per frame across a flat face leave one face-connected line (21 cells)
+ok: every cell along the flat path is painted
+ok: dense flat stroke preserves every wall cell
+ok: dense stroke undo restores exact bytes
+FAIL: flat-face result is identical with one or sixteen rays per frame
+ok: sparse stroke undo restores exact bytes
+ok: stroke around a two-face corner is one face-connected line (18 cells)
+ok: the line passes the diagonal edge cell outside both faces
+ok: both faces of the corner are painted end to end
+ok: corner stroke preserves every wall cell
+ok: no material was written inside the solid
+ok: corner stroke undo restores exact bytes
+ok: a missed sample breaks the segment (only the two endpoints changed, 2 cells)
+ok: broken stroke undo restores exact bytes
+SURFACE_STROKE_CHECKS 14 FAILURES 1

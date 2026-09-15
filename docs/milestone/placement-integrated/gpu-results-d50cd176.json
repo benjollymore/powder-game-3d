@@ -1,9 +1,9 @@
 [
   {
     "name": "surface128",
-    "pass": false,
-    "exit": 1,
-    "seconds": 61.08,
+    "pass": true,
+    "exit": 0,
+    "seconds": 4.37,
     "command": [
       "godot",
       "--path",

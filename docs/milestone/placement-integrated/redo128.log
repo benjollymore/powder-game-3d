@@ -23,5 +23,5 @@ ok: Open/replacement clears both history stacks and byte totals
 ok: Empty requested during inverse capture remains queued
 ok: queued Empty executes after Undo and clears both directions
 ok: reset during inverse capture rejects stale restoration and clears unavailable history
-REDO_MEASUREMENT grid=128 full_bytes=8388608 tiny_bytes=12288 action_completion_us=[3592, 5013, 5306, 5009, 5147, 4914, 4651, 4420, 5674]
+REDO_MEASUREMENT grid=128 full_bytes=8388608 tiny_bytes=12288 action_completion_us=[9389, 11753, 6916, 8167, 8051, 8641, 7582, 6426, 10020]
 Editor Redo GPU: 22 checks, 0 failures

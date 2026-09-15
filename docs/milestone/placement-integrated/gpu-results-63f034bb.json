@@ -3,7 +3,7 @@
     "name": "pending-paint128",
     "pass": true,
     "exit": 0,
-    "seconds": 2.99,
+    "seconds": 4.87,
     "command": [
       "godot",
       "--path",

@@ -12,7 +12,7 @@ ok: erase can target the retained section boundary
 ok: out-of-world ray is a miss
 ok: invalid zero-length ray is rejected
 ok: all preview picking leaves exact GPU material bytes unchanged
-surface two-ray transaction completion_us=4571 undo_bytes=18432
+surface two-ray transaction completion_us=4845 undo_bytes=18432
 ok: fast flat-face surface stroke is connected at radius zero
 ok: surface additive stroke preserves every underlying wall cell
 ok: surface undo captures local tiles, not the world (12 bytes per cell with thermal)
@@ -23,14 +23,29 @@ ok: cap stroke undo restores all packed bytes exactly
 ok: old preview initially sees original wall
 ok: live GPU stamp re-picks a newly inserted nearer surface atomically
 ok: old ray/gesture intent cannot replace newer preview
-SCRIPT ERROR: Invalid call to function '_receive_pick' in base 'Node3D (interaction_lab.gd)'. Expected 3 argument(s).
-          at: _run (res://tests/milestone/surface_pick_gpu.gd:124)
-          GDScript backtrace (most recent call first):
-              [0] _run (res://tests/milestone/surface_pick_gpu.gd:124)
-              [1] query (res://tests/milestone/surface_pick_gpu.gd:28)
-              [2] <anonymous lambda> (res://tests/milestone/surface_pick_gpu.gd:27)
-              [3] _deliver_surface_pick (res://scripts/sim/voxel_sim.gd:585)
-ERROR: Surface GPU watchdog expired
-   at: push_error (core/variant/variant_utility.cpp:1024)
-   GDScript backtrace (most recent call first):
-       [0] <anonymous lambda> (res://tests/milestone/surface_pick_gpu.gd:9)
+ok: a pick id that is not newer than the shown one cannot replace the preview
+ok: an authored edit does not reject the preview: it is informational and painting re-picks (placement contract 3)
+ok: world reset epoch rejects otherwise matching preview
+ok: live preview tolerates world evolution while atomic stamping owns correctness
+ok: axis0 sign-1 returns exact face normal and adjacent target
+ok: axis0 sign1 returns exact face normal and adjacent target
+ok: axis1 sign-1 returns exact face normal and adjacent target
+ok: axis1 sign1 returns exact face normal and adjacent target
+ok: axis2 sign-1 returns exact face normal and adjacent target
+ok: axis2 sign1 returns exact face normal and adjacent target
+ok: camera inside solid cannot invent an outside add face
+ok: camera inside solid may erase that exact hit cell
+ok: diagonal ray skips wall touched only at an edge
+ok: ray pointing away from the volume does not produce a boundary hit
+ok: surface held source adds 24 actual grains over120 ticks at batch1, got24
+ok: surface held source adds 24 actual grains over120 ticks at batch3, got24
+ok: atomic surface emission and material state are identical at batch3
+ok: surface held source adds 24 actual grains over120 ticks at batch7, got24
+ok: atomic surface emission and material state are identical at batch7
+ok: surface heat raises the picked hit cell by the full strength (293.15 -> 333.15)
+ok: the rim of the sphere warms less than its centre, matching the workplane falloff
+ok: the sphere is centred on the hit cell: wall below and air above warm by the same falloff (37.50 / 37.50 K)
+ok: surface heating leaves every voxel byte untouched
+ok: an equal surface cool restores the previous temperatures exactly
+ok: a slow and a fast surface heat stroke over the same path deposit identical temperatures
+Surface GPU: 46 checks, 0 failures
