@@ -1,6 +1,6 @@
 # Autonomous milestone status
 
-Updated 2026-09-14 22:59 UTC. Work continues until the user checks in; four hours is an estimate, not a deadline. Integration checkout: `powder-game-3d-discovery/fundamentals`, branch `milestone/fundamentals`. The original main checkout is preserved.
+Updated 2026-09-15 01:55 UTC. The coordinating session was interrupted after `7fee5fa` and resumed from its transcript; work continues until the user checks in; four hours is an estimate, not a deadline. Integration checkout: `powder-game-3d-discovery/fundamentals`, branch `milestone/fundamentals`. The original main checkout is preserved.
 
 ## Current result
 
@@ -31,12 +31,19 @@ Subsequent active-input testing fixed Space also activating a focused GUI button
 - Later integrated checks passed **203 leaf checks**, **102 liquid-path checks**, **61 section-depth checks**, and **24 full workflow checks**, with archive/action guards rerun. [Profiling and integration evidence](gpu-profiling.md). GPU timestamp reporting now explicitly reports unavailable data on the pinned Metal backend rather than zero pass cost.
 - Twenty-second [ordinary scheduler runs](editor-scheduling.md) with live surface previews kept approximately 120 rendered frames/s at both grid sizes and achieved their respective 180/120 simulation ticks/s. Both small-bowl runs restored the authored build exactly and held renderer-reported video memory flat. Four later reservoir/forest runs also maintained target simulation rates and exact Return; the 256³ reservoir averaged 89 rendered frames/s at the former 0.75 scale. Native-resolution FXAA averaged 83 frames/s in a separate reservoir run. These remain short, scoped measurements.
 
+## Integrated since the interruption
+
+- **File shortcuts.** Cmd/Ctrl+S saves a named build without a chooser, Cmd/Ctrl+Shift+S always asks for a path, Cmd/Ctrl+O enters the guarded Open workflow. Plain sandbox keys now require no modifier, so Cmd/Ctrl+P/N/X/B no longer pause, step or change tools, and Undo/Redo from a focused text field stays in that field. CPU 15 checks; GPU 20 checks at each grid size. The first GPU run failed one check because the fixture painted the default Water and compared against Sand; the fixture now selects Sand and the compound check is split into three. [Evidence](shortcuts-liquid-integrated/).
+- **Ordinary thin liquid.** Paused isolated or one-cell-thick liquid was pickable but invisible. Nonfalling liquid with open neighbours on both sides of an axis now renders as an amount-aware, gravity-aligned slab; a nominal-full fast path keeps the unchanged 256 reservoir within 0.08–0.10 ms of the original shader. Coordinator reruns: 138 geometry, 119 combined-interface and 28 unchanged-control checks, plus the existing 145/66/61/102 overflow and liquid suites. Tilted partial films render as lattice steps and the one-cell to two-cell topology switch is visible; see [ordinary-liquid.md](ordinary-liquid.md).
+- **Gravity and plane-constraint mechanics.** The [declared experiment](mechanics-experiment-plan.md) is implemented and evaluated in [mechanics-motion.md](mechanics-motion.md). The plan's original claim that a flat plane discriminates PIC from APIC was wrong for a purely translating cluster (tensor-product B-spline moments cancel), so the lower cluster now carries a 5 rad/s rotation. All declared gates pass against binary64 ledgers; PIC's plane angular residual 3.8e-4 is genuine method loss, APIC balances to 5e-9. Coordinator reruns: 12 admission, 84 force-free and 59 mechanics GPU checks. This is still an isolated 27-particle reference with no pressure, friction or production coupling.
+- **Coordinator regression.** 15 CPU suites and 16 GPU suites pass on `2ac4ab9`/`e4474f8`. The 256 document-protection suite failed 10 of 31 checks once while the user's own Godot session shared the GPU, then passed 32/32 alone; both logs are kept. Treat GPU suite results as valid only from an otherwise idle GPU.
+
 ## Active follow-through
 
-1. Implement conventional Save/Open shortcuts and stop modified keys from leaking into plain sandbox actions. Parsed input reproduced Cmd/Ctrl+P/N pausing/stepping and X/B changing tools; file commands will reuse the validated archive/protection state machine.
-2. Finish the separate ordinary-liquid omission fix: paused isolated water/oil cells can be pickable but invisible even without overflow. A bounded thin-feature representation passes coverage gates. Its first version slowed unchanged bulk scenes; an optimized nominal-full interval fast path is under final regression review.
-3. Implement the declared [gravity and plane-constraint experiment](mechanics-experiment-plan.md) with impulse, torque, work, transfer-loss and rejected-step accounting. The [enthalpy transport reference](enthalpy-transport.md) already demonstrates why production needs an explicit accepted-transfer contract; the [stationary thermal comparison](thermal-cached.md) remains an isolated candidate.
-4. Extend integrated repeated-session checks to the protection and rendering changes, including explicit dialog input, normal scheduling, retained history and memory trends. Preserve each earlier run's revision and viewport scope.
+1. Extend the repeated-session soak to the protection, shortcut and thin-liquid changes: real dialog input for Save/Discard/Cancel, Save As, radius-zero paused water on screen, normal scheduling and retained history across cycles, with memory trends at both grid sizes. In progress (editing worker).
+2. Identify and fix the next demonstrated rendering defect from the known list (regular isosurface bisection moving above-threshold entries inward, wall/water surface noise, pinholes, slab/isosurface topology switch), with matched captures, unchanged physical bytes and a reservoir cost measurement. In progress (rendering worker).
+3. Independent adversarial review of the shortcut routing and thin-liquid classifier against the brief's contracts. In progress (simulation worker, read-only).
+4. Decide the next physics step with the user: the isolated momentum, thermal and mechanics references establish narrow properties; the comparison against production on a momentum-carrying pour, containment, pressure communication, heat transfer and a moving obstacle has not been started and needs agreed scenes and budgets.
 
 ## Architectural position
 
