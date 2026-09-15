@@ -781,10 +781,14 @@ func _release_shortcuts() -> void:
 
 
 ## Layouts without Latin letters report another keycode for the S key; the
-## physical key is the fallback for application shortcuts.
+## physical key is the fallback only then. A different Latin letter on that
+## physical position (Colemak R, Dvorak R, QWERTZ Y) is that letter, as in
+## Godot's own editor shortcuts.
 func _shortcut_key(event: InputEventKey, accepted: Array) -> int:
 	if event.keycode in accepted:
 		return event.keycode
+	if event.keycode >= KEY_A and event.keycode <= KEY_Z:
+		return KEY_NONE
 	return event.physical_keycode if event.physical_keycode in accepted else KEY_NONE
 
 

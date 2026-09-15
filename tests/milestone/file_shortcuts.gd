@@ -130,6 +130,28 @@ func run() -> void:
 	physical(KEY_S, KEY_NONE, true, "")
 	physical(KEY_S, KEY_NONE, false, "")
 	check(files.queued_dialog.is_empty(), "an unmodified physical S key is not a file shortcut")
+	# Other Latin letters on the same physical positions are those letters.
+	physical(KEY_S, KEY_R, true)
+	physical(KEY_S, KEY_R, false)
+	check(files.queued_dialog.is_empty(), "Colemak Cmd+R (physical S) does not Save (queued: '%s')" % files.queued_dialog)
+	physical(KEY_O, KEY_R, true)
+	physical(KEY_O, KEY_R, false)
+	check(files.queued_dialog.is_empty(), "Dvorak Cmd+R (physical O) does not Open (queued: '%s')" % files.queued_dialog)
+	var undo_before: int = editor.undo_requests
+	physical(KEY_Z, KEY_Y, true)
+	physical(KEY_Z, KEY_Y, false)
+	check(editor.undo_requests == undo_before, "QWERTZ Cmd+Y (physical Z) does not Undo")
+	physical(KEY_S, 0x44B, true) # Cyrillic ы has no Latin keycode; physical S is the intended fallback
+	physical(KEY_S, 0x44B, false)
+	check(files.queued_dialog == "save_current", "Cyrillic Cmd+physical S still saves (queued: '%s')" % files.queued_dialog)
+	files.queued_dialog = ""
+	files.queued_dialog = "save"
+	editor.capturing = true
+	files.message.text = "Finishing edit…"
+	files._queue_dialog("open")
+	check(files.queued_dialog == "save" and files.message.text == "Finishing edit…", "a rejected request keeps the pending-capture message on screen")
+	editor.capturing = false
+	files.queued_dialog = ""
 	editor.queue_free()
 	await process_frame
 	print("File shortcuts CPU: %d checks, %d failures" % [checks, failures])

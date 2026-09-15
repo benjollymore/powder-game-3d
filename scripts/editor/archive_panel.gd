@@ -79,21 +79,27 @@ func request_save(save_as := false) -> void:
 func _queue_dialog(which: String, from_guard := false) -> void:
 	var guard: Node = editor.get("document_guard")
 	if operation != "":
-		message.text = "A file operation is still running; try again when it finishes."
+		_reject("A file operation is still running; try again when it finishes.")
 		return
 	if _modal:
-		message.text = "Close the open dialog first."
+		_reject("Close the open dialog first.")
 		return
 	if queued_dialog != "":
-		message.text = "A file action is already waiting; finish it first."
+		_reject("A file action is already waiting; finish it first.")
 		return
 	if not from_guard and is_instance_valid(guard) and not guard.state.is_empty():
-		message.text = "Answer the unsaved-build dialog first."
+		_reject("Answer the unsaved-build dialog first.")
 		return
 	editor.cancel_pending_paint()
 	editor._end_stroke()
 	queued_dialog = which
 	message.text = "Finishing edit…" if editor.capturing else ""
+
+func _reject(text: String) -> void:
+	# A queued action already reporting its pending capture keeps that message.
+	if queued_dialog != "" and editor.capturing and message.text == "Finishing edit…":
+		return
+	message.text = text
 
 func _begin_modal() -> void:
 	editor._release_shortcuts()
