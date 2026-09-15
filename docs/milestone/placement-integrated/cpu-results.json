@@ -20,7 +20,7 @@
     "name": "unit256",
     "pass": true,
     "exit": 0,
-    "seconds": 22.7,
+    "seconds": 22.4,
     "command": [
       "godot",
       "--path",
@@ -37,7 +37,7 @@
     "name": "gestures",
     "pass": true,
     "exit": 0,
-    "seconds": 0.87,
+    "seconds": 0.88,
     "command": [
       "godot",
       "--path",
@@ -54,7 +54,7 @@
     "name": "editing-unit",
     "pass": true,
     "exit": 0,
-    "seconds": 0.29,
+    "seconds": 0.31,
     "command": [
       "godot",
       "--path",
@@ -68,10 +68,27 @@
     ]
   },
   {
+    "name": "interaction-unit",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.3,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/placement",
+      "--headless",
+      "-s",
+      "res://tests/discovery/interaction_unit.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/interaction-unit"
+    ]
+  },
+  {
     "name": "paint-tools",
     "pass": true,
     "exit": 0,
-    "seconds": 0.49,
+    "seconds": 0.48,
     "command": [
       "godot",
       "--path",
@@ -88,7 +105,7 @@
     "name": "brush-shape",
     "pass": true,
     "exit": 0,
-    "seconds": 0.49,
+    "seconds": 0.48,
     "command": [
       "godot",
       "--path",
@@ -139,7 +156,7 @@
     "name": "editor-keyboard",
     "pass": true,
     "exit": 0,
-    "seconds": 0.49,
+    "seconds": 0.48,
     "command": [
       "godot",
       "--path",
@@ -173,7 +190,7 @@
     "name": "pending-gesture",
     "pass": true,
     "exit": 0,
-    "seconds": 0.29,
+    "seconds": 0.3,
     "command": [
       "godot",
       "--path",
@@ -190,7 +207,7 @@
     "name": "surface-feedback",
     "pass": true,
     "exit": 0,
-    "seconds": 0.48,
+    "seconds": 0.49,
     "command": [
       "godot",
       "--path",
@@ -207,7 +224,7 @@
     "name": "archive-format",
     "pass": true,
     "exit": 0,
-    "seconds": 0.29,
+    "seconds": 0.3,
     "command": [
       "godot",
       "--path",
@@ -224,7 +241,7 @@
     "name": "archive-job",
     "pass": true,
     "exit": 0,
-    "seconds": 0.87,
+    "seconds": 0.88,
     "command": [
       "godot",
       "--path",
@@ -241,7 +258,7 @@
     "name": "archive-panel",
     "pass": true,
     "exit": 0,
-    "seconds": 2.22,
+    "seconds": 2.03,
     "command": [
       "godot",
       "--path",
@@ -292,7 +309,7 @@
     "name": "heat-ui",
     "pass": true,
     "exit": 0,
-    "seconds": 0.88,
+    "seconds": 0.87,
     "command": [
       "godot",
       "--path",
@@ -309,7 +326,7 @@
     "name": "keep-result",
     "pass": true,
     "exit": 0,
-    "seconds": 0.59,
+    "seconds": 0.58,
     "command": [
       "godot",
       "--path",
@@ -326,7 +343,7 @@
     "name": "cell-inspector",
     "pass": true,
     "exit": 0,
-    "seconds": 0.29,
+    "seconds": 0.3,
     "command": [
       "godot",
       "--path",
@@ -343,7 +360,7 @@
     "name": "read-world-fifo",
     "pass": true,
     "exit": 0,
-    "seconds": 0.58,
+    "seconds": 0.61,
     "command": [
       "godot",
       "--path",
@@ -360,7 +377,7 @@
     "name": "examples128",
     "pass": true,
     "exit": 0,
-    "seconds": 8.79,
+    "seconds": 8.81,
     "command": [
       "godot",
       "--path",
@@ -377,7 +394,7 @@
     "name": "examples256",
     "pass": true,
     "exit": 0,
-    "seconds": 74.86,
+    "seconds": 70.33,
     "command": [
       "godot",
       "--path",
@@ -411,7 +428,7 @@
     "name": "thermal-init",
     "pass": true,
     "exit": 0,
-    "seconds": 0.79,
+    "seconds": 0.88,
     "command": [
       "godot",
       "--path",
@@ -428,7 +445,7 @@
     "name": "thermal-remap",
     "pass": true,
     "exit": 0,
-    "seconds": 0.3,
+    "seconds": 0.62,
     "command": [
       "godot",
       "--path",

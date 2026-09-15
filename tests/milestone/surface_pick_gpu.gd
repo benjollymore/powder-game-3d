@@ -118,7 +118,7 @@ func _run() -> void:
 	lab.pick_cache.clear()
 	lab.pick_intent = 5
 	result = await query(ray())
-	lab._receive_pick(result, 4)
+	lab._receive_pick(result, lab.pick_shown_id + 1, 4) # newer id, stale intent
 	check(lab.pick_cache.is_empty(), "old ray/gesture intent cannot replace newer preview")
 	sim.paint(Vector3i(1, 1, 1), 0, Elements.Id.SAND)
 	lab._receive_pick(result, 5)
