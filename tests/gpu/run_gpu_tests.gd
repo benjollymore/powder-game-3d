@@ -49,6 +49,7 @@ func _run() -> void:
 		["_test_heat_two_cell_exchange", 3], ["_test_heat_closed_box_equilibrium", 3],
 		["_test_heat_falling_water_pool", 3], ["_test_ice_plateau", 3], ["_test_water_over_lava", 2],
 		["_test_wood_ignites_by_conduction", 2], ["_test_heat_brush_roundtrip", 3],
+		["_test_scenario_volcano", 0], ["_test_scenario_ice_cave", 0], ["_test_scenario_boiler", 0], ["_test_scenario_foundry", 0],
 		["_test_large_grid_smoke", 0],
 	]
 	for t in tests:
@@ -741,6 +742,91 @@ func _test_heat_brush_roundtrip() -> void:
 	_sim.paint_thermal(mid, 3, -50.0)
 	var cooled: Array = await _run_and_read_state(0)
 	check(cooled[1] == initial[1] and cooled[0] == world, "an equal cool restores the thermal bytes exactly")
+
+
+# --- showcase scenarios (grid 128 = reference box, so coordinates match scenarios.gd) ---
+
+func _upload_scenario(name: String) -> PackedByteArray:
+	var world := Scenarios.build(name)
+	_sim.upload(world)
+	return world
+
+
+func _mean_temp_of(voxels: PackedByteArray, thermal: PackedByteArray, id: int) -> float:
+	var total := 0.0
+	var n := 0
+	for i in voxels.size() / 4:
+		if voxels[i * 4] == id:
+			total += thermal.decode_float(i * 8)
+			n += 1
+	return total / n if n > 0 else 0.0
+
+
+func _test_scenario_volcano() -> void:
+	# Lava spilling off the mount sinks into the pool: contact with water sheds
+	# roughly 6 J per tick per face, so a lava cell reaches its 1000 K crust
+	# within a few hundred ticks and a water cell boils within a few hundred
+	# more (water_over_lava: boiling by ~850). The spill itself takes ~100.
+	var world := _upload_scenario("Volcano")
+	var before: PackedInt64Array = _sim.histogram(world)
+	var state: Array = await _run_and_read_state(2500)
+	var after: PackedInt64Array = _sim.histogram(state[0])
+	var crust_in_pool := _count_in(state[0], Vector3i(4, 4, 4), Vector3i(124, 12, 124), Elements.Id.STONE) - _count_in(world, Vector3i(4, 4, 4), Vector3i(124, 12, 124), Elements.Id.STONE)
+	check(crust_in_pool > 0, "lava that reached the pool crusted to stone (%d cells)" % crust_in_pool)
+	check(after[Elements.Id.STEAM] > 0, "pool water boiled into steam (%d cells)" % after[Elements.Id.STEAM])
+	check(after[Elements.Id.WALL] == before[Elements.Id.WALL], "floor intact")
+
+
+func _test_scenario_ice_cave() -> void:
+	# An ice face against 1500 K embers takes ~13 J per tick; an ice cell needs
+	# ~190 J to reach and cross its plateau, so column bases melt within tens
+	# of ticks, and the meltwater on the embers boils within a few hundred.
+	var world := _upload_scenario("Ice cave")
+	var before: PackedInt64Array = _sim.histogram(world)
+	var water_seen := false
+	var state: Array = []
+	for step in 15:
+		state = await _run_and_read_state(100)
+		if _sim.histogram(state[0])[Elements.Id.WATER] > 0:
+			water_seen = true
+			break
+	state = await _run_and_read_state(1000)
+	var after: PackedInt64Array = _sim.histogram(state[0])
+	check(after[Elements.Id.ICE] < before[Elements.Id.ICE], "ice melted (%d of %d left)" % [after[Elements.Id.ICE], before[Elements.Id.ICE]])
+	check(water_seen or after[Elements.Id.WATER] > 0, "meltwater appeared")
+	check(after[Elements.Id.STEAM] > 0, "meltwater boiled on the embers (%d steam)" % after[Elements.Id.STEAM])
+	check(after[Elements.Id.WALL] == before[Elements.Id.WALL], "bowl intact")
+
+
+func _test_scenario_boiler() -> void:
+	# Heat crosses two cells of stone floor (diffusivity ~0.005 cell²/tick, so
+	# ~1000 ticks to warm the water side), then a bottom water cell needs
+	# ~2600 J at ~2 J per tick to boil: expect steam by ~2500 ticks, and it
+	# rises ~30 cells to the lid and 28 up the pipe within a few hundred more.
+	var world := _upload_scenario("Boiler")
+	var before: PackedInt64Array = _sim.histogram(world)
+	var state: Array = await _run_and_read_state(4000)
+	var after: PackedInt64Array = _sim.histogram(state[0])
+	var vented := _count_in(state[0], Vector3i(0, 88, 0), Vector3i(GRID, GRID, GRID), Elements.Id.STEAM)
+	check(after[Elements.Id.STEAM] > 0, "the tank water boiled (%d steam cells)" % after[Elements.Id.STEAM])
+	check(vented > 0, "steam left through the vent pipe (%d cells above the pipe)" % vented)
+	check(after[Elements.Id.WALL] == before[Elements.Id.WALL], "pipe intact")
+
+
+func _test_scenario_foundry() -> void:
+	# Metal diffuses ~0.1 cell² per tick, so the bar's ice end twelve cells past
+	# the lava contact warms on a ~1500-tick scale; the lava loses heat only
+	# through the bar (the basin is wall, k = 0), so its mean temperature must fall.
+	var world := _upload_scenario("Foundry")
+	var before: PackedInt64Array = _sim.histogram(world)
+	var state: Array = await _run_and_read_state(3000)
+	var after: PackedInt64Array = _sim.histogram(state[0])
+	var far_end := Vector3i(76, 13, 64)
+	var far_temp := _temp_at(state[1], far_end)
+	var lava_mean := _mean_temp_of(state[0], state[1], Elements.Id.LAVA)
+	check(state[0][VoxelCodec.index(far_end.x, far_end.y, far_end.z) * 4] == Elements.Id.METAL and far_temp > 330.0, "the ice end of the bar warmed (%.1f K)" % far_temp)
+	check(after[Elements.Id.ICE] < before[Elements.Id.ICE], "the bar melted into the ice (%d of %d left)" % [after[Elements.Id.ICE], before[Elements.Id.ICE]])
+	check(lava_mean < 1500.0 - 5.0 and lava_mean > 0.0, "the lava around the bar cooled (mean %.1f K)" % lava_mean)
 
 
 func _test_oil_floats() -> void:

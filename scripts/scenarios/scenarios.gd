@@ -20,6 +20,10 @@ const GUNPOWDER := Elements.Id.GUNPOWDER
 const ACID := Elements.Id.ACID
 const CLONE := Elements.Id.CLONE
 const VOID := Elements.Id.VOID
+const ICE := Elements.Id.ICE
+const LAVA := Elements.Id.LAVA
+const STONE := Elements.Id.STONE
+const METAL := Elements.Id.METAL
 
 const DEFAULT := "Demo"
 ## Reference box the coordinates below are written in.
@@ -27,7 +31,7 @@ const REF := 128
 
 
 static func names() -> PackedStringArray:
-	return PackedStringArray(["Demo", "Dam break", "U-bend", "Pressure pipe", "Forest fire", "Oil spill", "Steam vent", "Candle", "Powder keg", "Acid rain", "Empty"])
+	return PackedStringArray(["Demo", "Dam break", "U-bend", "Pressure pipe", "Forest fire", "Oil spill", "Steam vent", "Candle", "Powder keg", "Acid rain", "Volcano", "Ice cave", "Boiler", "Foundry", "Empty"])
 
 
 ## Primitive ops (already scaled to the grid) that make up a scenario.
@@ -50,6 +54,10 @@ static func ops(name: String) -> Array:
 		"Candle": _candle(data)
 		"Powder keg": _powder_keg(data)
 		"Acid rain": _acid_rain(data)
+		"Volcano": _volcano(data)
+		"Ice cave": _ice_cave(data)
+		"Boiler": _boiler(data)
+		"Foundry": _foundry(data)
 		"Empty": _floor(data)
 		_: _demo(data)
 	var out := _ops
@@ -177,6 +185,52 @@ static func _acid_rain(data: PackedInt32Array) -> void:
 	_box(data, Vector3i(42, 30, 42), Vector3i(86, 40, 86), SAND)
 	_box(data, Vector3i(52, 100, 52), Vector3i(76, 102, 76), CLONE)        # tray
 	_box(data, Vector3i(54, 102, 54), Vector3i(74, 103, 74), ACID)         # seed rests on the tray
+
+
+## A lava lake on a stone mount spills into the pool around its base: the
+## lava crusts to stone where it meets water and the water boils off as steam.
+## Temperatures come from each element's initial_temp (lava 1500 K).
+static func _volcano(data: PackedInt32Array) -> void:
+	_floor(data)
+	_box(data, Vector3i(4, 4, 4), Vector3i(124, 12, 124), WATER)             # pool
+	_box(data, Vector3i(56, 4, 56), Vector3i(96, 36, 96), STONE)             # mount
+	_box(data, Vector3i(60, 36, 60), Vector3i(92, 44, 92), LAVA)             # lake, spills off the edges
+
+
+## Ice columns standing in an ember bed under an ice ceiling: the columns melt
+## from the bottom, meltwater drips onto the embers and boils, and the bowl
+## keeps the rest.
+static func _ice_cave(data: PackedInt32Array) -> void:
+	_floor(data)
+	_bowl(data, Vector3i(24, 4, 24), Vector3i(104, 44, 104), 3)
+	_box(data, Vector3i(27, 7, 27), Vector3i(101, 9, 101), LAVA)             # ember bed
+	_box(data, Vector3i(30, 30, 30), Vector3i(98, 40, 98), ICE)              # ceiling
+	for column in [Vector3i(36, 9, 36), Vector3i(60, 9, 40), Vector3i(84, 9, 36), Vector3i(40, 9, 84), Vector3i(66, 9, 88), Vector3i(88, 9, 82)]:
+		_box(data, column, column + Vector3i(6, 21, 6), ICE)                 # columns reach the ceiling
+
+
+## A stone tank over an ember bed with a vent pipe: the floor conducts, the
+## water boils, and steam leaves through the pipe.
+static func _boiler(data: PackedInt32Array) -> void:
+	_floor(data)
+	_box(data, Vector3i(40, 4, 40), Vector3i(88, 60, 88), STONE)             # tank shell
+	_box(data, Vector3i(43, 4, 43), Vector3i(85, 7, 85), LAVA)               # ember bed under the floor
+	_box(data, Vector3i(43, 9, 43), Vector3i(85, 57, 85), AIR)               # interior; floor is stone y 7..9
+	_box(data, Vector3i(43, 9, 43), Vector3i(85, 20, 85), WATER)
+	_box(data, Vector3i(60, 57, 60), Vector3i(68, 60, 68), AIR)              # vent hole in the lid
+	_box(data, Vector3i(58, 60, 58), Vector3i(70, 88, 70), WALL)             # pipe
+	_box(data, Vector3i(60, 60, 60), Vector3i(68, 88, 68), AIR)
+
+
+## A metal bar runs from a lava basin through a wall into an ice block: the
+## far end warms and melts its way in while the lava around the bar cools.
+static func _foundry(data: PackedInt32Array) -> void:
+	_floor(data)
+	_bowl(data, Vector3i(24, 4, 44), Vector3i(62, 30, 84), 3)               # lava basin
+	_box(data, Vector3i(27, 7, 47), Vector3i(59, 20, 81), LAVA)
+	_box(data, Vector3i(62, 4, 20), Vector3i(66, 40, 108), WALL)             # partition
+	_box(data, Vector3i(66, 4, 52), Vector3i(90, 26, 76), ICE)               # ice block
+	_box(data, Vector3i(54, 12, 62), Vector3i(80, 14, 66), METAL)            # bar, last so it cuts through everything
 
 
 ## Wood trunk with a canopy of overlapping plant spheres; face-connected so
