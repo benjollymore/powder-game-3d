@@ -3,7 +3,7 @@
     "name": "workflow128",
     "pass": true,
     "exit": 0,
-    "seconds": 3.91,
+    "seconds": 3.23,
     "command": [
       "godot",
       "--path",

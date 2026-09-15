@@ -3,7 +3,7 @@
     "name": "surfaces-render128",
     "pass": true,
     "exit": 0,
-    "seconds": 8.27,
+    "seconds": 6.29,
     "command": [
       "godot",
       "--path",

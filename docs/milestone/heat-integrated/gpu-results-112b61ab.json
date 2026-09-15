@@ -3,7 +3,7 @@
     "name": "liquid-edges128",
     "pass": true,
     "exit": 0,
-    "seconds": 10.73,
+    "seconds": 7.94,
     "command": [
       "godot",
       "--path",

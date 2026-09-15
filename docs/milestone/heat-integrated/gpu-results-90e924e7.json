@@ -3,7 +3,7 @@
     "name": "document-protection256",
     "pass": true,
     "exit": 0,
-    "seconds": 57.94,
+    "seconds": 59.82,
     "command": [
       "godot",
       "--path",

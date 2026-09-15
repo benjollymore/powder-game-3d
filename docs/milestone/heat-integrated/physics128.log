@@ -64,8 +64,8 @@ ok: test world has 8000 plant
 ok: fire consumed the plant block (5 of 8000 left)
 ok: fire burnt out afterwards (0 left)
 --- _test_water_boils_on_fire
-ok: some water boiled into steam (80)
-ok: water mass lost matches boiled cells (9691 units, 80 cells)
+ok: some water boiled into steam (79)
+ok: water mass lost matches boiled cells (10115 units, 79 cells)
 ok: fire was put out (0 left)
 --- _test_oil_floats
 ok: oil and water mass conserved
@@ -133,26 +133,26 @@ ok: one exchange equals the canonical transfer (385.71429 / 314.28571 K, expecte
 ok: insulating wall never changes temperature (0 wall cells changed)
 ok: conduction changes no voxel byte
 --- _test_heat_closed_box_equilibrium
-ok: box energy conserved over 1000 ticks (drift -0.00000305944648)
+ok: box energy conserved over 1000 ticks (drift 0.00000280177683)
 ok: temperatures stay within the initial bounds (340.40..369.67)
 ok: water mass conserved under the hydro remap
-ok: box energy conserved over 4000 ticks (drift -0.00001351263752)
-ok: box reaches the capacity-weighted equilibrium 354.69 K (354.48..354.88)
+ok: box energy conserved over 4000 ticks (drift 0.00001129138185)
+ok: box reaches the capacity-weighted equilibrium 354.69 K (354.50..354.90)
 ok: energy did not leak through the wall
 --- _test_heat_falling_water_pool
-falling water pool energy drift 0.00001065204002 (8491565.761 -> 8491656.214 J)
+falling water pool energy drift -0.00001137911598 (8491565.761 -> 8491469.135 J)
 ok: water mass conserved
-ok: pool energy drift within the air-displacement bound (0.00001065204002)
-ok: no temperature outside the initial bounds (298.26..340.00)
+ok: pool energy drift within the air-displacement bound (-0.00001137911598)
+ok: no temperature outside the initial bounds (298.2482..340.0015)
 --- _test_ice_plateau
 ok: melting ice sat exactly at 273.15 K with latent progress
 ok: some ice melted (52 of 64 left)
 ok: melt water exists
 ok: nothing got hotter than the slab (max 299.996 K)
 --- _test_water_over_lava
-ok: water boiled into steam (406 cells)
+ok: water boiled into steam (453 cells)
 ok: lava crusted into stone (512 cells)
-ok: water mass lost matches boiled cells (82521 units, 406 cells)
+ok: water mass lost matches boiled cells (92011 units, 453 cells)
 ok: basin intact
 --- _test_wood_ignites_by_conduction
 ok: the metal bar carried heat out of the chamber (1058 K at its end)
@@ -163,23 +163,32 @@ ok: warm but sub-ignition wood does not catch
 ok: heat brush leaves voxel bytes untouched
 ok: heat brush adds full strength at the centre with radial falloff (343.150 K)
 ok: an equal cool restores the thermal bytes exactly
+--- _test_phase_keeps_mass
+ok: the cool brush froze the film
+ok: the ice record carries the film's 20 units (id 10, amount 20)
+ok: the heat brush thawed it back to 20 units of water (water 20 units, steam 0)
+ok: pool mass settled exactly (12800 units)
+ok: the whole pool froze (0 water cells left)
+ok: frozen pool carries the same mass (12800 vs 12800 units)
+ok: the whole pool thawed without boiling (0 ice, 0 steam)
+ok: thawed pool has its original water mass (12800 vs 12800 units)
 --- _test_scenario_volcano
-ok: lava that reached the pool crusted to stone (6989 cells)
-ok: pool water boiled into steam (3721 cells)
+ok: lava that reached the pool crusted to stone (6947 cells)
+ok: pool water boiled into steam (1873 cells)
 ok: floor intact
 --- _test_scenario_ice_cave
-ok: ice melted (50333 of 50776 left)
+ok: ice melted (50328 of 50776 left)
 ok: meltwater appeared
-ok: meltwater boiled on the embers (2359 steam)
+ok: meltwater boiled on the embers (1447 steam)
 ok: bowl intact
 --- _test_scenario_boiler
-ok: the tank water boiled (732 steam cells)
-ok: steam left through the vent pipe (226 cells above the pipe)
+ok: the tank water boiled (774 steam cells)
+ok: steam left through the vent pipe (212 cells above the pipe)
 ok: pipe intact
 --- _test_scenario_foundry
 ok: the ice end of the bar warmed (349.0 K)
-ok: the bar melted into the ice (12172 of 12560 left)
+ok: the bar melted into the ice (12169 of 12560 left)
 ok: the lava around the bar cooled (mean 1489.2 K)
 --- _test_large_grid_smoke
 skipped (grid 128)
-142 checks, 0 failures
+150 checks, 0 failures

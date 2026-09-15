@@ -18,8 +18,8 @@ ok: preset cancels pending click before next world tick
 WARNING: Live click queue full (32); newest click rejected until simulation advances
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
-         [0] _rt_finish_live_emitter (res://scripts/sim/voxel_sim.gd:1546)
-         [1] finish_live_emitter (res://scripts/sim/voxel_sim.gd:477)
+         [0] _rt_finish_live_emitter (res://scripts/sim/voxel_sim.gd:1624)
+         [1] finish_live_emitter (res://scripts/sim/voxel_sim.gd:478)
          [2] _queue_bound (res://tests/milestone/live_click.gd:92)
          [3] _run (res://tests/milestone/live_click.gd:14)
          [4] _cancel_and_reset (res://tests/milestone/live_click.gd:86)

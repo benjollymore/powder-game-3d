@@ -26,5 +26,5 @@ ok: reset during inverse capture rejects stale restoration and clears unavailabl
 ok: over-cap region changes nothing, reports limit and retains only accepted prefix history
 ok: partial accepted transaction remains exactly undoable after cap rejection
 ok: Redo restores only the accepted prefix, never the rejected oversized region
-REDO_MEASUREMENT grid=256 full_bytes=67108864 tiny_bytes=12288 action_completion_us=[32929, 16737, 19706, 26281, 18791, 10036, 13499, 23277, 9330, 34290, 7068]
+REDO_MEASUREMENT grid=256 full_bytes=67108864 tiny_bytes=12288 action_completion_us=[8062, 15219, 16681, 9336, 23858, 8742, 33839, 9480, 31180, 9009, 9042]
 Editor Redo GPU: 25 checks, 0 failures

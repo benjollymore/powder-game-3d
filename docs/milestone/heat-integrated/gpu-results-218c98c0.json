@@ -3,7 +3,7 @@
     "name": "editor128",
     "pass": true,
     "exit": 0,
-    "seconds": 2.48,
+    "seconds": 2.0,
     "command": [
       "godot",
       "--path",

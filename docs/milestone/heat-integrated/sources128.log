@@ -20,17 +20,17 @@ ok: actual accepted material mass equal for [7, 2, 5, 1, 9] (1161)
 ok: scheduled source stamp count equal for [7, 2, 5, 1, 9] (25)
 ok: source injected real material
 ok: source emitted repeatedly between physics ticks
-SOURCE material=Water schedule=[1] ticks=96 mass=366600 stamps=25 voxel_sha256=81fea4b25afb9d20c9e546bfbb2fc40dd3427ee37be1e2004820330d06b9105f air_sha256=93ec6ae86c93b97ed89e2c166bf4da8e988fcfa0879891122b90b5bda5c373a6
+SOURCE material=Water schedule=[1] ticks=96 mass=366600 stamps=25 voxel_sha256=81fea4b25afb9d20c9e546bfbb2fc40dd3427ee37be1e2004820330d06b9105f air_sha256=7608b0659da162fec6de8f7d1a2982543c1cae445b80a97bc47cced0449ca7e9
 ok: source injected real material
 ok: source emitted repeatedly between physics ticks
-SOURCE material=Water schedule=[3] ticks=96 mass=366600 stamps=25 voxel_sha256=81fea4b25afb9d20c9e546bfbb2fc40dd3427ee37be1e2004820330d06b9105f air_sha256=93ec6ae86c93b97ed89e2c166bf4da8e988fcfa0879891122b90b5bda5c373a6
+SOURCE material=Water schedule=[3] ticks=96 mass=366600 stamps=25 voxel_sha256=81fea4b25afb9d20c9e546bfbb2fc40dd3427ee37be1e2004820330d06b9105f air_sha256=7608b0659da162fec6de8f7d1a2982543c1cae445b80a97bc47cced0449ca7e9
 ok: Water injected voxel bytes equal for [3]
 ok: all air textures equal for [3]
 ok: actual accepted material mass equal for [3] (366600)
 ok: scheduled source stamp count equal for [3] (25)
 ok: source injected real material
 ok: source emitted repeatedly between physics ticks
-SOURCE material=Water schedule=[7, 2, 5, 1, 9] ticks=96 mass=366600 stamps=25 voxel_sha256=81fea4b25afb9d20c9e546bfbb2fc40dd3427ee37be1e2004820330d06b9105f air_sha256=93ec6ae86c93b97ed89e2c166bf4da8e988fcfa0879891122b90b5bda5c373a6
+SOURCE material=Water schedule=[7, 2, 5, 1, 9] ticks=96 mass=366600 stamps=25 voxel_sha256=81fea4b25afb9d20c9e546bfbb2fc40dd3427ee37be1e2004820330d06b9105f air_sha256=7608b0659da162fec6de8f7d1a2982543c1cae445b80a97bc47cced0449ca7e9
 ok: Water injected voxel bytes equal for [7, 2, 5, 1, 9]
 ok: all air textures equal for [7, 2, 5, 1, 9]
 ok: actual accepted material mass equal for [7, 2, 5, 1, 9] (366600)

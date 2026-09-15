@@ -3,7 +3,7 @@
     "name": "regional256",
     "pass": true,
     "exit": 0,
-    "seconds": 1.88,
+    "seconds": 1.83,
     "command": [
       "godot",
       "--path",

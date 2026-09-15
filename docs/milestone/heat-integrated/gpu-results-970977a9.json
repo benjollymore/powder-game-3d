@@ -3,7 +3,7 @@
     "name": "liquid-base128",
     "pass": true,
     "exit": 0,
-    "seconds": 3.81,
+    "seconds": 2.67,
     "command": [
       "godot",
       "--path",

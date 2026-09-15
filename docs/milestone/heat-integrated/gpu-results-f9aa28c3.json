@@ -3,7 +3,7 @@
     "name": "sources128",
     "pass": true,
     "exit": 0,
-    "seconds": 3.52,
+    "seconds": 2.67,
     "command": [
       "godot",
       "--path",

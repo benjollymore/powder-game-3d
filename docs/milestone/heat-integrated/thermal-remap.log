@@ -1,29 +1,40 @@
 Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 
-ok: uniform column: streamed walk completes within the ring
+ok: uniform column: streamed walk completes
 ok: uniform column: streamed energies match the segment remap (worst 0.0)
 ok: uniform column: energy conserved (258000.000000 -> 258000.000000)
 ok: uniform column: a hot bottom stays a hot bottom
-ok: pour: streamed walk completes within the ring
+ok: pour: streamed walk completes
 ok: pour: streamed energies match the segment remap (worst 0.0)
 ok: pour: energy conserved (239400.000000 -> 239400.000000)
 ok: pour: a hot bottom stays a hot bottom
-ok: top heavy: streamed walk completes within the ring
+ok: top heavy: streamed walk completes
 ok: top heavy: streamed energies match the segment remap (worst 0.0)
 ok: top heavy: energy conserved (459590.000000 -> 459590.000000)
 ok: top heavy: a hot bottom stays a hot bottom
-ok: deep top heavy: streamed walk completes within the ring
+ok: deep top heavy: streamed walk completes
 ok: deep top heavy: streamed energies match the segment remap (worst 0.0)
 ok: deep top heavy: energy conserved (964125.000000 -> 964125.000000)
 ok: deep top heavy: a hot bottom stays a hot bottom
-ok: row relax: streamed walk completes within the ring
+ok: row relax: streamed walk completes
 ok: row relax: streamed energies match the segment remap (worst 0.0)
 ok: row relax: energy conserved (180300.000000 -> 180300.000000)
-ring limit on a 180-cell top-heavy run: ok=true
-ok: ring limit case ran (fallback keeps previous temperatures when ok is false)
+ok: 64-cell top-heavy pipe: streamed walk completes
+ok: 64-cell top-heavy pipe: streamed energies match the segment remap (worst 0.0)
+ok: 64-cell top-heavy pipe: energy conserved (3902700.000000 -> 3902700.000000)
+ok: 64-cell top-heavy pipe: a hot bottom stays a hot bottom
+ok: 128-cell top-heavy pipe: streamed walk completes
+ok: 128-cell top-heavy pipe: streamed energies match the segment remap (worst 0.0)
+ok: 128-cell top-heavy pipe: energy conserved (9862800.000000 -> 9862800.000000)
+ok: 128-cell top-heavy pipe: a hot bottom stays a hot bottom
+ok: 128-cell row relax: streamed walk completes
+ok: 128-cell row relax: streamed energies match the segment remap (worst 0.0)
+ok: 128-cell row relax: energy conserved (4866810.000000 -> 4866810.000000)
 ok: python oracle returned one result per case
 ok: python oracle agrees on case 0 (worst 0.0)
 ok: python oracle agrees on case 1 (worst 0.0)
 ok: python oracle agrees on case 2 (worst 0.0)
 ok: python oracle agrees on case 3 (worst 0.00000000000091)
-Thermal remap CPU: 25 checks, 0 failures
+ok: python oracle agrees on case 4 (worst 0.0)
+ok: python oracle agrees on case 5 (worst 0.0)
+Thermal remap CPU: 37 checks, 0 failures

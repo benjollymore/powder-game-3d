@@ -3,7 +3,7 @@
     "name": "cadence128",
     "pass": true,
     "exit": 0,
-    "seconds": 3.2,
+    "seconds": 2.87,
     "command": [
       "godot",
       "--path",

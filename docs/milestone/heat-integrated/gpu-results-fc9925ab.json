@@ -3,7 +3,7 @@
     "name": "trackpad128",
     "pass": true,
     "exit": 0,
-    "seconds": 1.41,
+    "seconds": 1.29,
     "command": [
       "godot",
       "--path",

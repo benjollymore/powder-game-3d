@@ -3,7 +3,7 @@
     "name": "capacity128",
     "pass": true,
     "exit": 0,
-    "seconds": 7.04,
+    "seconds": 5.25,
     "command": [
       "godot",
       "--path",

@@ -3,7 +3,7 @@
     "name": "sprites-render128",
     "pass": true,
     "exit": 0,
-    "seconds": 2.24,
+    "seconds": 1.59,
     "command": [
       "godot",
       "--path",

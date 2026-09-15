@@ -3,7 +3,7 @@
     "name": "thermal-state128",
     "pass": true,
     "exit": 0,
-    "seconds": 3.88,
+    "seconds": 3.18,
     "command": [
       "godot",
       "--path",

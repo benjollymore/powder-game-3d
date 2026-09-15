@@ -3,7 +3,7 @@
     "name": "file-shortcuts128",
     "pass": true,
     "exit": 0,
-    "seconds": 6.18,
+    "seconds": 5.65,
     "command": [
       "godot",
       "--path",
