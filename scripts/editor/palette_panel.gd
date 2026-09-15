@@ -32,7 +32,10 @@ static func category_for(row: Dictionary, id: int) -> String:
 
 
 static func tip_of(id: int) -> String:
-	var row: Dictionary = Elements.TABLE[id]
+	return tip_for(Elements.TABLE[id])
+
+
+static func tip_for(row: Dictionary) -> String:
 	var tip := String(row.get("tip", ""))
 	return tip if not tip.is_empty() else String(row.name)
 

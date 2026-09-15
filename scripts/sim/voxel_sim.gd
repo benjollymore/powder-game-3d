@@ -828,6 +828,8 @@ func request_cell_probe(origin: Vector3, direction: Vector3, callback: Callable)
 	var mask := ((1 << Elements.count()) - 1) & ~1
 	request_surface_pick({"origin": origin, "direction": direction, "mask": mask}, 0, true,
 		func(result: Dictionary):
+			if not callback.is_valid():
+				return # the requester (an editor hovering every frame) may be gone by now
 			if result.get("valid", false):
 				callback.call({"pos": result.hit, "element": result.element, "temperature": result.temperature,
 					"amount": result.amount, "flags": result.flags})

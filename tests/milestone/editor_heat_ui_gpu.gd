@@ -7,6 +7,9 @@ func key(code: int) -> void:
 		event.keycode = code
 		event.pressed = down
 		Input.parse_input_event(event)
+func read_thermal() -> PackedByteArray:
+	sim.request_thermal_readback()
+	return await sim.thermal_ready
 func kept() -> void:
 	while editor.keeping or editor.capturing or not editor._queued_editor_action.is_empty():
 		await process_frame
@@ -25,6 +28,10 @@ func run() -> void:
 	root.add_child(editor)
 	current_scene = editor
 	sim = editor.sim
+	# The simulator connected to the clock in its own _ready; detach it so ticks
+	# happen only where this test asks for them.
+	if root.get_node("TimeController").ticks_requested.is_connected(sim.request_ticks):
+		root.get_node("TimeController").ticks_requested.disconnect(sim.request_ticks)
 	clock = root.get_node("TimeController")
 	guard = editor.document_guard
 	panel = editor.archive_panel
@@ -72,10 +79,12 @@ func run() -> void:
 	await read()
 	await frames(2)
 	var undo_before: int = editor.undo_history.size()
+	var live_thermal: PackedByteArray = await read_thermal()
 	await click(editor.keep_button)
 	await kept()
 	var kept_bytes: PackedByteArray = await read()
 	check(not editor.testing and not editor.keeping and kept_bytes != authored and clock.paused, "Keep leaves Test with the evolved experiment as the build")
+	check(await read_thermal() == live_thermal, "Keep carries the experiment's temperatures into the build")
 	check(editor.undo_history.size() == undo_before + 1 and editor.document.is_dirty() and editor.edit_message.begins_with("Kept"), "Keep records one undoable edit and marks the build unsaved")
 	check(editor.play_button.text.begins_with("Run") and not editor.test_time_controls.visible, "editor returns to Build controls after Keep")
 	await click(editor.undo_button)
@@ -99,9 +108,12 @@ func run() -> void:
 	await click(editor.pause_button)
 	await frames(2)
 	var history_size: int = editor.undo_history.size()
+	var before_keep: PackedByteArray = await read()
+	var before_keep_thermal: PackedByteArray = await read_thermal()
+	check(before_keep == editor.build_snapshot and before_keep_thermal == editor.build_thermal, "with no ticks requested the paused experiment equals its Run snapshot (voxels %s, thermal %s)" % [before_keep == editor.build_snapshot, before_keep_thermal == editor.build_thermal])
 	await click(editor.keep_button)
 	await kept()
-	check(editor.testing and editor.undo_history.size() == history_size and editor.edit_message.begins_with("Nothing changed"), "Keep with no changes stays in Test and adds no history")
+	check(editor.testing and editor.undo_history.size() == history_size and editor.edit_message.begins_with("Nothing changed"), "Keep with no changes stays in Test and adds no history (testing=%s history=%d message='%s')" % [editor.testing, editor.undo_history.size(), editor.edit_message])
 	await click(editor.play_button)
 	await settled()
 	check(await read() == kept_bytes, "Return still restores the kept revision")

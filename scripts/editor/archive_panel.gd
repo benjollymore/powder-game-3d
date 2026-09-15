@@ -133,11 +133,12 @@ func save_to_path(path: String) -> void:
 	operation = "capture"
 	message.text = "Saving build…"
 	if editor.testing:
-		_start_save(editor.build_snapshot)
+		var thermal: Variant = editor.get("build_thermal")
+		_start_save(editor.build_snapshot, thermal if thermal is PackedByteArray else PackedByteArray())
 	else:
-		# Explicit save may capture the whole authored volume once. The GPU
-		# request is ordered before any subsequent editing commands.
-		editor.sim.request_readback(func(bytes: PackedByteArray):
+		# Explicit save may capture the whole authored volume once, every
+		# layer. The GPU requests are ordered before any subsequent editing commands.
+		var captured := func(bytes: PackedByteArray, thermal: PackedByteArray):
 			if not is_inside_tree():
 				return
 			if editor.sim.edit_epoch != source_epoch:
@@ -145,11 +146,15 @@ func save_to_path(path: String) -> void:
 				message.text = "The world changed before saving; save the current build again."
 				save_finished.emit(false, source_document, source_generation)
 				return
-			_start_save(bytes))
+			_start_save(bytes, thermal)
+		if editor.has_method("read_world"):
+			editor.read_world(captured)
+		else:
+			editor.sim.request_readback(func(bytes: PackedByteArray): captured.call(bytes, PackedByteArray()))
 
-func _start_save(bytes: PackedByteArray) -> void:
+func _start_save(bytes: PackedByteArray, thermal: PackedByteArray = PackedByteArray()) -> void:
 	job = Job.new()
-	var err: Error = job.save_authored(selected_path, bytes, VoxelCodec.GRID)
+	var err: Error = job.save_authored(selected_path, bytes, VoxelCodec.GRID, thermal)
 	if err != OK:
 		operation = ""
 		job = null
@@ -217,7 +222,7 @@ func _process(_delta: float) -> void:
 	if source_epoch != editor.sim.edit_epoch or source_revision != editor.sim.edit_revision or source_testing != editor.testing or editor.capturing or editor.painting:
 		message.text = "The build changed while opening; open the file again to replace it."
 		return
-	var apply := _apply_open.bind(result.bytes, selected_path, source_epoch, source_revision, source_testing)
+	var apply := _apply_open.bind(result.bytes, result.get("thermal", PackedByteArray()), selected_path, source_epoch, source_revision, source_testing)
 	if is_instance_valid(editor.document_guard):
 		# Saving may overwrite the very file selected for Open. Re-read it after
 		# Save instead of applying cached old bytes and falsely marking them saved.
@@ -225,11 +230,11 @@ func _process(_delta: float) -> void:
 	else:
 		apply.call()
 
-func _apply_open(bytes: PackedByteArray, path: String, epoch: int, revision: int, testing: bool) -> void:
+func _apply_open(bytes: PackedByteArray, thermal: PackedByteArray, path: String, epoch: int, revision: int, testing: bool) -> void:
 	if epoch != editor.sim.edit_epoch or revision != editor.sim.edit_revision or testing != editor.testing or editor.capturing or editor.painting:
 		message.text = "The build changed while opening; open the file again to replace it."
 		return
-	if editor.replace_authored(bytes):
+	if editor.replace_authored(bytes, thermal):
 		editor.document.saved_capture(editor.document.current, editor.document.generation, path)
 		message.text = "Opened build: " + path.get_file()
 	else:

@@ -1,10 +1,17 @@
 class_name WorldArchive
 extends RefCounted
-## Versioned authored voxel archives. Runtime solver snapshots are a different
+## Versioned authored world archives. Runtime solver snapshots are a different
 ## format: this file deliberately stores only the construction to run again.
+## Version 2 stores every authoritative layer (packed voxels, then the thermal
+## layer); version 1 files hold voxels only and load with default temperatures.
 const MAGIC := "P3DA"
-const VERSION := 1
-const SCHEMA := "material-seed-amount-flags-rgba8-v1"
+const VERSION := 2
+const SCHEMA := "material-seed-amount-flags-rgba8+temperature-latent-rg32f-v2"
+const SCHEMA_V1 := "material-seed-amount-flags-rgba8-v1"
+const VOXEL_BYTES := 4
+const THERMAL_BYTES := 8
+const LAYERS := [{"name": "voxels", "format": "rgba8", "bytes_per_cell": VOXEL_BYTES},
+	{"name": "thermal", "format": "rg32f", "bytes_per_cell": THERMAL_BYTES}]
 const MAX_HEADER_BYTES := 4096
 const MAX_GRID := 256
 
@@ -32,17 +39,38 @@ static func _unsupported_material(bytes: PackedByteArray) -> int:
 	return -1
 
 
-static func save_authored(path: String, bytes: PackedByteArray, grid: int) -> Dictionary:
-	if not _valid_grid(grid) or bytes.size() != grid * grid * grid * 4:
+static func _thermal_finite(thermal: PackedByteArray) -> bool:
+	# Compute kernels read these floats directly; NaN or infinity would poison
+	# every neighbour through conduction. Reject them before upload.
+	for value in thermal.to_float32_array():
+		if not is_finite(value):
+			return false
+	return true
+
+
+## `thermal` is the RG32F layer (8 bytes per cell). It is required: an authored
+## world is its material and its temperatures. Callers without a thermal
+## readback use `default_thermal`.
+static func save_authored(path: String, bytes: PackedByteArray, grid: int, thermal: PackedByteArray = PackedByteArray()) -> Dictionary:
+	var cells := grid * grid * grid
+	if not _valid_grid(grid) or bytes.size() != cells * VOXEL_BYTES:
 		return _error("The authored world has an unsupported size.")
+	if thermal.size() != cells * THERMAL_BYTES:
+		return _error("The authored world's temperature layer has an unsupported size.")
 	if _unsupported_material(bytes) >= 0:
 		return _error("The authored world contains an unsupported material.")
-	var payload := bytes.compress(FileAccess.COMPRESSION_ZSTD)
+	if not _thermal_finite(thermal):
+		return _error("The authored world's temperatures are not finite.")
+	var combined := bytes.duplicate()
+	combined.append_array(thermal)
+	var payload := combined.compress(FileAccess.COMPRESSION_ZSTD)
 	if payload.is_empty():
 		return _error("The world could not be compressed.")
 	var header := {"version": VERSION, "kind": "authored", "grid": grid,
 		"cell_size_m": 0.01, "schema": SCHEMA, "codec": "zstd",
-		"size": bytes.size(), "sha256": _hash(bytes)}
+		"size": combined.size(), "sha256": _hash(combined),
+		"layers": [{"name": "voxels", "format": "rgba8", "size": bytes.size(), "sha256": _hash(bytes)},
+			{"name": "thermal", "format": "rg32f", "size": thermal.size(), "sha256": _hash(thermal)}]}
 	var metadata := JSON.stringify(header).to_utf8_buffer()
 	var temporary := path + ".partial-%s" % Time.get_ticks_usec()
 	var file := FileAccess.open(temporary, FileAccess.WRITE)
@@ -66,6 +94,24 @@ static func save_authored(path: String, bytes: PackedByteArray, grid: int) -> Di
 	return {"ok": true, "path": path, "header": header, "file_bytes": 8 + metadata.size() + payload.size()}
 
 
+## The thermal layer a version-1 world starts with: every cell at its
+## element's initial temperature, no latent progress. Matches thermal_init.glsl.
+static func default_thermal(bytes: PackedByteArray, ambient: float = 293.15) -> PackedByteArray:
+	var cells := bytes.size() / VOXEL_BYTES
+	var initial := PackedFloat32Array()
+	initial.resize(Elements.count())
+	for id in Elements.count():
+		initial[id] = Elements.thermal(id, "initial_temp")
+	initial[0] = ambient
+	var values := PackedFloat32Array()
+	values.resize(cells * 2)
+	for i in cells:
+		values[i * 2] = initial[bytes[i * VOXEL_BYTES]]
+	return values.to_byte_array()
+
+
+## Returns {ok, bytes, thermal, header}. `thermal` is empty for a version-1
+## file: the caller initialises temperatures from the element table.
 static func load_authored(path: String, expected_grid: int = 0) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
@@ -80,7 +126,10 @@ static func load_authored(path: String, expected_grid: int = 0) -> Dictionary:
 	if parser.parse(file.get_buffer(header_size).get_string_from_utf8()) != OK or not parser.data is Dictionary:
 		return _error("The world header cannot be read.")
 	var header: Dictionary = parser.data
-	if header.get("version") != VERSION or header.get("kind") != "authored" or header.get("schema") != SCHEMA or header.get("codec") != "zstd":
+	var version: Variant = header.get("version")
+	var legacy: bool = version == 1 and header.get("schema") == SCHEMA_V1
+	var current: bool = version == VERSION and header.get("schema") == SCHEMA
+	if not (legacy or current) or header.get("kind") != "authored" or header.get("codec") != "zstd":
 		return _error("This world uses an unsupported format version.")
 	var stored_grid: Variant = header.get("grid")
 	if not (stored_grid is int or stored_grid is float):
@@ -92,9 +141,21 @@ static func load_authored(path: String, expected_grid: int = 0) -> Dictionary:
 		return _error("The world scale is unsupported.")
 	if expected_grid != 0 and grid != expected_grid:
 		return _error("This world needs a %d³ session; the current session is %d³." % [grid, expected_grid])
-	var byte_count := grid * grid * grid * 4
+	var cells := grid * grid * grid
+	var voxel_count := cells * VOXEL_BYTES
+	var byte_count := voxel_count + (cells * THERMAL_BYTES if current else 0)
 	if header.get("size") != byte_count or not header.get("sha256") is String or header.sha256.length() != 64:
 		return _error("The world data description is invalid.")
+	var layers: Array = []
+	if current:
+		layers = header.get("layers", [])
+		if not layers is Array or layers.size() != LAYERS.size():
+			return _error("The world layer description is invalid.")
+		for i in LAYERS.size():
+			var layer: Variant = layers[i]
+			if not layer is Dictionary or layer.get("name") != LAYERS[i].name or layer.get("format") != LAYERS[i].format \
+					or layer.get("size") != cells * LAYERS[i].bytes_per_cell or not layer.get("sha256") is String or layer.sha256.length() != 64:
+				return _error("The world layer description is invalid.")
 	var payload_size := length - 8 - header_size
 	# Validate every allocation bound before reading or decompressing the body.
 	if payload_size <= 0 or payload_size > byte_count + 1048576:
@@ -103,13 +164,20 @@ static func load_authored(path: String, expected_grid: int = 0) -> Dictionary:
 	file.close()
 	if payload.size() != payload_size:
 		return _error("The world file is incomplete.")
-	var bytes := payload.decompress(byte_count, FileAccess.COMPRESSION_ZSTD)
-	if bytes.size() != byte_count or _hash(bytes) != header.sha256:
+	var combined := payload.decompress(byte_count, FileAccess.COMPRESSION_ZSTD)
+	if combined.size() != byte_count or _hash(combined) != header.sha256:
 		return _error("The world data is damaged or incomplete.")
+	var bytes := combined.slice(0, voxel_count)
+	var thermal := combined.slice(voxel_count) if current else PackedByteArray()
+	if current:
+		if _hash(bytes) != layers[0].sha256 or _hash(thermal) != layers[1].sha256:
+			return _error("A world layer is damaged or incomplete.")
+		if not _thermal_finite(thermal):
+			return _error("The world's temperatures are not finite.")
 	# Compute kernels index the element table directly. A valid checksum does
 	# not make an unknown material safe to upload. This scan runs in ArchiveJob
 	# for editor loads; all seed/amount/flag bytes remain exact.
 	var unsupported := _unsupported_material(bytes)
 	if unsupported >= 0:
 		return _error("This world contains an unsupported material (%d)." % unsupported)
-	return {"ok": true, "bytes": bytes, "header": header}
+	return {"ok": true, "bytes": bytes, "thermal": thermal, "header": header}

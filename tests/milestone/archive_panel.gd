@@ -32,10 +32,12 @@ class FakeEditor extends Node3D:
 		pass
 	func _stop_navigation() -> void:
 		pass
-	func replace_authored(bytes: PackedByteArray) -> bool:
+	var thermal := PackedByteArray()
+	func replace_authored(bytes: PackedByteArray, layer: PackedByteArray = PackedByteArray()) -> bool:
 		if capturing or painting:
 			return false
 		sim.bytes = bytes
+		thermal = layer
 		sim.edit_epoch += 1
 		testing = false
 		replacements += 1

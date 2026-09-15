@@ -33,6 +33,7 @@ CPU = [
     ("file-shortcuts", "tests/milestone/file_shortcuts.gd", 128),
     ("heat-ui", "tests/milestone/heat_ui.gd", 128),
     ("keep-result", "tests/milestone/keep_result.gd", 128),
+    ("cell-inspector", "tests/milestone/cell_inspector.gd", 128),
     ("guard-queue", "tests/milestone/guard_queue.gd", 128),
 ]
 GPU = [
@@ -51,6 +52,8 @@ GPU = [
     ("file-shortcuts128", "tests/milestone/file_shortcuts_gpu.gd", 128),
     ("file-shortcuts256", "tests/milestone/file_shortcuts_gpu.gd", 256),
     ("heat-ui128", "tests/milestone/editor_heat_ui_gpu.gd", 128),
+    ("archives-thermal128", "tests/milestone/archives_thermal_gpu.gd", 128),
+    ("inspector128", "tests/milestone/inspector_gpu.gd", 128),
     ("actions128", "tests/milestone/editor_actions_gpu.gd", 128),
     ("editor128", "tests/discovery/interaction_gpu.gd", 128),
     ("trackpad128", "tests/discovery/trackpad_gpu.gd", 128),

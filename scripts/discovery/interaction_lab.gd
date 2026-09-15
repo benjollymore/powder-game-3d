@@ -9,6 +9,13 @@ var document_guard: Node
 const PendingGesture := preload("res://scripts/editor/pending_gesture.gd")
 const PalettePanel := preload("res://scripts/editor/palette_panel.gd")
 const KeepResult := preload("res://scripts/editor/keep_result.gd")
+const CellInspector := preload("res://scripts/editor/cell_inspector.gd")
+var build_thermal := PackedByteArray()
+var _thermal_waiters: Array[Callable] = []
+var _thermal_results: Array[PackedByteArray] = []
+var probe_pending := false
+var probe_text := ""
+var ambient_input: SpinBox
 var palette: RefCounted
 var thermal_tool := "" # "", "heat" or "cool": the brush changes temperature, not material
 var stroke_thermal := ""
@@ -185,8 +192,9 @@ func _exit_tree() -> void:
 
 ## File payloads are validated by WorldArchive before reaching this boundary.
 ## Replacement starts a new authored world, never a partial runtime rewind.
-func replace_authored(bytes: PackedByteArray) -> bool:
-	if capturing or painting or bytes.size() != VoxelCodec.GRID * VoxelCodec.GRID * VoxelCodec.GRID * 4:
+func replace_authored(bytes: PackedByteArray, thermal: PackedByteArray = PackedByteArray()) -> bool:
+	var cells := VoxelCodec.GRID * VoxelCodec.GRID * VoxelCodec.GRID
+	if capturing or painting or bytes.size() != cells * 4 or not (thermal.is_empty() or thermal.size() == cells * 8):
 		return false
 	_end_stroke()
 	_queued_editor_action = ""
@@ -199,6 +207,7 @@ func replace_authored(bytes: PackedByteArray) -> bool:
 	last_edit_bytes = 0
 	edit_message = ""
 	build_snapshot.clear()
+	build_thermal.clear()
 	corner_a = Vector3i(-1, -1, -1)
 	corner_b = Vector3i(-1, -1, -1)
 	selecting = false
@@ -206,9 +215,34 @@ func replace_authored(bytes: PackedByteArray) -> bool:
 	selection_mesh.visible = false
 	selection_status.text = "Region: no corners selected"
 	play_button.text = "Run experiment · Space"
-	sim.upload(bytes)
+	sim.upload(bytes, thermal)
 	document.reset()
 	return true
+
+
+## Every authoritative layer, read once and ordered on the render thread
+## before any later edit. `callback(voxels, thermal)`; thermal is empty when
+## the simulator has no thermal layer. Requests never share a completion.
+func read_world(callback: Callable) -> void:
+	var thermal_supported: bool = sim.has_method("request_thermal_readback")
+	sim.request_readback(func(bytes: PackedByteArray):
+		if not thermal_supported:
+			callback.call(bytes, PackedByteArray())
+		elif not _thermal_results.is_empty():
+			callback.call(bytes, _thermal_results.pop_front())
+		else:
+			_thermal_waiters.append(func(thermal: PackedByteArray): callback.call(bytes, thermal)))
+	if thermal_supported:
+		if not sim.thermal_ready.is_connected(_on_thermal_ready):
+			sim.thermal_ready.connect(_on_thermal_ready)
+		sim.request_thermal_readback()
+
+
+func _on_thermal_ready(thermal: PackedByteArray) -> void:
+	if _thermal_waiters.is_empty():
+		_thermal_results.append(thermal)
+	else:
+		_thermal_waiters.pop_front().call(thermal)
 
 
 func _overlay_material(color: Color) -> StandardMaterial3D:
@@ -428,6 +462,21 @@ func _build_ui() -> void:
 	grid_toggle.button_pressed = show_workplane_grid
 	grid_toggle.toggled.connect(func(enabled): show_workplane_grid = enabled)
 	advanced_tools.add_child(grid_toggle)
+	var ambient_row := HBoxContainer.new()
+	advanced_tools.add_child(ambient_row)
+	var ambient_label := Label.new()
+	ambient_label.text = "Ambient °C  "
+	ambient_row.add_child(ambient_label)
+	ambient_input = SpinBox.new()
+	ambient_input.min_value = -100
+	ambient_input.max_value = 1000
+	ambient_input.step = 1
+	ambient_input.value = CellInspector.celsius(sim.ambient_temp) if "ambient_temp" in sim else 20
+	ambient_input.tooltip_text = "Air temperature for new, reset, empty, example and older opened builds. Cells already placed keep their temperature."
+	ambient_input.value_changed.connect(func(value):
+		if "ambient_temp" in sim:
+			sim.ambient_temp = value + CellInspector.ZERO_C)
+	ambient_row.add_child(ambient_input)
 	var reset := Button.new()
 	reset.text = "Reset container…"
 	reset.pressed.connect(reset_container)
@@ -632,23 +681,24 @@ func keep_result() -> void:
 	TimeController.paused = true
 	_refresh_test_controls()
 	var epoch: int = sim.edit_epoch
-	sim.request_readback(func(live: PackedByteArray): _keep_diff(live, epoch))
+	read_world(func(live: PackedByteArray, live_thermal: PackedByteArray): _keep_diff(live, live_thermal, epoch))
 
 
-func _keep_diff(live: PackedByteArray, epoch: int) -> void:
-	if not testing or sim.edit_epoch != epoch or live.size() != build_snapshot.size():
+func _keep_diff(live: PackedByteArray, live_thermal: PackedByteArray, epoch: int) -> void:
+	if not testing or sim.edit_epoch != epoch or live.size() != build_snapshot.size() or live_thermal.size() != build_thermal.size():
 		_keep_finish("The experiment changed while keeping; nothing was kept.")
 		return
-	var tiles := KeepResult.changed_tiles(build_snapshot, live, VoxelCodec.GRID, sim.EditGPU.TILE)
+	var tile: int = sim.EditGPU.TILE
+	var tiles := KeepResult.changed_tiles_all({"voxels": build_snapshot, "thermal": build_thermal}, {"voxels": live, "thermal": live_thermal}, VoxelCodec.GRID, tile)
 	if tiles.is_empty():
 		_keep_finish("Nothing changed; the build is already this result.")
 		return
-	var bounds := KeepResult.bounds(tiles, VoxelCodec.GRID, sim.EditGPU.TILE)
-	if KeepResult.byte_count(tiles, VoxelCodec.GRID, sim.EditGPU.TILE) > sim.EditGPU.MAX_TRANSACTION_BYTES:
+	var bounds := KeepResult.bounds(tiles, VoxelCodec.GRID, tile)
+	if KeepResult.byte_count(tiles, VoxelCodec.GRID, tile, sim.EditGPU.BYTES_PER_CELL) > sim.EditGPU.MAX_TRANSACTION_BYTES:
 		# Too much changed for one undoable edit: keep it as a new unsaved build.
 		testing = false
 		play_button.text = "Run experiment · Space"
-		replace_authored(live)
+		replace_authored(live, live_thermal)
 		document.changed({})
 		_keep_finish("Kept as a new build: too much changed to undo in one step.")
 		return
@@ -662,7 +712,7 @@ func _keep_captured_live(live_record: Dictionary, bounds: Array, epoch: int) -> 
 		return
 	# Return to the authored revision exactly as Return does, then record the
 	# kept tiles as one edit on top of it.
-	sim.upload(build_snapshot)
+	sim.upload(build_snapshot, build_thermal)
 	for transaction in undo_history + redo_history:
 		transaction.epoch = sim.edit_epoch
 	testing = false
@@ -1389,7 +1439,7 @@ func _set_testing(desired: bool) -> void:
 		return
 	if not desired:
 		TimeController.paused = true
-		sim.upload(build_snapshot)
+		sim.upload(build_snapshot, build_thermal)
 		# This reset restores the exact authored revision, so its existing build
 		# history remains applicable even though the runtime epoch advances.
 		for transaction in undo_history + redo_history:
@@ -1401,12 +1451,13 @@ func _set_testing(desired: bool) -> void:
 		_capture_accepts_pending = false
 		var epoch: int = sim.edit_epoch
 		var revision: int = sim.edit_revision
-		sim.request_readback(func(bytes: PackedByteArray):
+		read_world(func(bytes: PackedByteArray, thermal: PackedByteArray):
 			capturing = false
 			if sim.edit_epoch != epoch or sim.edit_revision != revision:
 				edit_message = "The build changed while preparing the experiment; run it again."
 				return
 			build_snapshot = bytes
+			build_thermal = thermal
 			edit_message = ""
 			testing = true
 			TimeController.time_scale = speed_scale
@@ -1481,6 +1532,23 @@ func _sample(mouse: Vector2) -> void:
 		line.remove_at(0)
 		pending.append_array(line)
 	previous = cell
+
+
+## Hover inspector: at most one 64-byte probe in flight, never a full readback.
+func _update_probe(blocked: bool) -> void:
+	if blocked or not sim.has_method("request_cell_probe"):
+		probe_text = ""
+		return
+	if probe_pending:
+		return
+	var ray := _ray_at(get_viewport().get_mouse_position())
+	probe_pending = true
+	sim.request_cell_probe(ray.origin, ray.direction, _receive_probe.bind(sim.edit_epoch))
+
+
+func _receive_probe(result: Dictionary, epoch: int) -> void:
+	probe_pending = false
+	probe_text = CellInspector.describe(result) if is_inside_tree() and sim.edit_epoch == epoch else ""
 
 
 func _end_stroke(completed: bool = false) -> void:
@@ -1575,9 +1643,12 @@ func _process(delta: float) -> void:
 		marker.position = ((Vector3(target) + Vector3.ONE * 0.5) / VoxelCodec.GRID - Vector3.ONE * 0.5) * sim.world_size()
 		marker.scale = Vector3.ONE * (2 * radius + 1) * sim.world_size() / VoxelCodec.GRID
 	_update_live_emitter(over_ui)
+	_update_probe(over_ui or orbiting or painting or selecting)
 	_flush()
 	status.text = "%s · %s · r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % [("HEAT" if thermal_tool == "heat" else "COOL") if thermal_tool != "" else ("ERASE" if erase else "Add into empty space"), Elements.TABLE[element].name, radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else _test_phase(), "Live edits reset on return; no live undo" if testing else "%d undo · %d redo" % [undo_history.size(), redo_history.size()]]
 	if edit_message != "":
 		status.text += "\n" + edit_message
 	if targeting_mode == TargetMode.SURFACE and not section_action.visible:
 		status.text += "\n" + _surface_feedback()
+	if not probe_text.is_empty():
+		status.text += "\n" + probe_text

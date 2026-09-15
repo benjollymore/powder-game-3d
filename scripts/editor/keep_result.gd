@@ -4,13 +4,12 @@ extends RefCounted
 ## regional transaction. Rows are compared as slices so an unchanged world
 ## costs one comparison per row, not one per cell.
 
-static func changed_tiles(before: PackedByteArray, after: PackedByteArray, grid: int, tile: int) -> Array[Vector3i]:
+static func changed_tiles(before: PackedByteArray, after: PackedByteArray, grid: int, tile: int, bytes_per_cell: int = 4, seen: Dictionary = {}) -> Array[Vector3i]:
 	var tiles: Array[Vector3i] = []
-	if before.size() != after.size() or before.size() != grid * grid * grid * 4:
+	if before.size() != after.size() or before.size() != grid * grid * grid * bytes_per_cell:
 		return tiles
-	var row_bytes := grid * 4
-	var chunk := tile * 4
-	var seen := {}
+	var row_bytes := grid * bytes_per_cell
+	var chunk := tile * bytes_per_cell
 	for z in grid:
 		for y in grid:
 			var start := (z * grid + y) * row_bytes
@@ -30,6 +29,16 @@ static func changed_tiles(before: PackedByteArray, after: PackedByteArray, grid:
 	return tiles
 
 
+## Tiles where either the voxel layer or the thermal layer differs.
+static func changed_tiles_all(before: Dictionary, after: Dictionary, grid: int, tile: int) -> Array[Vector3i]:
+	var seen := {}
+	var tiles: Array[Vector3i] = changed_tiles(before.voxels, after.voxels, grid, tile, 4, seen)
+	if before.has("thermal") and after.has("thermal") and not before.thermal.is_empty():
+		tiles.append_array(changed_tiles(before.thermal, after.thermal, grid, tile, 8, seen))
+	tiles.sort()
+	return tiles
+
+
 ## Aligned tile bounds in the layout the editor's regional history uses.
 static func bounds(tiles: Array[Vector3i], grid: int, tile: int) -> Array:
 	var result: Array = []
@@ -39,9 +48,9 @@ static func bounds(tiles: Array[Vector3i], grid: int, tile: int) -> Array:
 	return result
 
 
-static func byte_count(tiles: Array[Vector3i], grid: int, tile: int) -> int:
+static func byte_count(tiles: Array[Vector3i], grid: int, tile: int, bytes_per_cell: int = 12) -> int:
 	var total := 0
 	for region in bounds(tiles, grid, tile):
 		var extent: Vector3i = region.hi - region.lo
-		total += extent.x * extent.y * extent.z * 4
+		total += extent.x * extent.y * extent.z * bytes_per_cell
 	return total

@@ -17,7 +17,10 @@ class SimStub extends Node3D:
 		pass
 	func finish_live_emitter() -> void:
 		pass
-	func upload(bytes: PackedByteArray) -> void:
+	var ambient_temp := 293.15
+	func request_readback(callback: Callable) -> void:
+		callback.call(PackedByteArray([1, 2, 3, 4]))
+	func upload(bytes: PackedByteArray, _thermal: PackedByteArray = PackedByteArray()) -> void:
 		uploads.append(bytes.duplicate())
 		edit_epoch += 1
 		edit_revision += 1

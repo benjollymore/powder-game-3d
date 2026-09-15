@@ -22,16 +22,31 @@ func run() -> void:
 	root.size = Vector2i(1280, 800)
 	Input.use_accumulated_input = false
 	root.get_node("TimeController").set_process_unhandled_input(false)
-	# Grouping from a table without category keys uses the built-in fallback.
+	# The real table carries category and tip keys; the panel follows them.
 	var groups := PalettePanel.grouped()
-	check(groups.get("common", []) == [Elements.Id.WALL, Elements.Id.SAND, Elements.Id.WATER] and groups.get("heat", []) == [Elements.Id.FIRE],
-		"table without category keys groups the known ids by the fallback map")
-	check(groups.get("gases", []) == [Elements.Id.STEAM, Elements.Id.SMOKE] and groups.get("solids", []) == [Elements.Id.PLANT, Elements.Id.WOOD] and groups.get("liquids", []) == [Elements.Id.OIL],
-		"fallback map places oil, wood, plant, steam and smoke in their categories")
-	# Grouping from a table with explicit keys follows those keys, including new ids.
-	var table: Array = []
+	var expected := {}
+	for id in range(1, Elements.count()):
+		var category: String = Elements.TABLE[id].category
+		if not expected.has(category):
+			expected[category] = []
+		expected[category].append(id)
+	check(groups == expected, "grouping follows the table's own category keys")
+	check(PalettePanel.tip_of(Elements.Id.OIL) == Elements.TABLE[Elements.Id.OIL].tip, "tooltips come from the table's tip key")
+	# A table without those keys (older rows, external tables) uses the fallback map.
+	var keyless: Array = []
 	for row in Elements.TABLE:
-		table.append(row.duplicate())
+		var copy: Dictionary = row.duplicate()
+		copy.erase("category")
+		copy.erase("tip")
+		keyless.append(copy)
+	var fallback := PalettePanel.grouped_from(keyless)
+	check(fallback.get("common", []) == [Elements.Id.WALL, Elements.Id.SAND, Elements.Id.WATER] and fallback.get("heat", []) == [Elements.Id.FIRE],
+		"keyless rows group the known ids by the fallback map")
+	check(fallback.get("gases", []) == [Elements.Id.STEAM, Elements.Id.SMOKE] and fallback.get("solids", []) == [Elements.Id.PLANT, Elements.Id.WOOD] and fallback.get("liquids", []) == [Elements.Id.OIL],
+		"fallback map places oil, wood, plant, steam and smoke in their categories")
+	check(PalettePanel.tip_for(keyless[Elements.Id.OIL]) == "Oil", "a row without a tip falls back to its name")
+	# Explicit keys override the fallback and admit new ids.
+	var table: Array = keyless.duplicate(true)
 	table[Elements.Id.OIL]["category"] = "special"
 	table[Elements.Id.OIL]["tip"] = "Floats and burns"
 	table.append({"name": "Lava", "color": Color.RED, "flags": 0, "category": "heat", "tip": "Hot rock"})
@@ -48,10 +63,14 @@ func run() -> void:
 	check(palette.first_row == [Elements.Id.SAND, Elements.Id.WATER, Elements.Id.WALL], "first row is Sand, Water, Wall")
 	check(palette.heat_row_ids == [Elements.Id.FIRE] and not palette.heat_button.visible and not palette.cool_button.visible,
 		"heat row shows Fire and hides thermal brushes while the simulator has no HEAT/COOL modes")
-	check(palette.tab_buttons.keys() == ["liquids", "gases", "solids"] and lab.material_buttons.size() == 9,
+	var tabs_expected: Array = []
+	for category in PalettePanel.TAB_ORDER:
+		if expected.has(category) and expected[category].any(func(id): return id not in palette.first_row and id not in palette.heat_row_ids):
+			tabs_expected.append(category)
+	check(palette.tab_buttons.keys() == tabs_expected and lab.material_buttons.size() == Elements.count() - 1,
 		"one tab per remaining category, every non-air material has a button")
-	check(lab.material_buttons[Elements.Id.OIL].tooltip_text == "Oil" and not palette.grids["liquids"].visible,
-		"tooltips fall back to the material name and tab contents start hidden")
+	check(lab.material_buttons[Elements.Id.OIL].tooltip_text == Elements.TABLE[Elements.Id.OIL].tip and not palette.grids["liquids"].visible,
+		"buttons show the table tip and tab contents start hidden")
 	palette.tab_buttons["gases"].button_pressed = true
 	check(palette.grids["gases"].visible and not palette.grids["liquids"].visible and palette.active_tab == "gases", "a tab reveals only its own materials")
 	palette.tab_buttons["solids"].button_pressed = true
@@ -101,6 +120,18 @@ func run() -> void:
 	check(lab.document_guard.kinds == ["example", "example"], "the waiting example request resumes after the capture")
 	lab.load_example("No such scenario")
 	check(lab.document_guard.kinds.size() == 2, "unknown example names are ignored")
+	# Ambient temperature lives in the advanced tools and drives the simulator's default.
+	check(lab.ambient_input.value == 20 and lab.ambient_input.get_parent().get_parent() == lab.advanced_tools, "ambient control starts at 20 °C inside Tools & view options")
+	lab.ambient_input.value = -5
+	check(is_equal_approx(lab.sim.ambient_temp, 268.15), "ambient control sets the simulator's ambient kelvin")
+	# The inspector never probes a simulator without the probe API and hides while painting.
+	lab.painting = true
+	lab._update_probe(true)
+	check(lab.probe_text.is_empty() and not lab.probe_pending, "no probe is requested from a simulator without cell probes")
+	# Reading the world without a thermal layer yields empty thermal bytes.
+	var got: Array = [] # lambdas capture by value; an array is shared by reference
+	lab.read_world(func(bytes, thermal): got.append({"bytes": bytes, "thermal": thermal}))
+	check(got.size() == 1 and got[0].bytes == PackedByteArray([1, 2, 3, 4]) and got[0].thermal.is_empty(), "read_world returns voxels with an empty thermal layer when unsupported")
 	lab.queue_free()
 	await process_frame
 	print("Heat UI CPU: %d checks, %d failures" % [checks, failures])

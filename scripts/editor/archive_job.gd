@@ -5,10 +5,12 @@ extends RefCounted
 const Archive := preload("res://scripts/editor/world_archive.gd")
 var _thread := Thread.new()
 
-func save_authored(path: String, bytes: PackedByteArray, grid: int) -> Error:
+func save_authored(path: String, bytes: PackedByteArray, grid: int, thermal: PackedByteArray = PackedByteArray()) -> Error:
 	if _thread.is_started():
 		return ERR_BUSY
-	return _thread.start(Archive.save_authored.bind(path, bytes, grid))
+	if thermal.is_empty():
+		thermal = Archive.default_thermal(bytes)
+	return _thread.start(Archive.save_authored.bind(path, bytes, grid, thermal))
 
 func load_authored(path: String, grid: int) -> Error:
 	if _thread.is_started():
