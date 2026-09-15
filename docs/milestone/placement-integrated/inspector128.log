@@ -1,0 +1,12 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: hovering the water block reads 'Water · 69 °C · full' (got 'Water · 69 °C · full')
+ok: hovering the sand block reads 'Sand · 327 °C' (got 'Sand · 327 °C')
+ok: inspecting never triggers a full world readback
+ok: empty air under the pointer reads nothing
+ok: the inspector is quiet over the tools panel
+ok: the inspector is quiet while painting
+ok: the inspector resumes after the stroke
+ok: cutaway does not produce a stale or foreign reading
+INSPECTOR_CHECKS 8 FAILURES 0

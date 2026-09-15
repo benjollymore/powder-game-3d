@@ -1,9 +1,9 @@
 [
   {
     "name": "brush-shape128",
-    "pass": false,
-    "exit": 1,
-    "seconds": 3.22,
+    "pass": true,
+    "exit": 0,
+    "seconds": 2.9,
     "command": [
       "godot",
       "--path",

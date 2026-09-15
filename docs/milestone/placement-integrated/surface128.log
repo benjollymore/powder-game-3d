@@ -3,7 +3,7 @@ Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
 
 ok: authoritative pick includes liquid and skips gas by default
 ok: add selects adjacent outside cell with outward face normal
-ok: radius-three add centers brush outside the selected solid surface
+ok: radius-three add sits on the selected surface (centre is the first air cell outside the hit face)
 ok: erase targets actual hit material
 ok: explicit material mask skips intervening liquid and gas
 ok: section pick ignores hidden positive-side matter without deleting it
@@ -12,36 +12,25 @@ ok: erase can target the retained section boundary
 ok: out-of-world ray is a miss
 ok: invalid zero-length ray is rejected
 ok: all preview picking leaves exact GPU material bytes unchanged
-surface two-ray transaction completion_us=3337 undo_bytes=18432
+surface two-ray transaction completion_us=4571 undo_bytes=18432
 ok: fast flat-face surface stroke is connected at radius zero
 ok: surface additive stroke preserves every underlying wall cell
 ok: surface undo captures local tiles, not the world (12 bytes per cell with thermal)
 ok: surface stroke undo restores all packed bytes exactly
+ok: radius-three add sits on the selected surface (at least one stamped cell is face-adjacent to the hit cell)
+ok: the cap is the sphere clipped by the wall, not a floating ball
+ok: cap stroke undo restores all packed bytes exactly
 ok: old preview initially sees original wall
 ok: live GPU stamp re-picks a newly inserted nearer surface atomically
 ok: old ray/gesture intent cannot replace newer preview
-ok: changed authored edit revision rejects stale preview
-ok: world reset epoch rejects otherwise matching preview
-ok: live preview tolerates world evolution while atomic stamping owns correctness
-ok: axis0 sign-1 returns exact face normal and adjacent target
-ok: axis0 sign1 returns exact face normal and adjacent target
-ok: axis1 sign-1 returns exact face normal and adjacent target
-ok: axis1 sign1 returns exact face normal and adjacent target
-ok: axis2 sign-1 returns exact face normal and adjacent target
-ok: axis2 sign1 returns exact face normal and adjacent target
-ok: camera inside solid cannot invent an outside add face
-ok: camera inside solid may erase that exact hit cell
-ok: diagonal ray skips wall touched only at an edge
-ok: ray pointing away from the volume does not produce a boundary hit
-ok: surface held source adds 24 actual grains over120 ticks at batch1, got24
-ok: surface held source adds 24 actual grains over120 ticks at batch3, got24
-ok: atomic surface emission and material state are identical at batch3
-ok: surface held source adds 24 actual grains over120 ticks at batch7, got24
-ok: atomic surface emission and material state are identical at batch7
-ok: surface heat raises the picked hit cell by the full strength (293.15 -> 333.15)
-ok: the rim of the sphere warms less than its centre, matching the workplane falloff
-ok: the sphere is centred on the hit cell: wall below and air above warm by the same falloff (37.50 / 37.50 K)
-ok: surface heating leaves every voxel byte untouched
-ok: an equal surface cool restores the previous temperatures exactly
-ok: a slow and a fast surface heat stroke over the same path deposit identical temperatures
-Surface GPU: 42 checks, 0 failures
+SCRIPT ERROR: Invalid call to function '_receive_pick' in base 'Node3D (interaction_lab.gd)'. Expected 3 argument(s).
+          at: _run (res://tests/milestone/surface_pick_gpu.gd:124)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://tests/milestone/surface_pick_gpu.gd:124)
+              [1] query (res://tests/milestone/surface_pick_gpu.gd:28)
+              [2] <anonymous lambda> (res://tests/milestone/surface_pick_gpu.gd:27)
+              [3] _deliver_surface_pick (res://scripts/sim/voxel_sim.gd:585)
+ERROR: Surface GPU watchdog expired
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tests/milestone/surface_pick_gpu.gd:9)

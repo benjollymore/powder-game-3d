@@ -1,9 +1,9 @@
 [
   {
     "name": "workflow128",
-    "pass": false,
-    "exit": 1,
-    "seconds": 3.21,
+    "pass": true,
+    "exit": 0,
+    "seconds": 3.45,
     "command": [
       "godot",
       "--path",

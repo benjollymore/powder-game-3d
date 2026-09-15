@@ -6,9 +6,9 @@ ok: GUI material click and bracket shortcut select a radius-two wall brush
 ok: parsed primary hold survives four active editor frames
 ok: fast parsed drag paints a connected ramp while preserving container walls
 ok: parsed release ends Input hold and completes one authored history entry
-FAIL: GUI Undo restores exact original packed bytes
+ok: GUI Undo restores exact original packed bytes
 ok: parsed Space runs Test without also activating the focused Undo button
-FAIL: GUI Return after keyboard Run restores the untouched construction
+ok: GUI Return after keyboard Run restores the untouched construction
 ok: second GUI-selected material produces sand above the ramp without replacing walls
 ok: parsed Option-primary drag orbits and releases cleanly
 ok: parsed pan and pinch reach camera controls
@@ -26,4 +26,4 @@ WORKFLOW_MATERIAL sand_before_click=587 sand_after_step=588 sand_after_live_hold
 ok: GUI Return restores exact authored construction after live input
 ok: GUI Undo after Return removes only the last authored sand stroke
 ok: workflow restores the original OS cursor position
-Editor workflow GPU: 24 checks, 2 failures; evidence=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/workflow128
+Editor workflow GPU: 24 checks, 0 failures; evidence=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/workflow128
