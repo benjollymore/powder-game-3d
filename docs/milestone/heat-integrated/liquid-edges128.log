@@ -1,0 +1,126 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: cap-0-front has analytic interior samples
+ok: save cap-0-front baseline normal
+ok: save cap-0-front baseline missed-exit
+ok: save cap-0-front baseline length
+{"case":"cap-0-front","max_length_error_cells":56.2277325013024,"missed_exits":626,"samples":34287,"variant":"baseline","wrong_lengths":626}
+ok: save cap-0-front fixed normal
+ok: save cap-0-front fixed missed-exit
+ok: save cap-0-front fixed length
+{"case":"cap-0-front","max_length_error_cells":0.371827065470846,"missed_exits":0,"samples":34287,"variant":"fixed","wrong_lengths":0}
+ok: cap-0-front no open liquid after density exit
+ok: cap-0-front liquid length matches analytic box
+ok: cap-0-front full physical bytes unchanged
+ok: cap-0-oblique has analytic interior samples
+ok: save cap-0-oblique baseline normal
+ok: save cap-0-oblique baseline missed-exit
+ok: save cap-0-oblique baseline length
+{"case":"cap-0-oblique","max_length_error_cells":51.9632104215925,"missed_exits":78,"samples":30463,"variant":"baseline","wrong_lengths":78}
+ok: save cap-0-oblique fixed normal
+ok: save cap-0-oblique fixed missed-exit
+ok: save cap-0-oblique fixed length
+{"case":"cap-0-oblique","max_length_error_cells":0.403845583649314,"missed_exits":0,"samples":30463,"variant":"fixed","wrong_lengths":0}
+ok: cap-0-oblique no open liquid after density exit
+ok: cap-0-oblique liquid length matches analytic box
+ok: cap-0-oblique full physical bytes unchanged
+ok: cap-1-front has analytic interior samples
+ok: save cap-1-front baseline normal
+ok: save cap-1-front baseline missed-exit
+ok: save cap-1-front baseline length
+{"case":"cap-1-front","max_length_error_cells":56.2277604533787,"missed_exits":632,"samples":34287,"variant":"baseline","wrong_lengths":632}
+ok: save cap-1-front fixed normal
+ok: save cap-1-front fixed missed-exit
+ok: save cap-1-front fixed length
+{"case":"cap-1-front","max_length_error_cells":0.371827065470846,"missed_exits":0,"samples":34287,"variant":"fixed","wrong_lengths":0}
+ok: cap-1-front no open liquid after density exit
+ok: cap-1-front liquid length matches analytic box
+ok: cap-1-front full physical bytes unchanged
+ok: cap-1-oblique has analytic interior samples
+ok: save cap-1-oblique baseline normal
+ok: save cap-1-oblique baseline missed-exit
+ok: save cap-1-oblique baseline length
+{"case":"cap-1-oblique","max_length_error_cells":49.1233739105225,"missed_exits":79,"samples":30451,"variant":"baseline","wrong_lengths":79}
+ok: save cap-1-oblique fixed normal
+ok: save cap-1-oblique fixed missed-exit
+ok: save cap-1-oblique fixed length
+{"case":"cap-1-oblique","max_length_error_cells":0.40354892991023,"missed_exits":0,"samples":30451,"variant":"fixed","wrong_lengths":0}
+ok: cap-1-oblique no open liquid after density exit
+ok: cap-1-oblique liquid length matches analytic box
+ok: cap-1-oblique full physical bytes unchanged
+ok: cap-2-front has analytic interior samples
+ok: save cap-2-front baseline normal
+ok: save cap-2-front baseline missed-exit
+ok: save cap-2-front baseline length
+{"case":"cap-2-front","max_length_error_cells":56.2277425484862,"missed_exits":627,"samples":34287,"variant":"baseline","wrong_lengths":627}
+ok: cap-2-front reproduces missed-exit/path error
+ok: save cap-2-front fixed normal
+ok: save cap-2-front fixed missed-exit
+ok: save cap-2-front fixed length
+{"case":"cap-2-front","max_length_error_cells":0.371829978933938,"missed_exits":0,"samples":34287,"variant":"fixed","wrong_lengths":0}
+ok: cap-2-front no open liquid after density exit
+ok: cap-2-front liquid length matches analytic box
+ok: cap-2-front full physical bytes unchanged
+ok: cap-2-oblique has analytic interior samples
+ok: save cap-2-oblique baseline normal
+ok: save cap-2-oblique baseline missed-exit
+ok: save cap-2-oblique baseline length
+{"case":"cap-2-oblique","max_length_error_cells":50.6762506179075,"missed_exits":86,"samples":30462,"variant":"baseline","wrong_lengths":86}
+ok: cap-2-oblique reproduces missed-exit/path error
+ok: save cap-2-oblique fixed normal
+ok: save cap-2-oblique fixed missed-exit
+ok: save cap-2-oblique fixed length
+{"case":"cap-2-oblique","max_length_error_cells":0.40317384566179,"missed_exits":0,"samples":30462,"variant":"fixed","wrong_lengths":0}
+ok: cap-2-oblique no open liquid after density exit
+ok: cap-2-oblique liquid length matches analytic box
+ok: cap-2-oblique full physical bytes unchanged
+ok: ordinary-front has analytic interior samples
+ok: save ordinary-front baseline normal
+ok: save ordinary-front baseline missed-exit
+ok: save ordinary-front baseline length
+{"case":"ordinary-front","max_length_error_cells":56.6038097136885,"missed_exits":684,"samples":73719,"variant":"baseline","wrong_lengths":684}
+ok: save ordinary-front fixed normal
+ok: save ordinary-front fixed missed-exit
+ok: save ordinary-front fixed length
+{"case":"ordinary-front","max_length_error_cells":0.600085566551897,"missed_exits":0,"samples":73719,"variant":"fixed","wrong_lengths":0}
+ok: ordinary-front no open liquid after density exit
+ok: ordinary-front liquid length matches analytic box
+ok: ordinary-front full physical bytes unchanged
+ok: ordinary-oblique has analytic interior samples
+ok: save ordinary-oblique baseline normal
+ok: save ordinary-oblique baseline missed-exit
+ok: save ordinary-oblique baseline length
+{"case":"ordinary-oblique","max_length_error_cells":98.3356641572696,"missed_exits":301,"samples":59212,"variant":"baseline","wrong_lengths":301}
+ok: save ordinary-oblique fixed normal
+ok: save ordinary-oblique fixed missed-exit
+ok: save ordinary-oblique fixed length
+{"case":"ordinary-oblique","max_length_error_cells":0.625100706848343,"missed_exits":0,"samples":59212,"variant":"fixed","wrong_lengths":0}
+ok: ordinary-oblique no open liquid after density exit
+ok: ordinary-oblique liquid length matches analytic box
+ok: ordinary-oblique full physical bytes unchanged
+ok: thin-cap has analytic interior samples
+ok: save thin-cap baseline normal
+ok: save thin-cap baseline missed-exit
+ok: save thin-cap baseline length
+{"case":"thin-cap","max_length_error_cells":65.0804677963058,"missed_exits":29,"samples":1807,"variant":"baseline","wrong_lengths":29}
+ok: save thin-cap fixed normal
+ok: save thin-cap fixed missed-exit
+ok: save thin-cap fixed length
+{"case":"thin-cap","max_length_error_cells":0.113455933089352,"missed_exits":0,"samples":1807,"variant":"fixed","wrong_lengths":0}
+ok: thin-cap no open liquid after density exit
+ok: thin-cap liquid length matches analytic box
+ok: thin-cap full physical bytes unchanged
+ok: thin-ordinary has analytic interior samples
+ok: save thin-ordinary baseline normal
+ok: save thin-ordinary baseline missed-exit
+ok: save thin-ordinary baseline length
+{"case":"thin-ordinary","max_length_error_cells":115.869563585112,"missed_exits":106,"samples":6369,"variant":"baseline","wrong_lengths":106}
+ok: save thin-ordinary fixed normal
+ok: save thin-ordinary fixed missed-exit
+ok: save thin-ordinary fixed length
+{"case":"thin-ordinary","max_length_error_cells":0.113455933089352,"missed_exits":0,"samples":6369,"variant":"fixed","wrong_lengths":0}
+ok: thin-ordinary no open liquid after density exit
+ok: thin-ordinary liquid length matches analytic box
+ok: thin-ordinary full physical bytes unchanged
+LIQUID_EXIT_CHECKS 102 FAILURES 0

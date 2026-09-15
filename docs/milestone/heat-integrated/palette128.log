@@ -17,5 +17,11 @@ ok: Forest fire palette32 capture saved
 ok: Forest fire capture shows substantial content (66758 non-background pixels)
 ok: Forest fire renders byte-identically with palette 32
 ok: Forest fire physical bytes unchanged across captures
+ok: thermal bound (true) with thermal_glow=false renders byte-identically
+ok: thermal-off capture saved
+ok: thermal-on capture saved
+ok: thermal glow at 1400 K changes the picture (34533 pixels)
+ok: thermal glow leaves physical bytes unchanged
+note: no heat-milestone element rows present; material fixture skipped
 ok: padded palette has a zero tail
-PALETTE_CHECKS 17 FAILURES 0
+PALETTE_CHECKS 22 FAILURES 0
