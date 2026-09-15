@@ -9,6 +9,10 @@ uniform sampler3D voxels : filter_nearest, repeat_disable;
 uniform sampler3D occupancy : filter_nearest, repeat_disable;
 uniform sampler3D fields : filter_linear_mipmap, repeat_disable;
 uniform sampler3D sunvis : filter_linear, repeat_disable;
+// Authoritative temperature layer (R = kelvin). Unbound or disabled it is never
+// sampled, so output stays byte-identical to the pre-thermal shaders.
+uniform sampler3D thermal : filter_nearest, repeat_disable, hint_default_black;
+uniform bool thermal_glow = false;
 uniform vec4 palette[32];
 uniform int grid_size = 128;
 uniform int brick_size = 8;
@@ -171,4 +175,17 @@ bool step_voxel(inout Ray r, inout float t) {
 		r.cell.z += r.step_dir.z; t = r.t_max.z; r.t_max.z += r.t_delta.z; r.axis = 2;
 	}
 	return !outside(r.cell);
+}
+
+// Incandescence for a cell by temperature: dull red from ~800 K, orange near
+// 1150 K, yellow-white by 1500 K. Zero unless thermal_glow is on.
+vec3 thermal_emission(ivec3 cell) {
+	if (!thermal_glow) { return vec3(0.0); }
+	float kelvin = texelFetch(thermal, cell, 0).r;
+	float t = smoothstep(800.0, 1500.0, kelvin);
+	if (t <= 0.0) { return vec3(0.0); }
+	vec3 tint = t < 0.5
+		? mix(vec3(0.55, 0.04, 0.0), vec3(1.0, 0.42, 0.08), t * 2.0)
+		: mix(vec3(1.0, 0.42, 0.08), vec3(1.0, 0.90, 0.70), (t - 0.5) * 2.0);
+	return tint * (0.15 + 2.6 * t * t);
 }

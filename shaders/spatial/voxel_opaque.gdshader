@@ -238,6 +238,12 @@ void fragment() {
 	ROUGHNESS = mat_rough[int(id)];
 	METALLIC = 0.0;
 	AO = ao;
+	// Palette alpha is self-illumination. On textured materials the light comes
+	// from the dark cracks of the texture (a cooling crust); zero for every
+	// element without an emission entry, so existing looks are unchanged.
+	float crack = 1.0 - smoothstep(0.35, 0.75, dot(tex, vec3(1.0 / 3.0)));
+	EMISSION = pal.rgb * pal.a * mix(1.0, 0.25 + 0.75 * crack, detail_strength);
+	EMISSION += thermal_emission(ivec3(floor(ps - n_geo * 0.5)));
 	AO_LIGHT_AFFECT = 0.0;
 	LIGHT_VERTEX = hit_view.xyz;
 	vec4 hit_clip = PROJECTION_MATRIX * hit_view;

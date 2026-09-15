@@ -47,4 +47,9 @@ static func apply(sim: Node3D, world: WorldEnvironment, parent: Node3D) -> Direc
 	sim.set_param("foam_strength", 0.45)
 	sim.set_param("caustic_strength", 0.18)
 	sim.set_param("liquid_specular", 0.45)
+	# Incandescence reads the authoritative thermal layer when the simulator
+	# provides one; without it the shaders never sample the uniform.
+	if "thermal_texture" in sim and sim.thermal_texture != null:
+		sim.set_param("thermal", sim.thermal_texture)
+		sim.set_param("thermal_glow", true)
 	return sun

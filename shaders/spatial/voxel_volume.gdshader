@@ -146,6 +146,7 @@ void fragment() {
 	bool prev_liquid = false;
 	float t_in = 0.0;
 	vec3 liquid_col = vec3(0.0);
+	vec3 liquid_glow = vec3(0.0); // self-illumination of the current liquid segment
 	vec3 liquid_shade = hemi_light(vec3(0.0, 1.0, 0.0)) * 0.9 + sun_color * 0.35;
 	// Froth is bright: it scatters sunlight back and shows no absorption.
 	vec3 foam_shade = hemi_light(vec3(0.0, 1.0, 0.0)) * 1.1 + sun_color * 0.75;
@@ -166,6 +167,7 @@ void fragment() {
 			in_liquid = true;
 			liquid_id = id0;
 			liquid_col = palette[int(id0)].rgb;
+			liquid_glow = liquid_col * palette[int(id0)].a + thermal_emission(r.cell);
 			// A positive-side section can begin inside a liquid segment. There
 			// is no density crossing to initialize its visible depth later, so
 			// use the cut entry plane rather than falling back to the box exit.
@@ -228,13 +230,14 @@ void fragment() {
 			// the old colour and start a new one, with no surface in between.
 			float len = max(t - t_in, 0.0);
 			float foam = field(r.p0 + r.dir * (0.5 * (t_in + t))).a * foam_strength;
-			emitted += trans * liquid_col * liquid_shade * (1.0 - exp(-scatter * len));
+			emitted += trans * (liquid_col * liquid_shade + liquid_glow) * (1.0 - exp(-scatter * len));
 			emitted += trans * foam_shade * (1.0 - exp(-0.35 * foam * len));
 			trans *= exp(-(absorb + vec3(0.35 * foam)) * len);
 			liquid_len += len;
 			t_in = t;
 			liquid_id = id;
 			liquid_col = palette[int(id)].rgb;
+			liquid_glow = liquid_col * palette[int(id)].a + thermal_emission(r.cell);
 			if (proxy) { in_liquid = false; }
 		}
 		// Sampling can reach the density exit after the first non-liquid cell,
@@ -268,6 +271,7 @@ void fragment() {
 				float spec = pow(max(dot(refl_world, sun), 0.0), 96.0) * liquid_specular * vis * mix(0.2, 1.0, thick) * float(air_interface);
 				liquid_id = liquid ? id : voxel_at(ivec3(floor(ps))).x;
 				liquid_col = palette[int(liquid_id)].rgb;
+				liquid_glow = liquid_col * palette[int(liquid_id)].a + thermal_emission(ivec3(floor(ps)));
 				float sheen = 0.12 * max(dot(n_world, sun), 0.0) * vis * float(air_interface);
 				emitted += trans * (fresnel * refl_col + spec * sun_color + sheen * liquid_col);
 				trans *= 1.0 - fresnel;
@@ -289,7 +293,7 @@ void fragment() {
 				float ts = bisect(r.p0, r.dir, t_prev, t_next, 0, false);
 				float len = max(ts - t_in, 0.0);
 				float foam = field(r.p0 + r.dir * (0.5 * (t_in + ts))).a * foam_strength;
-				emitted += trans * liquid_col * liquid_shade * (1.0 - exp(-scatter * len));
+				emitted += trans * (liquid_col * liquid_shade + liquid_glow) * (1.0 - exp(-scatter * len));
 				emitted += trans * foam_shade * (1.0 - exp(-0.35 * foam * len));
 				trans *= exp(-(absorb + vec3(0.35 * foam)) * len);
 				liquid_len += len;
@@ -324,7 +328,7 @@ void fragment() {
 				}
 				previous_liquid_exit = end;
 				previous_proxy_exit = end;
-				emitted += trans * palette[int(id)].rgb * liquid_shade * (1.0 - exp(-scatter * len));
+				emitted += trans * (palette[int(id)].rgb * (liquid_shade + vec3(palette[int(id)].a)) + thermal_emission(r.cell)) * (1.0 - exp(-scatter * len));
 				trans *= exp(-absorb * len);
 				liquid_len += len;
 				if (t_first < 0.0) { t_first = start; }
@@ -350,7 +354,7 @@ void fragment() {
 	if (in_liquid) {
 		float len = max(min(t_stop, r.t_box) - t_in, 0.0);
 		float foam = field(r.p0 + r.dir * (t_in + 0.5 * len)).a * foam_strength;
-		emitted += trans * liquid_col * liquid_shade * (1.0 - exp(-scatter * len));
+		emitted += trans * (liquid_col * liquid_shade + liquid_glow) * (1.0 - exp(-scatter * len));
 		emitted += trans * foam_shade * (1.0 - exp(-0.35 * foam * len));
 		trans *= exp(-(absorb + vec3(0.35 * foam)) * len);
 		liquid_len += len;
