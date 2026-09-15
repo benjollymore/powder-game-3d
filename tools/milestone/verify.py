@@ -35,6 +35,8 @@ CPU = [
     ("heat-ui", "tests/milestone/heat_ui.gd", 128),
     ("keep-result", "tests/milestone/keep_result.gd", 128),
     ("cell-inspector", "tests/milestone/cell_inspector.gd", 128),
+    ("examples128", "tests/milestone/examples_cpu.gd", 128),
+    ("examples256", "tests/milestone/examples_cpu.gd", 256),
     ("guard-queue", "tests/milestone/guard_queue.gd", 128),
     ("thermal-init", "tests/milestone/thermal_init.gd", 128),
     ("thermal-remap", "tests/milestone/thermal_remap.gd", 128),
