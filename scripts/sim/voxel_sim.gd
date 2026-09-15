@@ -523,6 +523,15 @@ func finish_edit_transaction(id: int) -> void:
 	RenderingServer.call_on_render_thread(_rt_finish_edit.bind(id))
 
 
+## Capture the current contents of aligned history tiles without painting:
+## the same before-image path strokes use, closed as one record. Callers pass
+## `{lo, hi}` tile bounds; the record is valid for restore_edit_transaction.
+func capture_regions(bounds: Array, callback: Callable) -> int:
+	var id := begin_edit_transaction(callback)
+	RenderingServer.call_on_render_thread(_rt_capture_regions.bind(id, bounds))
+	return id
+
+
 ## Preview is asynchronous and tagged; painting re-picks from its frozen ray.
 func request_surface_pick(ray: Dictionary, radius: int, erase: bool, callback: Callable) -> void:
 	var checked := _checked_surface(ray)
@@ -760,6 +769,14 @@ func _rt_record_region(id: int, lo: Vector3i, hi: Vector3i, element: int) -> voi
 
 func _rt_finish_edit(id: int) -> void:
 	_rt_edit_gpu().finish(id)
+
+
+func _rt_capture_regions(id: int, bounds: Array) -> void:
+	var gpu := _rt_edit_gpu()
+	for region in bounds:
+		if not gpu.capture_region(id, region.lo, region.hi):
+			break
+	gpu.finish(id)
 
 
 func _rt_restore_edit(regions: Array) -> void:

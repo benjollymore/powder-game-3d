@@ -82,7 +82,7 @@ func _poll() -> void:
 		_execute()
 		return
 	prompt_token = editor.document.current
-	var purpose: String = {"reset": "resetting the container", "empty": "starting an empty build", "open": "opening another build", "close": "closing"}.get(action, "continuing")
+	var purpose: String = {"reset": "resetting the container", "empty": "starting an empty build", "open": "opening another build", "example": "loading an example", "close": "closing"}.get(action, "continuing")
 	dialog.dialog_text = "Save changes to %s before %s?" % ["this untitled build" if editor.document.path.is_empty() else editor.document.path.get_file(), purpose]
 	state = "prompt"
 	dialog.popup_centered(Vector2i(430, 150))

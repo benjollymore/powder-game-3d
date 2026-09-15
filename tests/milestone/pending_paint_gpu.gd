@@ -78,7 +78,7 @@ func run() -> void:
 	await begin_pair(curve)
 	check(editor.capturing and editor.pending_authored != null and editor.pending_authored.closed and editor.pending_authored.samples.size() == 3,
 		"rapid released second stroke retains all curve samples while first history capture is pending")
-	key(KEY_3)
+	key(KEY_2) # Water: number keys follow the palette's first row (Sand, Water, Wall)
 	key(KEY_BRACKETRIGHT)
 	await settled()
 	var painted := await read()

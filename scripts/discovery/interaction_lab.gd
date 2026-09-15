@@ -7,6 +7,18 @@ const HistoryBudget := preload("res://scripts/editor/history_budget.gd")
 var document := preload("res://scripts/editor/authored_document.gd").new()
 var document_guard: Node
 const PendingGesture := preload("res://scripts/editor/pending_gesture.gd")
+const PalettePanel := preload("res://scripts/editor/palette_panel.gd")
+const KeepResult := preload("res://scripts/editor/keep_result.gd")
+var palette: RefCounted
+var thermal_tool := "" # "", "heat" or "cool": the brush changes temperature, not material
+var stroke_thermal := ""
+var speed_slider: HSlider
+var speed_label: Label
+var speed_scale := 1.0
+var examples_choice: OptionButton
+var _queued_example := ""
+var keep_button: Button
+var keeping := false
 var pending_authored: RefCounted
 var _capture_accepts_pending := false
 enum TargetMode { PLANE, SURFACE }
@@ -229,20 +241,8 @@ func _build_ui() -> void:
 	var title := Label.new()
 	title.text = "  PAINT & PLAY  "
 	column.add_child(title)
-	var material_row := HBoxContainer.new()
-	column.add_child(material_row)
-	for id in [Elements.Id.SAND, Elements.Id.WATER, Elements.Id.WALL]:
-		_add_material_button(material_row, id)
-	var more := CheckButton.new()
-	more.text = "More materials"
-	column.add_child(more)
-	var extra := GridContainer.new()
-	extra.columns = 3
-	extra.visible = false
-	column.add_child(extra)
-	more.toggled.connect(func(enabled): extra.visible = enabled)
-	for id in [Elements.Id.OIL, Elements.Id.WOOD, Elements.Id.PLANT, Elements.Id.FIRE, Elements.Id.STEAM, Elements.Id.SMOKE]:
-		_add_material_button(extra, id)
+	palette = PalettePanel.new()
+	palette.build(self, column)
 	var brush_row := HBoxContainer.new()
 	column.add_child(brush_row)
 	var radius_label := Label.new()
@@ -261,12 +261,29 @@ func _build_ui() -> void:
 	erase_button.toggle_mode = true
 	erase_button.pressed.connect(func():
 		_end_stroke()
+		thermal_tool = ""
 		erase = not erase)
 	brush_row.add_child(erase_button)
 	play_button = Button.new()
 	play_button.text = "Run experiment · Space"
 	play_button.pressed.connect(run_or_restore)
 	column.add_child(play_button)
+	var speed_row := HBoxContainer.new()
+	column.add_child(speed_row)
+	speed_label = Label.new()
+	speed_label.text = "Speed 1×  "
+	speed_label.custom_minimum_size.x = 90
+	speed_row.add_child(speed_label)
+	speed_slider = HSlider.new()
+	speed_slider.min_value = -3
+	speed_slider.max_value = 2
+	speed_slider.step = 1
+	speed_slider.value = 0
+	speed_slider.tooltip_text = "Experiment speed, 1/8× to 4× real time"
+	speed_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	speed_slider.value_changed.connect(_set_speed_step)
+	speed_row.add_child(speed_slider)
+	TimeController.time_scale_changed.connect(_sync_speed)
 	test_time_controls = HBoxContainer.new()
 	test_time_controls.visible = false
 	column.add_child(test_time_controls)
@@ -281,6 +298,12 @@ func _build_ui() -> void:
 	step_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	step_button.pressed.connect(step_test)
 	test_time_controls.add_child(step_button)
+	keep_button = Button.new()
+	keep_button.text = "Keep result"
+	keep_button.tooltip_text = "Make the current experiment state the build, as one undoable edit"
+	keep_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	keep_button.pressed.connect(keep_result)
+	test_time_controls.add_child(keep_button)
 	var history_row := HBoxContainer.new()
 	column.add_child(history_row)
 	undo_button = Button.new()
@@ -295,6 +318,22 @@ func _build_ui() -> void:
 	redo_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	redo_button.pressed.connect(redo_edit)
 	history_row.add_child(redo_button)
+	examples_choice = OptionButton.new()
+	examples_choice.add_item("Examples…", 0)
+	examples_choice.set_item_disabled(0, true)
+	var example_index := 1
+	for name in Scenarios.names():
+		if name == "Empty":
+			continue
+		examples_choice.add_item(name, example_index)
+		example_index += 1
+	examples_choice.tooltip_text = "Load a ready-made build. Your unsaved work is protected first."
+	examples_choice.item_selected.connect(func(index):
+		var name := examples_choice.get_item_text(index)
+		examples_choice.select(0)
+		if index > 0:
+			load_example(name))
+	column.add_child(examples_choice)
 	var target_row := HBoxContainer.new()
 	column.add_child(target_row)
 	var target_label := Label.new()
@@ -402,7 +441,7 @@ func _build_ui() -> void:
 	controls.text = "Drag: paint · two fingers: orbit · pinch: zoom\nShift + two fingers: pan · Option + drag: orbit"
 	var secondary_controls := Label.new()
 	secondary_controls.add_theme_font_size_override("font_size", 14)
-	secondary_controls.text = "Option + Shift + drag: pan · RMB/wheel work too\nPlane: −/+ above · Shift-wheel · [ ] brush size\n1 wall · 2 sand · 3 water · X erase · F angle\nCmd/Ctrl: S save · Shift+S save as · O open"
+	secondary_controls.text = "Option + Shift + drag: pan · RMB/wheel work too\nPlane: −/+ above · Shift-wheel · [ ] brush size\n1 sand · 2 water · 3 wall · X erase · F angle\nCmd/Ctrl: S save · Shift+S save as · O open"
 	advanced_tools.add_child(secondary_controls)
 	controls.tooltip_text = controls.text + "\n" + secondary_controls.text
 	column.add_child(controls)
@@ -439,7 +478,44 @@ func _choose_material(id: int) -> void:
 	_end_stroke() # Commit using frozen stroke metadata before changing the tool.
 	element = id
 	erase = false
+	thermal_tool = ""
 	_refresh_palette()
+
+
+func _choose_thermal(tool: String) -> void:
+	_end_stroke()
+	if not PalettePanel.thermal_brushes_available(sim):
+		return
+	thermal_tool = "" if thermal_tool == tool else tool
+	erase = false
+	_refresh_palette()
+
+
+## Brush mode for frozen stroke metadata. Thermal brushes only exist once the
+## simulator exposes HEAT/COOL; until then they are hidden and never requested.
+func _brush_mode(thermal: String, erase_flag: bool) -> int:
+	if thermal != "" and PalettePanel.thermal_brushes_available(sim):
+		return sim.BrushMode[thermal.to_upper()]
+	return sim.BrushMode.ERASE if erase_flag else sim.BrushMode.ONLY_AIR
+
+
+func _set_speed_step(step: float) -> void:
+	speed_scale = pow(2.0, step)
+	speed_label.text = "Speed %s×  " % ("1/%d" % int(round(1.0 / speed_scale)) if speed_scale < 1.0 else str(int(speed_scale)))
+	if testing and not TimeController.is_frozen():
+		TimeController.time_scale = speed_scale
+	elif testing and TimeController.paused:
+		TimeController.time_scale = speed_scale
+
+
+func _sync_speed(target_scale: float) -> void:
+	if not testing or speed_slider == null or target_scale < TimeController.MIN_SCALE:
+		return
+	var step := clampf(round(log(target_scale) / log(2.0)), speed_slider.min_value, speed_slider.max_value)
+	if pow(2.0, step) != speed_scale:
+		speed_scale = pow(2.0, step)
+		speed_slider.set_value_no_signal(step)
+		speed_label.text = "Speed %s×  " % ("1/%d" % int(round(1.0 / speed_scale)) if speed_scale < 1.0 else str(int(speed_scale)))
 
 
 func toggle_test_pause() -> void:
@@ -479,9 +555,13 @@ func _refresh_palette() -> void:
 		undo_button.disabled = testing or (undo_history.is_empty() and not capturing)
 		redo_button.disabled = testing or (redo_history.is_empty() and not capturing)
 	for id in material_buttons:
-		material_buttons[id].set_pressed_no_signal(id == element and not erase)
+		material_buttons[id].set_pressed_no_signal(id == element and not erase and thermal_tool == "")
 	if erase_button:
 		erase_button.set_pressed_no_signal(erase)
+	if palette:
+		palette.refresh(self)
+	if keep_button:
+		keep_button.disabled = capturing or keeping
 
 
 func _set_advanced(enabled: bool) -> void:
@@ -519,6 +599,103 @@ func new_empty_build() -> void:
 			document_guard.request("empty", func(): replace_authored(WorldBuilder.empty().to_byte_array()))
 		else:
 			replace_authored(WorldBuilder.empty().to_byte_array())
+
+
+## Examples replace the construction like Open: a fresh authored world behind
+## the unsaved-build guard, not a runtime rewind and not part of Build history.
+func load_example(name: String) -> void:
+	if name.is_empty() or name not in Scenarios.names():
+		return
+	_queued_example = name
+	if _wait_for_edit("example"):
+		return
+	var apply := func(): replace_authored(Scenarios.build(name))
+	if _ready_to_edit and is_instance_valid(document_guard):
+		document_guard.request("example", apply)
+	else:
+		apply.call()
+
+
+## Keep the live experiment as the authored build. The changed history tiles
+## become one regional transaction: Undo returns to the previous build, Redo
+## re-applies the kept result. Larger changes fall back to a new authored
+## build, reported as such, rather than silently exceeding the history budget.
+func keep_result() -> void:
+	if not testing or keeping:
+		return
+	if _wait_for_edit("keep"):
+		return
+	keeping = true
+	capturing = true
+	_capture_accepts_pending = false
+	edit_message = "Keeping the experiment result…"
+	TimeController.paused = true
+	_refresh_test_controls()
+	var epoch: int = sim.edit_epoch
+	sim.request_readback(func(live: PackedByteArray): _keep_diff(live, epoch))
+
+
+func _keep_diff(live: PackedByteArray, epoch: int) -> void:
+	if not testing or sim.edit_epoch != epoch or live.size() != build_snapshot.size():
+		_keep_finish("The experiment changed while keeping; nothing was kept.")
+		return
+	var tiles := KeepResult.changed_tiles(build_snapshot, live, VoxelCodec.GRID, sim.EditGPU.TILE)
+	if tiles.is_empty():
+		_keep_finish("Nothing changed; the build is already this result.")
+		return
+	var bounds := KeepResult.bounds(tiles, VoxelCodec.GRID, sim.EditGPU.TILE)
+	if KeepResult.byte_count(tiles, VoxelCodec.GRID, sim.EditGPU.TILE) > sim.EditGPU.MAX_TRANSACTION_BYTES:
+		# Too much changed for one undoable edit: keep it as a new unsaved build.
+		testing = false
+		play_button.text = "Run experiment · Space"
+		replace_authored(live)
+		document.changed({})
+		_keep_finish("Kept as a new build: too much changed to undo in one step.")
+		return
+	# Capture the live tiles first, in the history layout, before returning.
+	sim.capture_regions(bounds, func(live_record: Dictionary): _keep_captured_live(live_record, bounds, epoch))
+
+
+func _keep_captured_live(live_record: Dictionary, bounds: Array, epoch: int) -> void:
+	if not testing or sim.edit_epoch != epoch or not live_record.valid or live_record.regions.is_empty():
+		_keep_finish("Could not capture the experiment result; nothing was kept.")
+		return
+	# Return to the authored revision exactly as Return does, then record the
+	# kept tiles as one edit on top of it.
+	sim.upload(build_snapshot)
+	for transaction in undo_history + redo_history:
+		transaction.epoch = sim.edit_epoch
+	testing = false
+	play_button.text = "Run experiment · Space"
+	var new_epoch: int = sim.edit_epoch
+	# The before-image buffer captures the authored tiles ahead of the queued
+	# restore; both are ordered on the render thread behind the upload.
+	sim.capture_regions(bounds, func(before: Dictionary): _keep_record(before, new_epoch))
+	sim.restore_edit_transaction({"valid": true, "epoch": new_epoch, "regions": live_record.regions, "bytes": live_record.bytes})
+
+
+func _keep_record(before: Dictionary, epoch: int) -> void:
+	if not before.valid or before.regions.is_empty() or before.epoch != epoch or sim.edit_epoch != epoch:
+		_clear_history()
+		document.changed({})
+		_keep_finish("Kept the result, but its Undo could not be recorded; history was cleared.")
+		return
+	document.changed(before)
+	redo_history.clear()
+	redo_bytes = 0
+	undo_history.append(before)
+	undo_bytes += before.bytes
+	_trim_history()
+	last_edit_bytes = before.bytes
+	_keep_finish("Kept the experiment result as the build.")
+	edit_completed.emit(before)
+
+
+func _keep_finish(message: String) -> void:
+	keeping = false
+	capturing = false
+	edit_message = message
+	_refresh_palette()
 
 
 ## Preserve the latest explicit action while the finished stroke's regional
@@ -562,6 +739,8 @@ func _resume_editor_action() -> void:
 		"return_build": _set_testing(false)
 		"reset": reset_container()
 		"empty": new_empty_build()
+		"example": load_example(_queued_example)
+		"keep": keep_result()
 
 
 func _set_target_mode(value: int) -> void:
@@ -896,6 +1075,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					stroke_radius = radius
 					stroke_element = element
 					stroke_erase = erase
+					stroke_thermal = thermal_tool
 					if not testing:
 						_begin_authored_edit()
 					painting = true
@@ -938,7 +1118,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if event.ctrl_pressed or event.meta_pressed or event.alt_pressed or event.shift_pressed:
 			return
-		if event.keycode not in [KEY_P, KEY_N, KEY_R, KEY_0, KEY_COMMA, KEY_PERIOD, KEY_BACKSLASH, KEY_B, KEY_1, KEY_2, KEY_3, KEY_X, KEY_BRACKETLEFT, KEY_BRACKETRIGHT, KEY_V, KEY_F]:
+		if event.keycode not in [KEY_P, KEY_N, KEY_R, KEY_0, KEY_COMMA, KEY_PERIOD, KEY_BACKSLASH, KEY_B, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_X, KEY_BRACKETLEFT, KEY_BRACKETRIGHT, KEY_V, KEY_F]:
 			return
 		_end_stroke()
 		match event.keycode:
@@ -952,8 +1132,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				pass
 			KEY_B:
 				selection_toggle.button_pressed = not selection_toggle.button_pressed
-			KEY_1, KEY_2, KEY_3:
-				element = event.keycode - KEY_1 + 1
+			KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9:
+				var id: int = palette.key_material(event.keycode - KEY_1 + 1) if palette else event.keycode - KEY_1 + 1
+				if id > 0:
+					element = id
+					thermal_tool = ""
 				erase = false
 			KEY_X:
 				erase = not erase
@@ -1034,7 +1217,7 @@ func _queue_pending_press(mouse: Vector2) -> void:
 	if targeting_mode == TargetMode.PLANE and _target_at(mouse).x < 0:
 		return
 	pending_authored = PendingGesture.new({"epoch": sim.edit_epoch, "mode": targeting_mode,
-		"element": element, "radius": radius, "erase": erase,
+		"element": element, "radius": radius, "erase": erase, "thermal": thermal_tool,
 		"view": {"section": section, "axis": axis, "depth": depth}})
 	_sample_pending(mouse)
 	edit_message = "Stroke queued while the previous edit finishes."
@@ -1069,9 +1252,10 @@ func _resume_pending_paint() -> void:
 	stroke_element = gesture.metadata.element
 	stroke_radius = gesture.metadata.radius
 	stroke_erase = gesture.metadata.erase
+	stroke_thermal = gesture.metadata.get("thermal", "")
 	stroke_view = gesture.metadata.view
 	_begin_authored_edit(gesture.warning)
-	var mode: int = sim.BrushMode.ERASE if stroke_erase else sim.BrushMode.ONLY_AIR
+	var mode: int = _brush_mode(stroke_thermal, stroke_erase)
 	if stroke_target_mode == TargetMode.SURFACE:
 		sim.record_surface_stroke(active_transaction, gesture.samples, stroke_radius, stroke_element, mode, active_transaction)
 		surface_connect = gesture.connect_next
@@ -1225,7 +1409,7 @@ func _set_testing(desired: bool) -> void:
 			build_snapshot = bytes
 			edit_message = ""
 			testing = true
-			TimeController.time_scale = 1.0
+			TimeController.time_scale = speed_scale
 			TimeController.paused = false
 			play_button.text = "Return to build (restore) · Space")
 
@@ -1342,7 +1526,7 @@ func _set_live_source(mouse: Vector2) -> void:
 	if surface.is_empty() and center.x < 0:
 		_stop_live_emitter()
 		return
-	var mode: int = sim.BrushMode.ERASE if stroke_erase else sim.BrushMode.ONLY_AIR
+	var mode: int = _brush_mode(stroke_thermal, stroke_erase)
 	var signature := hash([center, stroke_radius, stroke_element, mode, surface])
 	if signature != live_emitter_signature:
 		live_emitter_signature = signature
@@ -1356,12 +1540,12 @@ func _flush() -> void:
 		pending.clear()
 		return
 	if not pending_surface.is_empty() and sim != null:
-		var mode: int = sim.BrushMode.ERASE if stroke_erase else sim.BrushMode.ONLY_AIR
+		var mode: int = _brush_mode(stroke_thermal, stroke_erase)
 		if active_transaction >= 0:
 			sim.record_surface_stroke(active_transaction, pending_surface, stroke_radius, stroke_element, mode, active_transaction)
 		pending_surface.clear()
 	if not pending.is_empty() and sim != null:
-		var mode: int = sim.BrushMode.ERASE if stroke_erase else sim.BrushMode.ONLY_AIR
+		var mode: int = _brush_mode(stroke_thermal, stroke_erase)
 		if active_transaction >= 0:
 			sim.record_stroke(active_transaction, pending, stroke_radius, stroke_element, mode, active_transaction)
 		pending.clear()
@@ -1392,7 +1576,7 @@ func _process(delta: float) -> void:
 		marker.scale = Vector3.ONE * (2 * radius + 1) * sim.world_size() / VoxelCodec.GRID
 	_update_live_emitter(over_ui)
 	_flush()
-	status.text = "%s · %s · r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % ["ERASE" if erase else "Add into empty space", Elements.TABLE[element].name, radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else _test_phase(), "Live edits reset on return; no live undo" if testing else "%d undo · %d redo" % [undo_history.size(), redo_history.size()]]
+	status.text = "%s · %s · r=%d cells\nPlane %s=%d · target %s\n%.0f FPS · %s\n%s" % [("HEAT" if thermal_tool == "heat" else "COOL") if thermal_tool != "" else ("ERASE" if erase else "Add into empty space"), Elements.TABLE[element].name, radius, ["X", "Y", "Z"][axis], depth, str(target) if marker.visible else "—", Engine.get_frames_per_second(), "Preparing edit…" if capturing else _test_phase(), "Live edits reset on return; no live undo" if testing else "%d undo · %d redo" % [undo_history.size(), redo_history.size()]]
 	if edit_message != "":
 		status.text += "\n" + edit_message
 	if targeting_mode == TargetMode.SURFACE and not section_action.visible:

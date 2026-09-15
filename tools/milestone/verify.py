@@ -31,6 +31,8 @@ CPU = [
     ("archive-panel", "tests/milestone/archive_panel.gd", 128),
     ("authored-document", "tests/milestone/authored_document.gd", 128),
     ("file-shortcuts", "tests/milestone/file_shortcuts.gd", 128),
+    ("heat-ui", "tests/milestone/heat_ui.gd", 128),
+    ("keep-result", "tests/milestone/keep_result.gd", 128),
     ("guard-queue", "tests/milestone/guard_queue.gd", 128),
 ]
 GPU = [
@@ -48,6 +50,7 @@ GPU = [
     ("document-protection256", "tests/milestone/document_protection_gpu.gd", 256),
     ("file-shortcuts128", "tests/milestone/file_shortcuts_gpu.gd", 128),
     ("file-shortcuts256", "tests/milestone/file_shortcuts_gpu.gd", 256),
+    ("heat-ui128", "tests/milestone/editor_heat_ui_gpu.gd", 128),
     ("actions128", "tests/milestone/editor_actions_gpu.gd", 128),
     ("editor128", "tests/discovery/interaction_gpu.gd", 128),
     ("trackpad128", "tests/discovery/trackpad_gpu.gd", 128),
