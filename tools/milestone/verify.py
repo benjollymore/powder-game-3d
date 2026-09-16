@@ -114,6 +114,20 @@ def passed(output: str, returncode: int) -> bool:
             and not re.search(r"SCRIPT ERROR:|^ERROR:|\bFAIL:", output, re.M))
 
 
+# Preferences belong to the person playing, and a suite that writes them makes
+# the editor start wrong. The preference layer resolves away from the real file
+# in script mode (scripts/editor/preference_store.gd), and this is the check
+# that the arrangement actually holds: mechanisms rot, so verify the property.
+USER_PREFERENCES = (Path.home() / "Library/Application Support/Godot/app_userdata"
+                    / "Powder Game 3D" / "editor_preferences.cfg")
+
+
+def preferences_fingerprint() -> str:
+    if not USER_PREFERENCES.exists():
+        return "absent"
+    return hashlib.sha256(USER_PREFERENCES.read_bytes()).hexdigest()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--gpu", action="store_true", help="GPU suites instead of CPU suites")
@@ -129,6 +143,7 @@ def main() -> int:
     out = ROOT / args.output
     out.mkdir(parents=True, exist_ok=True)
     records = []
+    preferences_before = preferences_fingerprint()
     for case in cases:
         # A case may carry a fourth element: its own watchdog in seconds. The
         # default suits a suite that runs in well under a minute; building
@@ -165,6 +180,13 @@ def main() -> int:
         # A focused rerun must not erase the manifest of an earlier full run.
         label += "-" + hashlib.sha256("\n".join(case[0] for case in cases).encode()).hexdigest()[:8]
     (out / (label + ".json")).write_text(json.dumps(records, indent=2) + "\n")
+    preferences_after = preferences_fingerprint()
+    if preferences_after != preferences_before:
+        print(json.dumps({"name": "user-preferences-untouched", "pass": False,
+                          "detail": "a suite wrote the real editor preferences",
+                          "path": str(USER_PREFERENCES),
+                          "before": preferences_before, "after": preferences_after}), flush=True)
+        return 1
     return 0 if len(records) == len(cases) and all(row["pass"] for row in records) else 1
 
 

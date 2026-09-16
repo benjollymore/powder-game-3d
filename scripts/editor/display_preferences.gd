@@ -1,6 +1,6 @@
 extends RefCounted
 ## Editor-only presentation preference. It never changes simulation resolution.
-const PATH := "user://editor_preferences.cfg"
+const PreferenceStore := preload("res://scripts/editor/preference_store.gd")
 
 static func apply(viewport: Viewport, sharper: bool) -> void:
 	viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
@@ -9,7 +9,7 @@ static func apply(viewport: Viewport, sharper: bool) -> void:
 
 static func mount(editor: Node3D, parent: Container) -> void:
 	var config := ConfigFile.new()
-	config.load(PATH)
+	config.load(PreferenceStore.path())
 	var saved: Variant = config.get_value("display", "sharper", true)
 	var sharper: bool = saved if saved is bool else true
 	# Measurement scripts can explicitly hold a chosen viewport configuration.
@@ -33,7 +33,7 @@ static func mount(editor: Node3D, parent: Container) -> void:
 		editor._end_stroke()
 		apply(editor.get_viewport(), index == 0)
 		config.set_value("display", "sharper", index == 0)
-		if config.save(PATH) != OK:
+		if config.save(PreferenceStore.path()) != OK:
 			editor.edit_message = "Picture changed for this session; preference could not be saved.")
 	row.add_child(choice)
 	parent.add_child(row)

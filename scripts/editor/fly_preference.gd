@@ -13,7 +13,7 @@ extends RefCounted
 ## written before the change and is ignored; `camera/fly_always_v2` can only
 ## have been written after it and is honoured, including an explicit `false`.
 ## A user who turns the option off from now on keeps it off.
-const PATH := "user://editor_preferences.cfg"
+const PreferenceStore := preload("res://scripts/editor/preference_store.gd")
 const SECTION := "camera"
 const KEY := "fly_always_v2"
 const LEGACY_KEY := "fly"
@@ -23,7 +23,7 @@ const DEFAULT := true
 
 static func load_enabled() -> bool:
 	var config := ConfigFile.new()
-	config.load(PATH)
+	config.load(PreferenceStore.path())
 	# A `null` default counts as "no default given" and logs an error, so ask
 	# whether the key exists rather than reading it blind: on a fresh install,
 	# and on a config written before this key existed, it does not.
@@ -37,11 +37,11 @@ static func load_enabled() -> bool:
 ## editor says so rather than silently reverting the toggle.
 static func store(enabled: bool, editor: Node = null) -> void:
 	var config := ConfigFile.new()
-	config.load(PATH)
+	config.load(PreferenceStore.path())
 	config.set_value(SECTION, KEY, enabled)
 	# The opt-in key is dead; leaving it would look like a live setting to
 	# anyone reading the file.
 	if config.has_section_key(SECTION, LEGACY_KEY):
 		config.erase_section_key(SECTION, LEGACY_KEY)
-	if config.save(PATH) != OK and editor:
+	if config.save(PreferenceStore.path()) != OK and editor:
 		editor.edit_message = "Fly navigation changed for this session; preference could not be saved."

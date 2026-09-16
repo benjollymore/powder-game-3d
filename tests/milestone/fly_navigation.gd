@@ -5,6 +5,8 @@ extends SceneTree
 ##   godot --headless --path . -s res://tests/milestone/fly_navigation.gd
 const FlyMotion := preload("res://scripts/camera/fly_motion.gd")
 const FlyPreference := preload("res://scripts/editor/fly_preference.gd")
+const PreferenceStore := preload("res://scripts/editor/preference_store.gd")
+var _real_before := PackedByteArray()
 var checks := 0
 var failures := 0
 
@@ -35,6 +37,8 @@ func release_all() -> void:
 
 
 func run() -> void:
+	# Read before anything here can write: the point of the check below.
+	_real_before = FileAccess.get_file_as_bytes(PreferenceStore.REAL)
 	root.size = Vector2i(1280, 800)
 	root.get_node("TimeController").set_process_unhandled_input(false)
 	Input.use_accumulated_input = false
@@ -225,6 +229,18 @@ func run() -> void:
 	lab.set_fly_enabled(false)
 	check(lab._fly_motion.velocity == Vector3.ZERO and lab.camera.fov == lab._base_fov,
 		"turning the option off stops the camera and restores the field of view")
+	# Everything this suite writes must land in the sandbox: a test run that
+	# can reach the real config silently changes the settings of whoever plays
+	# the game, which is exactly how this option shipped looking broken.
+	check(PreferenceStore.is_script_run(), "a suite is a script run, so it resolves away from the real config")
+	check(PreferenceStore.path() != PreferenceStore.REAL, "preferences under test are not the real file (%s)" % PreferenceStore.path())
+	check(not FileAccess.file_exists(PreferenceStore.REAL) or FileAccess.get_file_as_bytes(PreferenceStore.REAL) == _real_before,
+		"the real preferences file is byte-identical after this suite has written its own")
+	# Fresh install, and a deliberate choice, read correctly from the sandbox.
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(PreferenceStore.path()))
+	check(FlyPreference.load_enabled(), "with no preferences file at all, a fresh install flies by default")
+	FlyPreference.store(false)
+	check(not FlyPreference.load_enabled(), "an off chosen after the change is honoured")
 	check(not FlyPreference.load_enabled(), "a deliberate off round-trips as off")
 	lab.set_fly_enabled(true)
 	check(FlyPreference.load_enabled(), "the preference round-trips as on")
@@ -232,17 +248,17 @@ func run() -> void:
 	# default, not a decision. It lives under the retired key and is ignored;
 	# only the versioned key speaks for the user.
 	var config := ConfigFile.new()
-	config.load(FlyPreference.PATH)
+	config.load(PreferenceStore.path())
 	if config.has_section_key(FlyPreference.SECTION, FlyPreference.KEY):
 		config.erase_section_key(FlyPreference.SECTION, FlyPreference.KEY)
 	config.set_value(FlyPreference.SECTION, FlyPreference.LEGACY_KEY, false)
-	config.save(FlyPreference.PATH)
+	config.save(PreferenceStore.path())
 	check(FlyPreference.load_enabled(), "a pre-change stored 'off' does not survive the new default")
 	FlyPreference.store(false)
 	# ConfigFile.load merges into whatever the object already holds, so read
 	# the saved file with a fresh one.
 	var reloaded := ConfigFile.new()
-	reloaded.load(FlyPreference.PATH)
+	reloaded.load(PreferenceStore.path())
 	check(not FlyPreference.load_enabled() and not reloaded.has_section_key(FlyPreference.SECTION, FlyPreference.LEGACY_KEY),
 		"turning it off after the change sticks, and the retired key is cleaned up")
 	FlyPreference.store(true)
