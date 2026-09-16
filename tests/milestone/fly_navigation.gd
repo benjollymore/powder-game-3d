@@ -67,6 +67,15 @@ func run() -> void:
 	# --- the editor guards, on the fake-simulator lab ---
 	var lab = load("res://tests/milestone/paint_tools_lab.gd").new()
 	root.add_child(lab)
+	# This suite drives _process, which shows and places the workplane guide and
+	# the brush marker. The shared lab skips UI construction, so supply them
+	# rather than teaching the editor to tolerate a half-built scene.
+	if lab.guide == null:
+		lab.guide = MeshInstance3D.new()
+		lab.add_child(lab.guide)
+	if lab.marker == null:
+		lab.marker = MeshInstance3D.new()
+		lab.add_child(lab.marker)
 	await process_frame
 	check(not lab.fly_enabled, "fly navigation is off by default")
 	var plane_before: int = lab.depth

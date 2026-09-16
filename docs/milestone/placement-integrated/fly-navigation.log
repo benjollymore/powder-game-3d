@@ -1,0 +1,27 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ok: fly speed scales with the world size (4.000000)
+ok: W moves along the view's forward axis ((0.0, 0.0, -0.226161))
+ok: velocity eases up rather than switching on (0.226161 then 0.324450)
+ok: E lifts along world up regardless of yaw ((0.0, 0.226161, 0.0))
+ok: Shift sprints and eases in the field-of-view boost (3.609507)
+ok: a stop leaves no coasting velocity
+ok: an inactive frame requests no movement whatever is held
+ok: scrolling up raises the fly speed (4.000000 to 5.000000)
+ok: fly speed stays clamped to the world size (0.200000)
+ok: fly navigation is off by default
+ok: W does nothing while fly navigation is off
+ok: the toggle turns fly navigation on
+ok: W flies the camera once the option is on (target (0.0, 0.0, -0.171618) to (0.0, 0.0, -0.203585))
+ok: flying leaves the workplane alone
+ok: flying does not mark the authored build unsaved
+ok: target is recomputed by the normal path, not by flying
+ok: typing in the brush radius field never flies the camera
+ok: Cmd+S saves rather than flying
+ok: a held drag keeps painting while a movement key is down
+ok: the stroke stays face-connected across the flight (112 cells)
+ok: focus loss releases a held movement key
+ok: turning the option off stops the camera and restores the field of view
+ok: the preference round-trips as off
+ok: the preference round-trips as on
+Fly navigation: 24 checks, 0 failures

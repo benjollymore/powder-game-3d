@@ -3,7 +3,7 @@
     "name": "unit",
     "pass": true,
     "exit": 0,
-    "seconds": 9.23,
+    "seconds": 8.61,
     "command": [
       "godot",
       "--path",
@@ -20,7 +20,7 @@
     "name": "unit256",
     "pass": true,
     "exit": 0,
-    "seconds": 64.06,
+    "seconds": 64.1,
     "command": [
       "godot",
       "--path",
@@ -37,7 +37,7 @@
     "name": "gestures",
     "pass": true,
     "exit": 0,
-    "seconds": 1.69,
+    "seconds": 1.77,
     "command": [
       "godot",
       "--path",
@@ -54,7 +54,7 @@
     "name": "editing-unit",
     "pass": true,
     "exit": 0,
-    "seconds": 0.73,
+    "seconds": 0.69,
     "command": [
       "godot",
       "--path",
@@ -71,7 +71,7 @@
     "name": "interaction-unit",
     "pass": true,
     "exit": 0,
-    "seconds": 0.68,
+    "seconds": 0.7,
     "command": [
       "godot",
       "--path",
@@ -82,6 +82,23 @@
       "--",
       "grid=128",
       "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/interaction-unit"
+    ]
+  },
+  {
+    "name": "fly-navigation",
+    "pass": true,
+    "exit": 0,
+    "seconds": 1.49,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/placement",
+      "--headless",
+      "-s",
+      "res://tests/milestone/fly_navigation.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/fly-navigation"
     ]
   },
   {
@@ -105,7 +122,7 @@
     "name": "brush-shape",
     "pass": true,
     "exit": 0,
-    "seconds": 1.27,
+    "seconds": 1.28,
     "command": [
       "godot",
       "--path",
@@ -122,7 +139,7 @@
     "name": "placement-tools",
     "pass": true,
     "exit": 0,
-    "seconds": 1.29,
+    "seconds": 1.37,
     "command": [
       "godot",
       "--path",
@@ -139,7 +156,7 @@
     "name": "time-controls",
     "pass": true,
     "exit": 0,
-    "seconds": 1.27,
+    "seconds": 1.29,
     "command": [
       "godot",
       "--path",
@@ -156,7 +173,7 @@
     "name": "gpu-profile",
     "pass": true,
     "exit": 0,
-    "seconds": 0.66,
+    "seconds": 0.67,
     "command": [
       "godot",
       "--path",
@@ -173,7 +190,7 @@
     "name": "editor-keyboard",
     "pass": true,
     "exit": 0,
-    "seconds": 1.38,
+    "seconds": 1.41,
     "command": [
       "godot",
       "--path",
@@ -190,7 +207,7 @@
     "name": "history-guards",
     "pass": true,
     "exit": 0,
-    "seconds": 1.28,
+    "seconds": 1.71,
     "command": [
       "godot",
       "--path",
@@ -207,7 +224,7 @@
     "name": "pending-gesture",
     "pass": true,
     "exit": 0,
-    "seconds": 0.68,
+    "seconds": 0.69,
     "command": [
       "godot",
       "--path",
@@ -224,7 +241,7 @@
     "name": "surface-feedback",
     "pass": true,
     "exit": 0,
-    "seconds": 1.5,
+    "seconds": 1.29,
     "command": [
       "godot",
       "--path",
@@ -258,7 +275,7 @@
     "name": "archive-job",
     "pass": true,
     "exit": 0,
-    "seconds": 2.38,
+    "seconds": 2.36,
     "command": [
       "godot",
       "--path",
@@ -275,7 +292,7 @@
     "name": "archive-panel",
     "pass": true,
     "exit": 0,
-    "seconds": 5.53,
+    "seconds": 6.5,
     "command": [
       "godot",
       "--path",
@@ -292,7 +309,7 @@
     "name": "authored-document",
     "pass": true,
     "exit": 0,
-    "seconds": 0.69,
+    "seconds": 2.36,
     "command": [
       "godot",
       "--path",
@@ -309,7 +326,7 @@
     "name": "file-shortcuts",
     "pass": true,
     "exit": 0,
-    "seconds": 1.39,
+    "seconds": 4.31,
     "command": [
       "godot",
       "--path",
@@ -326,7 +343,7 @@
     "name": "surface-join",
     "pass": true,
     "exit": 0,
-    "seconds": 0.88,
+    "seconds": 1.91,
     "command": [
       "godot",
       "--path",
@@ -343,7 +360,7 @@
     "name": "heat-ui",
     "pass": true,
     "exit": 0,
-    "seconds": 2.3,
+    "seconds": 12.21,
     "command": [
       "godot",
       "--path",
@@ -360,7 +377,7 @@
     "name": "keep-result",
     "pass": true,
     "exit": 0,
-    "seconds": 1.59,
+    "seconds": 5.72,
     "command": [
       "godot",
       "--path",
@@ -377,7 +394,7 @@
     "name": "cell-inspector",
     "pass": true,
     "exit": 0,
-    "seconds": 0.69,
+    "seconds": 1.28,
     "command": [
       "godot",
       "--path",
@@ -394,7 +411,7 @@
     "name": "read-world-fifo",
     "pass": true,
     "exit": 0,
-    "seconds": 1.4,
+    "seconds": 1.35,
     "command": [
       "godot",
       "--path",
@@ -411,7 +428,7 @@
     "name": "examples128",
     "pass": true,
     "exit": 0,
-    "seconds": 27.88,
+    "seconds": 15.56,
     "command": [
       "godot",
       "--path",
@@ -428,7 +445,7 @@
     "name": "examples256",
     "pass": true,
     "exit": 0,
-    "seconds": 204.63,
+    "seconds": 110.34,
     "command": [
       "godot",
       "--path",
@@ -445,7 +462,7 @@
     "name": "guard-queue",
     "pass": true,
     "exit": 0,
-    "seconds": 1.77,
+    "seconds": 0.91,
     "command": [
       "godot",
       "--path",
@@ -462,7 +479,7 @@
     "name": "thermal-init",
     "pass": true,
     "exit": 0,
-    "seconds": 2.29,
+    "seconds": 1.3,
     "command": [
       "godot",
       "--path",
@@ -479,7 +496,7 @@
     "name": "thermal-remap",
     "pass": true,
     "exit": 0,
-    "seconds": 0.9,
+    "seconds": 0.46,
     "command": [
       "godot",
       "--path",
