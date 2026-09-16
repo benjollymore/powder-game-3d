@@ -43,6 +43,7 @@ CPU = [
     ("read-world-fifo", "tests/milestone/read_world_fifo.gd", 128),
     ("examples128", "tests/milestone/examples_cpu.gd", 128),
     ("examples256", "tests/milestone/examples_cpu.gd", 256, 300),
+    ("ui-scale", "tests/milestone/ui_scale.gd", 128),
     ("guard-queue", "tests/milestone/guard_queue.gd", 128),
     ("thermal-init", "tests/milestone/thermal_init.gd", 128),
     ("thermal-remap", "tests/milestone/thermal_remap.gd", 128),
@@ -101,6 +102,7 @@ GPU = [
     ("palette128", "tests/milestone/palette_capture_gpu.gd", 128),
     ("liquid-base128", "tests/milestone/render_liquid_base_gpu.gd", 128),
     ("examples-look128", "tests/milestone/render_examples_gpu.gd", 128),
+    ("ui-scale128", "tests/milestone/ui_scale_gpu.gd", 128, 200),
 ]
 
 

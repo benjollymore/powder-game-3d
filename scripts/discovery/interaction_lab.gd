@@ -9,6 +9,7 @@ const HistoryBudget := preload("res://scripts/editor/history_budget.gd")
 var document := preload("res://scripts/editor/authored_document.gd").new()
 var document_guard: Node
 const PendingGesture := preload("res://scripts/editor/pending_gesture.gd")
+const UiScale := preload("res://scripts/editor/ui_scale.gd")
 const PalettePanel := preload("res://scripts/editor/palette_panel.gd")
 const KeepResult := preload("res://scripts/editor/keep_result.gd")
 const CellInspector := preload("res://scripts/editor/cell_inspector.gd")
@@ -139,6 +140,11 @@ var stroke_erase := false
 var stroke_shape: int = BrushScript.Shape.SPHERE
 var radius_input: SpinBox
 var tools_panel: PanelContainer
+## Scaled with the window by UiScale; the 3D viewport is left pixel-exact.
+var ui_theme: Theme
+var ui_scale := 1.0
+var controls_label: Label
+var secondary_controls_label: Label
 ## The scrolling part of the sidebar; the status footer sits below it, so this
 ## is not the panel's only child. Scroll a control into view through this.
 var tools_scroll: ScrollContainer
@@ -343,9 +349,10 @@ func _build_ui() -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel_column.add_child(scroll)
-	panel.size = Vector2(390, get_viewport().get_visible_rect().size.y - 32.0)
-	get_viewport().size_changed.connect(func():
-		panel.size.y = maxf(100.0, get_viewport().get_visible_rect().size.y - 32.0))
+	ui_theme = Theme.new()
+	panel.theme = ui_theme
+	_apply_ui_scale()
+	get_viewport().size_changed.connect(_apply_ui_scale)
 	var column := VBoxContainer.new()
 	tools_column = column
 	column.add_theme_constant_override("separation", 8)
@@ -404,7 +411,6 @@ func _build_ui() -> void:
 	column.add_child(speed_row)
 	speed_label = Label.new()
 	speed_label.text = "Speed 1×  "
-	speed_label.custom_minimum_size.x = 90
 	speed_row.add_child(speed_label)
 	speed_slider = HSlider.new()
 	speed_slider.min_value = -3
@@ -593,20 +599,20 @@ func _build_ui() -> void:
 	empty.pressed.connect(func(): call("new_empty_build"))
 	advanced_tools.add_child(empty)
 	var controls := Label.new()
-	controls.add_theme_font_size_override("font_size", 14)
+	controls_label = controls
 	controls.text = "Drag: paint · two fingers: orbit · pinch: zoom\nShift + two fingers: pan · Option + drag: orbit"
 	var secondary_controls := Label.new()
-	secondary_controls.add_theme_font_size_override("font_size", 14)
+	secondary_controls_label = secondary_controls
 	secondary_controls.text = "Option + Shift + drag: pan · RMB/wheel work too\nPlane: −/+ above · Shift-wheel · [ ] brush size\n1 sand · 2 water · 3 wall · X erase · F angle\nCmd/Ctrl: S save · Shift+S save as · O open"
 	advanced_tools.add_child(secondary_controls)
 	controls.tooltip_text = controls.text + "\n" + secondary_controls.text
 	column.add_child(controls)
 	status = Label.new()
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	status.custom_minimum_size.x = 300
 	# Pinned below the scrolling controls: what the next click will do must stay
 	# on screen at laptop heights, whatever rows the current phase adds above.
 	panel_column.add_child(status)
+	_apply_ui_scale()
 	get_tree().process_frame.connect(_refresh_palette)
 	_refresh_palette()
 
@@ -895,6 +901,27 @@ func _refresh_palette() -> void:
 		palette.refresh(self)
 	if keep_button:
 		keep_button.disabled = capturing or keeping
+
+
+## Rescale the sidebar for the current window. The 3D viewport is untouched:
+## its resolution belongs to the picture preference, and the pointer stays in
+## real pixels so picks keep landing under the cursor.
+func _apply_ui_scale() -> void:
+	if tools_panel == null:
+		return
+	ui_scale = UiScale.apply(self, get_viewport().get_visible_rect().size)
+
+
+## A Control cannot be sized below its children's combined minimum, and after a
+## font change those minimums lag by a frame or more. Re-assert the width once
+## the controls have re-measured, so shrinking the window does not leave the
+## sidebar stuck at the size the larger font needed.
+func _settle_ui_scale() -> void:
+	if tools_panel == null:
+		return
+	var target := UiScale.width_for(tools_panel, ui_scale)
+	if not is_equal_approx(tools_panel.size.x, target):
+		tools_panel.size.x = target
 
 
 func _set_advanced(enabled: bool) -> void:
@@ -2078,6 +2105,7 @@ func _fly_step(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
+	_settle_ui_scale()
 	if not _ready_to_edit:
 		return
 	_fly_step(delta)
