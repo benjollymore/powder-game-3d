@@ -12,14 +12,14 @@ ok: fly speed stays clamped to the world size (0.200000)
 ok: fly navigation is off by default
 ok: W does nothing while fly navigation is off
 ok: the toggle turns fly navigation on
-ok: W flies the camera once the option is on (target (0.0, 0.0, -0.171618) to (0.0, 0.0, -0.203585))
+ok: W flies the camera once the option is on (target (0.0, 0.0, -0.172687) to (0.0, 0.0, -0.184754))
 ok: flying leaves the workplane alone
 ok: flying does not mark the authored build unsaved
 ok: target is recomputed by the normal path, not by flying
 ok: typing in the brush radius field never flies the camera
 ok: Cmd+S saves rather than flying
 ok: a held drag keeps painting while a movement key is down
-ok: the stroke stays face-connected across the flight (112 cells)
+ok: the stroke stays face-connected across the flight (111 cells)
 ok: focus loss releases a held movement key
 ok: turning the option off stops the camera and restores the field of view
 ok: the preference round-trips as off
