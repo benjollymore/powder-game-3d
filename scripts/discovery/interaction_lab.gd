@@ -139,6 +139,9 @@ var stroke_erase := false
 var stroke_shape: int = BrushScript.Shape.SPHERE
 var radius_input: SpinBox
 var tools_panel: PanelContainer
+## The scrolling part of the sidebar; the status footer sits below it, so this
+## is not the panel's only child. Scroll a control into view through this.
+var tools_scroll: ScrollContainer
 var camera_target := Vector3.ZERO # box widths, independent of simulation size
 ## Optional WASD fly navigation (off by default); the orbit rig is unchanged
 ## and still owns looking around. See scripts/camera/fly_motion.gd.
@@ -262,6 +265,7 @@ func replace_authored(bytes: PackedByteArray, thermal: PackedByteArray = PackedB
 	_queued_editor_action = ""
 	_invalidate_picks()
 	_reset_gesture()
+	_drop_tool_anchor() # the anchor named a cell in the world being replaced
 	_stop_navigation()
 	TimeController.paused = true
 	testing = false
@@ -335,6 +339,7 @@ func _build_ui() -> void:
 	panel_column.add_theme_constant_override("separation", 6)
 	panel.add_child(panel_column)
 	var scroll := ScrollContainer.new()
+	tools_scroll = scroll
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel_column.add_child(scroll)
@@ -1181,10 +1186,12 @@ func _stop_navigation() -> void:
 	navigation_pan = false
 
 
+## Gesture-stream bookkeeping only. This runs on every mouse press, so it must
+## not disturb a two-click tool: the anchor is dropped where the world, the
+## target space or the phase changes, not where a gesture starts.
 func _reset_gesture() -> void:
 	gesture_owner = -1
 	last_gesture_ms = -1
-	_drop_tool_anchor()
 
 
 func _route_gesture(event: InputEventGesture) -> void:
@@ -1381,6 +1388,7 @@ func _notification(what: int) -> void:
 		cancel_pending_paint()
 		_release_shortcuts()
 		_reset_gesture()
+		_drop_tool_anchor()
 		_end_stroke()
 		_stop_navigation()
 		depth_scroll_fraction = 0.0

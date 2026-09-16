@@ -19,6 +19,13 @@ class SimStub extends Node3D:
 		return transactions
 	func set_param(_name, _value) -> void:
 		pass
+	var edit_revision := 0
+	## Preview and pick requests are fire-and-forget here: the CPU suites drive
+	## them to prove they do not disturb editor state, never to read cells back.
+	func request_surface_pick(_ray, _radius, _erase, _callback) -> void:
+		pass
+	func request_stamp_preview(_center, _radius, _erase, _shape, _axis, _callback, _any_cell := false) -> void:
+		pass
 	func reverse_edit_transaction(_record, _callback) -> bool:
 		return false
 	func record_region(id, lo, hi, material, mode = 4) -> void:

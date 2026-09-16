@@ -20,7 +20,7 @@ func action_button(prefix: String) -> void:
 	editor._set_advanced(true)
 	await frames(2)
 	var button := find_button(prefix)
-	editor.tools_panel.get_child(0).ensure_control_visible(button)
+	editor.tools_scroll.ensure_control_visible(button)
 	await frames(2)
 	await click(button)
 	await settled()
@@ -68,7 +68,7 @@ func prepare_dirty() -> PackedByteArray:
 	editor.radius_input.value = 0
 	editor._choose_material(Elements.Id.SAND)
 	editor._set_advanced(false)
-	editor.tools_panel.get_child(0).scroll_vertical = 0
+	editor.tools_scroll.scroll_vertical = 0
 	await frames(2)
 	return await draw(first)
 func run() -> void:

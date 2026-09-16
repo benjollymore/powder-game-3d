@@ -94,11 +94,18 @@ func run() -> void:
 	lab.undo_history.clear()
 	lab.capturing = false
 	lab._tool_click(anchor)
-	lab._reset_gesture()
-	check(lab.tool_anchor.x < 0, "a gesture reset (focus loss, world replacement) drops the anchor")
+	lab._notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
+	check(lab.tool_anchor.x < 0, "losing application focus drops the anchor")
 	lab._tool_click(anchor)
 	lab.cancel_pending_paint()
 	check(lab.tool_anchor == anchor, "orbiting between the two clicks keeps the anchor")
+	# An ordinary second click must reach the anchor: _reset_gesture runs on
+	# every mouse press, and the preview and pointer refresh every frame.
+	lab._reset_gesture()
+	lab._request_preview(Vector2(40, 40))
+	lab._request_stamp_preview()
+	lab._update_plane()
+	check(lab.tool_anchor == anchor, "a gesture start, a pointer move and a preview update all keep the anchor")
 	# Line keeps the disc axis of the face it was anchored on.
 	lab._set_tool("line")
 	lab._set_target_mode(lab.TargetMode.SURFACE)
