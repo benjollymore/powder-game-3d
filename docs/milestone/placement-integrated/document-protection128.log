@@ -12,20 +12,52 @@ ok: Undo a newer stroke returns to the saved checkpoint without prompting
 ok: running physics does not dirty the authored build or prompt
 ok: Save during Test stores the authored checkpoint, independent of live evolution
 ok: Return restores exact saved construction and remains clean
-DOCUMENT_DIALOG embedded=true state=prompt dirty=true
-ok: actual Reset button preserves dirty GPU state and displays Save/Discard/Cancel
+SCRIPT ERROR: Invalid call. Nonexistent function 'ensure_control_visible' in base 'VBoxContainer'.
+          at: action_button (res://tests/milestone/document_protection_gpu.gd:23)
+          GDScript backtrace (most recent call first):
+              [0] action_button (res://tests/milestone/document_protection_gpu.gd:23)
+              [1] frames (res://tests/milestone/editor_workflow_gpu.gd:30)
+DOCUMENT_DIALOG embedded=true state= dirty=true
+FAIL: actual Reset button preserves dirty GPU state and displays Save/Discard/Cancel
 ok: parsed Escape cancels Reset and preserves every authored byte
+SCRIPT ERROR: Invalid call. Nonexistent function 'ensure_control_visible' in base 'VBoxContainer'.
+          at: action_button (res://tests/milestone/document_protection_gpu.gd:23)
+          GDScript backtrace (most recent call first):
+              [0] action_button (res://tests/milestone/document_protection_gpu.gd:23)
+              [1] frames (res://tests/milestone/editor_workflow_gpu.gd:30)
 ok: parsed Cancel button preserves dirty work after Empty
-ok: explicit parsed Discard permits Empty and resets document/history together
-ok: invalid Open reports failure without a discard prompt or authored mutation
-ok: valid dirty Open waits for discard permission after loading
-ok: canceling dirty Open preserves exact construction and history
+SCRIPT ERROR: Invalid call. Nonexistent function 'ensure_control_visible' in base 'VBoxContainer'.
+          at: action_button (res://tests/milestone/document_protection_gpu.gd:23)
+          GDScript backtrace (most recent call first):
+              [0] action_button (res://tests/milestone/document_protection_gpu.gd:23)
+              [1] frames (res://tests/milestone/editor_workflow_gpu.gd:30)
+FAIL: explicit parsed Discard permits Empty and resets document/history together
+SCRIPT ERROR: Invalid assignment of property or key 'scroll_vertical' with value of type 'int' on a base object of type 'VBoxContainer'.
+          at: prepare_dirty (res://tests/milestone/document_protection_gpu.gd:71)
+          GDScript backtrace (most recent call first):
+              [0] prepare_dirty (res://tests/milestone/document_protection_gpu.gd:71)
+              [1] run (res://tests/milestone/document_protection_gpu.gd:147)
+              [2] read (res://tests/milestone/editor_workflow_gpu.gd:91)
+FAIL: invalid Open reports failure without a discard prompt or authored mutation
+FAIL: valid dirty Open waits for discard permission after loading
+FAIL: canceling dirty Open preserves exact construction and history
 ok: explicit Open Discard applies the validated file and clean filename
 ok: Open same file then Save reloads the new saved bytes instead of applying a stale cached file
-ok: Save choice writes exact dirty bytes before resetting the container
-ok: untitled destructive Save requests a native file selection
-ok: native picker cancellation signal preserves unsaved construction
-ok: Save As during dirty Open saves current work separately and still opens the originally selected file
+SCRIPT ERROR: Invalid call. Nonexistent function 'ensure_control_visible' in base 'VBoxContainer'.
+          at: action_button (res://tests/milestone/document_protection_gpu.gd:23)
+          GDScript backtrace (most recent call first):
+              [0] action_button (res://tests/milestone/document_protection_gpu.gd:23)
+              [1] frames (res://tests/milestone/editor_workflow_gpu.gd:30)
+FAIL: Save choice writes exact dirty bytes before resetting the container
+SCRIPT ERROR: Invalid assignment of property or key 'scroll_vertical' with value of type 'int' on a base object of type 'VBoxContainer'.
+          at: prepare_dirty (res://tests/milestone/document_protection_gpu.gd:71)
+          GDScript backtrace (most recent call first):
+              [0] prepare_dirty (res://tests/milestone/document_protection_gpu.gd:71)
+              [1] run (res://tests/milestone/document_protection_gpu.gd:176)
+              [2] read (res://tests/milestone/editor_workflow_gpu.gd:91)
+FAIL: untitled destructive Save requests a native file selection
+FAIL: native picker cancellation signal preserves unsaved construction
+FAIL: Save As during dirty Open saves current work separately and still opens the originally selected file
 ok: real disk Save failure cannot execute the pending Empty action
 ok: parsed newer paint after Save capture cancels destructive continuation
 ok: saved file contains the older snapshot, never falsely claims to include the newer stroke
@@ -33,5 +65,4 @@ ok: stale asynchronous Open is rejected before a discard dialog can authorize ol
 ok: normal root window-close signal is intercepted for dirty authored work
 ok: canceling window close preserves exact authored bytes and restores editor input
 ok: close confirmation and current unsaved filename remain visible at laptop resolution
-ok: explicit Discard completes the normal close route exactly once
-Document protection GPU: 32 checks, 0 failures
+Document protection GPU: 31 checks, 9 failures

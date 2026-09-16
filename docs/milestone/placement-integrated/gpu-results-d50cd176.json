@@ -3,7 +3,7 @@
     "name": "surface128",
     "pass": true,
     "exit": 0,
-    "seconds": 2.88,
+    "seconds": 3.32,
     "command": [
       "godot",
       "--path",

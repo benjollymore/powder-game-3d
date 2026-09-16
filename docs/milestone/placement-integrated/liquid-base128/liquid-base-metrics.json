@@ -1,0 +1,130 @@
+[
+	{
+		"box_area": 7872,
+		"caustic": 1.0,
+		"liquid": "water",
+		"streaks": 363,
+		"variant": "baseline",
+		"view": "front"
+	},
+	{
+		"box_area": 7872,
+		"caustic": 0.0,
+		"liquid": "water",
+		"streaks": 405,
+		"variant": "baseline",
+		"view": "front"
+	},
+	{
+		"box_area": 7872,
+		"caustic": 1.0,
+		"liquid": "water",
+		"streaks": 363,
+		"variant": "candidate",
+		"view": "front"
+	},
+	{
+		"box_area": 7872,
+		"caustic": 0.0,
+		"liquid": "water",
+		"streaks": 405,
+		"variant": "candidate",
+		"view": "front"
+	},
+	{
+		"box_area": 12298,
+		"caustic": 1.0,
+		"liquid": "water",
+		"streaks": 124,
+		"variant": "baseline",
+		"view": "oblique"
+	},
+	{
+		"box_area": 12298,
+		"caustic": 0.0,
+		"liquid": "water",
+		"streaks": 0,
+		"variant": "baseline",
+		"view": "oblique"
+	},
+	{
+		"box_area": 12298,
+		"caustic": 1.0,
+		"liquid": "water",
+		"streaks": 124,
+		"variant": "candidate",
+		"view": "oblique"
+	},
+	{
+		"box_area": 12298,
+		"caustic": 0.0,
+		"liquid": "water",
+		"streaks": 0,
+		"variant": "candidate",
+		"view": "oblique"
+	},
+	{
+		"box_area": 7872,
+		"caustic": 1.0,
+		"liquid": "lava",
+		"streaks": 160,
+		"variant": "baseline",
+		"view": "front"
+	},
+	{
+		"box_area": 7872,
+		"caustic": 0.0,
+		"liquid": "lava",
+		"streaks": 0,
+		"variant": "baseline",
+		"view": "front"
+	},
+	{
+		"box_area": 7872,
+		"caustic": 1.0,
+		"liquid": "lava",
+		"streaks": 167,
+		"variant": "candidate",
+		"view": "front"
+	},
+	{
+		"box_area": 7872,
+		"caustic": 0.0,
+		"liquid": "lava",
+		"streaks": 167,
+		"variant": "candidate",
+		"view": "front"
+	},
+	{
+		"box_area": 12298,
+		"caustic": 1.0,
+		"liquid": "lava",
+		"streaks": 171,
+		"variant": "baseline",
+		"view": "oblique"
+	},
+	{
+		"box_area": 12298,
+		"caustic": 0.0,
+		"liquid": "lava",
+		"streaks": 0,
+		"variant": "baseline",
+		"view": "oblique"
+	},
+	{
+		"box_area": 12298,
+		"caustic": 1.0,
+		"liquid": "lava",
+		"streaks": 1834,
+		"variant": "candidate",
+		"view": "oblique"
+	},
+	{
+		"box_area": 12298,
+		"caustic": 0.0,
+		"liquid": "lava",
+		"streaks": 1834,
+		"variant": "candidate",
+		"view": "oblique"
+	}
+]

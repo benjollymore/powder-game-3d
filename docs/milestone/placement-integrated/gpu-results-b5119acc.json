@@ -3,7 +3,7 @@
     "name": "live-input128",
     "pass": true,
     "exit": 0,
-    "seconds": 3.0,
+    "seconds": 2.94,
     "command": [
       "godot",
       "--path",

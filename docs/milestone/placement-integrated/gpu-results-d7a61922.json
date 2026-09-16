@@ -3,7 +3,7 @@
     "name": "preview-pick128",
     "pass": true,
     "exit": 0,
-    "seconds": 1.98,
+    "seconds": 2.19,
     "command": [
       "godot",
       "--path",

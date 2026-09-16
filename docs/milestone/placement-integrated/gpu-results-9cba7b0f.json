@@ -3,7 +3,7 @@
     "name": "heat-ui128",
     "pass": true,
     "exit": 0,
-    "seconds": 2.27,
+    "seconds": 2.2,
     "command": [
       "godot",
       "--path",

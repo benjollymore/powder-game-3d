@@ -3,7 +3,7 @@
     "name": "brush-shape128",
     "pass": true,
     "exit": 0,
-    "seconds": 3.0,
+    "seconds": 2.05,
     "command": [
       "godot",
       "--path",

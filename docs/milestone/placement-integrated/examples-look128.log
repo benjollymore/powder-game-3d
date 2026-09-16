@@ -1,0 +1,27 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: Dam break baseline capture saved
+{"blue":151886,"orange":0,"scene":"Dam break","variant":"baseline","white":55}
+ok: Dam break candidate capture saved
+{"blue":149480,"orange":395,"scene":"Dam break","variant":"candidate","white":55}
+ok: Dam break renders byte-identically with the new shaders under the old palette
+ok: Dam break is darker, not brighter, once wall, sand and water stop self-illuminating
+ok: Dam break physical bytes unchanged across captures
+ok: Volcano baseline capture saved
+{"blue":79913,"orange":0,"scene":"Volcano","variant":"baseline","white":14483}
+ok: Volcano candidate capture saved
+{"blue":75033,"orange":5463,"scene":"Volcano","variant":"candidate","white":8}
+ok: Volcano baseline reproduces the blown-out lava lake (14483 white px)
+ok: Volcano candidate removes the cream slab (14483 -> 8 white px)
+ok: Volcano candidate lava reads orange (0 -> 5463 orange px)
+ok: Volcano physical bytes unchanged across captures
+ok: Ice cave baseline capture saved
+{"blue":99413,"orange":0,"scene":"Ice cave","variant":"baseline","white":34000}
+ok: Ice cave candidate capture saved
+{"blue":132578,"orange":0,"scene":"Ice cave","variant":"candidate","white":0}
+ok: Ice cave baseline reproduces the white interior (34000 white px)
+ok: Ice cave candidate halves the blown-out area (34000 -> 0 white px)
+ok: Ice cave candidate ice reads blue (99413 -> 132578 blue px)
+ok: Ice cave physical bytes unchanged across captures
+EXAMPLES_LOOK_CHECKS 17 FAILURES 0

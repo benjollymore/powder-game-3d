@@ -1,9 +1,9 @@
 [
   {
     "name": "tools128",
-    "pass": true,
-    "exit": 0,
-    "seconds": 1.61,
+    "pass": false,
+    "exit": 1,
+    "seconds": 1.58,
     "command": [
       "godot",
       "--path",

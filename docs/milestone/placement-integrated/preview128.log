@@ -10,13 +10,13 @@ ok: disc workplane stamp changes exactly the previewed cells (25 previewed, 25 c
 ok: erase preview lists only occupied cells of the cube
 ok: erase stamp removes exactly the previewed cells (33)
 ok: sphere surface preview follows a valid pick
-FAIL: sphere surface stamp changes exactly the previewed cells (24 previewed, 24 changed)
+ok: sphere surface stamp changes exactly the previewed cells (24 previewed, 24 changed)
 ok: sphere surface stamp preserves the slab
 ok: cube surface preview follows a valid pick
-FAIL: cube surface stamp changes exactly the previewed cells (115 previewed, 85 changed)
+ok: cube surface stamp changes exactly the previewed cells (85 previewed, 85 changed)
 ok: cube surface stamp preserves the slab
 ok: disc surface preview follows a valid pick
-FAIL: disc surface stamp changes exactly the previewed cells (25 previewed, 25 changed)
+ok: disc surface stamp changes exactly the previewed cells (25 previewed, 25 changed)
 ok: disc surface stamp preserves the slab
 ok: preview stays visible while the pointer moves over a valid target (0 hidden frames)
-PREVIEW_CELLS_CHECKS 18 FAILURES 3
+PREVIEW_CELLS_CHECKS 18 FAILURES 0

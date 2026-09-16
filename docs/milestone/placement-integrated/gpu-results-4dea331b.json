@@ -3,7 +3,7 @@
     "name": "actions128",
     "pass": true,
     "exit": 0,
-    "seconds": 1.87,
+    "seconds": 1.47,
     "command": [
       "godot",
       "--path",

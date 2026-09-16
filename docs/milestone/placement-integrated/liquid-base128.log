@@ -1,0 +1,56 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: water block uploads exactly
+ok: water block has no falling flags, so the droplet and thin-spray paths cannot apply
+ok: water front baseline-caustic capture saved
+{"box_area":7872,"caustic":1.0,"liquid":"water","streaks":363,"variant":"baseline","view":"front"}
+ok: water front baseline-nocaustic capture saved
+{"box_area":7872,"caustic":0.0,"liquid":"water","streaks":405,"variant":"baseline","view":"front"}
+ok: water front candidate-caustic capture saved
+{"box_area":7872,"caustic":1.0,"liquid":"water","streaks":363,"variant":"candidate","view":"front"}
+ok: water front candidate-nocaustic capture saved
+{"box_area":7872,"caustic":0.0,"liquid":"water","streaks":405,"variant":"candidate","view":"front"}
+{"liquid":"water","self_noise_pixels":0,"self_noise_streaks":0,"view":"front"}
+ok: water front renders byte-identically (opacity 1 keeps caustics)
+ok: water front without caustics renders byte-identically
+ok: water oblique baseline-caustic capture saved
+{"box_area":12298,"caustic":1.0,"liquid":"water","streaks":124,"variant":"baseline","view":"oblique"}
+ok: water oblique baseline-nocaustic capture saved
+{"box_area":12298,"caustic":0.0,"liquid":"water","streaks":0,"variant":"baseline","view":"oblique"}
+ok: water oblique candidate-caustic capture saved
+{"box_area":12298,"caustic":1.0,"liquid":"water","streaks":124,"variant":"candidate","view":"oblique"}
+ok: water oblique candidate-nocaustic capture saved
+{"box_area":12298,"caustic":0.0,"liquid":"water","streaks":0,"variant":"candidate","view":"oblique"}
+{"liquid":"water","self_noise_pixels":0,"self_noise_streaks":0,"view":"oblique"}
+ok: water oblique renders byte-identically (opacity 1 keeps caustics)
+ok: water oblique without caustics renders byte-identically
+ok: water physical bytes unchanged across captures
+ok: lava block uploads exactly
+ok: lava block has no falling flags, so the droplet and thin-spray paths cannot apply
+ok: lava front baseline-caustic capture saved
+{"box_area":7872,"caustic":1.0,"liquid":"lava","streaks":160,"variant":"baseline","view":"front"}
+ok: lava front baseline-nocaustic capture saved
+{"box_area":7872,"caustic":0.0,"liquid":"lava","streaks":0,"variant":"baseline","view":"front"}
+ok: lava front candidate-caustic capture saved
+{"box_area":7872,"caustic":1.0,"liquid":"lava","streaks":167,"variant":"candidate","view":"front"}
+ok: lava front candidate-nocaustic capture saved
+{"box_area":7872,"caustic":0.0,"liquid":"lava","streaks":167,"variant":"candidate","view":"front"}
+{"liquid":"lava","self_noise_pixels":0,"self_noise_streaks":0,"view":"front"}
+ok: lava front baseline streaks come from caustics (160 with, 0 without)
+ok: lava front candidate is insensitive to caustic_strength (delta 0, noise 0, baseline delta 160)
+ok: lava front candidate caustic toggle changes no more pixels than self-noise plus 1% of the block box
+ok: lava oblique baseline-caustic capture saved
+{"box_area":12298,"caustic":1.0,"liquid":"lava","streaks":171,"variant":"baseline","view":"oblique"}
+ok: lava oblique baseline-nocaustic capture saved
+{"box_area":12298,"caustic":0.0,"liquid":"lava","streaks":0,"variant":"baseline","view":"oblique"}
+ok: lava oblique candidate-caustic capture saved
+{"box_area":12298,"caustic":1.0,"liquid":"lava","streaks":1834,"variant":"candidate","view":"oblique"}
+ok: lava oblique candidate-nocaustic capture saved
+{"box_area":12298,"caustic":0.0,"liquid":"lava","streaks":1834,"variant":"candidate","view":"oblique"}
+{"liquid":"lava","self_noise_pixels":0,"self_noise_streaks":0,"view":"oblique"}
+ok: lava oblique baseline streaks come from caustics (171 with, 0 without)
+ok: lava oblique candidate is insensitive to caustic_strength (delta 0, noise 0, baseline delta 171)
+ok: lava oblique candidate caustic toggle changes no more pixels than self-noise plus 1% of the block box
+ok: lava physical bytes unchanged across captures
+LIQUID_BASE_CHECKS 32 FAILURES 0

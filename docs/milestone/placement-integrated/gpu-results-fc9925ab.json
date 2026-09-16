@@ -1,0 +1,22 @@
+[
+  {
+    "name": "trackpad128",
+    "pass": true,
+    "exit": 0,
+    "seconds": 0.95,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/placement",
+      "--always-on-top",
+      "--disable-vsync",
+      "--resolution",
+      "1600x900",
+      "-s",
+      "res://tests/discovery/trackpad_gpu.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/trackpad128"
+    ]
+  }
+]

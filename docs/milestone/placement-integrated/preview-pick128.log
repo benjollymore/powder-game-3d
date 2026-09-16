@@ -2,10 +2,10 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
 
 ok: drag uses a radius-zero brush
-ok: stationary hover over the wall obtains a visible surface target (3 frames)
+ok: stationary hover over the wall obtains a visible surface target (2 frames)
 ok: target stays visible on every frame of a 60-frame drag (0 hidden)
 ok: shown pick ids only move forward during the drag
-ok: picks are issued while the pointer moves (65 requests over the drag)
+ok: picks are issued while the pointer moves (64 requests over the drag)
 ok: the drag painted onto the surface and preserved every wall cell
 ok: a newer pick replaces the shown target within a few frames (1)
 ok: the replaced target matches a fresh pick of the same ray ((32, 32, 33) vs (32, 32, 33))

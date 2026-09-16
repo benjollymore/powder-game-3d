@@ -3,7 +3,7 @@
     "name": "redo256",
     "pass": true,
     "exit": 0,
-    "seconds": 3.58,
+    "seconds": 2.88,
     "command": [
       "godot",
       "--path",

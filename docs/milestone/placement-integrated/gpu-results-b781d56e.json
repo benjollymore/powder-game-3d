@@ -3,7 +3,7 @@
     "name": "inspector128",
     "pass": true,
     "exit": 0,
-    "seconds": 1.76,
+    "seconds": 1.62,
     "command": [
       "godot",
       "--path",

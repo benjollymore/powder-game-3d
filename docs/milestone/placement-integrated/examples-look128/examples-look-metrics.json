@@ -1,0 +1,44 @@
+[
+	{
+		"blue": 151886,
+		"orange": 0,
+		"scene": "Dam break",
+		"variant": "baseline",
+		"white": 55
+	},
+	{
+		"blue": 149480,
+		"orange": 395,
+		"scene": "Dam break",
+		"variant": "candidate",
+		"white": 55
+	},
+	{
+		"blue": 79913,
+		"orange": 0,
+		"scene": "Volcano",
+		"variant": "baseline",
+		"white": 14483
+	},
+	{
+		"blue": 75033,
+		"orange": 5463,
+		"scene": "Volcano",
+		"variant": "candidate",
+		"white": 8
+	},
+	{
+		"blue": 99413,
+		"orange": 0,
+		"scene": "Ice cave",
+		"variant": "baseline",
+		"white": 34000
+	},
+	{
+		"blue": 132578,
+		"orange": 0,
+		"scene": "Ice cave",
+		"variant": "candidate",
+		"white": 0
+	}
+]

@@ -3,7 +3,7 @@
     "name": "clicks128",
     "pass": true,
     "exit": 0,
-    "seconds": 1.97,
+    "seconds": 1.55,
     "command": [
       "godot",
       "--path",

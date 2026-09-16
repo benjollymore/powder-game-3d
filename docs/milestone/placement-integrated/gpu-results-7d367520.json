@@ -1,9 +1,9 @@
 [
   {
     "name": "preview128",
-    "pass": false,
-    "exit": 1,
-    "seconds": 2.17,
+    "pass": true,
+    "exit": 0,
+    "seconds": 2.45,
     "command": [
       "godot",
       "--path",

@@ -6,7 +6,7 @@ ok: parsed GUI click opens the actual targeting dropdown
 ok: selecting Surface keeps the explicit cutaway geometry
 CUTAWAY_BLOCKED_PICK { "valid": false, "hit": (64, 26, 64), "normal": (0, 0, 1), "target": (64, 26, 65), "element": 3, "visited": 1, "temperature": 293.149993896484, "amount": 200, "flags": 0, "epoch": 1, "revision": 1, "tick": 0, &"index": 0 }
 ok: default water cut face produces explicit blocked feedback and visible recovery
-FAIL: Cutaway and recovery controls fit a 1280×800 laptop window
+ok: Cutaway and recovery controls fit a 1280×800 laptop window (recovery ends at 407, panel 413 wide)
 ok: actual recovery click shows the whole world without changing any packed material
 ok: recovery preserves exact plane, surface tool and Build phase
 WHOLE_WORLD_PICK { "valid": true, "hit": (64, 34, 95), "normal": (0, 0, 1), "target": (64, 34, 96), "element": 1, "visited": 40, "temperature": 293.149993896484, "amount": 0, "flags": 0, "epoch": 1, "revision": 1, "tick": 0, &"index": 0 }
@@ -20,7 +20,7 @@ ok: cut-face erasing undoes exact seeds, amounts and flags
 ok: same scene enters paused Test for source-boundary validation
 ok: paused primary hold creates a live source with the whole-world view
 ok: Cutaway view command terminates the source while preserving paused Test
-FAIL: Test controls and full status remain inside the 1280×800 sidebar with cutaway feedback
+ok: Test controls and full status remain inside the 1280×800 sidebar with cutaway feedback (status ends at 777, panel at 784)
 ok: next authoritative tick receives no stale pre-cutaway live stamp
 ok: Return restores authored material after view changes and live inspection
-Surface feedback GPU: 20 checks, 2 failures; evidence=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/surface-feedback128
+Surface feedback GPU: 20 checks, 0 failures; evidence=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/surface-feedback128

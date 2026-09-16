@@ -1,0 +1,31 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: two-finger swipe orbits via viewport event routing
+ok: native navigation creates no paint transaction
+ok: Shift swipe pans without orbiting
+ok: pinch-out zooms in by native magnification factor
+ok: neutral and invalid pinch factors do not move camera
+ok: pinch zoom clamps near distance
+ok: pinch zoom clamps far distance
+ok: pan target remains bounded
+ok: center recovers a panned and zoomed world
+ok: Option-primary drag starts navigation without painting
+ok: Option-primary drag moves camera
+ok: primary release over toolbar terminates navigation
+ok: Option-Shift-primary pans and keeps its mode until release
+ok: focus loss releases navigation and painting
+ok: physical right-button orbit still works
+ok: high-resolution wheel zoom honors fractional factor
+ok: fractional plane scroll does not round prematurely
+ok: four quarter wheel units move exactly one plane cell
+ok: depth boundary accumulates no hidden overscroll debt
+ok: pan and pinch over toolbar never navigate camera
+ok: toolbar gestures do not change plane or brush radius
+ok: wheel over brush field cannot leak into camera or depth
+ok: toolbar remains inside laptop viewport with scrollable content
+ok: all navigation and toolbar event probes leave GPU material bytes untouched
+ok: ordinary primary press still begins authored painting
+ok: native swipe ends an active paint stroke
+ok: ordinary paint transaction still writes GPU material
+Trackpad input: 27 checks, 0 failures

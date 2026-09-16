@@ -48,7 +48,7 @@ CPU = [
     ("thermal-remap", "tests/milestone/thermal_remap.gd", 128),
 ]
 GPU = [
-    ("physics128", "tests/gpu/run_gpu_tests.gd", 128),
+    ("physics128", "tests/gpu/run_gpu_tests.gd", 128, 300),
     ("regional256", "tests/milestone/regional_undo_gpu.gd", 256),
     ("cadence128", "tests/milestone/batch_cadence.gd", 128),
     ("thermal-state128", "tests/milestone/thermal_state_gpu.gd", 128),
