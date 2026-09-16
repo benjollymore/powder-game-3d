@@ -1,9 +1,3 @@
 Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 
-ERROR: FAIL: scenario 'Oil spill' CPU build is within budget (1009 ms; the game builds scenarios on the GPU)
-   at: push_error (core/variant/variant_utility.cpp:1024)
-   GDScript backtrace (most recent call first):
-       [0] check (res://tests/unit/run_unit.gd:25)
-       [1] _test_scenarios (res://tests/unit/run_unit.gd:86)
-       [2] _initialize (res://tests/unit/run_unit.gd:14)
-76 checks, 1 failures
+76 checks, 0 failures

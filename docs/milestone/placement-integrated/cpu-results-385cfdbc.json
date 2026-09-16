@@ -1,0 +1,19 @@
+[
+  {
+    "name": "unit",
+    "pass": true,
+    "exit": 0,
+    "seconds": 8.53,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/placement",
+      "--headless",
+      "-s",
+      "res://tests/unit/run_unit.gd",
+      "--",
+      "grid=128",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/unit"
+    ]
+  }
+]
