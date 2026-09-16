@@ -228,8 +228,11 @@ void fragment() {
 		float c1 = texture(grain_noise, vec3(q.xz / 9.0, sim_time * 0.35)).r;
 		float c2 = texture(grain_noise, vec3(q.xz / 6.5 + 3.7, 5.0 - sim_time * 0.27)).g;
 		float c = smoothstep(0.4, 0.65, c1) * smoothstep(0.4, 0.65, c2);
-		v_sunvis *= mix(1.0, 0.6 + 2.6 * c, caustic_strength);
-		base *= mix(vec3(1.0), vec3(0.8, 0.92, 1.0), 0.6 * caustic_strength);
+		// Synced with the live shader's caustic cosine (see submerged_caustic_gpu):
+		// this fixture isolates its own variable, not the caustic change.
+		float facing = max(dot(n_geo, to_sun_model), 0.0);
+		v_sunvis *= mix(1.0, 0.6 + 2.6 * c, caustic_strength * facing);
+		base *= mix(vec3(1.0), vec3(0.8, 0.92, 1.0), 0.6 * caustic_strength * facing);
 	}
 
 	vec3 n_world = normalize(model_basis * n);

@@ -5,7 +5,7 @@
 shader_type spatial;
 render_mode cull_front, depth_draw_opaque;
 
-#include "res://tests/milestone/fixtures/voxel_dda_liquid_base.gdshaderinc"
+#include "res://shaders/spatial/voxel_dda.gdshaderinc"
 
 uniform sampler2DArray albedo_maps : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2DArray normal_maps : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
@@ -224,15 +224,16 @@ void fragment() {
 	// with two drifting octaves of noise projected along the sun and tint it.
 	ivec3 above = ivec3(floor(ps + n_geo * 1.0));
 	if (!outside(above) && is_liquid(voxel_at(above).x)) {
+		// An opaque liquid (lava) casts no sunlit ripples onto what it covers:
+		// the ripple strength falls off exponentially with opacity above water's
+		// 1.0 (exp(0) is exactly 1, so water keeps its bytes; 12 leaves 0.4%).
+		float clarity = caustic_strength * exp(-0.5 * (max(liquid_opacity[int(voxel_at(above).x)], 1.0) - 1.0));
 		vec3 q = ps - to_sun_model * (ps.y / max(abs(to_sun_model.y), 0.3));
 		float c1 = texture(grain_noise, vec3(q.xz / 9.0, sim_time * 0.35)).r;
 		float c2 = texture(grain_noise, vec3(q.xz / 6.5 + 3.7, 5.0 - sim_time * 0.27)).g;
 		float c = smoothstep(0.4, 0.65, c1) * smoothstep(0.4, 0.65, c2);
-		// Synced with the live shader's caustic cosine (see submerged_caustic_gpu):
-		// this fixture isolates its own variable, not the caustic change.
-		float facing = max(dot(n_geo, to_sun_model), 0.0);
-		v_sunvis *= mix(1.0, 0.6 + 2.6 * c, caustic_strength * facing);
-		base *= mix(vec3(1.0), vec3(0.8, 0.92, 1.0), 0.6 * caustic_strength * facing);
+		v_sunvis *= mix(1.0, 0.6 + 2.6 * c, clarity);
+		base *= mix(vec3(1.0), vec3(0.8, 0.92, 1.0), 0.6 * clarity);
 	}
 
 	vec3 n_world = normalize(model_basis * n);

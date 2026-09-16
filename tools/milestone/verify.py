@@ -99,6 +99,7 @@ GPU = [
     ("ordinary-interface128", "tests/milestone/ordinary_liquid_interface_gpu.gd", 128),
     ("ordinary-controls128", "tests/milestone/ordinary_liquid_controls_gpu.gd", 128),
     ("ripple128", "tests/milestone/render_powder_ripple_gpu.gd", 128),
+    ("submerged-caustic128", "tests/milestone/submerged_caustic_gpu.gd", 128),
     ("palette128", "tests/milestone/palette_capture_gpu.gd", 128),
     ("liquid-base128", "tests/milestone/render_liquid_base_gpu.gd", 128),
     ("examples-look128", "tests/milestone/render_examples_gpu.gd", 128),

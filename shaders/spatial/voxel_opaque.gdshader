@@ -227,7 +227,17 @@ void fragment() {
 		// An opaque liquid (lava) casts no sunlit ripples onto what it covers:
 		// the ripple strength falls off exponentially with opacity above water's
 		// 1.0 (exp(0) is exactly 1, so water keeps its bytes; 12 leaves 0.4%).
-		float clarity = caustic_strength * exp(-0.5 * (max(liquid_opacity[int(voxel_at(above).x)], 1.0) - 1.0));
+		// Caustics are sunlight focused by the surface overhead onto what lies
+		// below, so their strength follows the receiver's cosine like any other
+		// irradiance. Without that term a vertical face got the full pattern,
+		// and because the pattern is sampled by world xz after projecting along
+		// the sun, every point of such a face walks the same straight line
+		// through the noise: the two-dimensional ripple collapsed into stripes
+		// at the voxel staircase. A submerged wall now takes almost none, a
+		// floor takes it all, and the bright bars Ben saw on submerged stone
+		// and on wax seen from underwater are gone.
+		float facing = max(dot(n_geo, to_sun_model), 0.0);
+		float clarity = caustic_strength * facing * exp(-0.5 * (max(liquid_opacity[int(voxel_at(above).x)], 1.0) - 1.0));
 		vec3 q = ps - to_sun_model * (ps.y / max(abs(to_sun_model.y), 0.3));
 		float c1 = texture(grain_noise, vec3(q.xz / 9.0, sim_time * 0.35)).r;
 		float c2 = texture(grain_noise, vec3(q.xz / 6.5 + 3.7, 5.0 - sim_time * 0.27)).g;
