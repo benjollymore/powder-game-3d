@@ -1771,7 +1771,10 @@ func _begin_test(bytes: PackedByteArray, thermal: PackedByteArray, epoch: int, r
 	build_snapshot = bytes
 	build_thermal = thermal
 	edit_message = ""
-	_drop_tool_anchor()
+	# Line and Box build the authored construction and refuse every click while
+	# an experiment runs. Leaving one selected across Run would silently swallow
+	# each press, so Run always hands the brush back.
+	_set_tool("")
 	testing = true
 	TimeController.time_scale = speed_scale
 	TimeController.paused = false

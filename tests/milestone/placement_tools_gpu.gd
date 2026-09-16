@@ -137,6 +137,9 @@ func run() -> void:
 		if editor.testing:
 			break
 	check(editor.testing and editor.tool_anchor.x < 0, "entering Test drops the pending anchor")
+	# Line and Box refuse every click while an experiment runs, so Run must also
+	# deselect the tool; leaving it selected silently swallowed live painting.
+	check(editor.tool_mode == "", "entering Test hands the brush back")
 	editor.run_or_restore()
 	for i in 60:
 		await process_frame
@@ -144,6 +147,8 @@ func run() -> void:
 			break
 	await settled()
 	check(not editor.testing and editor.tool_anchor.x < 0, "Return leaves no anchor behind")
+	key(KEY_K)
+	check(editor.tool_mode == "box", "K selects Box again after Return")
 	key(KEY_K)
 	check(editor.tool_mode == "", "K again returns to painting")
 	_restore_input()
