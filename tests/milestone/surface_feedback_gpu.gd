@@ -1,13 +1,24 @@
 extends "res://tests/milestone/editor_workflow_gpu.gd"
 ## Reuses parsed input/cursor restoration helpers; both production frame loops
 ## stay enabled. This is injected input, not a physical trackpad test.
+## Wait for a preview pick issued after this moment to come back.
+##
+## Watching `pick_pending` fall was a race: the editor re-arms a pick every
+## frame the pointer is over the scene, so the flag is false only between a
+## callback and the next `_process`, and whether the test resumed inside that
+## window decided the run. It failed about one run in three while the preview
+## itself was working. Request ids are monotonic, so a pick whose id passes the
+## last one issued necessarily reflects the pointer's current position, which is
+## the thing every caller here actually depends on.
 func preview() -> void:
-	for i in 120:
+	var issued: int = editor.pick_request_id
+	for i in 240:
 		await process_frame
-		if not editor.pick_pending and not editor.pick_cache.is_empty():
+		if editor.pick_shown_id > issued and not editor.pick_cache.is_empty():
 			await frames(2)
 			return
-	check(false, "surface preview completed within 120 frames")
+	check(false, "a preview pick issued after the pointer moved came back (last requested %d, shown %d, pending %s, cache %s)"
+		% [editor.pick_request_id, editor.pick_shown_id, str(editor.pick_pending), "empty" if editor.pick_cache.is_empty() else "set"])
 func capture_pointer(name: String) -> void:
 	await RenderingServer.frame_post_draw
 	root.get_texture().get_image().save_png(output_dir.path_join(name + ".png"))
