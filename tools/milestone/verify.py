@@ -77,6 +77,7 @@ GPU = [
     ("preparation128", "tests/milestone/render_preparation.gd", 128),
     ("preparation-render128", "tests/milestone/prepare_capture.gd", 128),
     ("leaf128", "tests/milestone/leaf_finite.gd", 128),
+    ("leaf-exposure128", "tests/milestone/leaf_exposure_gpu.gd", 128),
     ("capacity128", "tests/milestone/material_capacity_gpu.gd", 128),
     ("proxy-geometry128", "tests/milestone/material_proxy_geometry_gpu.gd", 128),
     ("proxy-interface128", "tests/milestone/material_proxy_interface_gpu.gd", 128),

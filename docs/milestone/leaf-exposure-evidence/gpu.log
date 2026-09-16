@@ -1,0 +1,13 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+Metal 4.0 - Forward+ - Using Device #0: Apple - Apple M5 Pro (Apple9)
+
+ok: baseline capture saved
+LEAF_CLIP baseline 41.1% mean_green 214
+ok: candidate capture saved
+LEAF_CLIP candidate 8.6% mean_green 179
+ok: pinned pre-change leaf shader clips the band (41.1% >= 30.0%), so the gate detects the defect
+ok: current leaf shader keeps the band unclipped (8.6% <= 12.0%)
+ok: the change reduces clipping (8.6% < 41.1%)
+ok: leaves stay bright rather than dull (mean green 179 >= 150)
+ok: leaf shading leaves every physical byte unchanged
+LEAF_EXPOSURE_CHECKS 7 FAILURES 0

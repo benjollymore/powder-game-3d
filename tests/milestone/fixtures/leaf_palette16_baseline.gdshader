@@ -60,9 +60,12 @@ void fragment() {
 	// Per-leaf variation: some yellower, some darker; inner cells darker.
 	vec3 warm = vec3(0.55, 0.62, 0.18);
 	vec3 col = mix(base, warm, seed * 0.45);
-	col *= 0.8 + 0.45 * fract(seed * 7.31);
+	// Kept in step with shaders/spatial/leaf.gdshader: this fixture pins the
+	// palette-16 width, so leaf albedo must match the current shader or the
+	// suite would attribute an exposure change to the palette bump.
+	col *= 0.42 + 0.30 * fract(seed * 7.31);
 	col *= 0.75 + 0.25 * clamp(v_custom.w / 3.0, 0.0, 1.0);
-	col *= 0.85 + 0.25 * y;
+	col *= 0.85 + 0.15 * y;
 	// Midrib and veins.
 	float rib = smoothstep(0.045, 0.01, abs(v_local.x)) * step(0.08, y);
 	float vein = smoothstep(0.02, 0.0, abs(fract((y - abs(v_local.x) * 0.9) * 7.0) - 0.5) - 0.44);
