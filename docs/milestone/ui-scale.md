@@ -44,6 +44,21 @@ The panel is never narrower than its own controls need. On a small window the
 content's combined minimum can exceed the scaled target, and forcing the panel
 below it would clip rows rather than shrink them.
 
+## Scaling the editor's own theme, not a second one
+
+`interaction_lab` builds the sidebar and then, on the next line,
+`editor_theme.apply(tools_panel)` replaces the panel's theme with its own
+(`default_font_size = 15`). A theme created during `_build_ui` is therefore
+orphaned a moment later, and every control keeps resolving 15 px however the
+window changes: in the real editor the sidebar measured 413 px at 1280x800
+against an authored 390, and the containers' minimum widths did not move by a
+single pixel across three window sizes. The scale is applied to whichever theme
+is attached, adopted after `editor_theme` has run, so there is exactly one.
+
+The test labs build the UI without attaching any theme, so the editor supplies a
+bare one when it finds none. That keeps the headless fixture and the real scene
+on the same path.
+
 ## One subtlety worth keeping
 
 A `Control` silently clamps an assigned `size` to its children's combined
@@ -62,10 +77,21 @@ live `size_changed` path rather than the arithmetic alone. Measured:
 | window | sidebar | font |
 | --- | ---: | ---: |
 | 1100×700 | 273 px | 11 |
-| 1280×800 | 312 px | 13 |
-| 1600×900 | 390 px | 16 |
-| 2560×1440 | 624 px | 26 |
-| 6016×3384 | 1170 px | 48 |
+| 1280×800 | 312 px | 12 |
+| 1600×900 | 390 px | 15 |
+| 2560×1440 | 624 px | 25 |
+| 6016×3384 | 1170 px | 45 |
+
+The real editor scene carries rows the fixture does not (the archive panel, the
+heat row, the tool row), so its content minimum is wider and the sidebar bottoms
+out there rather than at the factor's target:
+
+| window | sidebar | font |
+| --- | ---: | ---: |
+| 1100×700 | 347 px | 11 |
+| 1280×800 | 354 px | 12 |
+| 1600×900 | 405 px | 15 |
+| 2240×1260 | 546 px | 21 |
 
 At every size the sidebar fits the window, keeps the pinned status inside
 itself, stays at least as wide as its controls need, and leaves at least 55% of

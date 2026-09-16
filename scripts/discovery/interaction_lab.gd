@@ -236,6 +236,7 @@ func _ready() -> void:
 	_build_ui()
 	preload("res://scripts/editor/display_preferences.gd").mount(self, advanced_tools)
 	preload("res://scripts/editor/editor_theme.gd").apply(tools_panel)
+	_apply_ui_scale()
 	archive_panel = preload("res://scripts/editor/archive_panel.gd").new()
 	archive_panel.name = "AuthoredFiles"
 	add_child(archive_panel)
@@ -349,8 +350,8 @@ func _build_ui() -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel_column.add_child(scroll)
-	ui_theme = Theme.new()
-	panel.theme = ui_theme
+	# The editor's own theme is attached just after this function returns; the
+	# scale is applied to that one rather than to a competing Theme.
 	_apply_ui_scale()
 	get_viewport().size_changed.connect(_apply_ui_scale)
 	var column := VBoxContainer.new()
@@ -909,6 +910,15 @@ func _refresh_palette() -> void:
 func _apply_ui_scale() -> void:
 	if tools_panel == null:
 		return
+	# The editor's own theme is attached right after the UI is built, and the
+	# test labs build the UI without one. Adopt whichever is there, or supply a
+	# bare theme, so there is always exactly one theme to scale.
+	if ui_theme == null or tools_panel.theme != ui_theme:
+		if tools_panel.theme != null:
+			ui_theme = tools_panel.theme
+		else:
+			ui_theme = Theme.new()
+			tools_panel.theme = ui_theme
 	ui_scale = UiScale.apply(self, get_viewport().get_visible_rect().size)
 
 

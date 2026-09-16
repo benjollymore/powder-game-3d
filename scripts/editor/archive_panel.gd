@@ -23,6 +23,19 @@ var _input_was_enabled := true
 var _unhandled_was_enabled := true
 var _modal := false
 
+## Unscaled width of the two status labels; the sidebar scales these with the
+## window through `apply_ui_scale`, and they are wide enough to hold the panel
+## open on a small screen if they do not.
+const LABEL_WIDTH := 300.0
+
+
+## Called by UiScale when the window resizes.
+func apply_ui_scale(factor: float) -> void:
+	for label in [message, document_status]:
+		if label != null:
+			label.custom_minimum_size.x = LABEL_WIDTH * factor
+
+
 func bind_editor(target: Node3D, column: VBoxContainer) -> void:
 	editor = target
 	var row := HBoxContainer.new()
@@ -40,13 +53,13 @@ func bind_editor(target: Node3D, column: VBoxContainer) -> void:
 	row.add_child(open_button)
 	message = Label.new()
 	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	message.custom_minimum_size.x = 300
+	message.custom_minimum_size.x = LABEL_WIDTH
 	message.visible = false
 	column.add_child(message)
 	column.move_child(message, mini(6, column.get_child_count() - 1))
 	document_status = Label.new()
 	document_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	document_status.custom_minimum_size.x = 300
+	document_status.custom_minimum_size.x = LABEL_WIDTH
 	column.add_child(document_status)
 	column.move_child(document_status, mini(6, column.get_child_count() - 1))
 	save_dialog = _dialog(FileDialog.FILE_MODE_SAVE_FILE)
