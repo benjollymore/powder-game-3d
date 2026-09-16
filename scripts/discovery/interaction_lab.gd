@@ -149,9 +149,14 @@ var secondary_controls_label: Label
 ## is not the panel's only child. Scroll a control into view through this.
 var tools_scroll: ScrollContainer
 var camera_target := Vector3.ZERO # box widths, independent of simulation size
-## Optional WASD fly navigation (off by default); the orbit rig is unchanged
-## and still owns looking around. See scripts/camera/fly_motion.gd.
-var fly_enabled := false
+## WASD fly navigation, on whenever the game window has focus. The orbit rig
+## is unchanged and still owns looking around, so flying and the trackpad
+## gestures combine. Turn it off in Tools & view options.
+## See scripts/camera/fly_motion.gd.
+var fly_enabled := true
+## Movement only while this window has the keyboard; a key held while another
+## application had focus is never released here.
+var _window_focused := true
 var fly_toggle: CheckButton
 var _fly_motion: RefCounted = null
 var _base_fov := 75.0
@@ -572,7 +577,7 @@ func _build_ui() -> void:
 	fly_toggle = CheckButton.new()
 	fly_toggle.name = "FlyNavigation"
 	fly_toggle.text = "Fly (WASD)"
-	fly_toggle.tooltip_text = "Fly the camera: W A S D move, Q down, E up, Shift sprints. Two-finger drag, pinch and Option-drag keep looking around. Off by default; the orbit camera is unchanged."
+	fly_toggle.tooltip_text = "Fly the camera while this window has focus: W A S D move, Q down, E up, Shift sprints. Two-finger drag, pinch and Option-drag keep looking around, so flying and the trackpad work together. Turn this off to use the orbit camera alone."
 	fly_toggle.button_pressed = fly_enabled
 	fly_toggle.toggled.connect(set_fly_enabled)
 	advanced_tools.add_child(fly_toggle)
@@ -601,7 +606,7 @@ func _build_ui() -> void:
 	advanced_tools.add_child(empty)
 	var controls := Label.new()
 	controls_label = controls
-	controls.text = "Drag: paint · two fingers: orbit · pinch: zoom\nShift + two fingers: pan · Option + drag: orbit"
+	controls.text = "Drag: paint · two fingers: orbit · pinch: zoom\nShift + two fingers: pan · Option + drag: orbit\nW A S D fly · Q down · E up · Shift sprint"
 	var secondary_controls := Label.new()
 	secondary_controls_label = secondary_controls
 	secondary_controls.text = "Option + Shift + drag: pan · RMB/wheel work too\nPlane: −/+ above · Shift-wheel · [ ] brush size\n1 sand · 2 water · 3 wall · X erase · F angle\nCmd/Ctrl: S save · Shift+S save as · O open"
@@ -1017,6 +1022,10 @@ func _keep_diff(live: PackedByteArray, live_thermal: PackedByteArray, epoch: int
 	if KeepResult.byte_count(tiles, VoxelCodec.GRID, tile, sim.EditGPU.BYTES_PER_CELL) > sim.EditGPU.MAX_TRANSACTION_BYTES:
 		# Too much changed for one undoable edit: keep it as a new unsaved build.
 		testing = false
+		# A movement key held across the transition is never released here;
+		# stop rather than coast into the restored build.
+		if _fly_motion != null:
+			_fly_motion.stop()
 		play_button.text = "Run experiment · Space"
 		if not WorldArchive._thermal_finite(live_thermal):
 			live_thermal = PackedByteArray() # fall back to element defaults rather than upload NaN
@@ -1187,6 +1196,15 @@ func _face_plane() -> void:
 func _update_camera() -> void:
 	cancel_pending_paint()
 	_invalidate_picks()
+	_place_camera()
+
+
+## The camera maths alone. Discrete view changes (orbit, pan, zoom, facing a
+## plane) drop a queued gesture and the shown preview through _update_camera;
+## flying is continuous and would do that on every frame it moves, blinking
+## the ghost preview and cancelling paint queued a moment earlier, so it
+## places the camera and rejects its own in-flight picks instead.
+func _place_camera() -> void:
 	var direction := Vector3(sin(yaw) * cos(pitch), -sin(pitch), cos(yaw) * cos(pitch))
 	camera.position = (camera_target + direction * distance) * sim.world_size()
 	camera.look_at(camera_target * sim.world_size(), Vector3.UP)
@@ -1421,7 +1439,11 @@ func _input(event: InputEvent) -> void:
 
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		_window_focused = true
+		return
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_window_focused = false
 		cancel_pending_paint()
 		_release_shortcuts()
 		_reset_gesture()
@@ -1791,6 +1813,10 @@ func _set_testing(desired: bool) -> void:
 		for transaction in undo_history + redo_history:
 			transaction.epoch = sim.edit_epoch
 		testing = false
+		# A movement key held across the transition is never released here;
+		# stop rather than coast into the restored build.
+		if _fly_motion != null:
+			_fly_motion.stop()
 		play_button.text = "Run experiment · Space"
 	else:
 		capturing = true
@@ -1813,6 +1839,8 @@ func _begin_test(bytes: PackedByteArray, thermal: PackedByteArray, epoch: int, r
 	# each press, so Run always hands the brush back.
 	_set_tool("")
 	testing = true
+	if _fly_motion != null:
+		_fly_motion.stop()
 	TimeController.time_scale = speed_scale
 	TimeController.paused = false
 	play_button.text = "Return to build (restore) · Space"
@@ -2077,6 +2105,8 @@ func set_fly_enabled(value: bool) -> void:
 func _fly_active() -> bool:
 	if not fly_enabled or camera == null or not _ready_to_edit:
 		return false
+	if not _window_focused:
+		return false
 	var focused := get_viewport().gui_get_focus_owner()
 	if focused is LineEdit or focused is TextEdit:
 		return false
@@ -2109,7 +2139,9 @@ func _fly_step(delta: float) -> void:
 		# The orbit rig is defined by its target; flying moves that target with
 		# the camera so orbiting afterwards pivots around the new view.
 		camera_target += moved / sim.world_size()
-		_update_camera()
+		_place_camera()
+		# Picks in flight were cast from the old position; the shown target
+		# stays until a newer one arrives (placement brief contract 3).
 		_invalidate_picks(false)
 	camera.fov = _base_fov + _fly_motion.fov_boost
 

@@ -77,14 +77,19 @@ func run() -> void:
 		lab.marker = MeshInstance3D.new()
 		lab.add_child(lab.marker)
 	await process_frame
-	check(not lab.fly_enabled, "fly navigation is off by default")
+	check(lab.fly_enabled, "fly navigation is on by default")
 	var plane_before: int = lab.depth
 	var axis_before: int = lab.axis
 	var target_before: Vector3i = lab.target
+	lab.set_fly_enabled(false)
+	lab._ready_to_edit = true
 	press(KEY_W)
 	await process_frame
-	check(lab._fly_motion == null or lab._fly_motion.velocity == Vector3.ZERO, "W does nothing while fly navigation is off")
+	await process_frame
+	check(lab._fly_motion == null or lab._fly_motion.velocity == Vector3.ZERO, "W does nothing once the option is turned off")
+	release_all()
 	lab.set_fly_enabled(true)
+	press(KEY_W)
 	# The fake lab builds its own scene and never opens the editing gate that
 	# guards _process; the real editor sets it at the end of _ready.
 	lab._ready_to_edit = true
@@ -100,6 +105,14 @@ func run() -> void:
 	check(lab.camera_target != target_start and lab.camera.position != camera_before,
 		"W flies the camera once the option is on (target %s to %s)" % [target_start, lab.camera_target])
 	check(lab.depth == plane_before and lab.axis == axis_before, "flying leaves the workplane alone")
+	# Flying is continuous: it must not drop a queued gesture or blank the
+	# ghost preview on every frame the way a discrete view change does.
+	lab.pick_cache = {"valid": true, "target": Vector3i(4, 5, 6), "normal": Vector3i(0, 0, 1), "epoch": lab.sim.edit_epoch}
+	lab.pick_shown_id = 7
+	lab._fly_step(0.1)
+	lab._fly_step(0.1)
+	check(lab.pick_cache.get("valid", false) and lab.pick_shown_id == 7,
+		"a flying frame keeps the shown preview target rather than clearing it")
 	check(not lab.document.is_dirty(), "flying does not mark the authored build unsaved")
 	check(lab.target == target_before or true, "target is recomputed by the normal path, not by flying")
 
@@ -154,18 +167,85 @@ func run() -> void:
 	lab.pending.clear()
 	release_all()
 
+	# Trackpad and keyboard combine: a two-finger orbit, a pinch zoom and a
+	# Shift two-finger pan each keep working while a movement key is held, and
+	# none of them cancels the flight.
+	release_all()
+	lab._fly_motion.stop()
+	press(KEY_W)
+	lab._fly_step(0.1)
+	var flying_target: Vector3 = lab.camera_target
+	var yaw_before: float = lab.yaw
+	lab._navigate(Vector2(30, 0), false, true)
+	lab._fly_step(0.1)
+	check(lab.yaw != yaw_before and lab.camera_target != flying_target,
+		"a two-finger orbit turns the view while the camera keeps flying")
+	var distance_before: float = lab.distance
+	lab._zoom(0.8)
+	lab._fly_step(0.1)
+	check(lab.distance != distance_before and lab._fly_motion.velocity != Vector3.ZERO,
+		"a pinch zoom does not stop the flight")
+	var pan_before: Vector3 = lab.camera_target
+	press(KEY_SHIFT)
+	lab._navigate(Vector2(20, 10), true, true)
+	lab._fly_step(0.1)
+	check(lab.camera_target != pan_before and lab._fly_motion.fov_boost > 0.0,
+		"Shift two-finger pan pans the view and Shift still sprints")
+	release_all()
+	lab._fly_motion.stop()
+
 	# Focus loss and Test entry must not strand a held key.
 	lab._fly_motion.velocity = Vector3.ONE
 	lab._release_shortcuts()
 	check(lab._fly_motion.velocity == Vector3.ZERO, "focus loss releases a held movement key")
+	# "While focused on the game window": a key held for another application
+	# must not fly this one, and focus returning must not need a fresh press.
+	release_all()
+	lab._fly_motion.stop()
+	lab._notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
+	press(KEY_W)
+	var unfocused_target: Vector3 = lab.camera_target
+	lab._fly_step(0.1)
+	lab._fly_step(0.1)
+	check(lab.camera_target == unfocused_target and not lab._fly_active(),
+		"an unfocused window does not fly, however long a key is held")
+	lab._notification(Node.NOTIFICATION_APPLICATION_FOCUS_IN)
+	lab._fly_step(0.1)
+	lab._fly_step(0.1)
+	check(lab.camera_target != unfocused_target, "focus returning resumes movement for the still-held key")
+	release_all()
+	lab._fly_motion.stop()
+	# Entering and leaving Test must not leave the camera coasting.
+	lab._fly_motion.velocity = Vector3.ONE
+	lab.testing = true
+	if lab._fly_motion != null:
+		lab._fly_motion.stop()
+	check(lab._fly_motion.velocity == Vector3.ZERO, "entering Test releases a held movement key")
 	lab._fly_motion.velocity = Vector3.ONE
 	lab.set_fly_enabled(false)
 	check(lab._fly_motion.velocity == Vector3.ZERO and lab.camera.fov == lab._base_fov,
 		"turning the option off stops the camera and restores the field of view")
-	check(not FlyPreference.load_enabled(), "the preference round-trips as off")
+	check(not FlyPreference.load_enabled(), "a deliberate off round-trips as off")
 	lab.set_fly_enabled(true)
 	check(FlyPreference.load_enabled(), "the preference round-trips as on")
-	lab.set_fly_enabled(false)
+	# Migration: a value written while the feature was opt-in is the old
+	# default, not a decision. It lives under the retired key and is ignored;
+	# only the versioned key speaks for the user.
+	var config := ConfigFile.new()
+	config.load(FlyPreference.PATH)
+	if config.has_section_key(FlyPreference.SECTION, FlyPreference.KEY):
+		config.erase_section_key(FlyPreference.SECTION, FlyPreference.KEY)
+	config.set_value(FlyPreference.SECTION, FlyPreference.LEGACY_KEY, false)
+	config.save(FlyPreference.PATH)
+	check(FlyPreference.load_enabled(), "a pre-change stored 'off' does not survive the new default")
+	FlyPreference.store(false)
+	# ConfigFile.load merges into whatever the object already holds, so read
+	# the saved file with a fresh one.
+	var reloaded := ConfigFile.new()
+	reloaded.load(FlyPreference.PATH)
+	check(not FlyPreference.load_enabled() and not reloaded.has_section_key(FlyPreference.SECTION, FlyPreference.LEGACY_KEY),
+		"turning it off after the change sticks, and the retired key is cleaned up")
+	FlyPreference.store(true)
 	release_all()
 	print("Fly navigation: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
