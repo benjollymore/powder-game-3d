@@ -276,6 +276,14 @@ func run() -> void:
 
 ## Fly (WASD) is an option: with it on, the same parsed drag must paint the
 ## same cells as the orbit session, and no movement key may be held afterwards.
+func painted_ids(bytes: PackedByteArray) -> PackedByteArray:
+	var ids := PackedByteArray()
+	ids.resize(bytes.size() / 4)
+	for i in ids.size():
+		ids[i] = bytes[i * 4]
+	return ids
+
+
 func _test_fly_navigation_parity() -> void:
 	var n := VoxelCodec.GRID
 	var first := Vector3i(n / 4, n / 2, n / 2)
@@ -283,6 +291,8 @@ func _test_fly_navigation_parity() -> void:
 	editor.set_fly_enabled(false)
 	await frames(2)
 	var before := await read()
+	var camera_before: Transform3D = editor.camera.global_transform
+	var fov_before: float = editor.camera.fov
 	await stroke(first, last)
 	await settled()
 	var orbit_painted := await read()
@@ -291,10 +301,20 @@ func _test_fly_navigation_parity() -> void:
 	editor.set_fly_enabled(true)
 	await frames(2)
 	check(editor.fly_enabled, "fly navigation can be turned on mid-session")
+	# Turning the option on must not move the camera by itself: the rig only
+	# changes when a movement key is held, so the same screen-space drag casts
+	# the same rays and reaches the same cells.
+	check(editor.camera.global_transform.is_equal_approx(camera_before) and editor.camera.fov == fov_before,
+		"enabling the option leaves the camera transform and field of view untouched")
 	await stroke(first, last)
 	await settled()
 	var fly_painted := await read()
-	check(fly_painted == orbit_painted, "a fly-enabled session paints exactly the same cells as an orbit session")
+	# Element ids, not the whole packed record: the editor passes the authored
+	# transaction id as the brush seed (interaction_lab.gd record_stroke calls),
+	# and brush.glsl hashes that seed into every painted cell's seed byte, so
+	# two strokes never produce identical bytes however identical the geometry.
+	check(painted_ids(fly_painted) == painted_ids(orbit_painted),
+		"a fly-enabled session paints exactly the same cells with the same materials as an orbit session")
 	check(editor._fly_motion == null or editor._fly_motion.velocity == Vector3.ZERO, "no movement is held after the drag")
 	editor.set_fly_enabled(false)
 	await frames(2)
