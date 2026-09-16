@@ -15,5 +15,13 @@ ok: box commit records the half-open box between the two corners with the curren
 ok: the box tool records no brush stroke
 ok: switching tools drops the pending anchor
 ok: choosing a material keeps the tool and its anchor
-ok: Test mode refuses two-click tools with a message
-Placement tools CPU: 16 checks, 0 failures
+ok: changing the targeting mode drops the anchor
+ok: changing the plane axis drops the anchor
+ok: moving the workplane depth drops the anchor
+ok: Undo drops the anchor
+ok: a gesture reset (focus loss, world replacement) drops the anchor
+ok: orbiting between the two clicks keeps the anchor
+ok: a line's disc axis is the axis frozen at the anchor click, not the commit-time pick
+ok: Box with Erase on records a box erase, never a fill
+ok: Test mode refuses two-click tools with a message and drops a pre-Run anchor
+Placement tools CPU: 24 checks, 0 failures

@@ -41,7 +41,7 @@ CPU = [
     ("cell-inspector", "tests/milestone/cell_inspector.gd", 128),
     ("read-world-fifo", "tests/milestone/read_world_fifo.gd", 128),
     ("examples128", "tests/milestone/examples_cpu.gd", 128),
-    ("examples256", "tests/milestone/examples_cpu.gd", 256),
+    ("examples256", "tests/milestone/examples_cpu.gd", 256, 300),
     ("guard-queue", "tests/milestone/guard_queue.gd", 128),
     ("thermal-init", "tests/milestone/thermal_init.gd", 128),
     ("thermal-remap", "tests/milestone/thermal_remap.gd", 128),
@@ -123,7 +123,14 @@ def main() -> int:
     out = ROOT / args.output
     out.mkdir(parents=True, exist_ok=True)
     records = []
-    for name, script, grid in cases:
+    for case in cases:
+        # A case may carry a fourth element: its own watchdog in seconds. The
+        # default suits a suite that runs in well under a minute; building
+        # every scenario at 256 legitimately needs longer, and a suite that
+        # passes its checks then trips the watchdog on teardown is a false
+        # failure that hides real ones.
+        name, script, grid = case[0], case[1], case[2]
+        watchdog = case[3] if len(case) > 3 else 120
         command = ["godot", "--path", str(ROOT)]
         command += (["--always-on-top", "--disable-vsync", "--resolution", "1600x900"]
                     if args.gpu else ["--headless"])
@@ -131,7 +138,7 @@ def main() -> int:
         start = time.monotonic()
         try:
             process = subprocess.run(command, cwd=ROOT, stdout=subprocess.PIPE,
-                                     stderr=subprocess.STDOUT, text=True, timeout=120)
+                                     stderr=subprocess.STDOUT, text=True, timeout=watchdog)
             output, code = process.stdout, process.returncode
         except subprocess.TimeoutExpired as exc:
             output = exc.stdout or ""

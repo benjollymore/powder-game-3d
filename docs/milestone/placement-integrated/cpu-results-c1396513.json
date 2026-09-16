@@ -1,0 +1,19 @@
+[
+  {
+    "name": "examples256",
+    "pass": true,
+    "exit": 0,
+    "seconds": 205.04,
+    "command": [
+      "godot",
+      "--path",
+      "/Users/benjo/.superset/projects/powder-game-3d-discovery/placement",
+      "--headless",
+      "-s",
+      "res://tests/milestone/examples_cpu.gd",
+      "--",
+      "grid=256",
+      "output_dir=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/examples256"
+    ]
+  }
+]
