@@ -12,7 +12,7 @@ ok: fly speed stays clamped to the world size (0.200000)
 ok: fly navigation is off by default
 ok: W does nothing while fly navigation is off
 ok: the toggle turns fly navigation on
-ok: W flies the camera once the option is on (target (0.0, 0.0, -0.172687) to (0.0, 0.0, -0.184754))
+ok: W flies the camera once the option is on (target (0.0, 0.0, -0.17369) to (0.0, 0.0, -0.183676))
 ok: flying leaves the workplane alone
 ok: flying does not mark the authored build unsaved
 ok: target is recomputed by the normal path, not by flying

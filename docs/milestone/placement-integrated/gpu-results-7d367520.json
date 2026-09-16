@@ -3,7 +3,7 @@
     "name": "preview128",
     "pass": true,
     "exit": 0,
-    "seconds": 2.45,
+    "seconds": 2.44,
     "command": [
       "godot",
       "--path",

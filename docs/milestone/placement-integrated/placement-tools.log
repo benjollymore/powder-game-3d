@@ -19,9 +19,10 @@ ok: changing the targeting mode drops the anchor
 ok: changing the plane axis drops the anchor
 ok: moving the workplane depth drops the anchor
 ok: Undo drops the anchor
-ok: a gesture reset (focus loss, world replacement) drops the anchor
+ok: losing application focus drops the anchor
 ok: orbiting between the two clicks keeps the anchor
+ok: a gesture start, a pointer move and a preview update all keep the anchor
 ok: a line's disc axis is the axis frozen at the anchor click, not the commit-time pick
 ok: Box with Erase on records a box erase, never a fill
 ok: Test mode refuses two-click tools with a message and drops a pre-Run anchor
-Placement tools CPU: 24 checks, 0 failures
+Placement tools CPU: 25 checks, 0 failures

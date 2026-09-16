@@ -3,7 +3,7 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 ok: background save starts
 ok: an active job cannot be overwritten
 ok: background save completes
-SAVE grid=128 elapsed_ms=209.42 process_frames=33 compressed_bytes=2333
+SAVE grid=128 elapsed_ms=214.76 process_frames=34 compressed_bytes=2333
 ok: completed job can be reused for load
 ok: background load returns exact authored data
 Archive job: 5 checks, 0 failures

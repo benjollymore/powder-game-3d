@@ -22,12 +22,13 @@ ok: GUI step consumes the completed paused click exactly once
 ok: live held source survives the production per-frame Input guard
 ok: active-frame held source adds multiple real grains while simulation runs
 ok: live painting leaves authored snapshot/history separate
-WORKFLOW_MATERIAL sand_before_click=587 sand_after_step=588 sand_after_live_hold=605
+WORKFLOW_MATERIAL sand_before_click=587 sand_after_step=588 sand_after_live_hold=606
 ok: GUI Return restores exact authored construction after live input
 ok: GUI Undo after Return removes only the last authored sand stroke
 ok: fly navigation can be turned on mid-session
-FAIL: a fly-enabled session paints exactly the same cells as an orbit session
+ok: enabling the option leaves the camera transform and field of view untouched
+ok: a fly-enabled session paints exactly the same cells with the same materials as an orbit session
 ok: no movement is held after the drag
 ok: turning the option off restores the orbit camera
 ok: workflow restores the original OS cursor position
-Editor workflow GPU: 28 checks, 1 failures; evidence=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/workflow128
+Editor workflow GPU: 29 checks, 0 failures; evidence=/Users/benjo/.superset/projects/powder-game-3d-discovery/placement/docs/milestone/placement-integrated/workflow128

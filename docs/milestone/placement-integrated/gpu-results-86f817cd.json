@@ -3,7 +3,7 @@
     "name": "surface-feedback128",
     "pass": true,
     "exit": 0,
-    "seconds": 1.92,
+    "seconds": 2.1,
     "command": [
       "godot",
       "--path",

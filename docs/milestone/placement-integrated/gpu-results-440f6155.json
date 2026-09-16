@@ -3,7 +3,7 @@
     "name": "leaf-exposure128",
     "pass": true,
     "exit": 0,
-    "seconds": 1.39,
+    "seconds": 1.41,
     "command": [
       "godot",
       "--path",

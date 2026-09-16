@@ -3,7 +3,7 @@
     "name": "physics128",
     "pass": true,
     "exit": 0,
-    "seconds": 131.88,
+    "seconds": 131.23,
     "command": [
       "godot",
       "--path",
