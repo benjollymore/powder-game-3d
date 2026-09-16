@@ -21,6 +21,7 @@ CPU = [
     ("gestures", "tests/discovery/gesture_routing.gd", 128),
     ("editing-unit", "tests/milestone/editing_unit.gd", 128),
     ("interaction-unit", "tests/discovery/interaction_unit.gd", 128),
+    ("fly-navigation", "tests/milestone/fly_navigation.gd", 128),
     ("paint-tools", "tests/milestone/paint_tools.gd", 128),
     ("brush-shape", "tests/milestone/brush_shape.gd", 128),
     ("placement-tools", "tests/milestone/placement_tools.gd", 128),

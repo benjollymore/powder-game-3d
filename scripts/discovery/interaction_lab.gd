@@ -1,6 +1,8 @@
 extends Node3D
 ## Runnable experiment using the production GPU state, brush kernel and renderer.
 const Geometry := preload("res://scripts/discovery/edit_geometry.gd")
+const FlyMotion := preload("res://scripts/camera/fly_motion.gd")
+const FlyPreference := preload("res://scripts/editor/fly_preference.gd")
 const SimScene := preload("res://scenes/sim_volume.tscn")
 const Emission := preload("res://scripts/discovery/brush_emission.gd")
 const HistoryBudget := preload("res://scripts/editor/history_budget.gd")
@@ -138,6 +140,12 @@ var stroke_shape: int = BrushScript.Shape.SPHERE
 var radius_input: SpinBox
 var tools_panel: PanelContainer
 var camera_target := Vector3.ZERO # box widths, independent of simulation size
+## Optional WASD fly navigation (off by default); the orbit rig is unchanged
+## and still owns looking around. See scripts/camera/fly_motion.gd.
+var fly_enabled := false
+var fly_toggle: CheckButton
+var _fly_motion: RefCounted = null
+var _base_fov := 75.0
 var navigation_button := MOUSE_BUTTON_NONE
 var navigation_pan := false
 var depth_scroll_fraction := 0.0
@@ -175,6 +183,8 @@ func _ready() -> void:
 	camera = Camera3D.new()
 	camera.near = 0.001
 	camera.fov = 58.0
+	_base_fov = camera.fov
+	_fly_motion = FlyMotion.new(sim.world_size())
 	add_child(camera)
 	var environment := WorldEnvironment.new()
 	environment.environment = Environment.new()
@@ -228,6 +238,9 @@ func _ready() -> void:
 	_update_plane()
 	# Upload queues behind GPU initialization; no CPU state mirror is retained.
 	reset_container()
+	fly_enabled = FlyPreference.load_enabled()
+	if fly_toggle:
+		fly_toggle.set_pressed_no_signal(fly_enabled)
 	_ready_to_edit = true
 
 
@@ -544,6 +557,13 @@ func _build_ui() -> void:
 	grid_toggle.button_pressed = show_workplane_grid
 	grid_toggle.toggled.connect(func(enabled): show_workplane_grid = enabled)
 	advanced_tools.add_child(grid_toggle)
+	fly_toggle = CheckButton.new()
+	fly_toggle.name = "FlyNavigation"
+	fly_toggle.text = "Fly (WASD)"
+	fly_toggle.tooltip_text = "Fly the camera: W A S D move, Q down, E up, Shift sprints. Two-finger drag, pinch and Option-drag keep looking around. Off by default; the orbit camera is unchanged."
+	fly_toggle.button_pressed = fly_enabled
+	fly_toggle.toggled.connect(set_fly_enabled)
+	advanced_tools.add_child(fly_toggle)
 	var ambient_row := HBoxContainer.new()
 	advanced_tools.add_child(ambient_row)
 	var ambient_label := Label.new()
@@ -1272,6 +1292,10 @@ func _route_space(event: InputEventKey) -> bool:
 func _release_shortcuts() -> void:
 	_space_owned = false
 	_file_keys_owned.clear()
+	if _fly_motion != null:
+		# A movement key released while another window had focus is never seen
+		# here; stop rather than coast on a request that no longer exists.
+		_fly_motion.stop()
 
 
 ## Layouts without Latin letters report another keycode for the S key; the
@@ -1981,9 +2005,71 @@ func _flush() -> void:
 		pending.clear()
 
 
+## Fly navigation is an option, remembered across sessions beside the picture
+## preference. Turning it off restores the orbit camera exactly: no velocity,
+## no field-of-view boost, and the workplane, target and document are untouched.
+func set_fly_enabled(value: bool) -> void:
+	fly_enabled = value
+	if _fly_motion == null and camera and sim:
+		_fly_motion = FlyMotion.new(sim.world_size())
+		if _base_fov <= 0.0:
+			_base_fov = camera.fov
+	if fly_toggle and fly_toggle.button_pressed != value:
+		fly_toggle.set_pressed_no_signal(value)
+	if _fly_motion:
+		_fly_motion.stop()
+	if not value and camera:
+		camera.fov = _base_fov
+	FlyPreference.store(value, self)
+
+
+## A held W is a movement request only while the scene owns the keyboard. A
+## focused text field (brush radius, ambient temperature), a modal, Test mode's
+## own controls and lost focus all stop the camera instead of flying it.
+func _fly_active() -> bool:
+	if not fly_enabled or camera == null or not _ready_to_edit:
+		return false
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused is LineEdit or focused is TextEdit:
+		return false
+	if is_instance_valid(archive_panel) and (archive_panel._modal or not archive_panel.queued_dialog.is_empty()):
+		return false
+	return not Input.is_key_pressed(KEY_META) and not Input.is_key_pressed(KEY_CTRL) and not Input.is_key_pressed(KEY_ALT)
+
+
+## Move the camera without touching the workplane, the pick contract or the
+## authored document. Painting continues: a held drag keeps its stroke, and the
+## next sample is joined by the usual face-connected path.
+func _fly_step(delta: float) -> void:
+	# Fixtures and alternative scenes build their own camera without the
+	# editor's _ready; create the motion on demand so the option works there too.
+	if _fly_motion == null:
+		if camera == null or sim == null:
+			return
+		_fly_motion = FlyMotion.new(sim.world_size())
+		if _base_fov <= 0.0:
+			_base_fov = camera.fov
+	if not _fly_active():
+		_fly_motion.stop()
+		if camera:
+			camera.fov = _base_fov
+		return
+	var input: Vector3 = FlyMotion.input_vector(true)
+	var sprinting := input != Vector3.ZERO and Input.is_key_pressed(KEY_SHIFT)
+	var moved: Vector3 = _fly_motion.step(delta, camera.global_transform.basis, input, sprinting)
+	if moved != Vector3.ZERO:
+		# The orbit rig is defined by its target; flying moves that target with
+		# the camera so orbiting afterwards pivots around the new view.
+		camera_target += moved / sim.world_size()
+		_update_camera()
+		_invalidate_picks(false)
+	camera.fov = _base_fov + _fly_motion.fov_boost
+
+
 func _process(delta: float) -> void:
 	if not _ready_to_edit:
 		return
+	_fly_step(delta)
 	if painting and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		_end_stroke()
 	if navigation_button != MOUSE_BUTTON_NONE and not Input.is_mouse_button_pressed(navigation_button):

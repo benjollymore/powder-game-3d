@@ -266,8 +266,38 @@ func run() -> void:
 	await click(find_button("Undo build"))
 	await settled()
 	check(await read() == ramp and editor.undo_history.size() == 1, "GUI Undo after Return removes only the last authored sand stroke")
+	await _test_fly_navigation_parity()
 	_restore_input()
 	await frames(2)
 	check(DisplayServer.mouse_get_position().distance_to(original_cursor) <= 2.0, "workflow restores the original OS cursor position")
 	print("Editor workflow GPU: %d checks, %d failures; evidence=%s" % [checks, failures, output_dir])
 	quit(1 if failures else 0)
+
+
+## Fly (WASD) is an option: with it on, the same parsed drag must paint the
+## same cells as the orbit session, and no movement key may be held afterwards.
+func _test_fly_navigation_parity() -> void:
+	var n := VoxelCodec.GRID
+	var first := Vector3i(n / 4, n / 2, n / 2)
+	var last := Vector3i(n / 4 + 12, n / 2, n / 2)
+	editor.set_fly_enabled(false)
+	await frames(2)
+	var before := await read()
+	await stroke(first, last)
+	await settled()
+	var orbit_painted := await read()
+	sim.upload(before)
+	await frames(4)
+	editor.set_fly_enabled(true)
+	await frames(2)
+	check(editor.fly_enabled, "fly navigation can be turned on mid-session")
+	await stroke(first, last)
+	await settled()
+	var fly_painted := await read()
+	check(fly_painted == orbit_painted, "a fly-enabled session paints exactly the same cells as an orbit session")
+	check(editor._fly_motion == null or editor._fly_motion.velocity == Vector3.ZERO, "no movement is held after the drag")
+	editor.set_fly_enabled(false)
+	await frames(2)
+	check(not editor.fly_enabled and editor.camera.fov == editor._base_fov, "turning the option off restores the orbit camera")
+	sim.upload(before)
+	await frames(4)

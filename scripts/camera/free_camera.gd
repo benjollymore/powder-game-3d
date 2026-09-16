@@ -19,10 +19,11 @@ enum Mode { FLY, ORBIT }
 @export var brake_time := 0.18
 ## Extra field of view while sprinting, eased in and out.
 @export var sprint_fov_boost := 8.0
+const FlyMotion := preload("res://scripts/camera/fly_motion.gd")
 var world_size := 1.0
-var _velocity := Vector3.ZERO
 var _base_fov := 75.0
-var _fov_boost := 0.0
+## Shared with the paint editor's Fly (WASD) option; see fly_motion.gd.
+var _motion: RefCounted = FlyMotion.new()
 
 var mode := Mode.FLY
 var _yaw := 0.0
@@ -38,7 +39,13 @@ func _ready() -> void:
 		sim = get_node_or_null("../SimVolume")
 	if sim and sim.has_method("world_size"):
 		world_size = sim.world_size()
-	fly_speed *= world_size
+	_motion = FlyMotion.new(world_size)
+	_motion.sprint_multiplier = sprint_multiplier
+	_motion.accel_time = accel_time
+	_motion.brake_time = brake_time
+	_motion.sprint_fov_boost = sprint_fov_boost
+	_motion.fly_speed = fly_speed * world_size
+	fly_speed = _motion.fly_speed
 	orbit_distance *= world_size
 	frame_position *= world_size
 	_base_fov = camera.fov
@@ -70,42 +77,17 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if mode != Mode.FLY or (_tween and _tween.is_running()):
 		return
-	var input := Vector3.ZERO
-	if Input.is_key_pressed(KEY_W):
-		input.z -= 1.0
-	if Input.is_key_pressed(KEY_S):
-		input.z += 1.0
-	if Input.is_key_pressed(KEY_A):
-		input.x -= 1.0
-	if Input.is_key_pressed(KEY_D):
-		input.x += 1.0
-	if Input.is_key_pressed(KEY_E):
-		input.y += 1.0
-	if Input.is_key_pressed(KEY_Q):
-		input.y -= 1.0
+	var input: Vector3 = FlyMotion.input_vector(true)
 	var sprinting := input != Vector3.ZERO and Input.is_key_pressed(KEY_SHIFT)
-	var speed := fly_speed * (sprint_multiplier if sprinting else 1.0)
-	# Forward/right follow the view; up/down stay world-aligned so flying feels like a drone.
-	var basis := global_transform.basis
-	var move := (basis.x * input.x + basis.z * input.z)
-	move.y = 0.0
-	move = move.normalized() * Vector2(input.x, input.z).length() + Vector3.UP * input.y
-	var wanted := move.normalized() * speed if input != Vector3.ZERO else Vector3.ZERO
-	# Ease toward the wanted velocity so starts and stops feel like mass, not a switch.
-	var tau := accel_time if wanted.length() > _velocity.length() else brake_time
-	_velocity = _velocity.lerp(wanted, 1.0 - exp(-delta / maxf(tau, 0.001)))
-	if _velocity.length() < 0.001 * world_size:
-		_velocity = Vector3.ZERO
-	global_position += _velocity * delta
-	# A touch of extra field of view while sprinting sells the speed.
-	_fov_boost = lerpf(_fov_boost, sprint_fov_boost if sprinting else 0.0, 1.0 - exp(-6.0 * delta))
-	camera.fov = _base_fov + _fov_boost
+	global_position += _motion.step(delta, global_transform.basis, input, sprinting)
+	fly_speed = _motion.fly_speed
+	camera.fov = _base_fov + _motion.fov_boost
 
 
 func set_mode(new_mode: Mode) -> void:
 	if mode == new_mode:
 		return
-	_velocity = Vector3.ZERO
+	_motion.stop()
 	if new_mode == Mode.ORBIT:
 		orbit_distance = maxf(global_position.distance_to(orbit_target), 0.5)
 		global_position = orbit_target
@@ -166,4 +148,5 @@ func _scroll(direction: float) -> void:
 		orbit_distance = clampf(orbit_distance * (0.9 if direction > 0.0 else 1.1), 0.3 * world_size, 20.0 * world_size)
 		camera.position = Vector3(0.0, 0.0, orbit_distance)
 	else:
-		fly_speed = clampf(fly_speed * (1.25 if direction > 0.0 else 0.8), 0.1 * world_size, 50.0 * world_size)
+		_motion.scroll(direction)
+		fly_speed = _motion.fly_speed
